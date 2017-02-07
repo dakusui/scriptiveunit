@@ -3,7 +3,7 @@
     <groupId>com.github.dakusui</groupId>
     <artifactId>scriptunit</artifactId>
     <packaging>jar</packaging>
-    <version>0.0.1-SNAPSHOT</version>
+    <version>0.0.2</version>
     <name>scriptunit</name>
     <url>https://github.com/dakusui/scriptunit</url>
 
@@ -20,7 +20,7 @@
         <developerConnection>scm:git:git@github.com:dakusui/scriptunit.git
         </developerConnection>
         <url>http://dakusui.github.io/scriptunit</url>
-        <tag>scriptunit-0.0.1</tag>
+        <tag>scriptunit-0.0.2</tag>
     </scm>
 
     <developers>
