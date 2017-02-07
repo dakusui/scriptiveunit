@@ -7,7 +7,36 @@
     <packaging>jar</packaging>
     <version>0.0.1-SNAPSHOT</version>
     <name>scriptunit</name>
-    <url>http://maven.apache.org</url>
+    <url>https://github.com/dakusui/scriptunit</url>
+
+    <licenses>
+        <license>
+            <name>Apache License, Version 2.0</name>
+            <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+            <distribution>repo</distribution>
+        </license>
+    </licenses>
+
+    <scm>
+        <connection>scm:git:git@github.com/dakusui/actionunit.git</connection>
+        <developerConnection>scm:git:git@github.com:dakusui/actionunit.git
+        </developerConnection>
+        <url>http://dakusui.github.io/actionuint</url>
+        <tag>actionunit-1.0.3</tag>
+    </scm>
+
+    <developers>
+        <developer>
+            <id>dakusui</id>
+            <name>Hiroshi Ukai</name>
+            <email>dakusui@gmail.com</email>
+        </developer>
+    </developers>
+
+    <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    </properties>
+
     <dependencies>
         <dependency>
             <groupId>junit</groupId>
