@@ -67,25 +67,25 @@ public class HelpTest {
     System.out.println(this);
   }
 
-  @When("argLengthIs0")
+  @Given("argLengthIs0")
   @Test
   public void runHelp0() {
     Help.help(Qapi.class);
   }
 
-  @When("argLengthIs1")
+  @Given("argLengthIs1")
   @Test
   public void runHelp1() {
     Help.help(Qapi.class, arg1);
   }
 
-  @When("argLengthIs2&&!secondParameterIsInvalid")
+  @Given("argLengthIs2&&!secondParameterIsInvalid")
   @Test
   public void runHelp2() {
     Help.help(Qapi.class, arg1, arg1Values.get(arg1)[arg2]);
   }
 
-  @When("argLengthIs2&&secondParameterIsInvalid")
+  @Given("argLengthIs2&&secondParameterIsInvalid")
   @Test(expected = ScriptUnitException.class)
   public void runHelp2withInvalidSecondParameter() {
     Help.help(Qapi.class, arg1, arg1Values.get(arg1)[arg2]);
