@@ -32,12 +32,6 @@ Full version of this example is found [here](src/test/resources/examples/qapi.js
 ```javascript
     {
         "description":"An example test suite to Query-Result model on ScriptUnit",
-        "coveringArrayEngine":{
-            "class":"com.github.dakusui.jcunit.plugins.caengines.IpoGcCoveringArrayEngine",
-            "options":[
-                2
-            ]
-        },
         "factorSpace": {
             "factors": {
                 "terms": [["ヒーター"], ["iPhone"]],
