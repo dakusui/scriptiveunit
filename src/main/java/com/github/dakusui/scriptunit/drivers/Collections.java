@@ -6,10 +6,12 @@ import com.github.dakusui.scriptunit.model.Func;
 import com.github.dakusui.scriptunit.model.Stage;
 import com.google.common.collect.Iterables;
 
+import java.util.stream.Collectors;
+
 import static java.util.Objects.requireNonNull;
-import static java.util.stream.Collectors.toList;
 import static java.util.stream.StreamSupport.stream;
 
+@ReflectivelyReferenced
 public class Collections {
   @ReflectivelyReferenced
   @Scriptable
@@ -22,7 +24,10 @@ public class Collections {
   public <T extends Stage, E> Func<T, Iterable<? super E>> filter(Func<T, Iterable<? extends E>> iterable, Func<T, Func<? super E, Boolean>> predicate) {
     return i -> {
       //noinspection unchecked
-      return (Iterable<? super E>) stream(requireNonNull(iterable.apply(i)).<E>spliterator(), false).filter(input -> requireNonNull(requireNonNull(predicate.apply(i)).apply(input))).collect(toList());
+      return (Iterable<? super E>) stream(requireNonNull(iterable.apply(i))
+          .<E>spliterator(), false)
+          .filter(input -> requireNonNull(requireNonNull(predicate.apply(i)).apply(input)))
+          .collect(Collectors.<E>toList());
     };
   }
 
