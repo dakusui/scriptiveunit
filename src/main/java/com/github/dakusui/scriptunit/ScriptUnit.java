@@ -37,6 +37,9 @@ import static java.util.Objects.requireNonNull;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
 
+/**
+ * A main test runner class of ScriptUnit.
+ */
 public class ScriptUnit extends Parameterized {
   /**
    * Test runners each of which runs a test case represented by an action.
