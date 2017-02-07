@@ -1,0 +1,226 @@
+package com.github.dakusui.scriptunit.core;
+
+import com.github.dakusui.jcunit.core.tuples.Tuple;
+import com.github.dakusui.jcunit.framework.TestCase;
+import com.github.dakusui.scriptunit.exceptions.ScriptUnitException;
+import com.github.dakusui.scriptunit.exceptions.SyntaxException;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
+
+import java.lang.annotation.Annotation;
+import java.lang.reflect.AnnotatedElement;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.Field;
+import java.math.BigDecimal;
+import java.util.Arrays;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Map;
+import java.util.function.Function;
+import java.util.function.Supplier;
+
+import static com.google.common.base.Preconditions.checkState;
+import static java.lang.Character.isUpperCase;
+import static java.lang.Character.toLowerCase;
+import static java.lang.Character.toUpperCase;
+import static java.lang.String.format;
+import static java.util.Objects.requireNonNull;
+import static java.util.stream.Collectors.toList;
+
+public enum Utils {
+  ;
+
+  public static String toALL_CAPS(String inputString) {
+    StringBuilder b = new StringBuilder();
+    boolean wasPreviousUpper = true;
+    for (Character each : inputString.toCharArray()) {
+      boolean isUpper = isUpperCase(each);
+      if (isUpper) {
+        if (!wasPreviousUpper)
+          b.append("_");
+        b.append(each);
+      } else {
+        b.append(each.toString().toUpperCase());
+      }
+      wasPreviousUpper = isUpper;
+    }
+    return b.toString();
+  }
+
+  public static String toCamelCase(String inputString) {
+    StringBuilder b = new StringBuilder();
+    boolean wasPreviousUnderscore = false;
+    for (Character each : inputString.toCharArray()) {
+      boolean isUnderscore = each.equals('_');
+      if (!isUnderscore) {
+        if (wasPreviousUnderscore) {
+          b.append(toUpperCase(each));
+        } else {
+          b.append(toLowerCase(each));
+        }
+      }
+      wasPreviousUnderscore = isUnderscore;
+    }
+    return b.toString();
+  }
+
+  public static <T> Constructor<T> getConstructor(Class<? extends T> clazz) {
+    Constructor[] constructors = clazz.getConstructors();
+    checkState(
+        constructors.length == 1,
+        "There must be 1 and only 1 public constructor in order to use '%s' as a JCUnit plug-in(%s found). Also please make sure the class is public and static.",
+        clazz,
+        constructors.length
+    );
+    //noinspection unchecked
+    return (Constructor<T>) constructors[0];
+  }
+
+  public static TestCase createTestCase(final TestCase testCase) {
+    return createTestCase(testCase.getCategory(), testCase.getTuple());
+  }
+
+  public static TestCase createTestCase(TestCase.Category category, Tuple tuple) {
+    return new TestCase(category, tuple) {
+      @Override
+      public String toString() {
+        return format("%s:%s", this.getCategory(), this.getTuple());
+      }
+    };
+  }
+
+  public static <E extends ScriptUnitException> void check(boolean cond, Supplier<E> thrower) {
+    if (!cond)
+      throw thrower.get();
+  }
+
+  public static BigDecimal toBigDecimal(Number number) {
+    if (number instanceof BigDecimal)
+      return BigDecimal.class.cast(number);
+    return new BigDecimal(number.toString());
+  }
+
+  public static Object toBigDecimalIfPossible(Object object) {
+    if (object instanceof Number) {
+      return toBigDecimal(Number.class.cast(object));
+    }
+    return object;
+  }
+
+  // safe because both Long.class and long.class are of type Class<Long>
+  @SuppressWarnings("unchecked")
+  public static <T> Class<T> wrap(Class<T> c) {
+    return c.isPrimitive() ? (Class<T>) PRIMITIVES_TO_WRAPPERS.get(c) : c;
+  }
+
+  private static final Map<Class<?>, Class<?>> PRIMITIVES_TO_WRAPPERS
+      = new ImmutableMap.Builder<Class<?>, Class<?>>()
+      .put(boolean.class, Boolean.class)
+      .put(byte.class, Byte.class)
+      .put(char.class, Character.class)
+      .put(double.class, Double.class)
+      .put(float.class, Float.class)
+      .put(int.class, Integer.class)
+      .put(long.class, Long.class)
+      .put(short.class, Short.class)
+      .put(void.class, Void.class)
+      .build();
+
+
+  public static boolean isCompatible(Object input, Class<?> to) {
+    requireNonNull(to);
+    if (to.isPrimitive()) {
+      requireNonNull(input);
+      return Utils.wrap(to).isAssignableFrom(input.getClass());
+    }
+    //noinspection SimplifiableIfStatement
+    if (input == null)
+      return true;
+    return to.isAssignableFrom(input.getClass());
+  }
+
+  public static <T> T convert(Object input, Class<T> to) {
+    requireNonNull(input);
+    requireNonNull(to);
+    for (Converter each : TYPE_CONVERTERS) {
+      //noinspection unchecked
+      if (each.supports(input, to))
+        //noinspection unchecked
+        return (T) each.apply(input);
+    }
+    throw SyntaxException.typeMismatch(to, input);
+  }
+
+  public static <T> Object convertIfNecessary(Object input, Class<T> type) {
+    if (isCompatible(input, type)) {
+      return input;
+    }
+    return convert(input, type);
+  }
+
+  public static <T extends Annotation> T getAnnotation(AnnotatedElement annotatedElement, Class<T> annotationClass, T defaultInstance) {
+    return annotatedElement.isAnnotationPresent(annotationClass) ?
+        annotatedElement.getAnnotation(annotationClass) :
+        defaultInstance;
+  }
+
+  public static List<ObjectMethod> getAnnotatedMethods(Object object, Class<? extends Annotation> annotationClass, Map<String, String> aliases) {
+    return Arrays
+        .stream(object.getClass().getMethods())
+        .filter(each -> each.isAnnotationPresent(annotationClass))
+        .map(each -> ObjectMethod.create(object, each, aliases))
+        .collect(toList());
+  }
+
+  public static Object getFieldValue(Object object, Field field) {
+    try {
+      return field.get(object);
+    } catch (IllegalAccessException e) {
+      throw ScriptUnitException.wrap(e);
+    }
+  }
+
+  public static List<ObjectField> getAnnotatedFields(Object object, Class<? extends Annotation> annotationClass) {
+    return Arrays
+        .stream(object.getClass().getFields())
+        .filter(each -> each.isAnnotationPresent(annotationClass))
+        .map(each -> ObjectField.create(object, each))
+        .collect(toList());
+  }
+
+  public static <T> List<T> sort(List<T> list, Comparator<T> comparator) {
+    list.sort(comparator);
+    return list;
+  }
+
+  public static String indent(int level) {
+    StringBuilder b = new StringBuilder();
+    for (int i = 0; i < level; i++) {
+      b.append("  ");
+    }
+    return b.toString();
+  }
+
+  private interface Converter<FROM, TO> extends Function<FROM, TO> {
+    boolean supports(Object input, Class<?> to);
+
+    static <FROM, TO> Converter<FROM, TO> create(Class<FROM> fromClass, Class<TO> toClass, Function<FROM, TO> conveterBody) {
+      return new Converter<FROM, TO>() {
+        @Override
+        public boolean supports(Object input, Class<?> to) {
+          return fromClass.isAssignableFrom(input.getClass()) && toClass.isAssignableFrom(wrap(to));
+        }
+
+        @Override
+        public TO apply(FROM from) {
+          return conveterBody.apply(from);
+        }
+      };
+    }
+  }
+
+  private static final List<Converter<?, ?>> TYPE_CONVERTERS = new ImmutableList.Builder<Converter<?, ?>>()
+      .add(Converter.create(BigDecimal.class, Integer.class, BigDecimal::intValue))
+      .add(Converter.create(Number.class, BigDecimal.class, (Number input) -> new BigDecimal(input.toString())))
+      .build();
+}

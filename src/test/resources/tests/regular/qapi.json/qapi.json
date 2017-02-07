@@ -1,0 +1,47 @@
+{
+    "description":"An example test suite to Query-Result model on ScriptUnit",
+    "coveringArrayEngine":{
+        "class":"com.github.dakusui.jcunit.plugins.caengines.IpoGcCoveringArrayEngine",
+        "options":[ 2 ]
+    },
+    "factorSpace": {
+        "factors": {
+            "terms": [["ヒーター"], ["iPhone"]],
+            "sortBy": ["price", "lexical", "relevance"],
+            "order" : ["asc", "desc"]
+        },
+        "constraints": [
+            ["if_then", ["equals", ["attr", "sortBy"], "relevance"], ["equals", ["attr", "order"], "desc"]]
+        ]
+    },
+    "runnerType": "groupByTestCase",
+    "testOracles": [
+        {
+            "description": "Searching 'iPhone' should not return too many accessories",
+            "given": ["equals", ["attr", "terms"], ["quote", "iPhone"]],
+            "when": ["issue", ["query"] ],
+            "then": [">",
+                ["size", ["filter", ["result"], ["containedBy", ["issue", ["with", {"terms":["iPhone&&シルバー"]}, ["query"]]]]]],
+                3
+            ]
+        },
+        {
+            "description": "Searching 'ヒーター' should also return items that contain 'ヒータ' or 'ストーブ'",
+            "given": ["equals", ["attr", "terms"], ["quote", "ヒーター"]],
+            "when": ["issue", ["query"] ],
+            "then": ["<",
+              ["-",
+                ["size", ["issue", ["with", { "terms": ["ヒータ", "ストーブ"], "hits":-1 }, ["query"]]] ],
+                ["size", ["result"] ]
+              ],
+              2
+            ]
+        },
+        {
+            "description": "Valid queries should result in 200",
+            "given": ["always"],
+            "when": ["issue", ["query"]],
+            "then": ["==", ["value", "statusCode", ["result"]], 200]
+        }
+    ]
+}
