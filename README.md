@@ -10,9 +10,8 @@ Include following xml fragment in your ```pom.xml```.
 
     <dependency>
       <groupId>com.github.dakusui</groupId>
-      <artifactId>actionunit</artifactId>
+      <artifactId>scriptunit</artifactId>
       <version>{Script Unit Version}</version>
-      <scope>test</scope>
     </dependency>
 ```
 
