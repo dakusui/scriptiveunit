@@ -6,7 +6,13 @@ import com.github.dakusui.scriptunit.exceptions.ScriptUnitException;
 import com.github.dakusui.scriptunit.exceptions.SyntaxException;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import org.codehaus.jackson.JsonNode;
+import org.codehaus.jackson.map.ObjectMapper;
+import org.codehaus.jackson.node.ObjectNode;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.lang.Character;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.AnnotatedElement;
 import java.lang.reflect.Constructor;
@@ -17,12 +23,12 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
+import java.util.function.Predicate;
 import java.util.function.Supplier;
 
 import static com.google.common.base.Preconditions.checkState;
-import static java.lang.Character.isUpperCase;
-import static java.lang.Character.toLowerCase;
-import static java.lang.Character.toUpperCase;
+import static java.lang.Character.*;
+import static java.lang.ClassLoader.getSystemResourceAsStream;
 import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
 import static java.util.stream.Collectors.toList;
@@ -30,6 +36,28 @@ import static java.util.stream.Collectors.toList;
 public enum Utils {
   ;
 
+  public static ObjectNode deepMerge(ObjectNode source, ObjectNode target) {
+    requireNonNull(source);
+    requireNonNull(target);
+    for (String key : (Iterable<String>) source::getFieldNames) {
+      JsonNode sourceValue = source.get(key);
+      if (!target.has(key)) {
+        // new value for "key":
+        target.put(key, sourceValue);
+      } else {
+        // existing value for "key" - recursively deep merge:
+        if (sourceValue.isObject()) {
+          ObjectNode sourceObject = (ObjectNode) sourceValue;
+          JsonNode targetValue = target.get(key);
+          check(targetValue.isObject(), () -> SyntaxException.mergeFailed(source, target, key));
+          deepMerge(sourceObject, (ObjectNode) targetValue);
+        } else {
+          target.put(key, sourceValue);
+        }
+      }
+    }
+    return target;
+  }
   public static String toALL_CAPS(String inputString) {
     StringBuilder b = new StringBuilder();
     boolean wasPreviousUpper = true;
@@ -92,6 +120,12 @@ public enum Utils {
   public static <E extends ScriptUnitException> void check(boolean cond, Supplier<E> thrower) {
     if (!cond)
       throw thrower.get();
+  }
+
+  public static <E extends ScriptUnitException, V> V check(V target, Predicate<? super V> predicate, Supplier<? extends E> thrower) {
+    if (!requireNonNull(predicate).test(target))
+      throw thrower.get();
+    return target;
   }
 
   public static BigDecimal toBigDecimal(Number number) {
@@ -199,6 +233,18 @@ public enum Utils {
       b.append("  ");
     }
     return b.toString();
+  }
+
+  public static InputStream openResourceAsStream(String resourceName) {
+    return requireNonNull(getSystemResourceAsStream(resourceName), format("Failed to open '%s'. Make sure it is available on your classpath.", resourceName));
+  }
+
+  public static JsonNode readJsonNodeFromStream(InputStream is) {
+    try {
+      return new ObjectMapper().readTree(is);
+    } catch (IOException e) {
+      throw ScriptUnitException.wrap(e, "Non-welformed input is given.");
+    }
   }
 
   private interface Converter<FROM, TO> extends Function<FROM, TO> {

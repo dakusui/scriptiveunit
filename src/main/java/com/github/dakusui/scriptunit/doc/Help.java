@@ -196,7 +196,7 @@ public interface Help {
               @Override
               public List<String> content() {
                 try {
-                  return singletonList(new JsonBasedTestSuiteLoader(ClassLoader.getSystemResourceAsStream(name()), driverClass) {
+                  return singletonList(new JsonBasedTestSuiteLoader(name(), driverClass) {
                   }.getDescription());
                 } catch (Exception e) {
                   throw wrap(e);

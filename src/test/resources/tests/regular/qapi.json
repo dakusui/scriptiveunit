@@ -1,9 +1,6 @@
 {
+    "$extends":["base.json"],
     "description":"An example test suite to Query-Result model on ScriptUnit",
-    "coveringArrayEngine":{
-        "class":"com.github.dakusui.jcunit.plugins.caengines.IpoGcCoveringArrayEngine",
-        "options":[ 2 ]
-    },
     "factorSpace": {
         "factors": {
             "terms": [["ヒーター"], ["iPhone"]],

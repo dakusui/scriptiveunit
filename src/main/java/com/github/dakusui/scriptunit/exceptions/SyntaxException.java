@@ -1,5 +1,8 @@
 package com.github.dakusui.scriptunit.exceptions;
 
+import org.codehaus.jackson.JsonNode;
+import org.codehaus.jackson.node.ObjectNode;
+
 import java.util.function.Supplier;
 
 import static java.lang.String.format;
@@ -25,5 +28,21 @@ public class SyntaxException extends ScriptUnitException {
         input != null ? input.getClass().getCanonicalName() : "none",
         type.getCanonicalName()
     ));
+  }
+
+  public static SyntaxException mergeFailed(ObjectNode source, ObjectNode target, String key) {
+    throw new SyntaxException(format("Failed to merge '%s' and '%s' on '%s'", source, target, key));
+  }
+
+  public static SyntaxException nonObject(JsonNode jsonNode) {
+    throw new SyntaxException(format("An object node was expected but not. '%s'", jsonNode));
+  }
+
+  public static <E extends ScriptUnitException> E nonArray(JsonNode jsonNode) {
+    throw new SyntaxException(format("An array node was expected but not. '%s'", jsonNode));
+  }
+
+  public static <E extends ScriptUnitException> E nonText(JsonNode jsonNode) {
+    throw new SyntaxException(format("A text node was expected but not. '%s'", jsonNode));
   }
 }

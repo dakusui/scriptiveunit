@@ -15,7 +15,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 
 @RunWith(JCUnit.class)
 public class QapiTest extends TestBase {
-  @FactorField(stringLevels = { "tests/regular/qapi.json/qapi.json", "tests/regular/defaults.json"})
+  @FactorField(stringLevels = { "tests/regular/qapi.json", "tests/regular/defaults.json"})
   public String resourceName;
 
   @Test

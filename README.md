@@ -26,7 +26,7 @@ interacting each other in an ecosystem where ScriptUnit is utilized.
 
 ## Scripted test suite example
 
-Full version of this example is found [here](src/test/resources/examples/qapi.json).
+Full version of this example is found [here](src/test/resources/tests/regular/qapi.json).
 
 ```javascript
     {
@@ -79,7 +79,6 @@ Full version of this example is found [here](src/test/java/com/github/dakusui/sc
 ```java
     @Load(
         scriptPackagePrefix = "examples", scriptNamePattern = ".*\\.json",
-        defaultScriptName = "examples/qapi.json",
         with = JsonBasedTestSuiteLoader.Factory.class)
     @RunWith(ScriptUnit.class)
     public class Qapi {

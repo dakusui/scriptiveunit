@@ -17,7 +17,6 @@ import org.junit.runners.Parameterized;
 import org.junit.runners.model.InitializationError;
 import org.junit.runners.model.TestClass;
 
-import java.io.InputStream;
 import java.lang.annotation.Annotation;
 import java.util.Arrays;
 import java.util.List;
@@ -31,8 +30,6 @@ import static com.github.dakusui.scriptunit.core.Utils.check;
 import static com.github.dakusui.scriptunit.core.Utils.createTestCase;
 import static com.github.dakusui.scriptunit.exceptions.ScriptUnitException.wrap;
 import static com.google.common.collect.Lists.newLinkedList;
-import static java.lang.ClassLoader.getSystemResourceAsStream;
-import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
@@ -150,7 +147,7 @@ public class ScriptUnit extends Parameterized {
     return TestSuiteLoader.Factory
         .create(annLoad.with())
         .create(
-            openResourceAsStream(getScriptName(this.properties, annLoad)),
+            getScriptName(this.properties, annLoad),
             testClass.getJavaClass()
         );
   }
@@ -173,10 +170,6 @@ public class ScriptUnit extends Parameterized {
         aliases
     ).collect(toMap(alias -> requireNonNull(alias).value(), alias -> !"".equals(requireNonNull(alias).as()) ? alias.as() : ""
     ));
-  }
-
-  private static InputStream openResourceAsStream(String resourceName) {
-    return requireNonNull(getSystemResourceAsStream(resourceName), format("Failed to open '%s'. Make sure it is available on your classpath.", resourceName));
   }
 
   private static <T extends Annotation> T getAnnotationWithDefault(TestClass testClass, T defaultValue) {

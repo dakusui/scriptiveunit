@@ -25,7 +25,7 @@ import static java.util.Objects.requireNonNull;
  * A driver example.
  */
 @Load(
-    scriptPackagePrefix = "tests", scriptNamePattern = ".*\\.json", with = JsonBasedTestSuiteLoader.Factory.class)
+    scriptPackagePrefix = "tests", scriptNamePattern = ".*\\.json_", with = JsonBasedTestSuiteLoader.Factory.class)
 @RunWith(ScriptUnit.class)
 public class Qapi {
   @ReflectivelyReferenced

@@ -11,7 +11,6 @@ import com.github.dakusui.scriptunit.model.Func;
 import com.github.dakusui.scriptunit.model.TestOracle;
 import com.github.dakusui.scriptunit.model.TestSuiteDescriptor;
 
-import java.io.InputStream;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.util.List;
@@ -33,8 +32,8 @@ public interface TestSuiteLoader {
 
     private final TestSuiteDescriptor testSuiteDescriptor;
 
-    public Base(InputStream inputStream, Class<?> driverClass) {
-      this.testSuiteDescriptor = loadTestSuite(inputStream, driverClass);
+    public Base(String resourceName, Class<?> driverClass) {
+      this.testSuiteDescriptor = loadTestSuite(resourceName, driverClass);
     }
 
     @Override
@@ -59,7 +58,7 @@ public interface TestSuiteLoader {
     }
 
 
-    abstract protected TestSuiteDescriptor loadTestSuite(InputStream inputStream, Class<?> driverClass);
+    abstract protected TestSuiteDescriptor loadTestSuite(String resourceName, Class<?> driverClass);
 
     private List<TestCase> createTestCases(TestSuiteDescriptor testSuiteDescriptor) {
       TestSuite.Builder builder = new TestSuite.Builder(createEngine(testSuiteDescriptor.getCoveringArrayEngineConfig()));
@@ -98,7 +97,7 @@ public interface TestSuiteLoader {
   }
 
   interface Factory {
-    TestSuiteLoader create(InputStream testSuiteName, Class<?> driverClass);
+    TestSuiteLoader create(String resourceName, Class<?> driverClass);
 
     static Factory create(Class<? extends Factory> klass) {
       try {
