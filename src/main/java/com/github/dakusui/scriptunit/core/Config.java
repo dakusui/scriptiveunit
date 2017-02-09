@@ -27,7 +27,7 @@ public interface Config {
       public String getScriptResourceName() {
         return Utils.check(
             properties.getProperty(getScriptSystemPropertyKey(), this.loadAnnotation.defaultScriptName()),
-            Load.SCRIPT_NOT_SPECIFIED::equals,
+            (in) -> !in.equals(Load.SCRIPT_NOT_SPECIFIED),
             () -> scriptNotSpecified(getScriptSystemPropertyKey())
         );
       }
