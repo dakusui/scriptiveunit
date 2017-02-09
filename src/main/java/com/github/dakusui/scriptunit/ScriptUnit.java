@@ -5,10 +5,10 @@ import com.github.dakusui.scriptunit.annotations.Import;
 import com.github.dakusui.scriptunit.annotations.Load;
 import com.github.dakusui.scriptunit.annotations.ReflectivelyReferenced;
 import com.github.dakusui.scriptunit.annotations.Scriptable;
+import com.github.dakusui.scriptunit.core.Config;
 import com.github.dakusui.scriptunit.core.ObjectMethod;
 import com.github.dakusui.scriptunit.core.Utils;
 import com.github.dakusui.scriptunit.exceptions.ConfigurationException;
-import com.github.dakusui.scriptunit.exceptions.ScriptUnitException;
 import com.github.dakusui.scriptunit.loaders.TestSuiteLoader;
 import com.github.dakusui.scriptunit.model.Func;
 import com.github.dakusui.scriptunit.model.TestOracle;
@@ -23,13 +23,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.function.Function;
-import java.util.function.Supplier;
 
 import static com.github.dakusui.actionunit.Utils.createTestClassMock;
-import static com.github.dakusui.scriptunit.annotations.Load.SCRIPT_NOT_SPECIFIED;
-import static com.github.dakusui.scriptunit.core.Utils.check;
 import static com.github.dakusui.scriptunit.core.Utils.createTestCase;
-import static com.github.dakusui.scriptunit.exceptions.ConfigurationException.scriptNotSpecified;
 import static com.github.dakusui.scriptunit.exceptions.ScriptUnitException.wrap;
 import static com.google.common.collect.Lists.newLinkedList;
 import static java.util.Objects.requireNonNull;
@@ -149,7 +145,7 @@ public class ScriptUnit extends Parameterized {
     return TestSuiteLoader.Factory
         .create(annLoad.with())
         .create(
-            getScriptName(this.properties, annLoad),
+            Config.create(testClass.getJavaClass(), this.properties).getScriptResourceName(),
             testClass.getJavaClass()
         );
   }
@@ -179,13 +175,5 @@ public class ScriptUnit extends Parameterized {
     return ret != null ?
         ret :
         defaultValue;
-  }
-
-  private static String getScriptName(Properties properties, Load annLoad) {
-    return check(
-        properties.getProperty(annLoad.scriptSystemPropertyKey(), annLoad.defaultScriptName()),
-        s -> !SCRIPT_NOT_SPECIFIED.equals(s),
-        (Supplier<ScriptUnitException>) () -> scriptNotSpecified(annLoad.scriptSystemPropertyKey())
-    );
   }
 }
