@@ -1,17 +1,6 @@
 {
-    "$extends":["base.json"],
+    "$extends":["tests/regular/regularbase.json"],
     "description":"An example test suite to Query-Result model on ScriptUnit",
-    "factorSpace": {
-        "factors": {
-            "terms": [["ヒーター"], ["iPhone"]],
-            "sortBy": ["price", "lexical", "relevance"],
-            "order" : ["asc", "desc"]
-        },
-        "constraints": [
-            ["if_then", ["equals", ["attr", "sortBy"], "relevance"], ["equals", ["attr", "order"], "desc"]]
-        ]
-    },
-    "runnerType": "groupByTestCase",
     "testOracles": [
         {
             "description": "Searching 'iPhone' should not return too many accessories",

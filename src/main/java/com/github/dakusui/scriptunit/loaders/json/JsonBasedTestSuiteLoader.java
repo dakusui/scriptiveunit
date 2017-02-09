@@ -1,6 +1,5 @@
 package com.github.dakusui.scriptunit.loaders.json;
 
-import com.github.dakusui.scriptunit.core.Utils;
 import com.github.dakusui.scriptunit.exceptions.SyntaxException;
 import com.github.dakusui.scriptunit.loaders.TestSuiteLoader;
 import com.github.dakusui.scriptunit.loaders.json.JsonBeans.TestSuiteDescriptorBean;
@@ -42,23 +41,27 @@ public class JsonBasedTestSuiteLoader extends TestSuiteLoader.Base {
     ObjectNode child = checkObjectNode(readJsonNodeFromStream(openResourceAsStream(resourceName)));
     ObjectNode work = JsonNodeFactory.instance.objectNode();
     if (child.has(EXTENDS_KEYWORD)) {
-      new AbstractList<String>() {
-        ArrayNode parents = checkArrayNode(child.get(EXTENDS_KEYWORD));
-
-        @Override
-        public int size() {
-          return parents.size();
-        }
-
-        @Override
-        public String get(int index) {
-          return checkTextNode(parents.get(index)).asText();
-        }
-      }.forEach(s -> Utils.deepMerge(checkObjectNode(readJsonNodeFromStream(openResourceAsStream(s))), work));
+      getParentsOf(child).forEach(s -> deepMerge(checkObjectNode(readObjectNodeWithMerging(s)), work));
     }
-    ObjectNode ret = Utils.deepMerge(child, work);
+    ObjectNode ret = deepMerge(child, work);
     ret.remove(EXTENDS_KEYWORD);
     return ret;
+  }
+
+  private AbstractList<String> getParentsOf(final ObjectNode child) {
+    return new AbstractList<String>() {
+      ArrayNode parents = checkArrayNode(child.get(EXTENDS_KEYWORD));
+
+      @Override
+      public int size() {
+        return parents.size();
+      }
+
+      @Override
+      public String get(int index) {
+        return checkTextNode(parents.get(index)).asText();
+      }
+    };
   }
 
   private TextNode checkTextNode(JsonNode curr) {
