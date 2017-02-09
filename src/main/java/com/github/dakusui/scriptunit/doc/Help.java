@@ -5,8 +5,8 @@ import com.github.dakusui.actionunit.visitors.ActionPrinter.Writer.Std;
 import com.github.dakusui.scriptunit.ScriptRunner;
 import com.github.dakusui.scriptunit.annotations.Doc;
 import com.github.dakusui.scriptunit.annotations.Load;
+import com.github.dakusui.scriptunit.core.Config;
 import com.github.dakusui.scriptunit.core.ObjectMethod;
-import com.github.dakusui.scriptunit.core.SystemProperty;
 import com.github.dakusui.scriptunit.core.Utils;
 import com.github.dakusui.scriptunit.exceptions.ScriptUnitException;
 import com.github.dakusui.scriptunit.loaders.json.JsonBasedTestSuiteLoader;
@@ -55,10 +55,11 @@ public interface Help {
 
   static void help(Class<?> testClass, Writer writer) {
     String className = testClass.getCanonicalName();
+    String scriptSystemPropertyKey = Config.create(testClass, System.getProperties()).getScriptSystemPropertyKey();
     writer.writeLine(format(
         "This is a test class " + className + ".%n"
             + "You can run this as a JUnit test class from your IDE, build tool, etc.%n%n"
-            + " Use -D" + SystemProperty.TARGET.getKey() + "={path to your script on your class path}"
+            + " Use -D" + scriptSystemPropertyKey + "={path to your script on your class path}"
             + " to specify script to be run.%n%n"
             + "By running this as an application, you can see this message and other helps."
             + " To list all the available scripts on your classpath, run%n%n"

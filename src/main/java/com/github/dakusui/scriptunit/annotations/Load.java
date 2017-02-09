@@ -36,7 +36,7 @@ public @interface Load {
     }
 
     @Override
-    public String scriptSystemProperty() {
+    public String scriptSystemPropertyKey() {
       return DEFAULT_SCRIPT_SYSTEM_PROPERTY_KEY;
     }
 
@@ -52,7 +52,7 @@ public @interface Load {
 
   String scriptNamePattern() default DEFAULT_SCRIPT_NAME_PATTERN;
 
-  String scriptSystemProperty() default DEFAULT_SCRIPT_SYSTEM_PROPERTY_KEY;
+  String scriptSystemPropertyKey() default DEFAULT_SCRIPT_SYSTEM_PROPERTY_KEY;
 
   Class<? extends TestSuiteLoader.Factory> with() default JsonBasedTestSuiteLoader.Factory.class;
 }

@@ -26,6 +26,7 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 
+import static com.github.dakusui.scriptunit.exceptions.SyntaxException.mergeFailed;
 import static com.google.common.base.Preconditions.checkState;
 import static java.lang.Character.*;
 import static java.lang.ClassLoader.getSystemResourceAsStream;
@@ -49,7 +50,7 @@ public enum Utils {
         if (sourceValue.isObject()) {
           ObjectNode sourceObject = (ObjectNode) sourceValue;
           JsonNode targetValue = target.get(key);
-          check(targetValue.isObject(), () -> SyntaxException.mergeFailed(source, target, key));
+          check(targetValue.isObject(), () -> mergeFailed(source, target, key));
           deepMerge(sourceObject, (ObjectNode) targetValue);
         } else {
           target.put(key, sourceValue);
@@ -58,6 +59,7 @@ public enum Utils {
     }
     return target;
   }
+
   public static String toALL_CAPS(String inputString) {
     StringBuilder b = new StringBuilder();
     boolean wasPreviousUpper = true;

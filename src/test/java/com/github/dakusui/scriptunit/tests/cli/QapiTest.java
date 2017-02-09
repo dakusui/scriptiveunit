@@ -2,7 +2,8 @@ package com.github.dakusui.scriptunit.tests.cli;
 
 import com.github.dakusui.jcunit.runners.standard.JCUnit;
 import com.github.dakusui.jcunit.runners.standard.annotations.FactorField;
-import com.github.dakusui.scriptunit.core.SystemProperty;
+import com.github.dakusui.scriptunit.annotations.ReflectivelyReferenced;
+import com.github.dakusui.scriptunit.core.Config;
 import com.github.dakusui.scriptunit.drivers.Qapi;
 import com.github.dakusui.scriptunit.testutils.TestBase;
 import org.junit.Test;
@@ -15,12 +16,14 @@ import static org.hamcrest.MatcherAssert.assertThat;
 
 @RunWith(JCUnit.class)
 public class QapiTest extends TestBase {
-  @FactorField(stringLevels = { "tests/regular/qapi.json", "tests/regular/defaults.json"})
+  @ReflectivelyReferenced
+  @FactorField(stringLevels = { "tests/regular/qapi.json", "tests/regular/defaults.json" })
   public String resourceName;
 
   @Test
   public void runWithNormalExample() {
-    System.setProperty(SystemProperty.TARGET.getKey(), resourceName);
+    String scriptSystemPropertyKey = Config.create(Qapi.class, System.getProperties()).getScriptSystemPropertyKey();
+    System.setProperty(scriptSystemPropertyKey, resourceName);
     Result result = JUnitCore.runClasses(Qapi.class);
     assertThat(result.wasSuccessful(), equalTo(false));
     assertThat(result.getRunCount(), equalTo(27));
