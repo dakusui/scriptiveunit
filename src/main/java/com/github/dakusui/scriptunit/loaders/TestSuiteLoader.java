@@ -1,15 +1,13 @@
 package com.github.dakusui.scriptunit.loaders;
 
+import com.github.dakusui.actionunit.Action;
 import com.github.dakusui.jcunit.core.factor.Factor;
 import com.github.dakusui.jcunit.framework.TestCase;
 import com.github.dakusui.jcunit.framework.TestSuite;
 import com.github.dakusui.jcunit.plugins.caengines.CoveringArrayEngine;
 import com.github.dakusui.scriptunit.ScriptRunner.Type;
 import com.github.dakusui.scriptunit.core.Utils;
-import com.github.dakusui.scriptunit.model.CoveringArrayEngineConfig;
-import com.github.dakusui.scriptunit.model.Func;
-import com.github.dakusui.scriptunit.model.TestOracle;
-import com.github.dakusui.scriptunit.model.TestSuiteDescriptor;
+import com.github.dakusui.scriptunit.model.*;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
@@ -22,7 +20,11 @@ import static java.util.stream.Collectors.toList;
 public interface TestSuiteLoader {
   String getDescription();
 
-  List<TestCase> loadTestCases();
+  Func<Stage, Action> getSetUpActionFactory();
+
+  List<String> getInvolvedParameterNamesInSetUpAction();
+
+  List<IndexedTestCase> loadTestCases();
 
   List<TestOracle> loadTestOracles();
 
@@ -42,7 +44,12 @@ public interface TestSuiteLoader {
     }
 
     @Override
-    public List<TestCase> loadTestCases() {
+    public Func<Stage, Action> getSetUpActionFactory() {
+      return this.testSuiteDescriptor.getSetUpActionFactory();
+    }
+
+    @Override
+    public List<IndexedTestCase> loadTestCases() {
       return this.createTestCases(this.testSuiteDescriptor);
     }
 
@@ -60,7 +67,7 @@ public interface TestSuiteLoader {
 
     abstract protected TestSuiteDescriptor loadTestSuite(String resourceName, Class<?> driverClass);
 
-    private List<TestCase> createTestCases(TestSuiteDescriptor testSuiteDescriptor) {
+    private List<IndexedTestCase> createTestCases(TestSuiteDescriptor testSuiteDescriptor) {
       TestSuite.Builder builder = new TestSuite.Builder(createEngine(testSuiteDescriptor.getCoveringArrayEngineConfig()));
       builder.disableNegativeTests();
       for (Factor each : testSuiteDescriptor.getFactorSpaceDescriptor().getFactors()) {
@@ -69,7 +76,17 @@ public interface TestSuiteLoader {
       for (TestSuite.Predicate each : testSuiteDescriptor.getFactorSpaceDescriptor().getConstraints()) {
         builder.addConstraint(each);
       }
-      return builder.build().getTestCases();
+      return builder.build().getTestCases().stream()
+          .map(
+              new Func<TestCase, IndexedTestCase>() {
+                int i = 0;
+
+                @Override
+                public IndexedTestCase apply(TestCase input) {
+                  return new IndexedTestCase(i++, input);
+                }
+              }
+          ).collect(toList());
     }
 
     private CoveringArrayEngine createEngine(CoveringArrayEngineConfig coveringArrayEngineConfig) {

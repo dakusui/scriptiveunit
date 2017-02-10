@@ -1,6 +1,4 @@
 {
-  "$extends": [
-    "base.json"
-  ],
+  "$extends": [],
   "runnerType": "groupByTestOracle"
 }

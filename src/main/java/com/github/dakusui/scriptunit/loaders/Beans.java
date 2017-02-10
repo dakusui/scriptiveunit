@@ -27,11 +27,10 @@ import java.util.stream.Collectors;
 
 import static com.github.dakusui.actionunit.Actions.named;
 import static com.github.dakusui.actionunit.Actions.sequential;
-import static com.github.dakusui.scriptunit.core.Utils.toCamelCase;
 import static com.github.dakusui.scriptunit.exceptions.ScriptUnitException.wrap;
+import static com.github.dakusui.scriptunit.model.Stage.Type.*;
 import static com.google.common.base.Preconditions.checkArgument;
 import static java.lang.String.format;
-import static java.util.Collections.singletonList;
 import static java.util.Objects.requireNonNull;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assume.assumeThat;
@@ -40,24 +39,22 @@ public enum Beans {
   ;
 
   public abstract static class BaseForTestSuiteDescriptor {
-    final BaseForCoveringArrayEngineConfig  coveringArrayEngineConfigBean;
-    final BaseForFactorSpaceDescriptor      factorSpaceBean;
-    final List<? extends BaseForTestOracle> testOracleBeanList;
-    final String                            description;
-    final Type                              runnerType;
+    final         BaseForCoveringArrayEngineConfig  coveringArrayEngineConfigBean;
+    final         BaseForFactorSpaceDescriptor      factorSpaceBean;
+    final         List<? extends BaseForTestOracle> testOracleBeanList;
+    final         String                            description;
+    final         Type                              runnerType;
+    private final List<Object>                      setUpClause;
 
-    public BaseForTestSuiteDescriptor(BaseForCoveringArrayEngineConfig coveringArrayEngineConfigBean, BaseForFactorSpaceDescriptor factorSpaceBean, List<? extends BaseForTestOracle> testOracleBeanList, String description, String runnerType) {
-      this.coveringArrayEngineConfigBean = coveringArrayEngineConfigBean != null ?
-          coveringArrayEngineConfigBean :
-          new BaseForCoveringArrayEngineConfig() {
-            @Override
-            public CoveringArrayEngineConfig create() {
-              return super.create();
-            }
-          }
-      ;
-      this.runnerType = Type.valueOf(Utils.toALL_CAPS(runnerType != null ? runnerType: toCamelCase(Type.GROUP_BY_TEST_ORACLE.name())));
+    public BaseForTestSuiteDescriptor(
+        BaseForCoveringArrayEngineConfig coveringArrayEngineConfigBean,
+        BaseForFactorSpaceDescriptor factorSpaceBean,
+        List<Object> fixture,
+        List<? extends BaseForTestOracle> testOracleBeanList, String description, String runnerType) {
+      this.coveringArrayEngineConfigBean = coveringArrayEngineConfigBean;
+      this.runnerType = Type.valueOf(Utils.toALL_CAPS(runnerType));
       this.factorSpaceBean = factorSpaceBean;
+      this.setUpClause = fixture;
       this.testOracleBeanList = testOracleBeanList;
       this.description = description;
     }
@@ -98,6 +95,28 @@ public enum Beans {
         }
 
         @Override
+        public Func<Stage, Action> getSetUpActionFactory() {
+          Func.Invoker invoker = new Func.Invoker(0);
+          return input -> Actions.sequential(
+              Actions.simple(new Runnable() {
+                               @Override
+                               public void run() {
+                                 invoker.reset();
+                               }
+                               @Override
+                               public String toString() {
+                                 return "reset fixture setup writer";
+                               }
+                             }
+
+              ),
+              setUpClause == null ?
+                  Actions.nop() :
+                  Beans.<Stage, Action>createFunc(statementFactory, setUpClause, invoker).apply(input)
+          );
+        }
+
+        @Override
         public Type getRunnerType() {
           return runnerType;
         }
@@ -109,16 +128,10 @@ public enum Beans {
   public abstract static class BaseForCoveringArrayEngineConfig {
     private final Class<? extends CoveringArrayEngine> coveringArrayEngineClass;
     private final List<Object>                         options;
-    private final String                               className;
-
-    BaseForCoveringArrayEngineConfig() {
-      this("com.github.dakusui.jcunit.plugins.caengines.IpoGcCoveringArrayEngine", singletonList(2));
-    }
 
     public BaseForCoveringArrayEngineConfig(String className, List<Object> options) {
       try {
-        this.className = className;
-        Class clazz = Class.class.cast(Class.forName(this.className));
+        Class clazz = Class.class.cast(Class.forName(className));
         checkArgument(CoveringArrayEngine.class.isAssignableFrom(clazz));
         //noinspection unchecked
         this.coveringArrayEngineClass = clazz;
@@ -188,7 +201,7 @@ public enum Beans {
 
                       @Override
                       public Type getType() {
-                        return Type.GIVEN;
+                        return GIVEN;
                       }
                     }));
                   }
@@ -252,9 +265,13 @@ public enum Beans {
             invokerForThen = new Func.Invoker(0));
 
         @Override
-        public Action createTestAction(String testSuiteDescription, int testCaseId, TestCase testCase) {
-          return named(format("%s: %s", testCase.getCategory(), description),
+        public Action createTestAction(String testSuiteDescription, int groupId, int itemId, TestCase testCase, Func<Stage, Action> setUpFactory) {
+          return named(format("%s: %s: %-2d", testCase.getCategory(), description, itemId),
               sequential(
+                  Actions.named(
+                      "SetUp Test Fixture",
+                      requireNonNull(setUpFactory.apply(SETUP.create(testCase.getTuple())))
+                  ),
                   Actions.simple(new Runnable() {
                     @Override
                     public void run() {
@@ -275,7 +292,7 @@ public enum Beans {
                           assumeThat(testCase, new BaseMatcher<TestCase>() {
                             @Override
                             public boolean matches(Object item) {
-                              return requireNonNull(given.apply(Stage.Type.GIVEN.create(testCase.getTuple())));
+                              return requireNonNull(given.apply(GIVEN.create(testCase.getTuple())));
                             }
 
                             @Override
@@ -294,7 +311,7 @@ public enum Beans {
                       .when(new Pipe<TestCase, TestResult>() {
                         @Override
                         public TestResult apply(TestCase testCase, Context context) {
-                          return TestResult.create(testCase, when.apply(Stage.Type.WHEN.create(testCase.getTuple())));
+                          return TestResult.create(testCase, when.apply(WHEN.create(testCase.getTuple())));
                         }
 
                         @Override
@@ -305,7 +322,7 @@ public enum Beans {
                       .then(new Sink<TestResult>() {
                         @Override
                         public void apply(TestResult input, Context context) {
-                          Stage thenStage = Stage.Type.THEN.create(input.getTestCase().getTuple(), input.getOutput());
+                          Stage thenStage = THEN.create(input.getTestCase().getTuple(), input.getOutput());
                           assertThat(
                               thenStage,
                               new BaseMatcher<Stage>() {
@@ -335,15 +352,20 @@ public enum Beans {
               ));
         }
 
-        private <T extends Stage, U> Func createFunc(List<Object> clause, Func.Invoker invoker) {
-          return Func.class.<T, U>cast(
-              statementFactory.create(
-                  clause,
-                  invoker
-              ).execute());
+        private <T extends Stage, U> Func<T, U> createFunc(List<Object> clause, Func.Invoker invoker) {
+          return Beans.createFunc(statementFactory, clause, invoker);
         }
       };
     }
 
+  }
+
+  private static <T extends Stage, U> Func<T, U> createFunc(Statement.Factory statementFactory, List<Object> clause, Func.Invoker invoker) {
+    //noinspection unchecked
+    return Func.class.<T, U>cast(
+        statementFactory.create(
+            clause,
+            invoker
+        ).execute());
   }
 }

@@ -1,6 +1,7 @@
 {
     "$extends":["tests/regular/regularbase.json"],
     "description":"An example test suite to Query-Result model on ScriptUnit",
+    "setUp" : ["print", "Hello world"],
     "testOracles": [
         {
             "description": "Searching 'iPhone' should not return too many accessories",

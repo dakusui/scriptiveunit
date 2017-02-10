@@ -12,6 +12,7 @@ public interface Stage {
   Type getType();
 
   enum Type {
+    SETUP,
     GIVEN,
     WHEN,
     THEN;

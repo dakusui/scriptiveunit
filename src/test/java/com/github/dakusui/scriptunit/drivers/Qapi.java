@@ -59,6 +59,10 @@ public class Qapi {
   public Object collections = new Collections();
 
   @ReflectivelyReferenced
+  @Import
+  public Object basicActions = new BasicActions();
+
+  @ReflectivelyReferenced
   @Import({
       @Alias(value = "*"),
       @Alias(value = "request", as = "query"),

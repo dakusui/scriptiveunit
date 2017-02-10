@@ -1,6 +1,5 @@
 package com.github.dakusui.scriptunit.loaders.json;
 
-import com.github.dakusui.scriptunit.exceptions.SyntaxException;
 import com.github.dakusui.scriptunit.loaders.TestSuiteLoader;
 import com.github.dakusui.scriptunit.loaders.json.JsonBeans.TestSuiteDescriptorBean;
 import com.github.dakusui.scriptunit.model.TestSuiteDescriptor;
@@ -16,10 +15,12 @@ import java.util.AbstractList;
 
 import static com.github.dakusui.scriptunit.core.Utils.*;
 import static com.github.dakusui.scriptunit.exceptions.ScriptUnitException.wrap;
+import static com.github.dakusui.scriptunit.exceptions.SyntaxException.*;
 
 public class JsonBasedTestSuiteLoader extends TestSuiteLoader.Base {
 
-  public static final String EXTENDS_KEYWORD = "$extends";
+  private static final String EXTENDS_KEYWORD = "$extends";
+  private static final String DEFAULTS_JSON   = "defaults.json";
 
   @SuppressWarnings("WeakerAccess")
   protected JsonBasedTestSuiteLoader(String resourceName, Class<?> driverClass) {
@@ -27,14 +28,22 @@ public class JsonBasedTestSuiteLoader extends TestSuiteLoader.Base {
   }
 
   @Override
-  protected TestSuiteDescriptor loadTestSuite(String resourceName, Class<?> driverClass) {
+  protected TestSuiteDescriptor loadTestSuite(String scriptName, Class<?> driverClass) {
     try {
       return new ObjectMapper()
-          .readValue(readObjectNodeWithMerging(resourceName), TestSuiteDescriptorBean.class)
+          .readValue(readScript(scriptName), TestSuiteDescriptorBean.class)
           .create(driverClass);
     } catch (IOException e) {
       throw wrap(e);
     }
+  }
+
+  private ObjectNode readScript(String scriptResourceName) {
+    ObjectNode work = readObjectNodeWithMerging(scriptResourceName);
+    ObjectNode ret = checkObjectNode(readJsonNodeFromStream(openResourceAsStream(DEFAULTS_JSON)));
+    ret = deepMerge(work, ret);
+    ret.remove(EXTENDS_KEYWORD);
+    return ret;
   }
 
   private ObjectNode readObjectNodeWithMerging(String resourceName) {
@@ -43,9 +52,7 @@ public class JsonBasedTestSuiteLoader extends TestSuiteLoader.Base {
     if (child.has(EXTENDS_KEYWORD)) {
       getParentsOf(child).forEach(s -> deepMerge(checkObjectNode(readObjectNodeWithMerging(s)), work));
     }
-    ObjectNode ret = deepMerge(child, work);
-    ret.remove(EXTENDS_KEYWORD);
-    return ret;
+    return deepMerge(child, work);
   }
 
   private AbstractList<String> getParentsOf(final ObjectNode child) {
@@ -65,18 +72,15 @@ public class JsonBasedTestSuiteLoader extends TestSuiteLoader.Base {
   }
 
   private TextNode checkTextNode(JsonNode curr) {
-    JsonNode checked = check(curr, v -> curr.isTextual(), () -> SyntaxException.nonText(curr));
-    return (TextNode) checked;
+    return (TextNode) check(curr, v -> curr.isTextual(), () -> nonText(curr));
   }
 
   private ObjectNode checkObjectNode(JsonNode curr) {
-    JsonNode checked = check(curr, v -> curr.isObject(), () -> SyntaxException.nonObject(curr));
-    return (ObjectNode) checked;
+    return (ObjectNode) check(curr, v -> curr.isObject(), () -> nonObject(curr));
   }
 
   private ArrayNode checkArrayNode(JsonNode curr) {
-    JsonNode checked = check(curr, v -> curr.isArray(), () -> SyntaxException.nonArray(curr));
-    return (ArrayNode) checked;
+    return (ArrayNode) check(curr, v -> curr.isArray(), () -> nonArray(curr));
   }
 
   public static class Factory implements TestSuiteLoader.Factory {

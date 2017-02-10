@@ -1,7 +1,5 @@
 package com.github.dakusui.scriptunit.core;
 
-import com.github.dakusui.jcunit.core.tuples.Tuple;
-import com.github.dakusui.jcunit.framework.TestCase;
 import com.github.dakusui.scriptunit.exceptions.ScriptUnitException;
 import com.github.dakusui.scriptunit.exceptions.SyntaxException;
 import com.google.common.collect.ImmutableList;
@@ -104,19 +102,6 @@ public enum Utils {
     );
     //noinspection unchecked
     return (Constructor<T>) constructors[0];
-  }
-
-  public static TestCase createTestCase(final TestCase testCase) {
-    return createTestCase(testCase.getCategory(), testCase.getTuple());
-  }
-
-  public static TestCase createTestCase(TestCase.Category category, Tuple tuple) {
-    return new TestCase(category, tuple) {
-      @Override
-      public String toString() {
-        return format("%s:%s", this.getCategory(), this.getTuple());
-      }
-    };
   }
 
   public static <E extends ScriptUnitException> void check(boolean cond, Supplier<E> thrower) {

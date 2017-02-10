@@ -18,7 +18,7 @@ import static java.util.stream.Collectors.toList;
 
 public class Basic {
   /**
-   * Returns a function to access an attribute value in a test fixture.
+   * Returns a function to access an attribute value in a test case.
    * This can be used in {@code GENERATION}, {@code GIVEN}, {@code WHEN}, and {@code THEN}
    * stages.
    *
