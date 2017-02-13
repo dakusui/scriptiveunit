@@ -8,6 +8,8 @@ import java.util.List;
 public interface TestSuiteDescriptor {
   String getDescription();
 
+  ScriptRunner.Type getRunnerType();
+
   FactorSpaceDescriptor getFactorSpaceDescriptor();
 
   CoveringArrayEngineConfig getCoveringArrayEngineConfig();
@@ -16,5 +18,7 @@ public interface TestSuiteDescriptor {
 
   Func<Stage, Action> getSetUpActionFactory();
 
-  ScriptRunner.Type getRunnerType();
+  Func<Stage, Action> getSetUpBeforeAllActionFactory();
+
+  List<String> getInvolvedParameterNamesInSetUpAction();
 }

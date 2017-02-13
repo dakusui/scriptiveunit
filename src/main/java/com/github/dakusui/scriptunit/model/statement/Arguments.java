@@ -13,8 +13,8 @@ public interface Arguments extends Iterable<Statement> {
     }
 
     public Arguments create(Iterable<Object> args, Func.Invoker funcInvoker) {
-      Iterator<Object> i = args.iterator();
       return () -> new Iterator<Statement>() {
+        Iterator<Object> i = args.iterator();
         @Override
         public boolean hasNext() {
           return i.hasNext();

@@ -1,5 +1,6 @@
 package com.github.dakusui.scriptunit.core;
 
+import com.github.dakusui.scriptunit.annotations.AccessesTestParameter;
 import com.github.dakusui.scriptunit.annotations.Doc;
 import com.github.dakusui.scriptunit.annotations.Import;
 
@@ -27,11 +28,13 @@ public interface ObjectMethod {
 
   Doc getParameterDoc(int index);
 
+  Doc doc();
+
   boolean isVarArgs();
 
-  Object invoke(Object... args);
+  boolean isAccessor();
 
-  Doc doc();
+  Object invoke(Object... args);
 
 
   static ObjectMethod create(Object object, Method method, Map<String, String> aliases) {
@@ -68,6 +71,11 @@ public interface ObjectMethod {
       @Override
       public boolean isVarArgs() {
         return method.isVarArgs();
+      }
+
+      @Override
+      public boolean isAccessor() {
+        return method.isAnnotationPresent(AccessesTestParameter.class);
       }
 
       @Override

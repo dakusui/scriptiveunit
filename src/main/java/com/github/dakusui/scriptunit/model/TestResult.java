@@ -1,6 +1,6 @@
 package com.github.dakusui.scriptunit.model;
 
-import com.github.dakusui.jcunit.framework.TestCase;
+import com.github.dakusui.jcunit.core.tuples.Tuple;
 
 /**
  * An interface that represents a test result of a certain test case..
@@ -11,17 +11,17 @@ public interface TestResult<T> {
   /**
    * Returns a test case object.
    */
-  TestCase getTestCase();
+  Tuple getTestCase();
 
   /**
    * Returns output from SUT as an object of {@code T}.
    */
   T getOutput();
 
-  static <T> TestResult<T> create(TestCase testCase, T output) {
+  static <T> TestResult<T> create(Tuple testCase, T output) {
     return new TestResult<T>() {
       @Override
-      public TestCase getTestCase() {
+      public Tuple getTestCase() {
         return testCase;
       }
 

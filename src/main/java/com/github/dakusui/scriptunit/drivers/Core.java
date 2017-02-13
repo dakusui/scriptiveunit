@@ -1,6 +1,7 @@
 package com.github.dakusui.scriptunit.drivers;
 
 import com.github.dakusui.jcunit.core.tuples.Tuple;
+import com.github.dakusui.scriptunit.annotations.AccessesTestParameter;
 import com.github.dakusui.scriptunit.annotations.ReflectivelyReferenced;
 import com.github.dakusui.scriptunit.annotations.Scriptable;
 import com.github.dakusui.scriptunit.exceptions.ScriptUnitException;
@@ -16,7 +17,7 @@ import static com.github.dakusui.scriptunit.exceptions.SyntaxException.attribute
 import static java.util.Objects.requireNonNull;
 import static java.util.stream.Collectors.toList;
 
-public class Basic {
+public class Core {
   /**
    * Returns a function to access an attribute value in a test case.
    * This can be used in {@code GENERATION}, {@code GIVEN}, {@code WHEN}, and {@code THEN}
@@ -28,6 +29,7 @@ public class Basic {
    */
   @ReflectivelyReferenced
   @Scriptable
+  @AccessesTestParameter
   public <T extends Stage, E> Func.Accessor<T, E> attr(Func<T, String> attr) {
     return new Func.Accessor<T, E>() {
       @Override
@@ -40,7 +42,7 @@ public class Basic {
 
       @Override
       public E apply(T input) {
-        Tuple fixture = input.getFixture();
+        Tuple fixture = input.getTestCaseTuple();
         String attrName = attr.apply(input);
         check(
             fixture.containsKey(attrName),
@@ -77,7 +79,7 @@ public class Basic {
   @ReflectivelyReferenced
   @SafeVarargs
   @Scriptable
-  public final <T extends Stage, E> Func<T, List<?>> quote(Func<T, ?>... values) {
+  public final <T extends Stage> Func<T, List<?>> quote(Func<T, ?>... values) {
     return (T input) -> Arrays
         .stream(values)
         .map((Func<T, ?> each) -> each instanceof Func.Const ? each.apply(input) : each)

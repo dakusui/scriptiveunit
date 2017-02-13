@@ -5,8 +5,11 @@
       2
     ]
   },
-  "setUp": null,
-  "runnerType": [
-    "groupByTestOracle"
+  "runnerType": "groupByTestOracle",
+  "setUpBeforeAll": [
+    "nop"
+  ],
+  "setUp": [
+    "nop"
   ]
 }

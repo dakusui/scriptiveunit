@@ -8,7 +8,6 @@ import com.github.dakusui.actionunit.connectors.Sink;
 import com.github.dakusui.actionunit.connectors.Source;
 import com.github.dakusui.jcunit.core.factor.Factor;
 import com.github.dakusui.jcunit.core.tuples.Tuple;
-import com.github.dakusui.jcunit.framework.TestCase;
 import com.github.dakusui.jcunit.framework.TestSuite;
 import com.github.dakusui.jcunit.plugins.caengines.CoveringArrayEngine;
 import com.github.dakusui.scriptunit.ScriptRunner.Type;
@@ -27,6 +26,7 @@ import java.util.stream.Collectors;
 
 import static com.github.dakusui.actionunit.Actions.named;
 import static com.github.dakusui.actionunit.Actions.sequential;
+import static com.github.dakusui.scriptunit.core.Utils.iterableToString;
 import static com.github.dakusui.scriptunit.exceptions.ScriptUnitException.wrap;
 import static com.github.dakusui.scriptunit.model.Stage.Type.*;
 import static com.google.common.base.Preconditions.checkArgument;
@@ -45,15 +45,18 @@ public enum Beans {
     final         String                            description;
     final         Type                              runnerType;
     private final List<Object>                      setUpClause;
+    private final List<Object>                      setUpBeforeAllClause;
 
     public BaseForTestSuiteDescriptor(
         BaseForCoveringArrayEngineConfig coveringArrayEngineConfigBean,
         BaseForFactorSpaceDescriptor factorSpaceBean,
+        List<Object> suiteLevelFixture,
         List<Object> fixture,
         List<? extends BaseForTestOracle> testOracleBeanList, String description, String runnerType) {
       this.coveringArrayEngineConfigBean = coveringArrayEngineConfigBean;
       this.runnerType = Type.valueOf(Utils.toALL_CAPS(runnerType));
       this.factorSpaceBean = factorSpaceBean;
+      this.setUpBeforeAllClause = suiteLevelFixture;
       this.setUpClause = fixture;
       this.testOracleBeanList = testOracleBeanList;
       this.description = description;
@@ -74,6 +77,11 @@ public enum Beans {
 
     public TestSuiteDescriptor create(Statement.Factory statementFactory) {
       return new TestSuiteDescriptor() {
+        Func.Invoker setUpInvoker = new Func.Invoker(0);
+        Statement setUpStatement = statementFactory.create(setUpClause, setUpInvoker);
+        Func.Invoker setUpBeforeAllInvoker = new Func.Invoker(0);
+        Statement setUpBeforeAllStatement = statementFactory.create(setUpBeforeAllClause, setUpBeforeAllInvoker);
+
         @Override
         public String getDescription() {
           return description;
@@ -96,23 +104,38 @@ public enum Beans {
 
         @Override
         public Func<Stage, Action> getSetUpActionFactory() {
-          Func.Invoker invoker = new Func.Invoker(0);
+          return createActionFactory("Fixture set up", "reset fixture setup writer", setUpStatement, setUpInvoker);
+        }
+
+        @Override
+        public List<String> getInvolvedParameterNamesInSetUpAction() {
+          return Statement.Utils.involvedParameters(setUpStatement);
+        }
+
+        @Override
+        public Func<Stage, Action> getSetUpBeforeAllActionFactory() {
+          return createActionFactory(format("Suite level set up: %s", description), "reset suite level fixture writer", setUpBeforeAllStatement, setUpBeforeAllInvoker);
+        }
+
+
+        private Func<Stage, Action> createActionFactory(String actionName, String resetMessage, Statement statement, Func.Invoker invoker) {
           return input -> Actions.sequential(
+              actionName,
               Actions.simple(new Runnable() {
                                @Override
                                public void run() {
                                  invoker.reset();
                                }
+
                                @Override
                                public String toString() {
-                                 return "reset fixture setup writer";
+                                 return resetMessage;
                                }
                              }
-
               ),
-              setUpClause == null ?
+              statement == null ?
                   Actions.nop() :
-                  Beans.<Stage, Action>createFunc(statementFactory, setUpClause, invoker).apply(input)
+                  Beans.<Stage, Action>toFunc(statement).apply(input)
           );
         }
 
@@ -182,15 +205,13 @@ public enum Beans {
               .map((List<Object> each) -> {
                 Func.Invoker invoker = new Func.Invoker(0);
                 //noinspection unchecked
-                Func<Stage, Boolean> func = (Func<Stage, Boolean>) statementFactory.create(
-                    each, invoker
-                ).execute();
+                Func<Stage, Boolean> func = toFunc(statementFactory.create(each, invoker));
                 return new TestSuite.Predicate("(constraint)", computeInvolvedParameters(invoker)) {
                   @Override
                   public boolean apply(Tuple in) {
                     return requireNonNull(func.apply(new Stage() {
                       @Override
-                      public Tuple getFixture() {
+                      public Tuple getTestCaseTuple() {
                         return in;
                       }
 
@@ -232,15 +253,15 @@ public enum Beans {
 
   public abstract static class BaseForTestOracle {
     private final String       description;
-    private final List<Object> given;
-    private final List<Object> when;
-    private final List<Object> then;
+    private final List<Object> givenClause;
+    private final List<Object> whenClause;
+    private final List<Object> thenClause;
 
-    public BaseForTestOracle(String description, List<Object> given, List<Object> when, List<Object> then) {
+    public BaseForTestOracle(String description, List<Object> givenClause, List<Object> whenClause, List<Object> thenClause) {
       this.description = description;
-      this.given = given;
-      this.when = when;
-      this.then = then;
+      this.givenClause = givenClause;
+      this.whenClause = whenClause;
+      this.thenClause = thenClause;
     }
 
     /**
@@ -253,25 +274,23 @@ public enum Beans {
     public TestOracle create(Statement.Factory statementFactory) {
       //noinspection unchecked,Guava
       return new TestOracle() {
-        Func.Invoker invokerForGiven, invokerForWhen, invokerForThen;
-        Func<Stage, Boolean> given = createFunc(
-            BaseForTestOracle.this.given,
-            invokerForGiven = new Func.Invoker(0));
-        Func<Stage, Stage> when = createFunc(
-            BaseForTestOracle.this.when,
-            invokerForWhen = new Func.Invoker(0));
-        Func<Stage, Boolean> then = createFunc(
-            BaseForTestOracle.this.then,
-            invokerForThen = new Func.Invoker(0));
+        Func.Invoker
+            invokerForGiven = new Func.Invoker(0),
+            invokerForWhen = new Func.Invoker(0),
+            invokerForThen = new Func.Invoker(0);
+        Func<Stage, Boolean> given = toFunc(statementFactory.create(givenClause, invokerForGiven));
+        Func<Stage, Stage> when = toFunc(statementFactory.create(whenClause, invokerForWhen));
+        Func<Stage, Boolean> then = toFunc(statementFactory.create(thenClause, invokerForThen));
 
         @Override
-        public Action createTestAction(String testSuiteDescription, int groupId, int itemId, TestCase testCase, Func<Stage, Action> setUpFactory) {
-          return named(format("%s: %s: %-2d", testCase.getCategory(), description, itemId),
+        public String getDescription() {
+          return description;
+        }
+
+        @Override
+        public Action createTestAction(int itemId, String testSuiteDescription, Tuple testCase) {
+          return named(format("%03d: %s", itemId, description),
               sequential(
-                  Actions.named(
-                      "SetUp Test Fixture",
-                      requireNonNull(setUpFactory.apply(SETUP.create(testCase.getTuple())))
-                  ),
                   Actions.simple(new Runnable() {
                     @Override
                     public void run() {
@@ -285,19 +304,19 @@ public enum Beans {
                       return "reset writers";
                     }
                   }),
-                  Actions.<TestCase, TestResult>test("verify with: " + Objects.toString(testCase.getTuple()))
-                      .given(new Source<TestCase>() {
+                  Actions.<Tuple, TestResult>test("verify with: " + Objects.toString(testCase))
+                      .given(new Source<Tuple>() {
                         @Override
-                        public TestCase apply(Context context) {
-                          assumeThat(testCase, new BaseMatcher<TestCase>() {
+                        public Tuple apply(Context context) {
+                          assumeThat(testCase, new BaseMatcher<Tuple>() {
                             @Override
                             public boolean matches(Object item) {
-                              return requireNonNull(given.apply(GIVEN.create(testCase.getTuple())));
+                              return requireNonNull(given.apply(GIVEN.create(testCase)));
                             }
 
                             @Override
                             public void describeTo(Description description) {
-                              description.appendText(format("tag=%s; test case=%s", testCase.getCategory(), testCase.getTuple()));
+                              description.appendText(format("test case=%s", testCase));
                             }
                           });
                           return testCase;
@@ -308,10 +327,10 @@ public enum Beans {
                           return format("%n%s", invokerForGiven.asString());
                         }
                       })
-                      .when(new Pipe<TestCase, TestResult>() {
+                      .when(new Pipe<Tuple, TestResult>() {
                         @Override
-                        public TestResult apply(TestCase testCase, Context context) {
-                          return TestResult.create(testCase, when.apply(WHEN.create(testCase.getTuple())));
+                        public TestResult apply(Tuple testCase, Context context) {
+                          return TestResult.create(testCase, when.apply(WHEN.create(testCase)));
                         }
 
                         @Override
@@ -321,8 +340,8 @@ public enum Beans {
                       })
                       .then(new Sink<TestResult>() {
                         @Override
-                        public void apply(TestResult input, Context context) {
-                          Stage thenStage = THEN.create(input.getTestCase().getTuple(), input.getOutput());
+                        public void apply(TestResult testResult, Context context) {
+                          Stage thenStage = THEN.create(testResult.getTestCase(), testResult.getOutput());
                           assertThat(
                               thenStage,
                               new BaseMatcher<Stage>() {
@@ -338,7 +357,10 @@ public enum Beans {
 
                                 @Override
                                 public void describeMismatch(Object item, Description description) {
-                                  description.appendText(format("output '%s' created from '%s' did not satisfy it", input.getOutput(), input.getTestCase()));
+                                  Object output = testResult.getOutput() instanceof Iterable ?
+                                      iterableToString((Iterable<?>) testResult.getOutput()) :
+                                      testResult.getOutput();
+                                  description.appendText(format("output '%s' created from '%s' did not satisfy it", output, testResult.getTestCase()));
                                 }
                               }
                           );
@@ -351,21 +373,13 @@ public enum Beans {
                       }).build()
               ));
         }
-
-        private <T extends Stage, U> Func<T, U> createFunc(List<Object> clause, Func.Invoker invoker) {
-          return Beans.createFunc(statementFactory, clause, invoker);
-        }
       };
     }
 
   }
 
-  private static <T extends Stage, U> Func<T, U> createFunc(Statement.Factory statementFactory, List<Object> clause, Func.Invoker invoker) {
+  private static <T extends Stage, U> Func<T, U> toFunc(Statement statement) {
     //noinspection unchecked
-    return Func.class.<T, U>cast(
-        statementFactory.create(
-            clause,
-            invoker
-        ).execute());
+    return Func.class.<T, U>cast(statement.execute());
   }
 }

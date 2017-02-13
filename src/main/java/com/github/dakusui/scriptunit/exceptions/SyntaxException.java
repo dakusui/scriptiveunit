@@ -1,5 +1,6 @@
 package com.github.dakusui.scriptunit.exceptions;
 
+import com.github.dakusui.scriptunit.model.statement.Statement;
 import org.codehaus.jackson.JsonNode;
 import org.codehaus.jackson.node.ObjectNode;
 
@@ -44,5 +45,9 @@ public class SyntaxException extends ScriptUnitException {
 
   public static <E extends ScriptUnitException> E nonText(JsonNode jsonNode) {
     throw new SyntaxException(format("A text node was expected but not. '%s'", jsonNode));
+  }
+
+  public static SyntaxException parameterNameShouldBeSpecifiedWithConstant(Statement.Nested statement) {
+    throw new SyntaxException(format("Parameter name must be constant but not when accessor is used. (%s %s)", statement.getForm(), statement.getArguments()));
   }
 }

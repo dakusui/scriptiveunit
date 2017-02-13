@@ -1,7 +1,9 @@
 package com.github.dakusui.scriptunit.tests.cli;
 
 import com.github.dakusui.jcunit.runners.standard.JCUnit;
+import com.github.dakusui.jcunit.runners.standard.annotations.Condition;
 import com.github.dakusui.jcunit.runners.standard.annotations.FactorField;
+import com.github.dakusui.jcunit.runners.standard.annotations.Given;
 import com.github.dakusui.scriptunit.annotations.ReflectivelyReferenced;
 import com.github.dakusui.scriptunit.core.Config;
 import com.github.dakusui.scriptunit.drivers.Qapi;
@@ -20,8 +22,21 @@ public class QapiTest extends TestBase {
   @FactorField(stringLevels = { "tests/regular/qapi.json", "tests/regular/defaults.json" })
   public String resourceName;
 
+  @Given("!isDefaultValueTest")
   @Test
   public void runWithNormalExample() {
+    String scriptSystemPropertyKey = Config.create(Qapi.class, System.getProperties()).getScriptSystemPropertyKey();
+    System.setProperty(scriptSystemPropertyKey, resourceName);
+    Result result = JUnitCore.runClasses(Qapi.class);
+    assertThat(result.wasSuccessful(), equalTo(false));
+    assertThat(result.getRunCount(), equalTo(31));
+    assertThat(result.getFailureCount(), equalTo(9));
+    assertThat(result.getIgnoreCount(), equalTo(0));
+  }
+
+  @Given("isDefaultValueTest")
+  @Test
+  public void runWithDefaultValueExample() {
     String scriptSystemPropertyKey = Config.create(Qapi.class, System.getProperties()).getScriptSystemPropertyKey();
     System.setProperty(scriptSystemPropertyKey, resourceName);
     Result result = JUnitCore.runClasses(Qapi.class);
@@ -29,5 +44,10 @@ public class QapiTest extends TestBase {
     assertThat(result.getRunCount(), equalTo(27));
     assertThat(result.getFailureCount(), equalTo(9));
     assertThat(result.getIgnoreCount(), equalTo(0));
+  }
+
+  @Condition
+  public boolean isDefaultValueTest() {
+    return "tests/regular/defaults.json".equals(this.resourceName);
   }
 }

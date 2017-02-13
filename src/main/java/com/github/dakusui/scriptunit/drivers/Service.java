@@ -6,7 +6,7 @@ import com.github.dakusui.scriptunit.model.Stage;
 
 import java.util.Map;
 
-public abstract class Service<REQUEST, RESPONSE> extends Basic {
+public abstract class Service<REQUEST, RESPONSE> extends Core {
   @Scriptable
   public <T extends Stage> Func.Memoized<T, RESPONSE> service(Func<T, REQUEST> request) {
     return input -> Service.this.service(request.apply(input));
@@ -19,7 +19,7 @@ public abstract class Service<REQUEST, RESPONSE> extends Basic {
 
   @Scriptable
   public <T extends Stage> Func<T, REQUEST> request() {
-    return input -> buildRequest(input.getFixture());
+    return input -> buildRequest(input.getTestCaseTuple());
   }
 
   @Scriptable

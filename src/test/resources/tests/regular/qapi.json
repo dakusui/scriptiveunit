@@ -1,7 +1,16 @@
 {
     "$extends":["tests/regular/regularbase.json"],
-    "description":"An example test suite to Query-Result model on ScriptUnit",
-    "setUp" : ["print", "Hello world"],
+    "description":"An example test suite for Query-Result model with ScriptUnit",
+    "factorSpace": {
+        "factors": {
+            "service" : ["shoppingmall", "bookstore"],
+            "index" : ["item", "product"],
+            "host" : ["localhost"]
+        }
+    },
+    "runnerType": "groupByTestFixture",
+    "setUpBeforeAll" : ["print", ["attr", "host"]],
+    "setUp" : ["sequential", ["print", ["attr", "host"]], ["print", ["attr", "service"]], ["print", ["attr", "index"]]],
     "testOracles": [
         {
             "description": "Searching 'iPhone' should not return too many accessories",

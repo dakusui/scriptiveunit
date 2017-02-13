@@ -5,13 +5,14 @@ import com.github.dakusui.jcunit.core.tuples.Tuple;
 import static java.util.Objects.requireNonNull;
 
 public interface Stage {
-  Tuple getFixture();
+  Tuple getTestCaseTuple();
 
   <RESPONSE> RESPONSE response();
 
   Type getType();
 
   enum Type {
+    SETUP_BEFORE_SUITE,
     SETUP,
     GIVEN,
     WHEN,
@@ -29,7 +30,7 @@ public interface Stage {
       Type type = this;
       return new Stage() {
         @Override
-        public Tuple getFixture() {
+        public Tuple getTestCaseTuple() {
           return fixture;
         }
 

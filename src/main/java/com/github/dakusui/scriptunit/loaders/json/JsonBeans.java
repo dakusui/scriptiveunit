@@ -16,10 +16,11 @@ public enum JsonBeans {
         @JsonProperty("coveringArrayEngine") CoveringArrayEngineConfigBean coveringArrayEngineConfig,
         @JsonProperty("factorSpace") FactorSpaceDescriptorBean factorSpaceBean,
         @JsonProperty("runnerType") String runnerType,
-        @JsonProperty("setUp") List<Object> fixture,
+        @JsonProperty("setUpBeforeAll") List<Object> setUpBeforeAllClause,
+        @JsonProperty("setUp") List<Object> setUpClause,
         @JsonProperty("testOracles") List<TestOracleBean> testOracleBeanList
     ) {
-      super(coveringArrayEngineConfig, factorSpaceBean, fixture, testOracleBeanList, description, runnerType);
+      super(coveringArrayEngineConfig, factorSpaceBean, setUpBeforeAllClause, setUpClause, testOracleBeanList, description, runnerType);
     }
 
     public static class CoveringArrayEngineConfigBean extends Beans.BaseForCoveringArrayEngineConfig {

@@ -7,6 +7,7 @@ import com.github.dakusui.scriptunit.annotations.Import.Alias;
 import com.github.dakusui.scriptunit.annotations.Load;
 import com.github.dakusui.scriptunit.annotations.ReflectivelyReferenced;
 import com.github.dakusui.scriptunit.doc.Help;
+import com.github.dakusui.scriptunit.drivers.actions.Basic;
 import com.github.dakusui.scriptunit.loaders.json.JsonBasedTestSuiteLoader;
 import com.google.common.collect.Maps;
 import org.junit.runner.RunWith;
@@ -46,7 +47,7 @@ public class Qapi {
       @Alias(value = "lt", as = "<"),
       @Alias(value = "le", as = "<="),
       @Alias(value = "eq", as = "=="),
-      @Alias(value = "cond", as = "if_then")
+      @Alias(value = "ifthen", as = "if_then")
   })
   public Object predicates = new Predicates();
 
@@ -60,7 +61,7 @@ public class Qapi {
 
   @ReflectivelyReferenced
   @Import
-  public Object basicActions = new BasicActions();
+  public Object basicActions = new Basic();
 
   @ReflectivelyReferenced
   @Import({
@@ -151,6 +152,7 @@ public class Qapi {
     public int statusCode() {
       return this.isEmpty() ? 404 : 200;
     }
+
   }
 
   @ReflectivelyReferenced

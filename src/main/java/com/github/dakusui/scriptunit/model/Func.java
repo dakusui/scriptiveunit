@@ -20,6 +20,7 @@ import static com.github.dakusui.scriptunit.exceptions.ScriptUnitException.wrap;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.collect.Lists.asList;
 import static java.lang.String.format;
+import static java.util.Arrays.stream;
 import static java.util.stream.Collectors.toList;
 
 @FunctionalInterface
@@ -91,7 +92,7 @@ public interface Func<I, O> extends
       this.involvedParameters = new LinkedList<>();
     }
 
-    public Object create(ObjectMethod method, Object[] args) {
+    public Object invoke(ObjectMethod method, Object[] args) {
       Object ret = createProxyIfNecessary(method.getName(), method.invoke(args));
       if (ret instanceof Accessor) {
         String parameterName;
@@ -169,7 +170,7 @@ public interface Func<I, O> extends
 
     private Object invokeMethod(Object target, Method method, Object... args) {
       try {
-        return method.invoke(target, Arrays.stream(args).map(new Func<Object, Object>() {
+        return method.invoke(target, stream(args).map(new Func<Object, Object>() {
           int i = 0;
 
           @Override
@@ -210,7 +211,21 @@ public interface Func<I, O> extends
     }
 
     private void writeLine(String format, Object... args) {
-      writer.writeLine(indent(this.indent) + format(format, args));
+      String s = format(format, prettify(args));
+      if (s.contains("\n")) {
+        enter();
+        try {
+          stream(s.split("\\n")).forEach((String in) -> writer.writeLine(indent(this.indent) + in));
+        } finally {
+          leave();
+        }
+      } else {
+        writer.writeLine(indent(this.indent) + s);
+      }
+    }
+
+    private Object[] prettify(Object... args) {
+      return Arrays.stream(args).map((Object in) -> in instanceof Iterable ? Utils.iterableToString(((Iterable) in)) : in).collect(toList()).toArray();
     }
 
     private String indent(int indent) {

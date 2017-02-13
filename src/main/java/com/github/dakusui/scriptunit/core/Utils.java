@@ -1,9 +1,12 @@
 package com.github.dakusui.scriptunit.core;
 
+import com.github.dakusui.actionunit.Action;
+import com.github.dakusui.actionunit.visitors.ActionRunner;
 import com.github.dakusui.scriptunit.exceptions.ScriptUnitException;
 import com.github.dakusui.scriptunit.exceptions.SyntaxException;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Iterables;
 import org.codehaus.jackson.JsonNode;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.node.ObjectNode;
@@ -34,6 +37,14 @@ import static java.util.stream.Collectors.toList;
 
 public enum Utils {
   ;
+  public static void performActionWithLogging(Action action) {
+    ActionRunner.WithResult runner = new ActionRunner.WithResult();
+    try {
+      action.accept(runner);
+    } finally {
+      action.accept(runner.createPrinter());
+    }
+  }
 
   public static ObjectNode deepMerge(ObjectNode source, ObjectNode target) {
     requireNonNull(source);
@@ -232,6 +243,21 @@ public enum Utils {
     } catch (IOException e) {
       throw ScriptUnitException.wrap(e, "Non-welformed input is given.");
     }
+  }
+
+  public static String iterableToString(Iterable<?> i) {
+    if (Iterables.size(i) < 2) {
+      return i.toString();
+    }
+    StringBuilder b = new StringBuilder();
+    b.append("[\n");
+    i.forEach((Object in) -> {
+      b.append("  ");
+      b.append(in);
+      b.append("\n");
+    });
+    b.append("]");
+    return b.toString();
   }
 
   private interface Converter<FROM, TO> extends Function<FROM, TO> {

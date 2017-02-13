@@ -15,6 +15,8 @@ import static java.util.stream.StreamSupport.stream;
 public interface Form {
   Object apply(Arguments arguments);
 
+  boolean isAccessor();
+
   class Factory {
     private final Object driver;
 
@@ -27,16 +29,24 @@ public interface Form {
 
     @SuppressWarnings("WeakerAccess")
     public Form create(String name, Func.Invoker funcInvoker) {
-      return arguments -> {
-        ObjectMethod method = getMethodFromDriver(name);
-        Object[] args = toArray(stream(arguments.spliterator(), false)
-            .map(Statement::execute)
-            .collect(toList()), Object.class);
-        if (method.isVarArgs()) {
-          int parameterCount = method.getParameterCount();
-          args = shrinkTo(method.getParameterTypes()[parameterCount - 1].getComponentType(), parameterCount, args);
+      ObjectMethod method = Factory.this.getMethodFromDriver(name);
+      return new Form() {
+        @Override
+        public Object apply(Arguments arguments) {
+          Object[] args = toArray(stream(arguments.spliterator(), false)
+              .map(Statement::execute)
+              .collect(toList()), Object.class);
+          if (method.isVarArgs()) {
+            int parameterCount = method.getParameterCount();
+            args = Factory.this.shrinkTo(method.getParameterTypes()[parameterCount - 1].getComponentType(), parameterCount, args);
+          }
+          return funcInvoker.invoke(method, args);
         }
-        return funcInvoker.create(method, args);
+
+        @Override
+        public boolean isAccessor() {
+          return  Factory.this.getMethodFromDriver(name).isAccessor();
+        }
       };
     }
 

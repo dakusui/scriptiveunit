@@ -63,7 +63,7 @@ public class Predicates {
       "This function is useful to describe a constraint or a condition to ignore " +
           "a certain test oracle."
   })
-  public <T extends Stage> Func<T, Boolean> cond(
+  public <T extends Stage> Func<T, Boolean> ifthen(
       @Doc("A condition value") Func<T, Boolean> cond,
       @Doc("A condition value evaluated only when the first condition is met") Func<T, Boolean> then) {
     return (T input) -> requireNonNull(cond.apply(input)) ?

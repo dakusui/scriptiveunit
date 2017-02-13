@@ -22,13 +22,16 @@ public interface TestSuiteLoader {
 
   Func<Stage, Action> getSetUpActionFactory();
 
-  List<String> getInvolvedParameterNamesInSetUpAction();
+  Func<Stage, Action> getBeforeAllActionFactory();
 
   List<IndexedTestCase> loadTestCases();
 
   List<TestOracle> loadTestOracles();
 
   Type getRunnerType();
+
+  TestSuiteDescriptor getTestSuiteDescriptor();
+
 
   abstract class Base implements TestSuiteLoader {
 
@@ -49,6 +52,11 @@ public interface TestSuiteLoader {
     }
 
     @Override
+    public Func<Stage, Action> getBeforeAllActionFactory() {
+      return this.testSuiteDescriptor.getSetUpBeforeAllActionFactory();
+    }
+
+    @Override
     public List<IndexedTestCase> loadTestCases() {
       return this.createTestCases(this.testSuiteDescriptor);
     }
@@ -62,6 +70,11 @@ public interface TestSuiteLoader {
     @Override
     public Type getRunnerType() {
       return this.testSuiteDescriptor.getRunnerType();
+    }
+
+    @Override
+    public TestSuiteDescriptor getTestSuiteDescriptor() {
+      return this.testSuiteDescriptor;
     }
 
 
