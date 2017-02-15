@@ -30,26 +30,15 @@ public class Core {
   @ReflectivelyReferenced
   @Scriptable
   @AccessesTestParameter
-  public <T extends Stage, E> Func.Accessor<T, E> attr(Func<T, String> attr) {
-    return new Func.Accessor<T, E>() {
-      @Override
-      public String getParameterName() {
-        if (attr instanceof Const) {
-          return attr.apply(null);
-        }
-        return null;
-      }
-
-      @Override
-      public E apply(T input) {
-        Tuple fixture = input.getTestCaseTuple();
-        String attrName = attr.apply(input);
-        check(
-            fixture.containsKey(attrName),
-            attributeNotFound(attrName, input.getType().toString().toLowerCase(), fixture.keySet()));
-        //noinspection unchecked
-        return (E) fixture.get(attrName);
-      }
+  public <T extends Stage, E> Func<T, E> attr(Func<T, String> attr) {
+    return (T input) -> {
+      Tuple fixture = input.getTestCaseTuple();
+      String attrName = attr.apply(input);
+      check(
+          fixture.containsKey(attrName),
+          attributeNotFound(attrName, input.getType().toString().toLowerCase(), fixture.keySet()));
+      //noinspection unchecked
+      return (E) fixture.get(attrName);
     };
   }
 

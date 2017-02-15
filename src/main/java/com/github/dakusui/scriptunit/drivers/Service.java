@@ -1,5 +1,6 @@
 package com.github.dakusui.scriptunit.drivers;
 
+import com.github.dakusui.scriptunit.annotations.ReflectivelyReferenced;
 import com.github.dakusui.scriptunit.annotations.Scriptable;
 import com.github.dakusui.scriptunit.model.Func;
 import com.github.dakusui.scriptunit.model.Stage;
@@ -7,25 +8,29 @@ import com.github.dakusui.scriptunit.model.Stage;
 import java.util.Map;
 
 public abstract class Service<REQUEST, RESPONSE> extends Core {
+  @ReflectivelyReferenced
   @Scriptable
   public <T extends Stage> Func.Memoized<T, RESPONSE> service(Func<T, REQUEST> request) {
-    return input -> Service.this.service(request.apply(input));
+    return (T input) -> Service.this.service(request.apply(input));
   }
 
+  @ReflectivelyReferenced
   @Scriptable
   public <T extends Stage> Func<T, REQUEST> with(Func<T, Map<String, Object>> values, Func<T, REQUEST> request) {
-    return input -> override(values.apply(input), request.apply(input));
+    return (T input) -> override(values.apply(input), request.apply(input));
   }
 
+  @ReflectivelyReferenced
   @Scriptable
   public <T extends Stage> Func<T, REQUEST> request() {
-    return input -> buildRequest(input.getTestCaseTuple());
+    return (T input) -> buildRequest(input.getTestCaseTuple());
   }
 
+  @ReflectivelyReferenced
   @Scriptable
   public <T extends Stage> Func<T, RESPONSE> response() {
     //noinspection unchecked
-    return input -> (RESPONSE) input.response();
+    return (T input) -> (RESPONSE) input.response();
   }
 
   /**

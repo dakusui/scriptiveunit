@@ -2,7 +2,7 @@ package com.github.dakusui.scriptunit.model.statement;
 
 import com.github.dakusui.scriptunit.ScriptUnit;
 import com.github.dakusui.scriptunit.core.ObjectMethod;
-import com.github.dakusui.scriptunit.model.Func;
+import com.github.dakusui.scriptunit.model.Invoker;
 
 import java.lang.reflect.Array;
 
@@ -28,7 +28,7 @@ public interface Form {
     }
 
     @SuppressWarnings("WeakerAccess")
-    public Form create(String name, Func.Invoker funcInvoker) {
+    public Form create(String name, Invoker funcInvoker) {
       ObjectMethod method = Factory.this.getMethodFromDriver(name);
       return new Form() {
         @Override

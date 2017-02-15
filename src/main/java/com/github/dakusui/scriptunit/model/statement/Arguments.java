@@ -1,6 +1,6 @@
 package com.github.dakusui.scriptunit.model.statement;
 
-import com.github.dakusui.scriptunit.model.Func;
+import com.github.dakusui.scriptunit.model.Invoker;
 
 import java.util.Iterator;
 
@@ -12,7 +12,7 @@ public interface Arguments extends Iterable<Statement> {
       this.statementFactory = statementFactory;
     }
 
-    public Arguments create(Iterable<Object> args, Func.Invoker funcInvoker) {
+    public Arguments create(Iterable<Object> args, Invoker funcInvoker) {
       return () -> new Iterator<Statement>() {
         Iterator<Object> i = args.iterator();
         @Override

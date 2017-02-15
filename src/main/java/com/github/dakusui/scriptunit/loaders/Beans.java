@@ -77,9 +77,9 @@ public enum Beans {
 
     public TestSuiteDescriptor create(Statement.Factory statementFactory) {
       return new TestSuiteDescriptor() {
-        Func.Invoker setUpInvoker = new Func.Invoker(0);
+        Invoker setUpInvoker = new Invoker(0);
         Statement setUpStatement = statementFactory.create(setUpClause, setUpInvoker);
-        Func.Invoker setUpBeforeAllInvoker = new Func.Invoker(0);
+        Invoker setUpBeforeAllInvoker = new Invoker(0);
         Statement setUpBeforeAllStatement = statementFactory.create(setUpBeforeAllClause, setUpBeforeAllInvoker);
 
         @Override
@@ -118,7 +118,7 @@ public enum Beans {
         }
 
 
-        private Func<Stage, Action> createActionFactory(String actionName, String resetMessage, Statement statement, Func.Invoker invoker) {
+        private Func<Stage, Action> createActionFactory(String actionName, String resetMessage, Statement statement, Invoker invoker) {
           return input -> Actions.sequential(
               actionName,
               Actions.simple(new Runnable() {
@@ -203,10 +203,11 @@ public enum Beans {
           //noinspection unchecked
           return constraintList.stream()
               .map((List<Object> each) -> {
-                Func.Invoker invoker = new Func.Invoker(0);
+                Invoker invoker = new Invoker(0);
                 //noinspection unchecked
-                Func<Stage, Boolean> func = toFunc(statementFactory.create(each, invoker));
-                return new TestSuite.Predicate("(constraint)", computeInvolvedParameters(invoker)) {
+                Statement statement;
+                Func<Stage, Boolean> func = toFunc(statement = statementFactory.create(each, invoker));
+                return new TestSuite.Predicate("(constraint)", Statement.Utils.involvedParameters(statement).toArray(new String[0])) {
                   @Override
                   public boolean apply(Tuple in) {
                     return requireNonNull(func.apply(new Stage() {
@@ -229,10 +230,6 @@ public enum Beans {
                 };
               })
               .collect(Collectors.toList());
-        }
-
-        private String[] computeInvolvedParameters(Func.Invoker invoker) {
-          return invoker.getInvolvedParameterNames().toArray(new String[0]);
         }
       };
     }
@@ -274,10 +271,10 @@ public enum Beans {
     public TestOracle create(Statement.Factory statementFactory) {
       //noinspection unchecked,Guava
       return new TestOracle() {
-        Func.Invoker
-            invokerForGiven = new Func.Invoker(0),
-            invokerForWhen = new Func.Invoker(0),
-            invokerForThen = new Func.Invoker(0);
+        Invoker
+            invokerForGiven = new Invoker(0),
+            invokerForWhen = new Invoker(0),
+            invokerForThen = new Invoker(0);
         Func<Stage, Boolean> given = toFunc(statementFactory.create(givenClause, invokerForGiven));
         Func<Stage, Stage> when = toFunc(statementFactory.create(whenClause, invokerForWhen));
         Func<Stage, Boolean> then = toFunc(statementFactory.create(thenClause, invokerForThen));
