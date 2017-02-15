@@ -13,7 +13,8 @@ import com.github.dakusui.jcunit.plugins.caengines.CoveringArrayEngine;
 import com.github.dakusui.scriptunit.ScriptRunner.Type;
 import com.github.dakusui.scriptunit.core.Utils;
 import com.github.dakusui.scriptunit.model.*;
-import com.github.dakusui.scriptunit.model.statement.Form;
+import com.github.dakusui.scriptunit.model.func.Func;
+import com.github.dakusui.scriptunit.model.func.FuncInvoker;
 import com.github.dakusui.scriptunit.model.statement.Statement;
 import org.hamcrest.BaseMatcher;
 import org.hamcrest.Description;
@@ -63,24 +64,10 @@ public enum Beans {
     }
 
 
-    public TestSuiteDescriptor create(Class<?> driverClass) {
-      try {
-        return create(
-            new Statement.Factory(
-                new Form.Factory(driverClass.newInstance())
-            )
-        );
-      } catch (InstantiationException | IllegalAccessException e) {
-        throw wrap(e);
-      }
-    }
-
-    public TestSuiteDescriptor create(Statement.Factory statementFactory) {
+    public TestSuiteDescriptor create(Object driverObject) {
       return new TestSuiteDescriptor() {
-        Invoker setUpInvoker = new Invoker(0);
-        Statement setUpStatement = statementFactory.create(setUpClause, setUpInvoker);
-        Invoker setUpBeforeAllInvoker = new Invoker(0);
-        Statement setUpBeforeAllStatement = statementFactory.create(setUpBeforeAllClause, setUpBeforeAllInvoker);
+        Statement setUpStatement = new Statement.Factory(driverObject).create(setUpClause);
+        Statement setUpBeforeAllStatement = new Statement.Factory(driverObject).create(setUpBeforeAllClause);
 
         @Override
         public String getDescription() {
@@ -89,7 +76,7 @@ public enum Beans {
 
         @Override
         public FactorSpaceDescriptor getFactorSpaceDescriptor() {
-          return factorSpaceBean.create(statementFactory);
+          return factorSpaceBean.create(new Statement.Factory(driverObject));
         }
 
         @Override
@@ -99,12 +86,12 @@ public enum Beans {
 
         @Override
         public List<? extends TestOracle> getTestOracles() {
-          return testOracleBeanList.stream().map(each -> each.create(statementFactory)).collect(Collectors.toList());
+          return testOracleBeanList.stream().map(each -> each.create(new Statement.Factory(driverObject))).collect(Collectors.toList());
         }
 
         @Override
         public Func<Stage, Action> getSetUpActionFactory() {
-          return createActionFactory("Fixture set up", "reset fixture setup writer", setUpStatement, setUpInvoker);
+          return createActionFactory("Fixture set up", "reset fixture setup writer", setUpStatement);
         }
 
         @Override
@@ -114,17 +101,17 @@ public enum Beans {
 
         @Override
         public Func<Stage, Action> getSetUpBeforeAllActionFactory() {
-          return createActionFactory(format("Suite level set up: %s", description), "reset suite level fixture writer", setUpBeforeAllStatement, setUpBeforeAllInvoker);
+          return createActionFactory(format("Suite level set up: %s", description), "reset suite level fixture writer", setUpBeforeAllStatement);
         }
 
 
-        private Func<Stage, Action> createActionFactory(String actionName, String resetMessage, Statement statement, Invoker invoker) {
+        private Func<Stage, Action> createActionFactory(String actionName, String resetMessage, Statement statement) {
           return input -> Actions.sequential(
               actionName,
               Actions.simple(new Runnable() {
                                @Override
                                public void run() {
-                                 invoker.reset();
+                                 // TODO "invoker reset" should come here
                                }
 
                                @Override
@@ -203,10 +190,9 @@ public enum Beans {
           //noinspection unchecked
           return constraintList.stream()
               .map((List<Object> each) -> {
-                Invoker invoker = new Invoker(0);
                 //noinspection unchecked
                 Statement statement;
-                Func<Stage, Boolean> func = toFunc(statement = statementFactory.create(each, invoker));
+                Func<Stage, Boolean> func = toFunc(statement = statementFactory.create(each));
                 return new TestSuite.Predicate("(constraint)", Statement.Utils.involvedParameters(statement).toArray(new String[0])) {
                   @Override
                   public boolean apply(Tuple in) {
@@ -262,7 +248,7 @@ public enum Beans {
     }
 
     /**
-     * Test oracles created by this method are not thread safe since invokers ({@code Func.Invoker}
+     * Test oracles created by this method are not thread safe since invokers ({@code FuncHandler}
      * objects) have their internal states and not created every time the oracles
      * are performed.
      *
@@ -271,13 +257,9 @@ public enum Beans {
     public TestOracle create(Statement.Factory statementFactory) {
       //noinspection unchecked,Guava
       return new TestOracle() {
-        Invoker
-            invokerForGiven = new Invoker(0),
-            invokerForWhen = new Invoker(0),
-            invokerForThen = new Invoker(0);
-        Func<Stage, Boolean> given = toFunc(statementFactory.create(givenClause, invokerForGiven));
-        Func<Stage, Stage> when = toFunc(statementFactory.create(whenClause, invokerForWhen));
-        Func<Stage, Boolean> then = toFunc(statementFactory.create(thenClause, invokerForThen));
+        Func<Stage, Boolean> given = toFunc(statementFactory.create(givenClause));
+        Func<Stage, Stage> when = toFunc(statementFactory.create(whenClause));
+        Func<Stage, Boolean> then = toFunc(statementFactory.create(thenClause));
 
         @Override
         public String getDescription() {
@@ -291,9 +273,7 @@ public enum Beans {
                   Actions.simple(new Runnable() {
                     @Override
                     public void run() {
-                      invokerForGiven.reset();
-                      invokerForWhen.reset();
-                      invokerForThen.reset();
+                      // TODO
                     }
 
                     @Override
@@ -321,7 +301,7 @@ public enum Beans {
 
                         @Override
                         public String toString() {
-                          return format("%n%s", invokerForGiven.asString());
+                          return format("%n%s", "TODO"/* TODO */);
                         }
                       })
                       .when(new Pipe<Tuple, TestResult>() {
@@ -332,7 +312,7 @@ public enum Beans {
 
                         @Override
                         public String toString() {
-                          return format("%n%s", invokerForWhen.asString());
+                          return format("%n%s", "TODO"/* TODO */);
                         }
                       })
                       .then(new Sink<TestResult>() {
@@ -365,7 +345,7 @@ public enum Beans {
 
                         @Override
                         public String toString() {
-                          return format("%n%s", invokerForThen.asString());
+                          return format("%n%s", "TODO"/* TODO */);
                         }
                       }).build()
               ));
@@ -377,6 +357,6 @@ public enum Beans {
 
   private static <T extends Stage, U> Func<T, U> toFunc(Statement statement) {
     //noinspection unchecked
-    return Func.class.<T, U>cast(statement.execute());
+    return Func.class.<T, U>cast(statement.executeWith(new FuncInvoker.Impl(0)));
   }
 }

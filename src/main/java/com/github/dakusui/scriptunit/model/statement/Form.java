@@ -2,7 +2,8 @@ package com.github.dakusui.scriptunit.model.statement;
 
 import com.github.dakusui.scriptunit.ScriptUnit;
 import com.github.dakusui.scriptunit.core.ObjectMethod;
-import com.github.dakusui.scriptunit.model.Invoker;
+import com.github.dakusui.scriptunit.model.func.Func;
+import com.github.dakusui.scriptunit.model.func.FuncHandler;
 
 import java.lang.reflect.Array;
 
@@ -18,29 +19,31 @@ public interface Form {
   boolean isAccessor();
 
   class Factory {
-    private final Object driver;
+    private final Object       driver;
+    private final Func.Factory funcFactory;
 
     /**
      * @param driver Already validated drivers object.
      */
-    public Factory(Object driver) {
+    public Factory(Object driver, Func.Factory funcFactory) {
       this.driver = requireNonNull(driver);
+      this.funcFactory = funcFactory;
     }
 
     @SuppressWarnings("WeakerAccess")
-    public Form create(String name, Invoker funcInvoker) {
+    public Form create(String name, FuncHandler funcHandler) { /* TODO */
       ObjectMethod method = Factory.this.getMethodFromDriver(name);
       return new Form() {
         @Override
         public Object apply(Arguments arguments) {
           Object[] args = toArray(stream(arguments.spliterator(), false)
-              .map(Statement::execute)
+              .map(Statement::execute_)
               .collect(toList()), Object.class);
           if (method.isVarArgs()) {
             int parameterCount = method.getParameterCount();
             args = Factory.this.shrinkTo(method.getParameterTypes()[parameterCount - 1].getComponentType(), parameterCount, args);
           }
-          return funcInvoker.invoke(method, args);
+          return funcFactory.create(method, args);
         }
 
         @Override

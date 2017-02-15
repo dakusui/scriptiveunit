@@ -13,7 +13,7 @@ import com.github.dakusui.scriptunit.core.ObjectMethod;
 import com.github.dakusui.scriptunit.core.Utils;
 import com.github.dakusui.scriptunit.loaders.IndexedTestCase;
 import com.github.dakusui.scriptunit.loaders.TestSuiteLoader;
-import com.github.dakusui.scriptunit.model.Func;
+import com.github.dakusui.scriptunit.model.func.Func;
 import com.github.dakusui.scriptunit.model.Stage;
 import com.github.dakusui.scriptunit.model.TestOracle;
 import org.junit.internal.runners.statements.RunBefores;

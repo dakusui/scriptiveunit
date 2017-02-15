@@ -8,6 +8,7 @@ import com.github.dakusui.jcunit.plugins.caengines.CoveringArrayEngine;
 import com.github.dakusui.scriptunit.ScriptRunner.Type;
 import com.github.dakusui.scriptunit.core.Utils;
 import com.github.dakusui.scriptunit.model.*;
+import com.github.dakusui.scriptunit.model.func.Func;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;

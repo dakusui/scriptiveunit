@@ -1,7 +1,7 @@
 package com.github.dakusui.scriptunit.drivers;
 
 import com.github.dakusui.scriptunit.annotations.Scriptable;
-import com.github.dakusui.scriptunit.model.Func;
+import com.github.dakusui.scriptunit.model.func.Func;
 import com.github.dakusui.scriptunit.model.Stage;
 
 import static java.util.Objects.requireNonNull;

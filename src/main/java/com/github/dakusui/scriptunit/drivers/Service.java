@@ -2,7 +2,7 @@ package com.github.dakusui.scriptunit.drivers;
 
 import com.github.dakusui.scriptunit.annotations.ReflectivelyReferenced;
 import com.github.dakusui.scriptunit.annotations.Scriptable;
-import com.github.dakusui.scriptunit.model.Func;
+import com.github.dakusui.scriptunit.model.func.Func;
 import com.github.dakusui.scriptunit.model.Stage;
 
 import java.util.Map;

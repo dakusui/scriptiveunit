@@ -32,8 +32,8 @@ public class JsonBasedTestSuiteLoader extends TestSuiteLoader.Base {
     try {
       return new ObjectMapper()
           .readValue(readScript(scriptName), TestSuiteDescriptorBean.class)
-          .create(driverClass);
-    } catch (IOException e) {
+          .create(driverClass.newInstance());
+    } catch (IOException | IllegalAccessException | InstantiationException e) {
       throw wrap(e);
     }
   }

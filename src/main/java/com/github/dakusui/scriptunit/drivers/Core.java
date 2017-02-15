@@ -5,7 +5,7 @@ import com.github.dakusui.scriptunit.annotations.AccessesTestParameter;
 import com.github.dakusui.scriptunit.annotations.ReflectivelyReferenced;
 import com.github.dakusui.scriptunit.annotations.Scriptable;
 import com.github.dakusui.scriptunit.exceptions.ScriptUnitException;
-import com.github.dakusui.scriptunit.model.Func;
+import com.github.dakusui.scriptunit.model.func.Func;
 import com.github.dakusui.scriptunit.model.Stage;
 
 import java.lang.reflect.InvocationTargetException;
