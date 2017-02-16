@@ -29,7 +29,7 @@ public class QapiTest extends TestBase {
     System.setProperty(scriptSystemPropertyKey, resourceName);
     Result result = JUnitCore.runClasses(Qapi.class);
     assertThat(result.wasSuccessful(), equalTo(false));
-    assertThat(result.getRunCount(), equalTo(31));
+    assertThat(result.getRunCount(), equalTo(36));
     assertThat(result.getFailureCount(), equalTo(9));
     assertThat(result.getIgnoreCount(), equalTo(0));
   }
