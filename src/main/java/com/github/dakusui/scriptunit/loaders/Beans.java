@@ -259,22 +259,30 @@ public enum Beans {
           return () -> named(format("%03d: %s", itemId, description),
               Actions.<Tuple, TestResult>test("verify with: " + Utils.filterSingleLevelFactorsOut(testCaseTuple, factors))
                   .given(new Source<Tuple>() {
+                    Statement givenStatement = statementFactory.create(givenClause);
                     FuncInvoker funcInvoker = new FuncInvoker.Impl(0);
 
                     @Override
                     public Tuple apply(Context context) {
-                      assumeThat(testCaseTuple, new BaseMatcher<Tuple>() {
+                      assumeThat(Statement.Utils.prettifyTuple(testCaseTuple, givenStatement), new BaseMatcher<Tuple>() {
                         @Override
                         public boolean matches(Object item) {
                           return requireNonNull(
-                              Beans.<Stage, Boolean>toFunc(statementFactory.create(givenClause), funcInvoker)
-                                  .apply(GIVEN.create(testCaseTuple))
+                              createFunc(givenStatement, funcInvoker).apply(GIVEN.create(testCaseTuple))
                           );
                         }
 
                         @Override
                         public void describeTo(Description description) {
-                          description.appendText(format("test case=%s", testCaseTuple));
+                          description.appendText(
+                              format("input (%s) should have made true following criterion but not.:%n'%s' defined in stage:%s",
+                                  testCaseTuple,
+                                  funcInvoker.asString(),
+                                  GIVEN));
+                        }
+
+                        private Func<Stage, Boolean> createFunc(Statement statement, FuncInvoker invoker) {
+                          return Beans.toFunc(statement, invoker);
                         }
                       });
                       return testCaseTuple;
@@ -320,7 +328,7 @@ public enum Beans {
 
                             @Override
                             public void describeTo(Description description) {
-                              description.appendText(format("output should have made true criterion defined in stage:%s", thenStage.getType()));
+                              description.appendText(format("output should have made true the criterion defined in stage:%s", thenStage.getType()));
                             }
 
                             @Override
@@ -328,7 +336,10 @@ public enum Beans {
                               Object output = testResult.getOutput() instanceof Iterable ?
                                   iterableToString((Iterable<?>) testResult.getOutput()) :
                                   testResult.getOutput();
-                              description.appendText(format("output '%s' created from '%s' did not satisfy it.:%n'%s'", output, testResult.getTestCase(), funcInvoker.asString()));
+                              description.appendText(format("output '%s' created from '%s' did not satisfy it.:%n'%s'",
+                                  output,
+                                  testResult.getTestCase(),
+                                  funcInvoker.asString()));
                             }
                           }
                       );
@@ -343,7 +354,6 @@ public enum Beans {
         }
       };
     }
-
   }
 
   private static <T extends Stage, U> Func<T, U> toFunc(Statement statement, FuncInvoker funcInvoker) {

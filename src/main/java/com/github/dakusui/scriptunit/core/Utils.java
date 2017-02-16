@@ -25,7 +25,6 @@ import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
-import java.util.function.BiConsumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
@@ -57,12 +56,6 @@ public enum Utils {
     } finally {
       action.accept(runner.createPrinter());
     }
-  }
-
-  public static Tuple toTuple(Map<String, ? extends Object> map) {
-    Tuple.Builder b = new Tuple.Builder();
-    map.forEach((BiConsumer<String, Object>) b::put);
-    return b.build();
   }
 
   public static ObjectNode deepMerge(ObjectNode source, ObjectNode target) {

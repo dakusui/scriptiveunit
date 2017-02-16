@@ -1,5 +1,6 @@
 package com.github.dakusui.scriptunit.model.statement;
 
+import com.github.dakusui.jcunit.core.tuples.Tuple;
 import com.github.dakusui.scriptunit.exceptions.SyntaxException;
 import com.github.dakusui.scriptunit.model.func.Func;
 import com.github.dakusui.scriptunit.model.func.FuncHandler;
@@ -9,6 +10,7 @@ import com.google.common.collect.Lists;
 import java.util.List;
 import java.util.Objects;
 
+import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
 
 public interface Statement {
@@ -97,6 +99,26 @@ public interface Statement {
 
   enum Utils {
     ;
+
+    public static Tuple prettifyTuple(Tuple testCaseTuple, Statement statement) {
+      Tuple ret = new Tuple.Impl() {
+        @Override
+        public String toString() {
+          StringBuilder b = new StringBuilder();
+          b.append(format("{%n"));
+          Statement.Utils.involvedParameters(statement)
+              .forEach(key -> b.append("  ")
+                  .append(key)
+                  .append(":")
+                  .append(testCaseTuple.get(key))
+                  .append(format("%n")));
+          b.append("}");
+          return b.toString();
+        }
+      };
+      ret.putAll(testCaseTuple);
+      return ret;
+    }
 
     public static List<String> involvedParameters(Statement statement) {
       requireNonNull(statement);

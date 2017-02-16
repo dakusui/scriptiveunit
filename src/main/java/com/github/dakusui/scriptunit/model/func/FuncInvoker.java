@@ -18,13 +18,9 @@ import static java.util.Arrays.stream;
 import static java.util.stream.Collectors.toList;
 
 public interface FuncInvoker {
-  void enter();
-
   <T> T invokeConst(Object value);
 
   Object invokeMethod(Object target, Method method, Object[] args, String alias);
-
-  void leave();
 
   String asString();
 
@@ -55,15 +51,20 @@ public interface FuncInvoker {
       this.writer = new Writer();
     }
 
-    @Override
-    public void enter() {
+    void enter() {
       this.indent++;
     }
 
     @Override
     public <T> T invokeConst(Object value) {
-      //noinspection unchecked
-      return (T) value;
+      this.enter();
+      try {
+        this.writeLine("%s(const)", value);
+        //noinspection unchecked
+        return (T) value;
+      } finally {
+        this.leave();
+      }
     }
 
     @Override
@@ -72,6 +73,7 @@ public interface FuncInvoker {
       boolean wasAbsent = !this.memo.containsKey(key);
       boolean targetIsMemoized = target instanceof Func.Memoized;
       Object ret = "(N/A)";
+      this.enter();
       try {
         this.writeLine("%s(", alias);
         if (targetIsMemoized) {
@@ -88,6 +90,7 @@ public interface FuncInvoker {
           this.writeLine(") -> %s", ret);
         else
           this.writeLine(") -> (memoized)");
+        this.leave();
       }
     }
 
@@ -110,9 +113,8 @@ public interface FuncInvoker {
       }
     }
 
-    @Override
-    public void leave() {
-      this.indent--;
+    void leave() {
+      --this.indent;
     }
 
     public String asString() {
@@ -122,12 +124,7 @@ public interface FuncInvoker {
     void writeLine(String format, Object... args) {
       String s = format(format, prettify(args));
       if (s.contains("\n")) {
-        enter();
-        try {
-          stream(s.split("\\n")).forEach((String in) -> writer.writeLine(indent(this.indent) + in));
-        } finally {
-          leave();
-        }
+        stream(s.split("\\n")).forEach((String in) -> writer.writeLine(indent(this.indent) + in));
       } else {
         writer.writeLine(indent(this.indent) + s);
       }
