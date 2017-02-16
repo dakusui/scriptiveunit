@@ -2,6 +2,8 @@ package com.github.dakusui.scriptunit.core;
 
 import com.github.dakusui.actionunit.Action;
 import com.github.dakusui.actionunit.visitors.ActionRunner;
+import com.github.dakusui.jcunit.core.factor.Factor;
+import com.github.dakusui.jcunit.core.tuples.Tuple;
 import com.github.dakusui.scriptunit.exceptions.ScriptUnitException;
 import com.github.dakusui.scriptunit.exceptions.SyntaxException;
 import com.google.common.collect.ImmutableList;
@@ -23,6 +25,7 @@ import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import java.util.function.BiConsumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
@@ -37,6 +40,16 @@ import static java.util.stream.Collectors.toList;
 
 public enum Utils {
   ;
+
+  public static Tuple filterSingleLevelFactorsOut(Tuple tuple, List<Factor> factors) {
+    Tuple.Builder b = new Tuple.Builder();
+    factors.stream()
+        .filter(each -> each.levels.size() > 1)
+        .filter(each -> tuple.containsKey(each.name))
+        .forEach(each -> b.put(each.name, tuple.get(each.name)));
+    return b.build();
+  }
+
   public static void performActionWithLogging(Action action) {
     ActionRunner.WithResult runner = new ActionRunner.WithResult();
     try {
@@ -44,6 +57,12 @@ public enum Utils {
     } finally {
       action.accept(runner.createPrinter());
     }
+  }
+
+  public static Tuple toTuple(Map<String, ? extends Object> map) {
+    Tuple.Builder b = new Tuple.Builder();
+    map.forEach((BiConsumer<String, Object>) b::put);
+    return b.build();
   }
 
   public static ObjectNode deepMerge(ObjectNode source, ObjectNode target) {

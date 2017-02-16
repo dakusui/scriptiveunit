@@ -8,9 +8,9 @@
             "host" : ["localhost"]
         }
     },
-    "runnerType": "groupByTestOracle",
-    "setUpBeforeAll" : null,
-    "setUp" : null,
+    "runnerType": "groupByTestCase",
+    "setUpBeforeAll" : ["nop"],
+    "setUp" : ["sequential", ["print", ["attr", "service"]], ["print", ["attr", "index"]]],
     "testOracles": [
         {
             "description": "Searching 'iPhone' should not return too many accessories",

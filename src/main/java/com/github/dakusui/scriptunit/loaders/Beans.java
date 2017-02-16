@@ -16,13 +16,14 @@ import com.github.dakusui.scriptunit.model.*;
 import com.github.dakusui.scriptunit.model.func.Func;
 import com.github.dakusui.scriptunit.model.func.FuncInvoker;
 import com.github.dakusui.scriptunit.model.statement.Statement;
+import com.google.common.collect.Lists;
 import org.hamcrest.BaseMatcher;
 import org.hamcrest.Description;
 
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 import static com.github.dakusui.actionunit.Actions.named;
@@ -65,12 +66,9 @@ public enum Beans {
 
     public TestSuiteDescriptor create(Object driverObject) {
       return new TestSuiteDescriptor() {
-        Statement setUpStatement = setUpClause != null ?
-            new Statement.Factory(driverObject).create(setUpClause) :
-            null;
-        Statement setUpBeforeAllStatement = setUpBeforeAllClause != null ?
-            new Statement.Factory(driverObject).create(setUpBeforeAllClause) :
-            null;
+        private final Object NOP_CLAUSE = Lists.newArrayList("nop");
+        Statement setUpStatement = new Statement.Factory(driverObject).create(setUpClause != null ? setUpClause : NOP_CLAUSE);
+        Statement setUpBeforeAllStatement = new Statement.Factory(driverObject).create(setUpBeforeAllClause != null ? setUpBeforeAllClause : NOP_CLAUSE);
 
         @Override
         public String getDescription() {
@@ -113,7 +111,7 @@ public enum Beans {
               actionName,
               statement == null ?
                   Actions.nop() :
-                  Beans.<Stage, Action>toFunc(statement, new FuncInvoker.Impl(0)).apply(input)
+                  requireNonNull(Beans.<Stage, Action>toFunc(statement, new FuncInvoker.Impl(0)).apply(input))
           );
         }
 
@@ -253,30 +251,33 @@ public enum Beans {
           return description;
         }
 
+        /**
+         * Warning: Created action is not thread safe. Users should create 1 action for 1 thread.
+         */
         @Override
-        public Action createTestAction(int itemId, String testSuiteDescription, Tuple testCase) {
-          return named(format("%03d: %s", itemId, description),
-              Actions.<Tuple, TestResult>test("verify with: " + Objects.toString(testCase))
+        public Supplier<Action> createTestActionSupplier(List<Factor> factors, int itemId, String testSuiteDescription, Tuple testCaseTuple) {
+          return () -> named(format("%03d: %s", itemId, description),
+              Actions.<Tuple, TestResult>test("verify with: " + Utils.filterSingleLevelFactorsOut(testCaseTuple, factors))
                   .given(new Source<Tuple>() {
                     FuncInvoker funcInvoker = new FuncInvoker.Impl(0);
 
                     @Override
                     public Tuple apply(Context context) {
-                      assumeThat(testCase, new BaseMatcher<Tuple>() {
+                      assumeThat(testCaseTuple, new BaseMatcher<Tuple>() {
                         @Override
                         public boolean matches(Object item) {
                           return requireNonNull(
                               Beans.<Stage, Boolean>toFunc(statementFactory.create(givenClause), funcInvoker)
-                                  .apply(GIVEN.create(testCase))
+                                  .apply(GIVEN.create(testCaseTuple))
                           );
                         }
 
                         @Override
                         public void describeTo(Description description) {
-                          description.appendText(format("test case=%s", testCase));
+                          description.appendText(format("test case=%s", testCaseTuple));
                         }
                       });
-                      return testCase;
+                      return testCaseTuple;
                     }
 
                     @Override
@@ -327,7 +328,7 @@ public enum Beans {
                               Object output = testResult.getOutput() instanceof Iterable ?
                                   iterableToString((Iterable<?>) testResult.getOutput()) :
                                   testResult.getOutput();
-                              description.appendText(format("output '%s' created from '%s' did not satisfy it", output, testResult.getTestCase()));
+                              description.appendText(format("output '%s' created from '%s' did not satisfy it.:%n'%s'", output, testResult.getTestCase(), funcInvoker.asString()));
                             }
                           }
                       );

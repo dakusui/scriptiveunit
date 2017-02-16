@@ -37,7 +37,7 @@ public interface Form {
         @Override
         public Object apply(Arguments arguments) {
           Object[] args = toArray(stream(arguments.spliterator(), false)
-              .map(Statement::execute_)
+              .map(Statement::execute)
               .collect(toList()), Object.class);
           if (method.isVarArgs()) {
             int parameterCount = method.getParameterCount();

@@ -154,6 +154,7 @@ public interface FuncInvoker {
 
   class Writer implements ActionPrinter.Writer, Iterable<String> {
     List<String> output = Lists.newArrayList();
+
     Writer() {
     }
 

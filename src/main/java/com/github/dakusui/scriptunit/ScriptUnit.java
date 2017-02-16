@@ -13,9 +13,9 @@ import com.github.dakusui.scriptunit.core.ObjectMethod;
 import com.github.dakusui.scriptunit.core.Utils;
 import com.github.dakusui.scriptunit.loaders.IndexedTestCase;
 import com.github.dakusui.scriptunit.loaders.TestSuiteLoader;
-import com.github.dakusui.scriptunit.model.func.Func;
 import com.github.dakusui.scriptunit.model.Stage;
 import com.github.dakusui.scriptunit.model.TestOracle;
+import com.github.dakusui.scriptunit.model.func.Func;
 import org.junit.internal.runners.statements.RunBefores;
 import org.junit.runner.Runner;
 import org.junit.runners.Parameterized;
@@ -122,6 +122,7 @@ public class ScriptUnit extends Parameterized {
           public Runner apply(TestOracle input) {
             return ScriptRunner.createRunnerForTestOracle(
                 getTestClass().getJavaClass(),
+                testSuiteLoader.getTestSuiteDescriptor().getFactorSpaceDescriptor().getFactors(),
                 testSuiteLoader.getDescription(),
                 id++,
                 input,
@@ -137,6 +138,7 @@ public class ScriptUnit extends Parameterized {
     return testSuiteLoader.loadTestCases().stream().map(
         (Function<IndexedTestCase, Runner>) (IndexedTestCase testCase) -> ScriptRunner.createRunnerForTestCase(
             getTestClass().getJavaClass(),
+            testSuiteLoader.getTestSuiteDescriptor().getFactorSpaceDescriptor().getFactors(),
             testSuiteLoader.getDescription(),
             testCase.getIndex(),
             testCase,
@@ -146,23 +148,20 @@ public class ScriptUnit extends Parameterized {
 
   Iterable<Runner> createRunnersGroupingByTestFixture(TestSuiteLoader testSuiteLoader) {
     List<TestOracle> testOracles = testSuiteLoader.loadTestOracles();
-    List<String> singleLevelFactors = testSuiteLoader.getTestSuiteDescriptor().getFactorSpaceDescriptor().getFactors().stream()
+    List<Factor> factors = testSuiteLoader.getTestSuiteDescriptor().getFactorSpaceDescriptor().getFactors();
+    List<String> singleLevelFactors = factors.stream()
         .filter((Factor each) -> each.levels.size() == 1)
         .map((Factor each) -> each.name)
         .collect(toList());
-    List<String>
-        involved = Stream.concat(testSuiteLoader.getTestSuiteDescriptor().getInvolvedParameterNamesInSetUpAction().stream(), singleLevelFactors.stream()).distinct().collect(toList());
+    List<String> involved = figureOutInvolvedParameters(testSuiteLoader, singleLevelFactors);
     List<IndexedTestCase> testCases = testSuiteLoader.loadTestCases().stream()
         .sorted(byParameters(involved))
         .collect(toList());
-    List<Tuple> fixtures = new LinkedList<>(
-        testCases.stream()
-            .map((Func<IndexedTestCase, Map<String, Object>>) input -> project(input.getTuple(), involved))
-            .map((Func<Map<String, Object>, Tuple>) input -> new Tuple.Builder().putAll(input).build())
-            .collect(toSet()));
+    List<Tuple> fixtures = buildFixtures(involved, testCases);
     return fixtures.stream().map(
         (Function<Tuple, Runner>) fixture -> ScriptRunner.createRunnerForTestFixture(
             ScriptUnit.this.getTestClass().getJavaClass(),
+            factors,
             testSuiteLoader.getDescription(),
             fixtures.indexOf(fixture),
             fixture,
@@ -173,6 +172,18 @@ public class ScriptUnit extends Parameterized {
     ).collect(toList());
   }
 
+  private List<String> figureOutInvolvedParameters(TestSuiteLoader testSuiteLoader, List<String> singleLevelFactors) {
+    return Stream.concat(testSuiteLoader.getTestSuiteDescriptor().getInvolvedParameterNamesInSetUpAction().stream(), singleLevelFactors.stream()).distinct().collect(toList());
+  }
+
+  private LinkedList<Tuple> buildFixtures(List<String> involved, List<IndexedTestCase> testCases) {
+    return new LinkedList<>(
+        testCases.stream()
+            .map((Func<IndexedTestCase, Map<String, Object>>) input -> project(input.getTuple(), involved))
+            .map((Func<Map<String, Object>, Tuple>) input -> new Tuple.Builder().putAll(input).build())
+            .collect(toSet()));
+  }
+
   private static Action createSetUpBeforeAllAction(Func<Stage, Action> setUpFactory, Tuple commonFixture) {
     Stage.Type stageType = Stage.Type.SETUP_BEFORE_SUITE;
     return setUpFactory.apply(stageType.create(commonFixture));
@@ -180,7 +191,10 @@ public class ScriptUnit extends Parameterized {
 
   private <K, V> Map<K, V> project(Map<K, V> in, List<K> keys) {
     Map<K, V> ret = new HashMap<>();
-    keys.forEach(each -> ret.put(each, in.get(each)));
+    keys.forEach(each -> {
+      if (in.containsKey(each))
+        ret.put(each, in.get(each));
+    });
     return ret;
   }
 

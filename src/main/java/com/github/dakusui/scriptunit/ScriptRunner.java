@@ -2,14 +2,15 @@ package com.github.dakusui.scriptunit;
 
 import com.github.dakusui.actionunit.Action;
 import com.github.dakusui.actionunit.Actions;
+import com.github.dakusui.jcunit.core.factor.Factor;
 import com.github.dakusui.jcunit.core.tuples.Tuple;
 import com.github.dakusui.scriptunit.core.Utils;
 import com.github.dakusui.scriptunit.exceptions.ScriptUnitException;
 import com.github.dakusui.scriptunit.loaders.IndexedTestCase;
 import com.github.dakusui.scriptunit.loaders.TestSuiteLoader;
-import com.github.dakusui.scriptunit.model.func.Func;
 import com.github.dakusui.scriptunit.model.Stage;
 import com.github.dakusui.scriptunit.model.TestOracle;
+import com.github.dakusui.scriptunit.model.func.Func;
 import org.junit.runner.Description;
 import org.junit.runner.Runner;
 import org.junit.runner.notification.RunNotifier;
@@ -24,6 +25,7 @@ import java.util.function.Function;
 import java.util.stream.Stream;
 
 import static com.github.dakusui.actionunit.Actions.named;
+import static com.github.dakusui.scriptunit.core.Utils.filterSingleLevelFactorsOut;
 import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
 import static java.util.stream.Collectors.toList;
@@ -117,7 +119,7 @@ public final class ScriptRunner extends ParentRunner<Action> {
     };
   }
 
-  static ScriptRunner createRunnerForTestOracle(Class<?> testClass, String testSuiteDescription, int testOracleId, TestOracle testOracle, Func<Stage, Action> setUpFactory, List<IndexedTestCase> testCases) {
+  static ScriptRunner createRunnerForTestOracle(Class<?> testClass, List<Factor> factors, String testSuiteDescription, int testOracleId, TestOracle testOracle, Func<Stage, Action> setUpFactory, List<IndexedTestCase> testCases) {
     try {
       return new ScriptRunner(testClass,
           testCases.stream()
@@ -128,11 +130,14 @@ public final class ScriptRunner extends ParentRunner<Action> {
                 public Action apply(IndexedTestCase input) {
                   try {
                     return Actions.sequential(
-                        String.format("%03d: %s: %s", i, testOracle.getDescription(), input.getTuple()),
+                        format("%03d: %s", i, testOracle.getDescription()),
                         named(
-                            format("%03d: Setup test fixture %s", i, input.getTuple()),
-                            requireNonNull(createSetUpAction(input.getTuple(), setUpFactory))),
-                        testOracle.createTestAction(input.getIndex(), testSuiteDescription, input.getTuple()));
+                            format("%03d: Setup test fixture", i),
+                            named(format("fixture: %s", filterSingleLevelFactorsOut(input.getTuple(), factors)),
+                                requireNonNull(createSetUpAction(input.getTuple(), setUpFactory))
+                            )
+                        ),
+                        testOracle.createTestActionSupplier(factors, input.getIndex(), testSuiteDescription, input.getTuple()).get());
                   } finally {
                     i++;
                   }
@@ -145,18 +150,19 @@ public final class ScriptRunner extends ParentRunner<Action> {
     }
   }
 
-  static ScriptRunner createRunnerForTestCase(Class<?> testClass, String testSuiteDescription, int testCaseId, IndexedTestCase testCase, Func<Stage, Action> setUpFactory, List<TestOracle> testOracles) {
+  static ScriptRunner createRunnerForTestCase(Class<?> testClass, List<Factor> factors, String testSuiteDescription, int testCaseId, IndexedTestCase testCase, Func<Stage, Action> setUpFactory, List<TestOracle> testOracles) {
     try {
       Tuple testCaseTuple = testCase.getTuple();
       return new ScriptRunner(testClass,
           concat(
               of(
                   named(
-                      format("%03d: Setup test fixture %s", 0, testCase.getTuple()),
-                      requireNonNull(createSetUpAction(testCaseTuple, setUpFactory))
+                      format("%03d: Setup test fixture", 0),
+                      named(format("fixture: %s", filterSingleLevelFactorsOut(testCase.getTuple(), factors)),
+                          requireNonNull(createSetUpAction(testCaseTuple, setUpFactory)))
                   )),
               testOracles.stream()
-                  .map((TestOracle input) -> input.createTestAction(testOracles.indexOf(input) + 1, testSuiteDescription, testCaseTuple)))
+                  .map((TestOracle input) -> input.createTestActionSupplier(factors, testOracles.indexOf(input) + 1, testSuiteDescription, testCaseTuple).get()))
               .collect(toList()),
           testCaseId);
     } catch (InitializationError initializationError) {
@@ -164,17 +170,18 @@ public final class ScriptRunner extends ParentRunner<Action> {
     }
   }
 
-  static ScriptRunner createRunnerForTestFixture(Class<?> testClass, String testSuiteDescription, int testFixtureId, Tuple fixture, Func<Stage, Action> setUpFactory, List<IndexedTestCase> testCases, List<TestOracle> testOracles) {
+  static ScriptRunner createRunnerForTestFixture(Class<?> testClass, List<Factor> factors, String testSuiteDescription, int testFixtureId, Tuple fixture, Func<Stage, Action> setUpFactory, List<IndexedTestCase> testCases, List<TestOracle> testOracles) {
     try {
       AtomicInteger i = new AtomicInteger(0);
       return new ScriptRunner(testClass,
           concat(
               of(
                   named(
-                      format("%03d: Setup test fixture %s", i.getAndIncrement(), fixture),
-                      requireNonNull(createSetUpAction(fixture, setUpFactory))
+                      format("%03d: Setup test fixture", i.getAndIncrement()),
+                      named(format("fixture: %s", fixture),
+                          requireNonNull(createSetUpAction(fixture, setUpFactory)))
                   )),
-              buildSortedActionStreamOrderingByTestCaseAndThenTestOracle(testSuiteDescription, testCases, testOracles, i)
+              buildSortedActionStreamOrderingByTestCaseAndThenTestOracle(factors, testSuiteDescription, testCases, testOracles, i)
           ).collect(toList()),
           testFixtureId);
     } catch (InitializationError initializationError) {
@@ -182,18 +189,18 @@ public final class ScriptRunner extends ParentRunner<Action> {
     }
   }
 
-  private static Stream<Action> buildSortedActionStreamOrderingByTestCaseAndThenTestOracle(String testSuiteDescription, List<IndexedTestCase> testCases, List<TestOracle> testOracles, AtomicInteger i) {
+  private static Stream<Action> buildSortedActionStreamOrderingByTestCaseAndThenTestOracle(List<Factor> factors, String testSuiteDescription, List<IndexedTestCase> testCases, List<TestOracle> testOracles, AtomicInteger i) {
     return testCases.stream()
         .flatMap(eachTestCase -> testOracles.stream()
             .map(eachOracle ->
-                eachOracle.createTestAction(i.getAndIncrement(), testSuiteDescription, eachTestCase.getTuple())));
+                eachOracle.createTestActionSupplier(factors, i.getAndIncrement(), testSuiteDescription, eachTestCase.getTuple()).get()));
   }
 
-  private static Stream<Action> buildSortedActionStreamOrderingByTestOracleAndThenTestCase(String testSuiteDescription, List<IndexedTestCase> testCases, List<TestOracle> testOracles, AtomicInteger i) {
+  private static Stream<Action> buildSortedActionStreamOrderingByTestOracleAndThenTestCase(List<Factor> factors, String testSuiteDescription, List<IndexedTestCase> testCases, List<TestOracle> testOracles, AtomicInteger i) {
     return testOracles.stream()
         .flatMap(eachOracle -> testCases.stream()
             .map(eachTestCase ->
-                eachOracle.createTestAction(i.getAndIncrement(), testSuiteDescription, eachTestCase.getTuple())));
+                eachOracle.createTestActionSupplier(factors, i.getAndIncrement(), testSuiteDescription, eachTestCase.getTuple()).get()));
   }
 
   private static Action createSetUpAction(Tuple input, Func<Stage, Action> setUpFactory) {

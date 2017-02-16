@@ -12,7 +12,7 @@ import java.util.Objects;
 import static java.util.Objects.requireNonNull;
 
 public interface Statement {
-  Object execute_();
+  Object execute();
 
   Object executeWith(FuncInvoker funcInvoker);
 
@@ -45,14 +45,14 @@ public interface Statement {
       if (isAtom(object))
         return new Atom() {
           @Override
-          public Object execute_() {
+          public Object execute() {
             return funcFactory.createConst(object);
           }
 
           @Override
           public Object executeWith(FuncInvoker funcInvoker) {
             funcHandler.setFuncInvoker(funcInvoker);
-            return execute_();
+            return execute();
           }
         };
       @SuppressWarnings("unchecked") List<Object> raw = (List<Object>) object;
@@ -70,14 +70,14 @@ public interface Statement {
         }
 
         @Override
-        public Object execute_() {
+        public Object execute() {
           return form.apply(arguments);
         }
 
         @Override
         public Object executeWith(FuncInvoker funcInvoker) {
           funcHandler.setFuncInvoker(funcInvoker);
-          return execute_();
+          return execute();
         }
       };
     }
