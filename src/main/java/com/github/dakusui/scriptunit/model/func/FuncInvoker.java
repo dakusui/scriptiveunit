@@ -5,10 +5,13 @@ import com.github.dakusui.jcunit.core.utils.StringUtils;
 import com.github.dakusui.scriptunit.core.Utils;
 import com.google.common.collect.Lists;
 
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.*;
 import java.util.function.Function;
 
+import static com.github.dakusui.scriptunit.core.Utils.convertIfNecessary;
+import static com.github.dakusui.scriptunit.exceptions.ScriptUnitException.wrap;
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
 import static java.util.Arrays.stream;
@@ -22,6 +25,8 @@ public interface FuncInvoker {
   Object invokeMethod(Object target, Method method, Object[] args, String alias);
 
   void leave();
+
+  String asString();
 
   class Impl implements FuncInvoker {
     private final Writer writer;
@@ -63,7 +68,7 @@ public interface FuncInvoker {
 
     @Override
     public Object invokeMethod(Object target, Method method, Object[] args, String alias) {
-      List<Object> key = asList(method, target, args);
+      List<Object> key = asList(target, method, args);
       boolean wasAbsent = !this.memo.containsKey(key);
       boolean targetIsMemoized = target instanceof Func.Memoized;
       Object ret = "(N/A)";
@@ -72,10 +77,10 @@ public interface FuncInvoker {
         if (targetIsMemoized) {
           ret = this.memo.computeIfAbsent(
               key,
-              (List<Object> input) -> invokeMethod(input.get(0), (Method) input.get(1), (Object[])(input.get(2)), alias)
+              (List<Object> input) -> invokeMethod(input.get(0), (Method) input.get(1), (Object[])(input.get(2)))
           );
         } else {
-          ret = invokeMethod(target, method, args, alias);
+          ret = invokeMethod(target, method, args);
         }
         return Utils.toBigDecimalIfPossible(ret);
       } finally {
@@ -83,6 +88,25 @@ public interface FuncInvoker {
           this.writeLine(") -> %s", ret);
         else
           this.writeLine(") -> (memoized)");
+      }
+    }
+
+    private static Object invokeMethod(Object target, Method method, Object... args) {
+      try {
+        return method.invoke(target, stream(args).map(new Func<Object, Object>() {
+          int i = 0;
+
+          @Override
+          public Object apply(Object input) {
+            try {
+              return convertIfNecessary(input, method.getParameterTypes()[i]);
+            } finally {
+              i++;
+            }
+          }
+        }).collect(toList()).toArray());
+      } catch (IllegalAccessException | InvocationTargetException e) {
+        throw wrap(e);
       }
     }
 

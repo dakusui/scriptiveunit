@@ -4,18 +4,14 @@ import com.github.dakusui.scriptunit.core.ObjectMethod;
 
 import java.io.IOException;
 import java.lang.reflect.InvocationHandler;
-import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.util.Formattable;
 import java.util.Formatter;
 
 import static com.github.dakusui.scriptunit.core.Utils.check;
-import static com.github.dakusui.scriptunit.core.Utils.convertIfNecessary;
 import static com.github.dakusui.scriptunit.exceptions.ScriptUnitException.wrap;
 import static com.github.dakusui.scriptunit.exceptions.TypeMismatch.valueReturnedByScriptableMethodMustBeFunc;
-import static java.util.Arrays.stream;
-import static java.util.stream.Collectors.toList;
 
 @FunctionalInterface
 public interface Func<I, O> extends
@@ -90,26 +86,5 @@ public interface Func<I, O> extends
           handler
       );
     }
-
-
-    private static Object invokeMethod(Object target, Method method, Object... args) {
-      try {
-        return method.invoke(target, stream(args).map(new Func<Object, Object>() {
-          int i = 0;
-
-          @Override
-          public Object apply(Object input) {
-            try {
-              return convertIfNecessary(input, method.getParameterTypes()[i]);
-            } finally {
-              i++;
-            }
-          }
-        }).collect(toList()).toArray());
-      } catch (IllegalAccessException | InvocationTargetException e) {
-        throw wrap(e);
-      }
-    }
-
   }
 }

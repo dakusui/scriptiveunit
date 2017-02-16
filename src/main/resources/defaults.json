@@ -6,10 +6,6 @@
     ]
   },
   "runnerType": "groupByTestOracle",
-  "setUpBeforeAll": [
-    "nop"
-  ],
-  "setUp": [
-    "nop"
-  ]
+  "setUpBeforeAll": null,
+  "setUp": null
 }
