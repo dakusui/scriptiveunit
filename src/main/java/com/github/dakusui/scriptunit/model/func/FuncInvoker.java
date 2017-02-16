@@ -68,7 +68,7 @@ public interface FuncInvoker {
 
     @Override
     public Object invokeMethod(Object target, Method method, Object[] args, String alias) {
-      List<Object> key = asList(target, method, args);
+      List<Object> key = asList(target, method, asList(args));
       boolean wasAbsent = !this.memo.containsKey(key);
       boolean targetIsMemoized = target instanceof Func.Memoized;
       Object ret = "(N/A)";
@@ -77,7 +77,7 @@ public interface FuncInvoker {
         if (targetIsMemoized) {
           ret = this.memo.computeIfAbsent(
               key,
-              (List<Object> input) -> invokeMethod(input.get(0), (Method) input.get(1), (Object[])(input.get(2)))
+              (List<Object> input) -> invokeMethod(target, method, args)
           );
         } else {
           ret = invokeMethod(target, method, args);

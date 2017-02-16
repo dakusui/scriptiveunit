@@ -65,8 +65,12 @@ public enum Beans {
 
     public TestSuiteDescriptor create(Object driverObject) {
       return new TestSuiteDescriptor() {
-        Statement setUpStatement = new Statement.Factory(driverObject).create(setUpClause);
-        Statement setUpBeforeAllStatement = new Statement.Factory(driverObject).create(setUpBeforeAllClause);
+        Statement setUpStatement = setUpClause != null ?
+            new Statement.Factory(driverObject).create(setUpClause) :
+            null;
+        Statement setUpBeforeAllStatement = setUpBeforeAllClause != null ?
+            new Statement.Factory(driverObject).create(setUpBeforeAllClause) :
+            null;
 
         @Override
         public String getDescription() {
@@ -90,7 +94,7 @@ public enum Beans {
 
         @Override
         public Func<Stage, Action> getSetUpActionFactory() {
-          return createActionFactory("Fixture set up", "reset fixture setup writer", setUpStatement);
+          return createActionFactory("Fixture set up", setUpStatement);
         }
 
         @Override
@@ -100,25 +104,13 @@ public enum Beans {
 
         @Override
         public Func<Stage, Action> getSetUpBeforeAllActionFactory() {
-          return createActionFactory(format("Suite level set up: %s", description), "reset suite level fixture writer", setUpBeforeAllStatement);
+          return createActionFactory(format("Suite level set up: %s", description), setUpBeforeAllStatement);
         }
 
 
-        private Func<Stage, Action> createActionFactory(String actionName, String resetMessage, Statement statement) {
-          return input -> Actions.sequential(
+        private Func<Stage, Action> createActionFactory(String actionName, Statement statement) {
+          return input -> Actions.named(
               actionName,
-              Actions.simple(new Runnable() {
-                               @Override
-                               public void run() {
-                                 // TODO "invoker reset" should come here
-                               }
-
-                               @Override
-                               public String toString() {
-                                 return resetMessage;
-                               }
-                             }
-              ),
               statement == null ?
                   Actions.nop() :
                   Beans.<Stage, Action>toFunc(statement, new FuncInvoker.Impl(0)).apply(input)
