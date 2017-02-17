@@ -1,4 +1,4 @@
-package com.github.dakusui.scriptunit.testutils.drivers;
+package com.github.dakusui.scriptunit.drivers;
 
 import com.github.dakusui.scriptunit.annotations.Doc;
 import com.github.dakusui.scriptunit.annotations.ReflectivelyReferenced;

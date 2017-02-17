@@ -5,7 +5,7 @@ import com.github.dakusui.jcunit.runners.standard.annotations.FactorField;
 import com.github.dakusui.scriptunit.annotations.ReflectivelyReferenced;
 import com.github.dakusui.scriptunit.testutils.JUnitResultMatcher;
 import com.github.dakusui.scriptunit.testutils.TestDef;
-import com.github.dakusui.scriptunit.testutils.drivers.Simple;
+import com.github.dakusui.scriptunit.drivers.Simple;
 import org.junit.Test;
 import org.junit.runner.JUnitCore;
 import org.junit.runner.Result;

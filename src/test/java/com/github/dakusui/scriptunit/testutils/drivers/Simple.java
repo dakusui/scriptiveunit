@@ -1,4 +1,4 @@
-package com.github.dakusui.scriptunit.testutils.drivers;
+package com.github.dakusui.scriptunit.drivers;
 
 import com.github.dakusui.scriptunit.ScriptiveUnit;
 import com.github.dakusui.scriptunit.annotations.Import;
@@ -6,7 +6,7 @@ import com.github.dakusui.scriptunit.annotations.Import.Alias;
 import com.github.dakusui.scriptunit.annotations.Load;
 import com.github.dakusui.scriptunit.annotations.ReflectivelyReferenced;
 import com.github.dakusui.scriptunit.loaders.json.JsonBasedTestSuiteLoader;
-import com.github.dakusui.scriptunit.testutils.drivers.actions.Basic;
+import com.github.dakusui.scriptunit.drivers.actions.Basic;
 import org.junit.runner.RunWith;
 
 @Load(
