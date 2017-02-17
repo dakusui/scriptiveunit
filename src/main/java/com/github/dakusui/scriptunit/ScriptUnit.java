@@ -43,6 +43,7 @@ public class ScriptUnit extends Parameterized {
   private final List<Runner>    runners;
   private final Properties      properties;
   private final TestSuiteLoader testSuiteLoader;
+  private final String          scriptResourceName;
 
   /**
    * Only called reflectively. Do not use programmatically.
@@ -65,7 +66,8 @@ public class ScriptUnit extends Parameterized {
     super(klass);
     this.properties = requireNonNull(properties);
     try {
-      this.testSuiteLoader = createTestSuiteLoader(this.getTestClass());
+      this.scriptResourceName = Config.create(klass, this.properties).getScriptResourceName();
+      this.testSuiteLoader = createTestSuiteLoader(this.getTestClass(), this.scriptResourceName);
       runners = newLinkedList(createRunners(this.testSuiteLoader));
     } catch (RuntimeException e) {
       if (e.getCause() instanceof InitializationError) {
@@ -73,6 +75,14 @@ public class ScriptUnit extends Parameterized {
       }
       throw e;
     }
+  }
+
+  @Override
+  public String getName() {
+    return scriptResourceName
+        .replaceAll(".+/", "")
+        .replaceAll("\\.[^.]*$", "")
+        + ":" + this.testSuiteLoader.getDescription();
   }
 
   @Override
@@ -210,12 +220,12 @@ public class ScriptUnit extends Parameterized {
   }
 
 
-  private TestSuiteLoader createTestSuiteLoader(TestClass testClass) {
+  private TestSuiteLoader createTestSuiteLoader(TestClass testClass, String scriptResourceName) {
     Load annLoad = getAnnotationWithDefault(testClass, Load.DEFAULT_INSTANCE);
     return TestSuiteLoader.Factory
         .create(annLoad.with())
         .create(
-            Config.create(testClass.getJavaClass(), this.properties).getScriptResourceName(),
+            scriptResourceName,
             testClass.getJavaClass()
         );
   }
