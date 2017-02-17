@@ -82,12 +82,18 @@ public interface TestSuiteLoader {
     abstract protected TestSuiteDescriptor loadTestSuite(String resourceName, Class<?> driverClass);
 
     private List<IndexedTestCase> createTestCases(TestSuiteDescriptor testSuiteDescriptor) {
-      TestSuite.Builder builder = new TestSuite.Builder(createEngine(testSuiteDescriptor.getCoveringArrayEngineConfig()));
+      FactorSpaceDescriptor factorSpaceDescriptor = testSuiteDescriptor.getFactorSpaceDescriptor();
+      CoveringArrayEngineConfig coveringArrayEngineConfig = testSuiteDescriptor.getCoveringArrayEngineConfig();
+
+      TestSuite.Builder builder = new TestSuite.Builder(createEngine(coveringArrayEngineConfig));
       builder.disableNegativeTests();
-      for (Factor each : testSuiteDescriptor.getFactorSpaceDescriptor().getFactors()) {
-        builder.addFactor(each);
+      if (!factorSpaceDescriptor.getFactors().isEmpty()) {
+        factorSpaceDescriptor.getFactors().forEach(builder::addFactor);
+      } else {
+        builder.addFactor("*dummyFactor*", "*dummyLevel*");
       }
-      for (TestSuite.Predicate each : testSuiteDescriptor.getFactorSpaceDescriptor().getConstraints()) {
+
+      for (TestSuite.Predicate each : factorSpaceDescriptor.getConstraints()) {
         builder.addConstraint(each);
       }
       return builder.build().getTestCases().stream()

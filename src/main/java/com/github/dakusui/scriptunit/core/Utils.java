@@ -34,6 +34,7 @@ import static com.google.common.base.Preconditions.checkState;
 import static java.lang.Character.*;
 import static java.lang.ClassLoader.getSystemResourceAsStream;
 import static java.lang.String.format;
+import static java.math.MathContext.DECIMAL128;
 import static java.util.Objects.requireNonNull;
 import static java.util.stream.Collectors.toList;
 
@@ -141,7 +142,7 @@ public enum Utils {
   public static BigDecimal toBigDecimal(Number number) {
     if (number instanceof BigDecimal)
       return BigDecimal.class.cast(number);
-    return new BigDecimal(number.toString());
+    return new BigDecimal(number.toString(), DECIMAL128);
   }
 
   public static Object toBigDecimalIfPossible(Object object) {
@@ -292,6 +293,6 @@ public enum Utils {
 
   private static final List<Converter<?, ?>> TYPE_CONVERTERS = new ImmutableList.Builder<Converter<?, ?>>()
       .add(Converter.create(BigDecimal.class, Integer.class, BigDecimal::intValue))
-      .add(Converter.create(Number.class, BigDecimal.class, (Number input) -> new BigDecimal(input.toString())))
+      .add(Converter.create(Number.class, BigDecimal.class, (Number input) -> new BigDecimal(input.toString(), DECIMAL128)))
       .build();
 }
