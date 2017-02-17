@@ -3,15 +3,15 @@ package com.github.dakusui.scriptunit.tests.bugfixes;
 import com.github.dakusui.jcunit.runners.standard.JCUnit;
 import com.github.dakusui.jcunit.runners.standard.annotations.FactorField;
 import com.github.dakusui.scriptunit.annotations.ReflectivelyReferenced;
-import com.github.dakusui.scriptunit.testutils.drivers.Simple;
 import com.github.dakusui.scriptunit.testutils.JUnitResultMatcher;
 import com.github.dakusui.scriptunit.testutils.TestDef;
-import com.github.dakusui.scriptunit.testutils.TestUtils;
+import com.github.dakusui.scriptunit.testutils.drivers.Simple;
 import org.junit.Test;
 import org.junit.runner.JUnitCore;
 import org.junit.runner.Result;
 import org.junit.runner.RunWith;
 
+import static com.github.dakusui.scriptunit.testutils.TestUtils.configureScriptNameSystemProperty;
 import static org.hamcrest.MatcherAssert.assertThat;
 
 @RunWith(JCUnit.class)
@@ -28,7 +28,7 @@ public class BugfixesTest {
       public JUnitResultMatcher getOracle(BugfixesTest testObject) {
         return new JUnitResultMatcher.Impl(true, 5, 0, 0);
       }
-    };
+    }
   }
 
   @ReflectivelyReferenced
@@ -37,7 +37,7 @@ public class BugfixesTest {
 
   @Test
   public void run() {
-    TestUtils.configureScriptNameSystemProperty(testItem.getTestInput(), Simple.class);
+    configureScriptNameSystemProperty(testItem.getTestInput(), Simple.class);
     assertThat(JUnitCore.runClasses(Simple.class), testItem.getOracle(this));
   }
 

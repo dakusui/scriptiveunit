@@ -7,7 +7,6 @@ import org.hamcrest.Matcher;
  * @param <S> Output from SUT
  */
 public interface TestDef<I, T, S> {
-  I getTestInput();
-
   Matcher<S> getOracle(T testObject);
+  I getTestInput();
 }
