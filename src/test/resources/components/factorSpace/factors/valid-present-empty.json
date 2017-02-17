@@ -1,0 +1,17 @@
+{
+  "factorSpace": {
+    "factors": {
+      "service": [
+        "shoppingmall",
+        "bookstore"
+      ],
+      "index": [
+        "item",
+        "product"
+      ],
+      "host": [
+        "localhost"
+      ]
+    }
+  }
+}

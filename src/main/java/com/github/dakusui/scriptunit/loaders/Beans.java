@@ -10,7 +10,7 @@ import com.github.dakusui.jcunit.core.factor.Factor;
 import com.github.dakusui.jcunit.core.tuples.Tuple;
 import com.github.dakusui.jcunit.framework.TestSuite;
 import com.github.dakusui.jcunit.plugins.caengines.CoveringArrayEngine;
-import com.github.dakusui.scriptunit.ScriptRunner.Type;
+import com.github.dakusui.scriptunit.GroupedTestItemRunner.Type;
 import com.github.dakusui.scriptunit.core.Utils;
 import com.github.dakusui.scriptunit.model.*;
 import com.github.dakusui.scriptunit.model.func.Func;

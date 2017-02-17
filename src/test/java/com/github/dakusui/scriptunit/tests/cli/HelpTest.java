@@ -22,7 +22,7 @@ public class HelpTest {
   private static final String                INVALID             = "(INVALID)";
   private static final int                   INVALID_SECOND_ARG  = 2;
   private static final Map<String, String[]> arg1Values          = new ImmutableMap.Builder<String, String[]>()
-      .put("SCRIPT", new String[] { "tests/regular/qapi.json", "tests/regular/defaults.json", INVALID })
+      .put("SCRIPT", new String[] { "tests/regular/qapi.json", "tests/regular/defaultValues.json", INVALID })
       .put("FUNCTION", new String[] { "always", "if_then", INVALID })
       .put("RUNNER", new String[] { "groupByTestOracle", "groupByTestCase", INVALID })
       .build();

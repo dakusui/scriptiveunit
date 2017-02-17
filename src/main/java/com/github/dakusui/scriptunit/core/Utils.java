@@ -12,6 +12,8 @@ import com.google.common.collect.Iterables;
 import org.codehaus.jackson.JsonNode;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.node.ObjectNode;
+import org.junit.runner.JUnitCore;
+import org.junit.runner.notification.RunListener;
 
 import java.io.IOException;
 import java.io.InputStream;

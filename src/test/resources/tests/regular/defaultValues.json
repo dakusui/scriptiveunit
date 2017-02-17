@@ -5,10 +5,7 @@
       "terms": [["ヒーター"], ["iPhone"]],
       "sortBy": ["price", "lexical", "relevance"],
       "order" : ["asc", "desc"]
-    },
-    "constraints": [
-      ["if_then", ["equals", ["attr", "sortBy"], "relevance"], ["equals", ["attr", "order"], "desc"]]
-    ]
+    }
   },
   "testOracles": [
     {

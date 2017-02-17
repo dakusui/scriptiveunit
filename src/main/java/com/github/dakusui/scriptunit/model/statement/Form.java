@@ -1,6 +1,6 @@
 package com.github.dakusui.scriptunit.model.statement;
 
-import com.github.dakusui.scriptunit.ScriptUnit;
+import com.github.dakusui.scriptunit.ScriptiveUnit;
 import com.github.dakusui.scriptunit.core.ObjectMethod;
 import com.github.dakusui.scriptunit.model.func.Func;
 import com.github.dakusui.scriptunit.model.func.FuncHandler;
@@ -66,7 +66,7 @@ public interface Form {
     }
 
     private ObjectMethod getMethodFromDriver(String methodName) {
-      for (ObjectMethod each : ScriptUnit.getAnnotatedMethodsFromImportedFieldsInObject(this.driver)) {
+      for (ObjectMethod each : ScriptiveUnit.getAnnotatedMethodsFromImportedFieldsInObject(this.driver)) {
         if (getMethodName(each).equals(methodName))
           return each;
       }

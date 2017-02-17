@@ -1,0 +1,25 @@
+{
+  "factorSpace": {
+    "constraints": [
+      [
+        "if_then",
+        [
+          "equals",
+          [
+            "attr",
+            "sortBy"
+          ],
+          "relevance"
+        ],
+        [
+          "equals",
+          [
+            "attr",
+            "order"
+          ],
+          "desc"
+        ]
+      ]
+    ]
+  }
+}

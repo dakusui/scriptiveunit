@@ -1,11 +1,10 @@
 package com.github.dakusui.scriptunit.loaders;
 
 import com.github.dakusui.actionunit.Action;
-import com.github.dakusui.jcunit.core.factor.Factor;
 import com.github.dakusui.jcunit.framework.TestCase;
 import com.github.dakusui.jcunit.framework.TestSuite;
 import com.github.dakusui.jcunit.plugins.caengines.CoveringArrayEngine;
-import com.github.dakusui.scriptunit.ScriptRunner.Type;
+import com.github.dakusui.scriptunit.GroupedTestItemRunner.Type;
 import com.github.dakusui.scriptunit.core.Utils;
 import com.github.dakusui.scriptunit.model.*;
 import com.github.dakusui.scriptunit.model.func.Func;
@@ -19,11 +18,13 @@ import static com.github.dakusui.scriptunit.exceptions.ScriptUnitException.wrap;
 import static java.util.stream.Collectors.toList;
 
 public interface TestSuiteLoader {
+  String getScriptResourceName();
+
   String getDescription();
 
   Func<Stage, Action> getSetUpActionFactory();
 
-  Func<Stage, Action> getBeforeAllActionFactory();
+  Func<Stage, Action> getSetUpBeforeAllActionFactory();
 
   List<IndexedTestCase> loadTestCases();
 
@@ -37,9 +38,16 @@ public interface TestSuiteLoader {
   abstract class Base implements TestSuiteLoader {
 
     private final TestSuiteDescriptor testSuiteDescriptor;
+    private final String              scriptResourceName;
 
-    public Base(String resourceName, Class<?> driverClass) {
-      this.testSuiteDescriptor = loadTestSuite(resourceName, driverClass);
+    public Base(String scriptResourceName, Class<?> driverClass) {
+      this.scriptResourceName = scriptResourceName;
+      this.testSuiteDescriptor = loadTestSuite(driverClass, scriptResourceName);
+    }
+
+    @Override
+    public String getScriptResourceName() {
+      return this.scriptResourceName;
     }
 
     @Override
@@ -53,7 +61,7 @@ public interface TestSuiteLoader {
     }
 
     @Override
-    public Func<Stage, Action> getBeforeAllActionFactory() {
+    public Func<Stage, Action> getSetUpBeforeAllActionFactory() {
       return this.testSuiteDescriptor.getSetUpBeforeAllActionFactory();
     }
 
@@ -77,9 +85,6 @@ public interface TestSuiteLoader {
     public TestSuiteDescriptor getTestSuiteDescriptor() {
       return this.testSuiteDescriptor;
     }
-
-
-    abstract protected TestSuiteDescriptor loadTestSuite(String resourceName, Class<?> driverClass);
 
     private List<IndexedTestCase> createTestCases(TestSuiteDescriptor testSuiteDescriptor) {
       FactorSpaceDescriptor factorSpaceDescriptor = testSuiteDescriptor.getFactorSpaceDescriptor();
@@ -131,6 +136,7 @@ public interface TestSuiteLoader {
         throw wrap(e);
       }
     }
+    abstract protected TestSuiteDescriptor loadTestSuite(Class<?> driverClass, String resourceName);
   }
 
   interface Factory {

@@ -32,28 +32,28 @@ import static java.util.stream.Collectors.toList;
 import static java.util.stream.Stream.concat;
 import static java.util.stream.Stream.of;
 
-public final class ScriptRunner extends ParentRunner<Action> {
+public final class GroupedTestItemRunner extends ParentRunner<Action> {
   public enum Type {
-    GROUP_BY_TEST_ORACLE {
+    BY_TEST_ORACLE {
       @Override
-      Iterable<Runner> createRunners(ScriptUnit scriptUnit, TestSuiteLoader testSuiteLoader) {
-        return scriptUnit.createRunnersGroupingByTestOracle(testSuiteLoader);
+      Iterable<Runner> createRunners(ScriptiveUnit scriptiveUnit, TestSuiteLoader testSuiteLoader) {
+        return scriptiveUnit.createRunnersGroupingByTestOracle(testSuiteLoader);
       }
     },
-    GROUP_BY_TEST_CASE {
+    BY_TEST_CASE {
       @Override
-      Iterable<Runner> createRunners(ScriptUnit scriptUnit, TestSuiteLoader testSuiteLoader) {
-        return scriptUnit.createRunnersGroupingByTestCase(testSuiteLoader);
+      Iterable<Runner> createRunners(ScriptiveUnit scriptiveUnit, TestSuiteLoader testSuiteLoader) {
+        return scriptiveUnit.createRunnersGroupingByTestCase(testSuiteLoader);
       }
     },
-    GROUP_BY_TEST_FIXTURE {
+    BY_TEST_FIXTURE {
       @Override
-      Iterable<Runner> createRunners(ScriptUnit scriptUnit, TestSuiteLoader testSuiteLoader) {
-        return scriptUnit.createRunnersGroupingByTestFixture(testSuiteLoader);
+      Iterable<Runner> createRunners(ScriptiveUnit scriptiveUnit, TestSuiteLoader testSuiteLoader) {
+        return scriptiveUnit.createRunnersGroupingByTestFixture(testSuiteLoader);
       }
     },;
 
-    abstract Iterable<Runner> createRunners(ScriptUnit scriptUnit, TestSuiteLoader testSuiteLoader);
+    abstract Iterable<Runner> createRunners(ScriptiveUnit scriptiveUnit, TestSuiteLoader testSuiteLoader);
   }
 
   private final List<Action> actions;
@@ -63,7 +63,7 @@ public final class ScriptRunner extends ParentRunner<Action> {
   /**
    * Constructs a new {@code ParentRunner} that will run {@code @TestClass}
    */
-  private ScriptRunner(Class<?> testClass, List<Action> actions, int groupId) throws InitializationError {
+  private GroupedTestItemRunner(Class<?> testClass, List<Action> actions, int groupId) throws InitializationError {
     super(testClass);
     this.actions = requireNonNull(actions);
     this.groupId = groupId;
@@ -119,9 +119,9 @@ public final class ScriptRunner extends ParentRunner<Action> {
     };
   }
 
-  static ScriptRunner createRunnerForTestOracle(Class<?> testClass, List<Factor> factors, String testSuiteDescription, int testOracleId, TestOracle testOracle, Func<Stage, Action> setUpFactory, List<IndexedTestCase> testCases) {
+  static GroupedTestItemRunner createRunnerForTestOracle(Class<?> testClass, List<Factor> factors, String testSuiteDescription, int testOracleId, TestOracle testOracle, Func<Stage, Action> setUpFactory, List<IndexedTestCase> testCases) {
     try {
-      return new ScriptRunner(testClass,
+      return new GroupedTestItemRunner(testClass,
           testCases.stream()
               .map(new Function<IndexedTestCase, Action>() {
                 int i = 0;
@@ -150,10 +150,10 @@ public final class ScriptRunner extends ParentRunner<Action> {
     }
   }
 
-  static ScriptRunner createRunnerForTestCase(Class<?> testClass, List<Factor> factors, String testSuiteDescription, int testCaseId, IndexedTestCase testCase, Func<Stage, Action> setUpFactory, List<TestOracle> testOracles) {
+  static GroupedTestItemRunner createRunnerForTestCase(Class<?> testClass, List<Factor> factors, String testSuiteDescription, int testCaseId, IndexedTestCase testCase, Func<Stage, Action> setUpFactory, List<TestOracle> testOracles) {
     try {
       Tuple testCaseTuple = testCase.getTuple();
-      return new ScriptRunner(testClass,
+      return new GroupedTestItemRunner(testClass,
           concat(
               of(
                   named(
@@ -170,10 +170,10 @@ public final class ScriptRunner extends ParentRunner<Action> {
     }
   }
 
-  static ScriptRunner createRunnerForTestFixture(Class<?> testClass, List<Factor> factors, String testSuiteDescription, int testFixtureId, Tuple fixture, Func<Stage, Action> setUpFactory, List<IndexedTestCase> testCases, List<TestOracle> testOracles) {
+  static GroupedTestItemRunner createRunnerForTestFixture(Class<?> testClass, List<Factor> factors, String testSuiteDescription, int testFixtureId, Tuple fixture, Func<Stage, Action> setUpFactory, List<IndexedTestCase> testCases, List<TestOracle> testOracles) {
     try {
       AtomicInteger i = new AtomicInteger(0);
-      return new ScriptRunner(testClass,
+      return new GroupedTestItemRunner(testClass,
           concat(
               of(
                   named(
