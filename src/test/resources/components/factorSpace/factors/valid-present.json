@@ -11,6 +11,23 @@
       ],
       "host": [
         "localhost"
+      ],
+      "terms": [
+        [
+          "ヒーター"
+        ],
+        [
+          "iPhone"
+        ]
+      ],
+      "sortBy": [
+        "price",
+        "lexical",
+        "relevance"
+      ],
+      "order": [
+        "asc",
+        "desc"
       ]
     }
   }

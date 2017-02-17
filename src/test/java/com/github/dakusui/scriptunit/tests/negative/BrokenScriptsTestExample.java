@@ -1,7 +1,7 @@
 package com.github.dakusui.scriptunit.tests.negative;
 
 import com.github.dakusui.scriptunit.core.Config;
-import com.github.dakusui.scriptunit.drivers.Qapi;
+import com.github.dakusui.scriptunit.testutils.drivers.Qapi;
 import com.github.dakusui.scriptunit.testutils.TestBase;
 import org.junit.Test;
 import org.junit.runner.Description;

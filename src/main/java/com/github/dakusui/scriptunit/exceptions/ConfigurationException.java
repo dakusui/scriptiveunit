@@ -4,7 +4,7 @@ import com.github.dakusui.scriptunit.GroupedTestItemRunner;
 
 import static java.lang.String.format;
 
-public class ConfigurationException extends ScriptUnitException {
+public class ConfigurationException extends ScriptiveUnitException {
   public ConfigurationException(String message) {
     super(message);
   }

@@ -14,7 +14,7 @@ import java.io.IOException;
 import java.util.AbstractList;
 
 import static com.github.dakusui.scriptunit.core.Utils.*;
-import static com.github.dakusui.scriptunit.exceptions.ScriptUnitException.wrap;
+import static com.github.dakusui.scriptunit.exceptions.ScriptiveUnitException.wrap;
 import static com.github.dakusui.scriptunit.exceptions.SyntaxException.*;
 
 public class JsonBasedTestSuiteLoader extends TestSuiteLoader.Base {

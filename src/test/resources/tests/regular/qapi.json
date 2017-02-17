@@ -8,7 +8,7 @@
             "host" : ["localhost"]
         }
     },
-    "runnerType": "groupByTestCase",
+    "runnerType": "byTestCase",
     "setUpBeforeAll" : ["nop"],
     "setUp" : ["sequential", ["print", ["attr", "service"]], ["print", ["attr", "index"]]],
     "testOracles": [

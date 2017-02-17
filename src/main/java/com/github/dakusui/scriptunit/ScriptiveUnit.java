@@ -63,7 +63,7 @@ public class ScriptiveUnit extends Parameterized {
     this(klass, createTestSuiteLoader(klass, Config.create(klass, properties).getScriptResourceName()));
   }
 
-  protected ScriptiveUnit(Class<?> klass, TestSuiteLoader testSuiteLoader) throws Throwable {
+  public ScriptiveUnit(Class<?> klass, TestSuiteLoader testSuiteLoader) throws Throwable {
     super(klass);
     this.testSuiteLoader = testSuiteLoader;
     this.runners = newLinkedList(createRunners(this.testSuiteLoader));

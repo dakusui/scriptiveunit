@@ -5,7 +5,7 @@ import com.github.dakusui.actionunit.Actions;
 import com.github.dakusui.jcunit.core.factor.Factor;
 import com.github.dakusui.jcunit.core.tuples.Tuple;
 import com.github.dakusui.scriptunit.core.Utils;
-import com.github.dakusui.scriptunit.exceptions.ScriptUnitException;
+import com.github.dakusui.scriptunit.exceptions.ScriptiveUnitException;
 import com.github.dakusui.scriptunit.loaders.IndexedTestCase;
 import com.github.dakusui.scriptunit.loaders.TestSuiteLoader;
 import com.github.dakusui.scriptunit.model.Stage;
@@ -146,7 +146,7 @@ public final class GroupedTestItemRunner extends ParentRunner<Action> {
           testOracleId
       );
     } catch (InitializationError initializationError) {
-      throw ScriptUnitException.wrap(initializationError);
+      throw ScriptiveUnitException.wrap(initializationError);
     }
   }
 
@@ -166,7 +166,7 @@ public final class GroupedTestItemRunner extends ParentRunner<Action> {
               .collect(toList()),
           testCaseId);
     } catch (InitializationError initializationError) {
-      throw ScriptUnitException.wrap(initializationError);
+      throw ScriptiveUnitException.wrap(initializationError);
     }
   }
 
@@ -185,7 +185,7 @@ public final class GroupedTestItemRunner extends ParentRunner<Action> {
           ).collect(toList()),
           testFixtureId);
     } catch (InitializationError initializationError) {
-      throw ScriptUnitException.wrap(initializationError);
+      throw ScriptiveUnitException.wrap(initializationError);
     }
   }
 

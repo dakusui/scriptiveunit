@@ -14,7 +14,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.util.List;
 
 import static com.github.dakusui.scriptunit.core.Utils.convertIfNecessary;
-import static com.github.dakusui.scriptunit.exceptions.ScriptUnitException.wrap;
+import static com.github.dakusui.scriptunit.exceptions.ScriptiveUnitException.wrap;
 import static java.util.stream.Collectors.toList;
 
 public interface TestSuiteLoader {

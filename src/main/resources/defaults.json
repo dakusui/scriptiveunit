@@ -1,5 +1,6 @@
 {
   "factorSpace": {
+    "factors": {},
     "constraints": []
   },
   "coveringArrayEngine": {
@@ -8,7 +9,7 @@
       2
     ]
   },
-  "runnerType": "groupByTestOracle",
+  "runnerType": "byTestOracle",
   "setUpBeforeAll": null,
   "setUp": null
 }

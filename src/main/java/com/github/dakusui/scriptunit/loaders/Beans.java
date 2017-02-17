@@ -28,7 +28,7 @@ import java.util.stream.Collectors;
 
 import static com.github.dakusui.actionunit.Actions.named;
 import static com.github.dakusui.scriptunit.core.Utils.iterableToString;
-import static com.github.dakusui.scriptunit.exceptions.ScriptUnitException.wrap;
+import static com.github.dakusui.scriptunit.exceptions.ScriptiveUnitException.wrap;
 import static com.github.dakusui.scriptunit.model.Stage.Type.*;
 import static com.google.common.base.Preconditions.checkArgument;
 import static java.lang.String.format;
@@ -211,7 +211,7 @@ public enum Beans {
 
     private List<Factor> composeFactors(Map<String, List<Object>> factorMap) {
       List<Factor> ret = new LinkedList<>();
-      for (String eachFactorName : factorMap.keySet()) {
+      for (String eachFactorName : requireNonNull(factorMap).keySet()) {
         Factor.Builder b = new Factor.Builder(eachFactorName);
         for (Object eachLevel : factorMap.get(eachFactorName)) {
           b.addLevel(eachLevel);

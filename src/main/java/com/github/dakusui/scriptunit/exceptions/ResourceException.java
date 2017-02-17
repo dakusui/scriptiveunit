@@ -2,7 +2,7 @@ package com.github.dakusui.scriptunit.exceptions;
 
 import static java.lang.String.format;
 
-public class ResourceException extends ScriptUnitException {
+public class ResourceException extends ScriptiveUnitException {
   public ResourceException(String message) {
     super(message);
   }

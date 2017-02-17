@@ -4,7 +4,7 @@ import com.github.dakusui.scriptunit.model.func.Func;
 
 import static java.lang.String.format;
 
-public class TypeMismatch extends ScriptUnitException {
+public class TypeMismatch extends ScriptiveUnitException {
   private TypeMismatch(String format, Object... args) {
     super(format(format, args));
   }

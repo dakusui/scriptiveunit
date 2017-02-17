@@ -32,7 +32,7 @@ public interface Form {
 
     @SuppressWarnings("WeakerAccess")
     public Form create(String name, FuncHandler funcHandler) { /* TODO */
-      ObjectMethod method = Factory.this.getMethodFromDriver(name);
+      ObjectMethod method = Factory.this.getObjectMethodFromDriver(name);
       return new Form() {
         @Override
         public Object apply(Arguments arguments) {
@@ -48,7 +48,7 @@ public interface Form {
 
         @Override
         public boolean isAccessor() {
-          return  Factory.this.getMethodFromDriver(name).isAccessor();
+          return  Factory.this.getObjectMethodFromDriver(name).isAccessor();
         }
       };
     }
@@ -65,12 +65,12 @@ public interface Form {
       return ret;
     }
 
-    private ObjectMethod getMethodFromDriver(String methodName) {
+    private ObjectMethod getObjectMethodFromDriver(String methodName) {
       for (ObjectMethod each : ScriptiveUnit.getAnnotatedMethodsFromImportedFieldsInObject(this.driver)) {
         if (getMethodName(each).equals(methodName))
           return each;
       }
-      throw new RuntimeException(format("method '%s' annotated with 'Scriptable' was not found in '%s'", methodName, this.driver.getClass().getCanonicalName()));
+      throw new RuntimeException(format("function '%s' annotated with 'Scriptable' was not found in '%s'", methodName, this.driver.getClass().getCanonicalName()));
     }
 
     private String getMethodName(ObjectMethod method) {

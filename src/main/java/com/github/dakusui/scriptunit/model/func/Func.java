@@ -10,7 +10,7 @@ import java.util.Formattable;
 import java.util.Formatter;
 
 import static com.github.dakusui.scriptunit.core.Utils.check;
-import static com.github.dakusui.scriptunit.exceptions.ScriptUnitException.wrap;
+import static com.github.dakusui.scriptunit.exceptions.ScriptiveUnitException.wrap;
 import static com.github.dakusui.scriptunit.exceptions.TypeMismatch.valueReturnedByScriptableMethodMustBeFunc;
 
 @FunctionalInterface

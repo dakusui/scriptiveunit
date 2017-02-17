@@ -11,7 +11,7 @@ import java.util.*;
 import java.util.function.Function;
 
 import static com.github.dakusui.scriptunit.core.Utils.convertIfNecessary;
-import static com.github.dakusui.scriptunit.exceptions.ScriptUnitException.wrap;
+import static com.github.dakusui.scriptunit.exceptions.ScriptiveUnitException.wrap;
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
 import static java.util.Arrays.stream;

@@ -11,7 +11,7 @@ import java.util.Arrays;
 import java.util.Map;
 import java.util.Optional;
 
-import static com.github.dakusui.scriptunit.exceptions.ScriptUnitException.wrap;
+import static com.github.dakusui.scriptunit.exceptions.ScriptiveUnitException.wrap;
 import static java.lang.String.format;
 import static java.util.Arrays.stream;
 

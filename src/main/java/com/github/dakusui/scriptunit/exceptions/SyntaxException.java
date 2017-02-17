@@ -8,7 +8,7 @@ import java.util.function.Supplier;
 
 import static java.lang.String.format;
 
-public class SyntaxException extends ScriptUnitException {
+public class SyntaxException extends ScriptiveUnitException {
   private SyntaxException(String message) {
     super(message);
   }
@@ -39,11 +39,11 @@ public class SyntaxException extends ScriptUnitException {
     throw new SyntaxException(format("An object node was expected but not. '%s'", jsonNode));
   }
 
-  public static <E extends ScriptUnitException> E nonArray(JsonNode jsonNode) {
+  public static <E extends ScriptiveUnitException> E nonArray(JsonNode jsonNode) {
     throw new SyntaxException(format("An array node was expected but not. '%s'", jsonNode));
   }
 
-  public static <E extends ScriptUnitException> E nonText(JsonNode jsonNode) {
+  public static <E extends ScriptiveUnitException> E nonText(JsonNode jsonNode) {
     throw new SyntaxException(format("A text node was expected but not. '%s'", jsonNode));
   }
 
