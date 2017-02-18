@@ -58,7 +58,7 @@ public interface Statement {
           }
         };
       @SuppressWarnings("unchecked") List<Object> raw = (List<Object>) object;
-      Form form = this.formFactory.create(String.class.cast(car(raw)), funcHandler);
+      Form form = this.formFactory.create(String.class.cast(car(raw)));
       Arguments arguments = this.argumentsFactory.create(cdr(raw), funcHandler);
       return new Nested() {
         @Override

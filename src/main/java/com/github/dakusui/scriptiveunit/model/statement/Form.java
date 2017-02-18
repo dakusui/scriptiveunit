@@ -3,7 +3,6 @@ package com.github.dakusui.scriptiveunit.model.statement;
 import com.github.dakusui.scriptiveunit.ScriptiveUnit;
 import com.github.dakusui.scriptiveunit.core.ObjectMethod;
 import com.github.dakusui.scriptiveunit.model.func.Func;
-import com.github.dakusui.scriptiveunit.model.func.FuncHandler;
 
 import java.lang.reflect.Array;
 
@@ -31,7 +30,7 @@ public interface Form {
     }
 
     @SuppressWarnings("WeakerAccess")
-    public Form create(String name, FuncHandler funcHandler) { /* TODO */
+    public Form create(String name) {
       ObjectMethod method = Factory.this.getObjectMethodFromDriver(name);
       return new Form() {
         @Override
