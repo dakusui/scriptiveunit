@@ -5,7 +5,7 @@
     "factors": {
     }
   },
-  "runnerType": "byTestOracle",
+  "runnerType": "groupByTestOracle",
   "testOracles": [
     {
       "description": "Non-terminating floating number created by division can be handled",

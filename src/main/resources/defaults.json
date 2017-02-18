@@ -9,7 +9,7 @@
       2
     ]
   },
-  "runnerType": "byTestOracle",
+  "runnerType": "groupByTestOracle",
   "setUpBeforeAll": null,
   "setUp": null
 }

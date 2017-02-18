@@ -34,19 +34,19 @@ import static java.util.stream.Stream.of;
 
 public final class GroupedTestItemRunner extends ParentRunner<Action> {
   public enum Type {
-    BY_TEST_ORACLE {
+    GROUP_BY_TEST_ORACLE {
       @Override
       Iterable<Runner> createRunners(ScriptiveUnit scriptiveUnit, TestSuiteLoader testSuiteLoader) {
         return scriptiveUnit.createRunnersGroupingByTestOracle(testSuiteLoader);
       }
     },
-    BY_TEST_CASE {
+    GROUP_BY_TEST_CASE {
       @Override
       Iterable<Runner> createRunners(ScriptiveUnit scriptiveUnit, TestSuiteLoader testSuiteLoader) {
         return scriptiveUnit.createRunnersGroupingByTestCase(testSuiteLoader);
       }
     },
-    BY_TEST_FIXTURE {
+    GROUP_BY_TEST_FIXTURE {
       @Override
       Iterable<Runner> createRunners(ScriptiveUnit scriptiveUnit, TestSuiteLoader testSuiteLoader) {
         return scriptiveUnit.createRunnersGroupingByTestFixture(testSuiteLoader);

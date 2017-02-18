@@ -24,7 +24,7 @@ public class HelpTest {
   private static final Map<String, String[]> arg1Values          = new ImmutableMap.Builder<String, String[]>()
       .put("SCRIPT", new String[] { "tests/regular/qapi.json", "tests/regular/defaultValues.json", INVALID })
       .put("FUNCTION", new String[] { "always", "if_then", INVALID })
-      .put("RUNNER", new String[] { "byTestOracle", "byTestCase", INVALID })
+      .put("RUNNER", new String[] { "groupByTestOracle", "groupByTestCase", INVALID })
       .build();
 
   @FactorField(stringLevels = { "SCRIPT", "FUNCTION", "RUNNER", NULL })
