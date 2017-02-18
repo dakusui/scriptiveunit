@@ -1,0 +1,13 @@
+{
+  "testOracles": [
+    {
+      "description": "Searching 'iPhone' should not return too many accessories",
+      "given": ["equals", ["attr", "terms"], ["quote", "iPhone"]],
+      "when": ["issue", ["query"] ],
+      "then": [">",
+        ["size", ["filter", ["result"], ["containedBy", ["issue", ["with", {"terms":["iPhone&&シルバー"]}, ["query"]]]]]],
+        3
+      ]
+    }
+  ]
+}

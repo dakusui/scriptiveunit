@@ -1,7 +1,7 @@
 package com.github.dakusui.scriptunit.model;
 
 import com.github.dakusui.actionunit.Action;
-import com.github.dakusui.scriptunit.ScriptRunner;
+import com.github.dakusui.scriptunit.GroupedTestItemRunner;
 import com.github.dakusui.scriptunit.model.func.Func;
 
 import java.util.List;
@@ -9,7 +9,7 @@ import java.util.List;
 public interface TestSuiteDescriptor {
   String getDescription();
 
-  ScriptRunner.Type getRunnerType();
+  GroupedTestItemRunner.Type getRunnerType();
 
   FactorSpaceDescriptor getFactorSpaceDescriptor();
 

@@ -2,13 +2,13 @@ package com.github.dakusui.scriptunit.doc;
 
 import com.github.dakusui.actionunit.visitors.ActionPrinter.Writer;
 import com.github.dakusui.actionunit.visitors.ActionPrinter.Writer.Std;
-import com.github.dakusui.scriptunit.ScriptRunner;
+import com.github.dakusui.scriptunit.GroupedTestItemRunner;
 import com.github.dakusui.scriptunit.annotations.Doc;
 import com.github.dakusui.scriptunit.annotations.Load;
 import com.github.dakusui.scriptunit.core.Config;
 import com.github.dakusui.scriptunit.core.ObjectMethod;
 import com.github.dakusui.scriptunit.core.Utils;
-import com.github.dakusui.scriptunit.exceptions.ScriptUnitException;
+import com.github.dakusui.scriptunit.exceptions.ScriptiveUnitException;
 import com.github.dakusui.scriptunit.loaders.json.JsonBasedTestSuiteLoader;
 import org.reflections.Reflections;
 import org.reflections.scanners.ResourcesScanner;
@@ -19,9 +19,9 @@ import java.util.List;
 import java.util.Optional;
 import java.util.regex.Pattern;
 
-import static com.github.dakusui.scriptunit.ScriptUnit.getAnnotatedMethodsFromImportedFieldsInObject;
+import static com.github.dakusui.scriptunit.ScriptiveUnit.getAnnotatedMethodsFromImportedFieldsInObject;
 import static com.github.dakusui.scriptunit.core.Utils.*;
-import static com.github.dakusui.scriptunit.exceptions.ScriptUnitException.wrap;
+import static com.github.dakusui.scriptunit.exceptions.ScriptiveUnitException.wrap;
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
 import static java.util.Arrays.stream;
@@ -129,7 +129,7 @@ public interface Help {
               if (target.isPresent())
                 objectMethod = target.get();
               else
-                throw new ScriptUnitException("Framework error");
+                throw new ScriptiveUnitException("Framework error");
 
               return new Description() {
                 @Override
@@ -197,7 +197,7 @@ public interface Help {
               @Override
               public List<String> content() {
                 try {
-                  return singletonList(new JsonBasedTestSuiteLoader(name(), driverClass) {
+                  return singletonList(new JsonBasedTestSuiteLoader(driverClass, name()) {
                   }.getDescription());
                 } catch (Exception e) {
                   throw wrap(e);
@@ -214,7 +214,7 @@ public interface Help {
         return new Help() {
           @Override
           public List<String> list() {
-            return stream(ScriptRunner.Type.values()).map(ScriptRunner.Type::name).map(Utils::toCamelCase).collect(toList());
+            return stream(GroupedTestItemRunner.Type.values()).map(GroupedTestItemRunner.Type::name).map(Utils::toCamelCase).collect(toList());
           }
 
           @Override
@@ -228,9 +228,9 @@ public interface Help {
               @Override
               public List<String> content() {
                 try {
-                  return asList(Utils.getAnnotation(ScriptRunner.Type.class.getField(toALL_CAPS(name)), Doc.class, Doc.NOT_AVAILABLE).value());
+                  return asList(Utils.getAnnotation(GroupedTestItemRunner.Type.class.getField(toALL_CAPS(name)), Doc.class, Doc.NOT_AVAILABLE).value());
                 } catch (NoSuchFieldException e) {
-                  throw ScriptUnitException.wrap(e);
+                  throw ScriptiveUnitException.wrap(e);
                 }
               }
             };

@@ -1,12 +1,13 @@
-package com.github.dakusui.scriptunit.drivers;
+package com.github.dakusui.scriptunit.testutils.drivers;
 
 
-import com.github.dakusui.scriptunit.ScriptUnit;
+import com.github.dakusui.scriptunit.ScriptiveUnit;
 import com.github.dakusui.scriptunit.annotations.Import;
 import com.github.dakusui.scriptunit.annotations.Import.Alias;
 import com.github.dakusui.scriptunit.annotations.Load;
 import com.github.dakusui.scriptunit.annotations.ReflectivelyReferenced;
 import com.github.dakusui.scriptunit.doc.Help;
+import com.github.dakusui.scriptunit.drivers.*;
 import com.github.dakusui.scriptunit.drivers.actions.Basic;
 import com.github.dakusui.scriptunit.loaders.json.JsonBasedTestSuiteLoader;
 import com.google.common.collect.Maps;
@@ -27,7 +28,7 @@ import static java.util.Objects.requireNonNull;
  */
 @Load(
     scriptPackagePrefix = "tests", scriptNamePattern = ".*\\.json", with = JsonBasedTestSuiteLoader.Factory.class)
-@RunWith(ScriptUnit.class)
+@RunWith(ScriptiveUnit.class)
 public class Qapi {
   @ReflectivelyReferenced
   @Import({

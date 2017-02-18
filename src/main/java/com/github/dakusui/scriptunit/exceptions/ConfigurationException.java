@@ -1,15 +1,15 @@
 package com.github.dakusui.scriptunit.exceptions;
 
-import com.github.dakusui.scriptunit.ScriptRunner;
+import com.github.dakusui.scriptunit.GroupedTestItemRunner;
 
 import static java.lang.String.format;
 
-public class ConfigurationException extends ScriptUnitException {
+public class ConfigurationException extends ScriptiveUnitException {
   public ConfigurationException(String message) {
     super(message);
   }
 
-  public static ConfigurationException unsupportedRunMode(ScriptRunner.Type runnerType) {
+  public static ConfigurationException unsupportedRunMode(GroupedTestItemRunner.Type runnerType) {
     throw new ConfigurationException(format("Runner type '%s' is not supported", runnerType));
   }
 

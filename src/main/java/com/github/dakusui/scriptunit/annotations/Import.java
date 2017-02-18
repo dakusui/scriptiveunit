@@ -13,7 +13,7 @@ public @interface Import {
     String ALL = "*";
 
     /**
-     * If {@code "*"} is returned, ScriptUnit imports all the available {@code Func}s
+     * If {@code "*"} is returned, ScriptiveUnit imports all the available {@code Func}s
      * in the class.
      */
     String value();

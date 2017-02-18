@@ -1,17 +1,17 @@
 package com.github.dakusui.scriptunit.drivers;
 
-import com.github.dakusui.scriptunit.ScriptUnit;
+import com.github.dakusui.scriptunit.ScriptiveUnit;
 import com.github.dakusui.scriptunit.annotations.Import;
 import com.github.dakusui.scriptunit.annotations.Import.Alias;
 import com.github.dakusui.scriptunit.annotations.Load;
 import com.github.dakusui.scriptunit.annotations.ReflectivelyReferenced;
-import com.github.dakusui.scriptunit.drivers.actions.Basic;
 import com.github.dakusui.scriptunit.loaders.json.JsonBasedTestSuiteLoader;
+import com.github.dakusui.scriptunit.drivers.actions.Basic;
 import org.junit.runner.RunWith;
 
 @Load(
     scriptPackagePrefix = "tests", scriptNamePattern = ".*\\.json", with = JsonBasedTestSuiteLoader.Factory.class)
-@RunWith(ScriptUnit.class)
+@RunWith(ScriptiveUnit.class)
 public class Simple {
   @ReflectivelyReferenced
   @Import({
@@ -46,4 +46,8 @@ public class Simple {
   @ReflectivelyReferenced
   @Import
   public Object basicActions = new Basic();
+
+  @ReflectivelyReferenced
+  @Import
+  public Object core = new Core();
 }

@@ -4,7 +4,7 @@ import com.github.dakusui.actionunit.Action;
 import com.github.dakusui.actionunit.visitors.ActionRunner;
 import com.github.dakusui.jcunit.core.factor.Factor;
 import com.github.dakusui.jcunit.core.tuples.Tuple;
-import com.github.dakusui.scriptunit.exceptions.ScriptUnitException;
+import com.github.dakusui.scriptunit.exceptions.ScriptiveUnitException;
 import com.github.dakusui.scriptunit.exceptions.SyntaxException;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -128,12 +128,12 @@ public enum Utils {
     return (Constructor<T>) constructors[0];
   }
 
-  public static <E extends ScriptUnitException> void check(boolean cond, Supplier<E> thrower) {
+  public static <E extends ScriptiveUnitException> void check(boolean cond, Supplier<E> thrower) {
     if (!cond)
       throw thrower.get();
   }
 
-  public static <E extends ScriptUnitException, V> V check(V target, Predicate<? super V> predicate, Supplier<? extends E> thrower) {
+  public static <E extends ScriptiveUnitException, V> V check(V target, Predicate<? super V> predicate, Supplier<? extends E> thrower) {
     if (!requireNonNull(predicate).test(target))
       throw thrower.get();
     return target;
@@ -221,7 +221,7 @@ public enum Utils {
     try {
       return field.get(object);
     } catch (IllegalAccessException e) {
-      throw ScriptUnitException.wrap(e);
+      throw ScriptiveUnitException.wrap(e);
     }
   }
 
@@ -254,7 +254,7 @@ public enum Utils {
     try {
       return new ObjectMapper().readTree(is);
     } catch (IOException e) {
-      throw ScriptUnitException.wrap(e, "Non-welformed input is given.");
+      throw ScriptiveUnitException.wrap(e, "Non-welformed input is given.");
     }
   }
 

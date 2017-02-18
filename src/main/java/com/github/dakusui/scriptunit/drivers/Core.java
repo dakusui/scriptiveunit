@@ -4,7 +4,7 @@ import com.github.dakusui.jcunit.core.tuples.Tuple;
 import com.github.dakusui.scriptunit.annotations.AccessesTestParameter;
 import com.github.dakusui.scriptunit.annotations.ReflectivelyReferenced;
 import com.github.dakusui.scriptunit.annotations.Scriptable;
-import com.github.dakusui.scriptunit.exceptions.ScriptUnitException;
+import com.github.dakusui.scriptunit.exceptions.ScriptiveUnitException;
 import com.github.dakusui.scriptunit.model.func.Func;
 import com.github.dakusui.scriptunit.model.Stage;
 
@@ -60,7 +60,7 @@ public class Core {
         //noinspection unchecked
         return (E) object.getClass().getMethod(methodName).invoke(object);
       } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
-        throw ScriptUnitException.wrap(e);
+        throw ScriptiveUnitException.wrap(e);
       }
     };
   }

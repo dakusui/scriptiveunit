@@ -19,7 +19,6 @@ import com.github.dakusui.scriptunit.model.func.Func;
 import org.junit.internal.runners.statements.RunBefores;
 import org.junit.runner.Runner;
 import org.junit.runners.Parameterized;
-import org.junit.runners.model.InitializationError;
 import org.junit.runners.model.Statement;
 import org.junit.runners.model.TestClass;
 
@@ -34,16 +33,14 @@ import static java.util.Objects.requireNonNull;
 import static java.util.stream.Collectors.*;
 
 /**
- * A main test runner class of ScriptUnit.
+ * A main test runner class of ScriptiveUnit.
  */
-public class ScriptUnit extends Parameterized {
+public class ScriptiveUnit extends Parameterized {
   /**
    * Test runners each of which runs a test case represented by an action.
    */
   private final List<Runner>    runners;
-  private final Properties      properties;
   private final TestSuiteLoader testSuiteLoader;
-  private final String          scriptResourceName;
 
   /**
    * Only called reflectively. Do not use programmatically.
@@ -51,7 +48,7 @@ public class ScriptUnit extends Parameterized {
    * @param klass A test class.
    */
   @ReflectivelyReferenced
-  public ScriptUnit(Class<?> klass) throws Throwable {
+  public ScriptiveUnit(Class<?> klass) throws Throwable {
     this(klass, System.getProperties());
   }
 
@@ -62,24 +59,20 @@ public class ScriptUnit extends Parameterized {
    * @param properties A properties object. Typically a value returned by {@code System.getProperties()}.
    */
   @ReflectivelyReferenced
-  protected ScriptUnit(Class<?> klass, Properties properties) throws Throwable {
+  protected ScriptiveUnit(Class<?> klass, Properties properties) throws Throwable {
+    this(klass, createTestSuiteLoader(klass, Config.create(klass, properties).getScriptResourceName()));
+  }
+
+  public ScriptiveUnit(Class<?> klass, TestSuiteLoader testSuiteLoader) throws Throwable {
     super(klass);
-    this.properties = requireNonNull(properties);
-    try {
-      this.scriptResourceName = Config.create(klass, this.properties).getScriptResourceName();
-      this.testSuiteLoader = createTestSuiteLoader(this.getTestClass(), this.scriptResourceName);
-      runners = newLinkedList(createRunners(this.testSuiteLoader));
-    } catch (RuntimeException e) {
-      if (e.getCause() instanceof InitializationError) {
-        throw e.getCause();
-      }
-      throw e;
-    }
+    this.testSuiteLoader = testSuiteLoader;
+    this.runners = newLinkedList(createRunners(this.testSuiteLoader));
   }
 
   @Override
   public String getName() {
-    return scriptResourceName
+    return
+        this.testSuiteLoader.getScriptResourceName()
         .replaceAll(".+/", "")
         .replaceAll("\\.[^.]*$", "")
         + ":" + this.testSuiteLoader.getDescription();
@@ -100,7 +93,7 @@ public class ScriptUnit extends Parameterized {
       @Override
       public void evaluate() throws Throwable {
         Utils.performActionWithLogging(createSetUpBeforeAllAction(
-            testSuiteLoader.getBeforeAllActionFactory(),
+            testSuiteLoader.getSetUpBeforeAllActionFactory(),
             createCommonFixture(testSuiteLoader.getTestSuiteDescriptor().getFactorSpaceDescriptor().getFactors()))
         );
         super.evaluate();
@@ -130,7 +123,7 @@ public class ScriptUnit extends Parameterized {
 
           @Override
           public Runner apply(TestOracle input) {
-            return ScriptRunner.createRunnerForTestOracle(
+            return GroupedTestItemRunner.createRunnerForTestOracle(
                 getTestClass().getJavaClass(),
                 testSuiteLoader.getTestSuiteDescriptor().getFactorSpaceDescriptor().getFactors(),
                 testSuiteLoader.getDescription(),
@@ -146,7 +139,7 @@ public class ScriptUnit extends Parameterized {
   Iterable<Runner> createRunnersGroupingByTestCase(final TestSuiteLoader testSuiteLoader) {
     List<TestOracle> testOracles = testSuiteLoader.loadTestOracles();
     return testSuiteLoader.loadTestCases().stream().map(
-        (Function<IndexedTestCase, Runner>) (IndexedTestCase testCase) -> ScriptRunner.createRunnerForTestCase(
+        (Function<IndexedTestCase, Runner>) (IndexedTestCase testCase) -> GroupedTestItemRunner.createRunnerForTestCase(
             getTestClass().getJavaClass(),
             testSuiteLoader.getTestSuiteDescriptor().getFactorSpaceDescriptor().getFactors(),
             testSuiteLoader.getDescription(),
@@ -169,14 +162,14 @@ public class ScriptUnit extends Parameterized {
         .collect(toList());
     List<Tuple> fixtures = buildFixtures(involved, testCases);
     return fixtures.stream().map(
-        (Function<Tuple, Runner>) fixture -> ScriptRunner.createRunnerForTestFixture(
-            ScriptUnit.this.getTestClass().getJavaClass(),
+        (Function<Tuple, Runner>) fixture -> GroupedTestItemRunner.createRunnerForTestFixture(
+            ScriptiveUnit.this.getTestClass().getJavaClass(),
             factors,
             testSuiteLoader.getDescription(),
             fixtures.indexOf(fixture),
             fixture,
             testSuiteLoader.getSetUpActionFactory(),
-            testCases.stream().filter((IndexedTestCase indexedTestCase) -> ScriptUnit.this.project(indexedTestCase.getTuple(), involved).equals(fixture)).collect(toList()),
+            testCases.stream().filter((IndexedTestCase indexedTestCase) -> ScriptiveUnit.this.project(indexedTestCase.getTuple(), involved).equals(fixture)).collect(toList()),
             testOracles
         )
     ).collect(toList());
@@ -220,13 +213,13 @@ public class ScriptUnit extends Parameterized {
   }
 
 
-  private TestSuiteLoader createTestSuiteLoader(TestClass testClass, String scriptResourceName) {
-    Load annLoad = getAnnotationWithDefault(testClass, Load.DEFAULT_INSTANCE);
+  private static TestSuiteLoader createTestSuiteLoader(Class javaClass, String scriptResourceName) {
+    Load annLoad = getAnnotationWithDefault(javaClass, Load.DEFAULT_INSTANCE);
     return TestSuiteLoader.Factory
         .create(annLoad.with())
         .create(
             scriptResourceName,
-            testClass.getJavaClass()
+            javaClass
         );
   }
 
@@ -250,8 +243,8 @@ public class ScriptUnit extends Parameterized {
     ));
   }
 
-  private static <T extends Annotation> T getAnnotationWithDefault(TestClass testClass, T defaultValue) {
-    @SuppressWarnings("unchecked") T ret = testClass.getAnnotation((Class<? extends T>) defaultValue.annotationType());
+  private static <T extends Annotation> T getAnnotationWithDefault(Class javaClass, T defaultValue) {
+    @SuppressWarnings("unchecked") T ret = (T) javaClass.<T>getAnnotation(defaultValue.annotationType());
     return ret != null ?
         ret :
         defaultValue;
