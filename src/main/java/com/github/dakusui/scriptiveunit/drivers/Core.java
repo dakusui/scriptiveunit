@@ -74,4 +74,15 @@ public class Core {
         .map((Func<T, ?> each) -> each instanceof Func.Const ? each.apply(input) : each)
         .collect(toList());
   }
+
+  @ReflectivelyReferenced
+  @SafeVarargs
+  @Scriptable
+  public final <T extends Stage> Func<T, List<?>> call(Func<T, String> funcName, Func<T, ?>... values) {
+    return (T input) -> Arrays
+        .stream(values)
+        .map((Func<T, ?> each) -> each instanceof Func.Const ? each.apply(input) : each)
+        .collect(toList());
+  }
+
 }

@@ -8,6 +8,7 @@ import com.github.dakusui.actionunit.connectors.Sink;
 import com.github.dakusui.actionunit.connectors.Source;
 import com.github.dakusui.jcunit.core.factor.Factor;
 import com.github.dakusui.jcunit.core.tuples.Tuple;
+import com.github.dakusui.jcunit.framework.TestCase;
 import com.github.dakusui.jcunit.framework.TestSuite;
 import com.github.dakusui.jcunit.plugins.caengines.CoveringArrayEngine;
 import com.github.dakusui.scriptiveunit.GroupedTestItemRunner.Type;
@@ -20,19 +21,22 @@ import com.google.common.collect.Lists;
 import org.hamcrest.BaseMatcher;
 import org.hamcrest.Description;
 
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Supplier;
-import java.util.stream.Collectors;
 
 import static com.github.dakusui.actionunit.Actions.named;
+import static com.github.dakusui.scriptiveunit.core.Utils.convertIfNecessary;
 import static com.github.dakusui.scriptiveunit.core.Utils.iterableToString;
 import static com.github.dakusui.scriptiveunit.exceptions.ScriptiveUnitException.wrap;
 import static com.github.dakusui.scriptiveunit.model.Stage.Type.*;
 import static com.google.common.base.Preconditions.checkArgument;
 import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
+import static java.util.stream.Collectors.toList;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assume.assumeThat;
 
@@ -69,6 +73,8 @@ public enum Beans {
         private final Object NOP_CLAUSE = Lists.newArrayList("nop");
         Statement setUpStatement = new Statement.Factory(driverObject).create(setUpClause != null ? setUpClause : NOP_CLAUSE);
         Statement setUpBeforeAllStatement = new Statement.Factory(driverObject).create(setUpBeforeAllClause != null ? setUpBeforeAllClause : NOP_CLAUSE);
+        List<? extends TestOracle> testOracles = testOracleBeanList.stream().map(each -> each.create(new Statement.Factory(driverObject))).collect(toList());
+        List<IndexedTestCase> testCases = createTestCases(this);
 
         @Override
         public String getDescription() {
@@ -87,7 +93,12 @@ public enum Beans {
 
         @Override
         public List<? extends TestOracle> getTestOracles() {
-          return testOracleBeanList.stream().map(each -> each.create(new Statement.Factory(driverObject))).collect(Collectors.toList());
+          return this.testOracles;
+        }
+
+        @Override
+        public List<IndexedTestCase> getTestCases() {
+          return this.testCases;
         }
 
         @Override
@@ -119,6 +130,58 @@ public enum Beans {
         public Type getRunnerType() {
           return runnerType;
         }
+
+        List<IndexedTestCase> createTestCases(TestSuiteDescriptor testSuiteDescriptor) {
+          FactorSpaceDescriptor factorSpaceDescriptor = testSuiteDescriptor.getFactorSpaceDescriptor();
+          CoveringArrayEngineConfig coveringArrayEngineConfig = testSuiteDescriptor.getCoveringArrayEngineConfig();
+
+          TestSuite.Builder builder = new TestSuite.Builder(createEngine(coveringArrayEngineConfig));
+          builder.disableNegativeTests();
+          if (!factorSpaceDescriptor.getFactors().isEmpty()) {
+            factorSpaceDescriptor.getFactors().forEach(builder::addFactor);
+          } else {
+            builder.addFactor("*dummyFactor*", "*dummyLevel*");
+          }
+
+          for (TestSuite.Predicate each : factorSpaceDescriptor.getConstraints()) {
+            builder.addConstraint(each);
+          }
+          return builder.build().getTestCases().stream()
+              .map(
+                  new Func<TestCase, IndexedTestCase>() {
+                    int i = 0;
+
+                    @Override
+                    public IndexedTestCase apply(TestCase input) {
+                      return new IndexedTestCase(i++, input);
+                    }
+                  }
+              ).collect(toList());
+        }
+
+        CoveringArrayEngine createEngine(CoveringArrayEngineConfig coveringArrayEngineConfig) {
+          try {
+            Constructor<CoveringArrayEngine> constructor;
+            return (constructor = Utils.getConstructor(coveringArrayEngineConfig.getEngineClass()))
+                .newInstance(coveringArrayEngineConfig.getOptions().stream()
+                    .map(new Func<Object, Object>() {
+                      int i = 0;
+
+                      @Override
+                      public Object apply(Object input) {
+                        try {
+                          return convertIfNecessary(input, constructor.getParameterTypes()[i]);
+                        } finally {
+                          i++;
+                        }
+                      }
+                    })
+                    .collect(toList()).toArray());
+          } catch (InstantiationException | IllegalAccessException | InvocationTargetException e) {
+            throw wrap(e);
+          }
+        }
+
       };
     }
 
@@ -204,7 +267,7 @@ public enum Beans {
                   }
                 };
               })
-              .collect(Collectors.toList());
+              .collect(toList());
         }
       };
     }

@@ -15,6 +15,7 @@ import com.github.dakusui.scriptiveunit.loaders.IndexedTestCase;
 import com.github.dakusui.scriptiveunit.loaders.TestSuiteLoader;
 import com.github.dakusui.scriptiveunit.model.Stage;
 import com.github.dakusui.scriptiveunit.model.TestOracle;
+import com.github.dakusui.scriptiveunit.model.TestSuiteDescriptor;
 import com.github.dakusui.scriptiveunit.model.func.Func;
 import org.junit.internal.runners.statements.RunBefores;
 import org.junit.runner.Runner;
@@ -66,16 +67,16 @@ public class ScriptiveUnit extends Parameterized {
   public ScriptiveUnit(Class<?> klass, TestSuiteLoader testSuiteLoader) throws Throwable {
     super(klass);
     this.testSuiteLoader = testSuiteLoader;
-    this.runners = newLinkedList(createRunners(this.testSuiteLoader));
+    this.runners = newLinkedList(createRunners(this.testSuiteLoader.getTestSuiteDescriptor()));
   }
 
   @Override
   public String getName() {
     return
         this.testSuiteLoader.getScriptResourceName()
-        .replaceAll(".+/", "")
-        .replaceAll("\\.[^.]*$", "")
-        + ":" + this.testSuiteLoader.getDescription();
+            .replaceAll(".+/", "")
+            .replaceAll("\\.[^.]*$", "")
+            + ":" + this.testSuiteLoader.getTestSuiteDescriptor().getDescription();
   }
 
   @Override
@@ -93,7 +94,7 @@ public class ScriptiveUnit extends Parameterized {
       @Override
       public void evaluate() throws Throwable {
         Utils.performActionWithLogging(createSetUpBeforeAllAction(
-            testSuiteLoader.getSetUpBeforeAllActionFactory(),
+            testSuiteLoader.getTestSuiteDescriptor().getSetUpBeforeAllActionFactory(),
             createCommonFixture(testSuiteLoader.getTestSuiteDescriptor().getFactorSpaceDescriptor().getFactors()))
         );
         super.evaluate();
@@ -110,13 +111,12 @@ public class ScriptiveUnit extends Parameterized {
   }
 
 
-  private Iterable<Runner> createRunners(TestSuiteLoader testSuiteLoader) {
-    return testSuiteLoader.getRunnerType().createRunners(this, testSuiteLoader);
+  private Iterable<Runner> createRunners(TestSuiteDescriptor testSuiteDescriptor) {
+    return testSuiteDescriptor.getRunnerType().createRunners(this, testSuiteDescriptor);
   }
 
-  Iterable<Runner> createRunnersGroupingByTestOracle(final TestSuiteLoader testSuiteLoader) {
-    List<IndexedTestCase> testCases = testSuiteLoader.loadTestCases();
-    return testSuiteLoader.loadTestOracles()
+  Iterable<Runner> createRunnersGroupingByTestOracle(final TestSuiteDescriptor testSuiteDescriptor) {
+    return testSuiteDescriptor.getTestOracles()
         .stream()
         .map(new Func<TestOracle, Runner>() {
           int id = 0;
@@ -125,58 +125,44 @@ public class ScriptiveUnit extends Parameterized {
           public Runner apply(TestOracle input) {
             return GroupedTestItemRunner.createRunnerForTestOracle(
                 getTestClass().getJavaClass(),
-                testSuiteLoader.getTestSuiteDescriptor().getFactorSpaceDescriptor().getFactors(),
-                testSuiteLoader.getDescription(),
                 id++,
                 input,
-                testSuiteLoader.getSetUpActionFactory(),
-                testCases);
+                testSuiteDescriptor);
           }
         })
         .collect(toList());
   }
 
-  Iterable<Runner> createRunnersGroupingByTestCase(final TestSuiteLoader testSuiteLoader) {
-    List<TestOracle> testOracles = testSuiteLoader.loadTestOracles();
-    return testSuiteLoader.loadTestCases().stream().map(
+  Iterable<Runner> createRunnersGroupingByTestCase(final TestSuiteDescriptor testSuiteDescriptor) {
+    return testSuiteDescriptor.getTestCases().stream().map(
         (Function<IndexedTestCase, Runner>) (IndexedTestCase testCase) -> GroupedTestItemRunner.createRunnerForTestCase(
             getTestClass().getJavaClass(),
-            testSuiteLoader.getTestSuiteDescriptor().getFactorSpaceDescriptor().getFactors(),
-            testSuiteLoader.getDescription(),
-            testCase.getIndex(),
             testCase,
-            testSuiteLoader.getSetUpActionFactory(),
-            testOracles)).collect(toList());
+            testSuiteDescriptor)).collect(toList());
   }
 
-  Iterable<Runner> createRunnersGroupingByTestFixture(TestSuiteLoader testSuiteLoader) {
-    List<TestOracle> testOracles = testSuiteLoader.loadTestOracles();
+  Iterable<Runner> createRunnersGroupingByTestFixture(TestSuiteDescriptor testSuiteDescriptor) {
     List<Factor> factors = testSuiteLoader.getTestSuiteDescriptor().getFactorSpaceDescriptor().getFactors();
     List<String> singleLevelFactors = factors.stream()
         .filter((Factor each) -> each.levels.size() == 1)
         .map((Factor each) -> each.name)
         .collect(toList());
-    List<String> involved = figureOutInvolvedParameters(testSuiteLoader, singleLevelFactors);
-    List<IndexedTestCase> testCases = testSuiteLoader.loadTestCases().stream()
+    List<String> involved = figureOutInvolvedParameters(testSuiteDescriptor, singleLevelFactors);
+    List<IndexedTestCase> testCases = testSuiteDescriptor.getTestCases().stream()
         .sorted(byParameters(involved))
         .collect(toList());
     List<Tuple> fixtures = buildFixtures(involved, testCases);
     return fixtures.stream().map(
         (Function<Tuple, Runner>) fixture -> GroupedTestItemRunner.createRunnerForTestFixture(
             ScriptiveUnit.this.getTestClass().getJavaClass(),
-            factors,
-            testSuiteLoader.getDescription(),
-            fixtures.indexOf(fixture),
-            fixture,
-            testSuiteLoader.getSetUpActionFactory(),
-            testCases.stream().filter((IndexedTestCase indexedTestCase) -> ScriptiveUnit.this.project(indexedTestCase.getTuple(), involved).equals(fixture)).collect(toList()),
-            testOracles
-        )
+            fixtures.indexOf(fixture), fixture,
+            testCases.stream().filter((IndexedTestCase indexedTestCase) -> project(indexedTestCase.getTuple(), involved).equals(fixture)).collect(toList()),
+            testSuiteDescriptor)
     ).collect(toList());
   }
 
-  private List<String> figureOutInvolvedParameters(TestSuiteLoader testSuiteLoader, List<String> singleLevelFactors) {
-    return Stream.concat(testSuiteLoader.getTestSuiteDescriptor().getInvolvedParameterNamesInSetUpAction().stream(), singleLevelFactors.stream()).distinct().collect(toList());
+  private static List<String> figureOutInvolvedParameters(TestSuiteDescriptor testSuiteDescriptor, List<String> singleLevelFactors) {
+    return Stream.concat(testSuiteDescriptor.getInvolvedParameterNamesInSetUpAction().stream(), singleLevelFactors.stream()).distinct().collect(toList());
   }
 
   private LinkedList<Tuple> buildFixtures(List<String> involved, List<IndexedTestCase> testCases) {
@@ -192,7 +178,7 @@ public class ScriptiveUnit extends Parameterized {
     return setUpFactory.apply(stageType.create(commonFixture));
   }
 
-  private <K, V> Map<K, V> project(Map<K, V> in, List<K> keys) {
+  private static <K, V> Map<K, V> project(Map<K, V> in, List<K> keys) {
     Map<K, V> ret = new HashMap<>();
     keys.forEach(each -> {
       if (in.containsKey(each))

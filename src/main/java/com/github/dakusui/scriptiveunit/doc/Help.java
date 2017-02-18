@@ -198,7 +198,7 @@ public interface Help {
               public List<String> content() {
                 try {
                   return singletonList(new JsonBasedTestSuiteLoader(driverClass, name()) {
-                  }.getDescription());
+                  }.getTestSuiteDescriptor().getDescription());
                 } catch (Exception e) {
                   throw wrap(e);
                 }
