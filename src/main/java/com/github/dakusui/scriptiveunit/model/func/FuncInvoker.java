@@ -3,15 +3,12 @@ package com.github.dakusui.scriptiveunit.model.func;
 import com.github.dakusui.actionunit.visitors.ActionPrinter;
 import com.github.dakusui.jcunit.core.utils.StringUtils;
 import com.github.dakusui.scriptiveunit.core.Utils;
+import com.github.dakusui.scriptiveunit.model.Stage;
 import com.google.common.collect.Lists;
 
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
 import java.util.*;
 import java.util.function.Function;
 
-import static com.github.dakusui.scriptiveunit.core.Utils.convertIfNecessary;
-import static com.github.dakusui.scriptiveunit.exceptions.ScriptiveUnitException.wrap;
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
 import static java.util.Arrays.stream;
@@ -20,7 +17,7 @@ import static java.util.stream.Collectors.toList;
 public interface FuncInvoker {
   <T> T invokeConst(Object value);
 
-  Object invokeMethod(Object target, Method method, Object[] args, String alias);
+  Object invokeFunc(Func target, Stage stage, String alias);
 
   String asString();
 
@@ -68,8 +65,8 @@ public interface FuncInvoker {
     }
 
     @Override
-    public Object invokeMethod(Object target, Method method, Object[] args, String alias) {
-      List<Object> key = asList(target, method, asList(args));
+    public Object invokeFunc(Func target, Stage args, String alias) {
+      List<Object> key = asList(target, args);
       boolean wasAbsent = !this.memo.containsKey(key);
       boolean targetIsMemoized = target instanceof Func.Memoized;
       Object ret = "(N/A)";
@@ -77,12 +74,14 @@ public interface FuncInvoker {
       try {
         this.writeLine("%s(", alias);
         if (targetIsMemoized) {
+          //noinspection unchecked
           ret = this.memo.computeIfAbsent(
               key,
-              (List<Object> input) -> invokeMethod(target, method, args)
+              (List<Object> input) -> target.apply(args)
           );
         } else {
-          ret = invokeMethod(target, method, args);
+          //noinspection unchecked
+          ret = target.apply(args);
         }
         return Utils.toBigDecimalIfPossible(ret);
       } finally {
@@ -91,25 +90,6 @@ public interface FuncInvoker {
         else
           this.writeLine(") -> (memoized)");
         this.leave();
-      }
-    }
-
-    private static Object invokeMethod(Object target, Method method, Object... args) {
-      try {
-        return method.invoke(target, stream(args).map(new Func<Object, Object>() {
-          int i = 0;
-
-          @Override
-          public Object apply(Object input) {
-            try {
-              return convertIfNecessary(input, method.getParameterTypes()[i]);
-            } finally {
-              i++;
-            }
-          }
-        }).collect(toList()).toArray());
-      } catch (IllegalAccessException | InvocationTargetException e) {
-        throw wrap(e);
       }
     }
 

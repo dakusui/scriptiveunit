@@ -2,17 +2,20 @@ package com.github.dakusui.scriptiveunit.model.func;
 
 import com.github.dakusui.scriptiveunit.core.ObjectMethod;
 import com.github.dakusui.scriptiveunit.exceptions.ScriptiveUnitException;
+import com.github.dakusui.scriptiveunit.model.Stage;
 
 import java.io.IOException;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
+import java.util.Arrays;
 import java.util.Formattable;
 import java.util.Formatter;
 
 import static com.github.dakusui.scriptiveunit.core.Utils.check;
 import static com.github.dakusui.scriptiveunit.exceptions.ScriptiveUnitException.wrap;
 import static com.github.dakusui.scriptiveunit.exceptions.TypeMismatch.valueReturnedByScriptableMethodMustBeFunc;
+import static java.lang.String.format;
 
 @FunctionalInterface
 public interface Func<I, O> extends
@@ -53,9 +56,12 @@ public interface Func<I, O> extends
 
     public Func create(ObjectMethod objectMethod, Object[] args) {
       Object returnedValue;
+      /*
+       * By using dynamic proxy, we are making it possible to print structured pretty log.
+       */
       return createFunc(
           objectMethod.getName(),
-          check(
+          (Func) check(
               returnedValue = objectMethod.invoke(args),
               (Object o) -> o instanceof Func,
               () -> valueReturnedByScriptableMethodMustBeFunc(objectMethod.getName(), returnedValue)
@@ -66,16 +72,22 @@ public interface Func<I, O> extends
       return createProxy((proxy, method, args) -> funcHandler.handleConst(value), Const.class);
     }
 
-    private Func createFunc(String name, Object target) {
+    private Func createFunc(String name, Func target) {
       return createProxy(createInvocationHandler(name, target), Func.class);
     }
 
-    private InvocationHandler createInvocationHandler(String name, Object target) {
+    private InvocationHandler createInvocationHandler(String name, Func target) {
       return (Object proxy, Method method, Object[] args) -> {
         check("apply".equals(method.getName()), () -> {
-          throw new ScriptiveUnitException("");
+          throw new ScriptiveUnitException("This should only be executed on 'apply' method.");
         });
-        return funcHandler.invoke(target, method, args, name);
+        check(args.length == 1 && args[0] instanceof Stage, () -> {
+          throw new ScriptiveUnitException(
+              format("The argument should be an array of length 1 and its first element should be '%s', but: %s",
+                  Arrays.toString(args),
+                  Stage.class.getCanonicalName()));
+        });
+        return funcHandler.handle(target, (Stage) args[0], name);
       };
     }
 
