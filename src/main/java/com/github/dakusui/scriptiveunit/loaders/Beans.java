@@ -77,6 +77,11 @@ public enum Beans {
         List<IndexedTestCase> testCases = createTestCases(this);
 
         @Override
+        public Object getDriverObject() {
+          return driverObject;
+        }
+
+        @Override
         public String getDescription() {
           return description;
         }
@@ -250,6 +255,11 @@ public enum Beans {
                   public boolean apply(Tuple in) {
                     return requireNonNull(func.apply(new Stage() {
                       @Override
+                      public Statement.Factory getStatementFactory() {
+                        return statementFactory;
+                      }
+
+                      @Override
                       public Tuple getTestCaseTuple() {
                         return in;
                       }
@@ -262,6 +272,16 @@ public enum Beans {
                       @Override
                       public Type getType() {
                         return GIVEN;
+                      }
+
+                      @Override
+                      public <T> T getArgument(int index) {
+                        throw new UnsupportedOperationException();
+                      }
+
+                      @Override
+                      public int sizeOfArguments() {
+                        throw new UnsupportedOperationException();
                       }
                     }));
                   }
@@ -331,7 +351,7 @@ public enum Beans {
                         @Override
                         public boolean matches(Object item) {
                           return requireNonNull(
-                              createFunc(givenStatement, funcInvoker).apply(GIVEN.create(testCaseTuple))
+                              createFunc(givenStatement, funcInvoker).apply(GIVEN.create(statementFactory, testCaseTuple))
                           );
                         }
 
@@ -364,7 +384,7 @@ public enum Beans {
                       return TestResult.create(
                           testCase,
                           Beans.<Stage, Boolean>toFunc(statementFactory.create(whenClause), funcInvoker)
-                              .apply(WHEN.create(testCase)));
+                              .apply(WHEN.create(statementFactory, testCase)));
                     }
 
                     @Override
@@ -377,7 +397,7 @@ public enum Beans {
 
                     @Override
                     public void apply(TestResult testResult, Context context) {
-                      Stage thenStage = THEN.create(testResult.getTestCase(), testResult.getOutput());
+                      Stage thenStage = THEN.create(statementFactory, testResult.getTestCase(), testResult.getOutput());
                       assertThat(
                           thenStage,
                           new BaseMatcher<Stage>() {

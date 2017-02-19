@@ -2,6 +2,7 @@ package com.github.dakusui.scriptiveunit.model.statement;
 
 import com.github.dakusui.scriptiveunit.ScriptiveUnit;
 import com.github.dakusui.scriptiveunit.core.ObjectMethod;
+import com.github.dakusui.scriptiveunit.model.Stage;
 import com.github.dakusui.scriptiveunit.model.func.Func;
 
 import java.lang.reflect.Array;
@@ -13,7 +14,7 @@ import static java.util.stream.Collectors.toList;
 import static java.util.stream.StreamSupport.stream;
 
 public interface Form {
-  Object apply(Arguments arguments);
+  Func<? extends Stage, ?> apply(Arguments arguments);
 
   boolean isAccessor();
 
@@ -31,25 +32,17 @@ public interface Form {
 
     @SuppressWarnings("WeakerAccess")
     public Form create(String name) {
-      ObjectMethod objectMethod = Factory.this.getObjectMethodFromDriver(name);
-      return new Form() {
-        @Override
-        public Object apply(Arguments arguments) {
-          Object[] args = toArray(stream(arguments.spliterator(), false)
-              .map(Statement::execute)
-              .collect(toList()), Object.class);
-          if (objectMethod.isVarArgs()) {
-            int parameterCount = objectMethod.getParameterCount();
-            args = Factory.this.shrinkTo(objectMethod.getParameterTypes()[parameterCount - 1].getComponentType(), parameterCount, args);
-          }
-          return funcFactory.create(objectMethod, args);
-        }
+      /* TODO: Fix */
+      try {
+        ObjectMethod objectMethod = Factory.this.getObjectMethodFromDriver(name);
+        return new Impl(objectMethod, name);
+      } catch (RuntimeException e) {
+        return findUserDefinedForm(name);
+      }
+    }
 
-        @Override
-        public boolean isAccessor() {
-          return  Factory.this.getObjectMethodFromDriver(name).isAccessor();
-        }
-      };
+    private Form findUserDefinedForm(String name) {
+      return new Deform(null/*TODO*/);
     }
 
     private Object[] shrinkTo(Class<?> componentType, int count, Object[] args) {
@@ -76,5 +69,31 @@ public interface Form {
       return method.getName();
     }
 
+    private class Impl implements Form {
+      private final ObjectMethod objectMethod;
+      private final String name;
+
+      Impl(ObjectMethod objectMethod, String name) {
+        this.objectMethod = objectMethod;
+        this.name = name;
+      }
+
+      @Override
+      public Func apply(Arguments arguments) {
+        Object[] args = toArray(stream(arguments.spliterator(), false)
+            .map(Statement::execute)
+            .collect(toList()), Object.class);
+        if (objectMethod.isVarArgs()) {
+          int parameterCount = objectMethod.getParameterCount();
+          args = Factory.this.shrinkTo(objectMethod.getParameterTypes()[parameterCount - 1].getComponentType(), parameterCount, args);
+        }
+        return funcFactory.create(objectMethod, args);
+      }
+
+      @Override
+      public boolean isAccessor() {
+        return  Factory.this.getObjectMethodFromDriver(name).isAccessor();
+      }
+    }
   }
 }

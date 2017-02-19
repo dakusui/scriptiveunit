@@ -1,13 +1,9 @@
 {
   "define": {
-    "print_twice": {
-      "type": "FUNC",
-      "params": ["msg"],
-      "body": [
+    "print_twice": [
         "sequential",
-        ["print", ["param", "msg"]],
-        ["print", ["param", "msg"]]
+        ["print", [0]],
+        ["print", [0]]
       ]
-    }
   }
 }

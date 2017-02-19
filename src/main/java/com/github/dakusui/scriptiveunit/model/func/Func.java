@@ -1,7 +1,6 @@
 package com.github.dakusui.scriptiveunit.model.func;
 
 import com.github.dakusui.scriptiveunit.core.ObjectMethod;
-import com.github.dakusui.scriptiveunit.exceptions.ScriptiveUnitException;
 import com.github.dakusui.scriptiveunit.model.Stage;
 
 import java.io.IOException;
@@ -13,9 +12,9 @@ import java.util.Formattable;
 import java.util.Formatter;
 
 import static com.github.dakusui.scriptiveunit.core.Utils.check;
+import static com.github.dakusui.scriptiveunit.exceptions.ScriptiveUnitException.fail;
 import static com.github.dakusui.scriptiveunit.exceptions.ScriptiveUnitException.wrap;
 import static com.github.dakusui.scriptiveunit.exceptions.TypeMismatch.valueReturnedByScriptableMethodMustBeFunc;
-import static java.lang.String.format;
 
 @FunctionalInterface
 public interface Func<I, O> extends
@@ -72,21 +71,28 @@ public interface Func<I, O> extends
       return createProxy((proxy, method, args) -> funcHandler.handleConst(value), Const.class);
     }
 
+    public <T> Func<? extends Stage, T> createArg(int index) {
+      return new Func<Stage, T>() {
+        @Override
+        public T apply(Stage input) {
+          return input.getArgument(index);
+        }
+      };
+    }
     private Func createFunc(String name, Func target) {
       return createProxy(createInvocationHandler(name, target), Func.class);
     }
 
     private InvocationHandler createInvocationHandler(String name, Func target) {
       return (Object proxy, Method method, Object[] args) -> {
-        check("apply".equals(method.getName()), () -> {
-          throw new ScriptiveUnitException("This should only be executed on 'apply' method.");
-        });
-        check(args.length == 1 && args[0] instanceof Stage, () -> {
-          throw new ScriptiveUnitException(
-              format("The argument should be an array of length 1 and its first element should be '%s', but: %s",
-                  Arrays.toString(args),
-                  Stage.class.getCanonicalName()));
-        });
+        check("apply".equals(method.getName()),
+            fail("This should only be executed on 'apply' method.")
+        );
+        check(args.length == 1 && args[0] instanceof Stage,
+            fail("The argument should be an array of length 1 and its first element should be '%s', but: %s",
+                Arrays.toString(args),
+                Stage.class.getCanonicalName()
+            ));
         return funcHandler.handle(target, (Stage) args[0], name);
       };
     }

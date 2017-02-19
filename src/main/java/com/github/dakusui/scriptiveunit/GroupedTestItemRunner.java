@@ -10,7 +10,6 @@ import com.github.dakusui.scriptiveunit.loaders.IndexedTestCase;
 import com.github.dakusui.scriptiveunit.model.Stage;
 import com.github.dakusui.scriptiveunit.model.TestOracle;
 import com.github.dakusui.scriptiveunit.model.TestSuiteDescriptor;
-import com.github.dakusui.scriptiveunit.model.func.Func;
 import org.junit.runner.Description;
 import org.junit.runner.Runner;
 import org.junit.runner.notification.RunNotifier;
@@ -110,7 +109,6 @@ public final class GroupedTestItemRunner extends ParentRunner<Action> {
   private final List<Action> actions;
   private final int          groupId;
 
-
   /**
    * Constructs a new {@code ParentRunner} that will run {@code @TestClass}
    */
@@ -173,7 +171,6 @@ public final class GroupedTestItemRunner extends ParentRunner<Action> {
   static GroupedTestItemRunner createRunnerForTestOracle(Class<?> testClass, int testOracleId, TestOracle testOracle, TestSuiteDescriptor testSuiteDescriptor) {
     List<Factor> factors = testSuiteDescriptor.getFactorSpaceDescriptor().getFactors();
     String testSuiteDescription = testSuiteDescriptor.getDescription();
-    Func<Stage, Action> setUpFactory = testSuiteDescriptor.getSetUpActionFactory();
     List<IndexedTestCase> testCases = testSuiteDescriptor.getTestCases();
     try {
       return new GroupedTestItemRunner(testClass,
@@ -189,7 +186,7 @@ public final class GroupedTestItemRunner extends ParentRunner<Action> {
                         named(
                             format("%03d: Setup test fixture", i),
                             named(format("fixture: %s", filterSingleLevelFactorsOut(input.getTuple(), factors)),
-                                requireNonNull(createSetUpAction(input.getTuple(), setUpFactory))
+                                requireNonNull(createSetUpAction(testSuiteDescriptor, input.getTuple()))
                             )
                         ),
                         testOracle.createTestActionSupplier(factors, input.getIndex(), testSuiteDescription, input.getTuple()).get());
@@ -209,7 +206,6 @@ public final class GroupedTestItemRunner extends ParentRunner<Action> {
     int testCaseId = testCase.getIndex();
     List<Factor> factors = testSuiteDescriptor.getFactorSpaceDescriptor().getFactors();
     String testSuiteDescription = testSuiteDescriptor.getDescription();
-    Func<Stage, Action> setUpFactory = testSuiteDescriptor.getSetUpActionFactory();
     List<? extends TestOracle> testOracles = testSuiteDescriptor.getTestOracles();
     try {
       Tuple testCaseTuple = testCase.getTuple();
@@ -219,7 +215,7 @@ public final class GroupedTestItemRunner extends ParentRunner<Action> {
                   named(
                       format("%03d: Setup test fixture", 0),
                       named(format("fixture: %s", filterSingleLevelFactorsOut(testCase.getTuple(), factors)),
-                          requireNonNull(createSetUpAction(testCaseTuple, setUpFactory)))
+                          requireNonNull(createSetUpAction(testSuiteDescriptor, testCaseTuple)))
                   )),
               testOracles.stream()
                   .map((TestOracle input) -> input.createTestActionSupplier(factors, testOracles.indexOf(input) + 1, testSuiteDescription, testCaseTuple).get()))
@@ -231,16 +227,16 @@ public final class GroupedTestItemRunner extends ParentRunner<Action> {
   }
 
   static GroupedTestItemRunner createRunnerForTestFixture(Class<?> testClass, int fixtureId, Tuple fixture, List<IndexedTestCase> testCasesFilteredByFixture, TestSuiteDescriptor testSuiteDescriptor) {
-    Func<Stage, Action> setUpFactory = testSuiteDescriptor.getSetUpActionFactory();
     try {
       AtomicInteger i = new AtomicInteger(0);
-      return new GroupedTestItemRunner(testClass,
+      return new GroupedTestItemRunner(
+          testClass,
           concat(
               of(
                   named(
                       format("%03d: Setup test fixture", i.getAndIncrement()),
                       named(format("fixture: %s", fixture),
-                          requireNonNull(createSetUpAction(fixture, setUpFactory)))
+                          requireNonNull(createSetUpAction(testSuiteDescriptor, fixture)))
                   )),
               testSuiteDescriptor.getRunnerType().orderBy().buildSortedActionStreamOrderingBy(testCasesFilteredByFixture, i, testSuiteDescriptor)
           ).collect(toList()),
@@ -250,7 +246,7 @@ public final class GroupedTestItemRunner extends ParentRunner<Action> {
     }
   }
 
-  private static Action createSetUpAction(Tuple input, Func<Stage, Action> setUpFactory) {
-    return setUpFactory.apply(Stage.Type.SETUP.create(input));
+  private static Action createSetUpAction(TestSuiteDescriptor testSuiteDescriptor, Tuple input) {
+    return testSuiteDescriptor.getSetUpActionFactory().apply(Stage.Type.SETUP.create(testSuiteDescriptor.getDriverObject(), input));
   }
 }

@@ -8,6 +8,8 @@ import com.github.dakusui.scriptiveunit.model.func.Func;
 import java.util.List;
 
 public interface TestSuiteDescriptor {
+  Object getDriverObject();
+
   String getDescription();
 
   GroupedTestItemRunner.Type getRunnerType();
