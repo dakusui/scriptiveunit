@@ -327,7 +327,7 @@ public enum Beans {
 
                     @Override
                     public Tuple apply(Context context) {
-                      assumeThat(Statement.Utils.prettifyTuple(testCaseTuple, givenStatement), new BaseMatcher<Tuple>() {
+                      assumeThat(testCaseTuple, new BaseMatcher<Tuple>() {
                         @Override
                         public boolean matches(Object item) {
                           return requireNonNull(

@@ -31,18 +31,18 @@ public interface Form {
 
     @SuppressWarnings("WeakerAccess")
     public Form create(String name) {
-      ObjectMethod method = Factory.this.getObjectMethodFromDriver(name);
+      ObjectMethod objectMethod = Factory.this.getObjectMethodFromDriver(name);
       return new Form() {
         @Override
         public Object apply(Arguments arguments) {
           Object[] args = toArray(stream(arguments.spliterator(), false)
               .map(Statement::execute)
               .collect(toList()), Object.class);
-          if (method.isVarArgs()) {
-            int parameterCount = method.getParameterCount();
-            args = Factory.this.shrinkTo(method.getParameterTypes()[parameterCount - 1].getComponentType(), parameterCount, args);
+          if (objectMethod.isVarArgs()) {
+            int parameterCount = objectMethod.getParameterCount();
+            args = Factory.this.shrinkTo(objectMethod.getParameterTypes()[parameterCount - 1].getComponentType(), parameterCount, args);
           }
-          return funcFactory.create(method, args);
+          return funcFactory.create(objectMethod, args);
         }
 
         @Override

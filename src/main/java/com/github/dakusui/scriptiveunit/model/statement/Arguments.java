@@ -1,7 +1,5 @@
 package com.github.dakusui.scriptiveunit.model.statement;
 
-import com.github.dakusui.scriptiveunit.model.func.FuncHandler;
-
 import java.util.Iterator;
 
 public interface Arguments extends Iterable<Statement> {
@@ -12,7 +10,7 @@ public interface Arguments extends Iterable<Statement> {
       this.statementFactory = statementFactory;
     }
 
-    public Arguments create(Iterable<Object> args, FuncHandler funcFuncInvoker) {
+    public Arguments create(Iterable<Object> args) {
       return () -> new Iterator<Statement>() {
         Iterator<Object> i = args.iterator();
         @Override

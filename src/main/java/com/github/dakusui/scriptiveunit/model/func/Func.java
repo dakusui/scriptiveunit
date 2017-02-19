@@ -1,6 +1,7 @@
 package com.github.dakusui.scriptiveunit.model.func;
 
 import com.github.dakusui.scriptiveunit.core.ObjectMethod;
+import com.github.dakusui.scriptiveunit.exceptions.ScriptiveUnitException;
 
 import java.io.IOException;
 import java.lang.reflect.InvocationHandler;
@@ -50,14 +51,14 @@ public interface Func<I, O> extends
       this.funcHandler = funcHandler;
     }
 
-    public Func create(ObjectMethod method, Object[] args) {
+    public Func create(ObjectMethod objectMethod, Object[] args) {
       Object returnedValue;
       return createFunc(
-          method.getName(),
+          objectMethod.getName(),
           check(
-              returnedValue = method.invoke(args),
+              returnedValue = objectMethod.invoke(args),
               (Object o) -> o instanceof Func,
-              () -> valueReturnedByScriptableMethodMustBeFunc(method.getName(), returnedValue)
+              () -> valueReturnedByScriptableMethodMustBeFunc(objectMethod.getName(), returnedValue)
           ));
     }
 
@@ -71,9 +72,9 @@ public interface Func<I, O> extends
 
     private InvocationHandler createInvocationHandler(String name, Object target) {
       return (Object proxy, Method method, Object[] args) -> {
-        if (!"apply".equals(method.getName())) {
-          return method.invoke(target, args);
-        }
+        check("apply".equals(method.getName()), () -> {
+          throw new ScriptiveUnitException("");
+        });
         return funcHandler.invoke(target, method, args, name);
       };
     }

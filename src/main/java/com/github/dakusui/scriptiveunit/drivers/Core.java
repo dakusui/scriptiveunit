@@ -5,8 +5,8 @@ import com.github.dakusui.scriptiveunit.annotations.AccessesTestParameter;
 import com.github.dakusui.scriptiveunit.annotations.ReflectivelyReferenced;
 import com.github.dakusui.scriptiveunit.annotations.Scriptable;
 import com.github.dakusui.scriptiveunit.exceptions.ScriptiveUnitException;
-import com.github.dakusui.scriptiveunit.model.func.Func;
 import com.github.dakusui.scriptiveunit.model.Stage;
+import com.github.dakusui.scriptiveunit.model.func.Func;
 
 import java.lang.reflect.InvocationTargetException;
 import java.util.Arrays;
@@ -74,15 +74,4 @@ public class Core {
         .map((Func<T, ?> each) -> each instanceof Func.Const ? each.apply(input) : each)
         .collect(toList());
   }
-
-  @ReflectivelyReferenced
-  @SafeVarargs
-  @Scriptable
-  public final <T extends Stage> Func<T, List<?>> call(Func<T, String> funcName, Func<T, ?>... values) {
-    return (T input) -> Arrays
-        .stream(values)
-        .map((Func<T, ?> each) -> each instanceof Func.Const ? each.apply(input) : each)
-        .collect(toList());
-  }
-
 }

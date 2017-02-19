@@ -16,6 +16,7 @@ public enum JsonBeans {
         @JsonProperty("coveringArrayEngine") CoveringArrayEngineConfigBean coveringArrayEngineConfig,
         @JsonProperty("factorSpace") FactorSpaceDescriptorBean factorSpaceBean,
         @JsonProperty("runnerType") String runnerType,
+        @JsonProperty("define") Map<String, Object> defineMap, // TODO this is not implemented yet.
         @JsonProperty("setUpBeforeAll") List<Object> setUpBeforeAllClause,
         @JsonProperty("setUp") List<Object> setUpClause,
         @JsonProperty("testOracles") List<TestOracleBean> testOracleBeanList

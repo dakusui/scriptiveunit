@@ -1,6 +1,5 @@
 package com.github.dakusui.scriptiveunit.model.statement;
 
-import com.github.dakusui.jcunit.core.tuples.Tuple;
 import com.github.dakusui.scriptiveunit.exceptions.SyntaxException;
 import com.github.dakusui.scriptiveunit.model.func.Func;
 import com.github.dakusui.scriptiveunit.model.func.FuncHandler;
@@ -10,7 +9,6 @@ import com.google.common.collect.Lists;
 import java.util.List;
 import java.util.Objects;
 
-import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
 
 public interface Statement {
@@ -33,10 +31,8 @@ public interface Statement {
     private final Arguments.Factory argumentsFactory;
     private final Func.Factory      funcFactory;
     private final FuncHandler       funcHandler;
-    private final Object            driverObject;
 
     public Factory(Object driverObject) {
-      this.driverObject = driverObject;
       this.funcHandler = new FuncHandler();
       this.funcFactory = new Func.Factory(funcHandler);
       this.formFactory = new Form.Factory(driverObject, funcFactory);
@@ -59,7 +55,7 @@ public interface Statement {
         };
       @SuppressWarnings("unchecked") List<Object> raw = (List<Object>) object;
       Form form = this.formFactory.create(String.class.cast(car(raw)));
-      Arguments arguments = this.argumentsFactory.create(cdr(raw), funcHandler);
+      Arguments arguments = this.argumentsFactory.create(cdr(raw));
       return new Nested() {
         @Override
         public Form getForm() {
@@ -99,27 +95,6 @@ public interface Statement {
 
   enum Utils {
     ;
-
-    public static Tuple prettifyTuple(Tuple testCaseTuple, Statement statement) {
-      Tuple ret = new Tuple.Impl() {
-        @Override
-        public String toString() {
-          StringBuilder b = new StringBuilder();
-          b.append(format("{%n"));
-          Statement.Utils.involvedParameters(statement)
-              .forEach(key -> b.append("  ")
-                  .append(key)
-                  .append(":")
-                  .append(testCaseTuple.get(key))
-                  .append(format("%n")));
-          b.append("}");
-          return b.toString();
-        }
-      };
-      ret.putAll(testCaseTuple);
-      return ret;
-    }
-
     public static List<String> involvedParameters(Statement statement) {
       requireNonNull(statement);
       List<String> ret = Lists.newLinkedList();
