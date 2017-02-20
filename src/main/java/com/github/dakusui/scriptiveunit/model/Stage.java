@@ -23,8 +23,8 @@ public interface Stage {
     WHEN,
     THEN;
 
-    public Stage create(Object driverObject, Tuple fixture) {
-      return create(new Statement.Factory(driverObject), fixture, null);
+    public Stage create(TestSuiteDescriptor testSuiteDescriptor, Tuple fixture) {
+      return create(new Statement.Factory(testSuiteDescriptor), fixture, null);
     }
 
     public Stage create(Statement.Factory statementFactory, Tuple fixture, Object response) {

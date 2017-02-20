@@ -16,6 +16,7 @@ import com.github.dakusui.scriptiveunit.core.Utils;
 import com.github.dakusui.scriptiveunit.model.*;
 import com.github.dakusui.scriptiveunit.model.func.Func;
 import com.github.dakusui.scriptiveunit.model.func.FuncInvoker;
+import com.github.dakusui.scriptiveunit.model.statement.Deform;
 import com.github.dakusui.scriptiveunit.model.statement.Statement;
 import com.google.common.collect.Lists;
 import org.hamcrest.BaseMatcher;
@@ -23,9 +24,8 @@ import org.hamcrest.Description;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.function.BiConsumer;
 import java.util.function.Supplier;
 
 import static com.github.dakusui.actionunit.Actions.named;
@@ -51,16 +51,19 @@ public enum Beans {
     final         Type                              runnerType;
     private final List<Object>                      setUpClause;
     private final List<Object>                      setUpBeforeAllClause;
+    private final Map<String, List<Object>>         userDefinedFormClauses;
 
     public BaseForTestSuiteDescriptor(
         BaseForCoveringArrayEngineConfig coveringArrayEngineConfigBean,
         BaseForFactorSpaceDescriptor factorSpaceBean,
+        Map<String, List<Object>> userDefinedFormClauses,
         List<Object> suiteLevelFixture,
         List<Object> fixture,
         List<? extends BaseForTestOracle> testOracleBeanList, String description, String runnerType) {
       this.coveringArrayEngineConfigBean = coveringArrayEngineConfigBean;
       this.runnerType = Type.valueOf(Utils.toALL_CAPS(runnerType));
       this.factorSpaceBean = factorSpaceBean;
+      this.userDefinedFormClauses = userDefinedFormClauses;
       this.setUpBeforeAllClause = suiteLevelFixture;
       this.setUpClause = fixture;
       this.testOracleBeanList = testOracleBeanList;
@@ -69,11 +72,19 @@ public enum Beans {
 
 
     public TestSuiteDescriptor create(Object driverObject) {
+      Map<String, Deform> work = new HashMap<>();
+      this.userDefinedFormClauses.forEach(new BiConsumer<String, List<Object>>() {
+        @Override
+        public void accept(String s, List<Object> objects) {
+          work.put(s, new Deform(objects));
+        }
+      });
       return new TestSuiteDescriptor() {
+        private Map<String, Deform> userDefinedForms = Collections.unmodifiableMap(work);
         private final Object NOP_CLAUSE = Lists.newArrayList("nop");
-        Statement setUpStatement = new Statement.Factory(driverObject).create(setUpClause != null ? setUpClause : NOP_CLAUSE);
-        Statement setUpBeforeAllStatement = new Statement.Factory(driverObject).create(setUpBeforeAllClause != null ? setUpBeforeAllClause : NOP_CLAUSE);
-        List<? extends TestOracle> testOracles = testOracleBeanList.stream().map(each -> each.create(new Statement.Factory(driverObject))).collect(toList());
+        Statement setUpStatement = new Statement.Factory(this).create(setUpClause != null ? setUpClause : NOP_CLAUSE);
+        Statement setUpBeforeAllStatement = new Statement.Factory(this).create(setUpBeforeAllClause != null ? setUpBeforeAllClause : NOP_CLAUSE);
+        List<? extends TestOracle> testOracles = testOracleBeanList.stream().map(each -> each.create(new Statement.Factory(this))).collect(toList());
         List<IndexedTestCase> testCases = createTestCases(this);
 
         @Override
@@ -88,7 +99,7 @@ public enum Beans {
 
         @Override
         public FactorSpaceDescriptor getFactorSpaceDescriptor() {
-          return factorSpaceBean.create(new Statement.Factory(driverObject));
+          return factorSpaceBean.create(new Statement.Factory(this));
         }
 
         @Override
@@ -104,6 +115,11 @@ public enum Beans {
         @Override
         public List<IndexedTestCase> getTestCases() {
           return this.testCases;
+        }
+
+        @Override
+        public Map<String, Deform> getUserDefinedForms() {
+          return this.userDefinedForms;
         }
 
         @Override
@@ -123,12 +139,17 @@ public enum Beans {
 
 
         private Func<Stage, Action> createActionFactory(String actionName, Statement statement) {
-          return input -> Actions.named(
-              actionName,
-              statement == null ?
-                  Actions.nop() :
-                  requireNonNull(Beans.<Stage, Action>toFunc(statement, new FuncInvoker.Impl(0)).apply(input))
-          );
+          return new Func<Stage, Action>() {
+            @Override
+            public Action apply(Stage input) {
+              Object result =
+                  statement == null ?
+                      Actions.nop() :
+                      toFunc(statement, new FuncInvoker.Impl(0)).apply(input);
+              //noinspection ConstantConditions
+              return Actions.named(actionName, Action.class.cast(result));
+            }
+          };
         }
 
         @Override
@@ -136,7 +157,8 @@ public enum Beans {
           return runnerType;
         }
 
-        List<IndexedTestCase> createTestCases(TestSuiteDescriptor testSuiteDescriptor) {
+        List<IndexedTestCase> createTestCases(TestSuiteDescriptor
+            testSuiteDescriptor) {
           FactorSpaceDescriptor factorSpaceDescriptor = testSuiteDescriptor.getFactorSpaceDescriptor();
           CoveringArrayEngineConfig coveringArrayEngineConfig = testSuiteDescriptor.getCoveringArrayEngineConfig();
 
@@ -164,7 +186,8 @@ public enum Beans {
               ).collect(toList());
         }
 
-        CoveringArrayEngine createEngine(CoveringArrayEngineConfig coveringArrayEngineConfig) {
+        CoveringArrayEngine createEngine(CoveringArrayEngineConfig
+            coveringArrayEngineConfig) {
           try {
             Constructor<CoveringArrayEngine> constructor;
             return (constructor = Utils.getConstructor(coveringArrayEngineConfig.getEngineClass()))
@@ -187,7 +210,9 @@ public enum Beans {
           }
         }
 
-      };
+      }
+
+          ;
     }
 
   }
@@ -351,7 +376,7 @@ public enum Beans {
                         @Override
                         public boolean matches(Object item) {
                           return requireNonNull(
-                              createFunc(givenStatement, funcInvoker).apply(GIVEN.create(statementFactory, testCaseTuple))
+                              createFunc(givenStatement, funcInvoker).apply(GIVEN.create(statementFactory, testCaseTuple, null))
                           );
                         }
 
@@ -384,7 +409,7 @@ public enum Beans {
                       return TestResult.create(
                           testCase,
                           Beans.<Stage, Boolean>toFunc(statementFactory.create(whenClause), funcInvoker)
-                              .apply(WHEN.create(statementFactory, testCase)));
+                              .apply(WHEN.create(statementFactory, testCase, null)));
                     }
 
                     @Override
@@ -437,6 +462,7 @@ public enum Beans {
         }
       };
     }
+
   }
 
   private static <T extends Stage, U> Func<T, U> toFunc(Statement statement, FuncInvoker funcInvoker) {

@@ -1,6 +1,9 @@
 package com.github.dakusui.scriptiveunit.model.statement;
 
 import com.github.dakusui.scriptiveunit.exceptions.SyntaxException;
+import com.github.dakusui.scriptiveunit.exceptions.TypeMismatch;
+import com.github.dakusui.scriptiveunit.model.Stage;
+import com.github.dakusui.scriptiveunit.model.TestSuiteDescriptor;
 import com.github.dakusui.scriptiveunit.model.func.Func;
 import com.github.dakusui.scriptiveunit.model.func.FuncHandler;
 import com.github.dakusui.scriptiveunit.model.func.FuncInvoker;
@@ -12,9 +15,9 @@ import java.util.Objects;
 import static java.util.Objects.requireNonNull;
 
 public interface Statement {
-  Object execute();
+  Func<? extends Stage, ?> execute();
 
-  Object executeWith(FuncInvoker funcInvoker);
+  Func<? extends Stage, ?> executeWith(FuncInvoker funcInvoker);
 
   interface Atom extends Statement {
 
@@ -32,10 +35,10 @@ public interface Statement {
     private final Func.Factory      funcFactory;
     private final FuncHandler       funcHandler;
 
-    public Factory(Object driverObject) {
+    public Factory(TestSuiteDescriptor testSuiteDescriptor) {
       this.funcHandler = new FuncHandler();
       this.funcFactory = new Func.Factory(funcHandler);
-      this.formFactory = new Form.Factory(driverObject, funcFactory);
+      this.formFactory = new Form.Factory(testSuiteDescriptor, funcFactory);
       this.argumentsFactory = new Arguments.Factory(this);
     }
 
@@ -43,41 +46,63 @@ public interface Statement {
       if (isAtom(object))
         return new Atom() {
           @Override
-          public Object execute() {
-            return funcFactory.createConst(object);
+          public Func<Stage, Object> execute() {
+            return (Func<Stage, Object>) funcFactory.createConst(object);
           }
 
           @Override
-          public Object executeWith(FuncInvoker funcInvoker) {
+          public Func<Stage, Object> executeWith(FuncInvoker funcInvoker) {
             funcHandler.setFuncInvoker(funcInvoker);
             return execute();
           }
         };
       @SuppressWarnings("unchecked") List<Object> raw = (List<Object>) object;
-      Form form = this.formFactory.create(String.class.cast(car(raw)));
-      Arguments arguments = this.argumentsFactory.create(cdr(raw));
-      return new Nested() {
-        @Override
-        public Form getForm() {
-          return form;
-        }
+      Object car = car(raw);
+      if (car instanceof String) {
+        Form form = this.formFactory.create(String.class.cast(car));
+        Arguments arguments = this.argumentsFactory.create(cdr(raw));
+        return new Nested() {
+          @Override
+          public Form getForm() {
+            return form;
+          }
 
-        @Override
-        public Arguments getArguments() {
-          return arguments;
-        }
+          @Override
+          public Arguments getArguments() {
+            return arguments;
+          }
 
-        @Override
-        public Object execute() {
-          return form.apply(arguments);
-        }
+          @Override
+          public Func<? extends Stage, ?> execute() {
+            return (Func<? extends Stage, ?>) form.apply(arguments);
+          }
 
-        @Override
-        public Object executeWith(FuncInvoker funcInvoker) {
-          funcHandler.setFuncInvoker(funcInvoker);
-          return execute();
-        }
-      };
+          @Override
+          public Func<? extends Stage, ?> executeWith(FuncInvoker funcInvoker) {
+            funcHandler.setFuncInvoker(funcInvoker);
+            return execute();
+          }
+        };
+      } else if (car instanceof Integer) {
+        return new Statement() {
+          @Override
+          public Func<Stage, Object> execute() {
+            return new Func<Stage, Object>() {
+              @Override
+              public Object apply(Stage input) {
+                return input.getArgument((Integer) car);
+              }
+            };
+          }
+
+          @Override
+          public Func<Stage, Object> executeWith(FuncInvoker funcInvoker) {
+            funcHandler.setFuncInvoker(funcInvoker);
+            return execute();
+          }
+        };
+      }
+      throw TypeMismatch.headOfCallMustBeString(car);
     }
 
     static boolean isAtom(Object object) {
@@ -95,6 +120,7 @@ public interface Statement {
 
   enum Utils {
     ;
+
     public static List<String> involvedParameters(Statement statement) {
       requireNonNull(statement);
       List<String> ret = Lists.newLinkedList();

@@ -3,12 +3,12 @@ package com.github.dakusui.scriptiveunit.model.statement;
 import com.github.dakusui.scriptiveunit.ScriptiveUnit;
 import com.github.dakusui.scriptiveunit.core.ObjectMethod;
 import com.github.dakusui.scriptiveunit.model.Stage;
+import com.github.dakusui.scriptiveunit.model.TestSuiteDescriptor;
 import com.github.dakusui.scriptiveunit.model.func.Func;
 
 import java.lang.reflect.Array;
 
 import static com.google.common.collect.Iterables.toArray;
-import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.StreamSupport.stream;
@@ -19,30 +19,22 @@ public interface Form {
   boolean isAccessor();
 
   class Factory {
-    private final Object       driver;
-    private final Func.Factory funcFactory;
+    private final Object              driver;
+    private final Func.Factory        funcFactory;
+    private final TestSuiteDescriptor testSuiteDescriptor;
 
-    /**
-     * @param driver Already validated drivers object.
-     */
-    public Factory(Object driver, Func.Factory funcFactory) {
-      this.driver = requireNonNull(driver);
+    public Factory(TestSuiteDescriptor testSuiteDescriptor, Func.Factory funcFactory) {
+      this.testSuiteDescriptor = testSuiteDescriptor;
+      this.driver = requireNonNull(testSuiteDescriptor.getDriverObject());
       this.funcFactory = funcFactory;
     }
 
     @SuppressWarnings("WeakerAccess")
     public Form create(String name) {
-      /* TODO: Fix */
-      try {
-        ObjectMethod objectMethod = Factory.this.getObjectMethodFromDriver(name);
-        return new Impl(objectMethod, name);
-      } catch (RuntimeException e) {
-        return findUserDefinedForm(name);
-      }
-    }
-
-    private Form findUserDefinedForm(String name) {
-      return new Deform(null/*TODO*/);
+      ObjectMethod objectMethod = Factory.this.getObjectMethodFromDriver(name);
+      return requireNonNull(objectMethod != null ?
+          new Impl(objectMethod, name) :
+          testSuiteDescriptor.getUserDefinedForms().get(name), String.format("A form '%s' was not found", name));
     }
 
     private Object[] shrinkTo(Class<?> componentType, int count, Object[] args) {
@@ -62,7 +54,7 @@ public interface Form {
         if (getMethodName(each).equals(methodName))
           return each;
       }
-      throw new RuntimeException(format("function '%s' annotated with 'Scriptable' was not found in '%s'", methodName, this.driver.getClass().getCanonicalName()));
+      return null;
     }
 
     private String getMethodName(ObjectMethod method) {
@@ -71,7 +63,7 @@ public interface Form {
 
     private class Impl implements Form {
       private final ObjectMethod objectMethod;
-      private final String name;
+      private final String       name;
 
       Impl(ObjectMethod objectMethod, String name) {
         this.objectMethod = objectMethod;
@@ -83,7 +75,7 @@ public interface Form {
         Object[] args = toArray(stream(arguments.spliterator(), false)
             .map(Statement::execute)
             .collect(toList()), Object.class);
-        if (objectMethod.isVarArgs()) {
+        if (requireNonNull(objectMethod).isVarArgs()) {
           int parameterCount = objectMethod.getParameterCount();
           args = Factory.this.shrinkTo(objectMethod.getParameterTypes()[parameterCount - 1].getComponentType(), parameterCount, args);
         }
@@ -92,7 +84,7 @@ public interface Form {
 
       @Override
       public boolean isAccessor() {
-        return  Factory.this.getObjectMethodFromDriver(name).isAccessor();
+        return this.objectMethod.isAccessor();
       }
     }
   }

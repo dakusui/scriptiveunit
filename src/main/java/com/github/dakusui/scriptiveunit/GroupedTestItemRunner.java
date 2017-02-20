@@ -247,6 +247,6 @@ public final class GroupedTestItemRunner extends ParentRunner<Action> {
   }
 
   private static Action createSetUpAction(TestSuiteDescriptor testSuiteDescriptor, Tuple input) {
-    return testSuiteDescriptor.getSetUpActionFactory().apply(Stage.Type.SETUP.create(testSuiteDescriptor.getDriverObject(), input));
+    return testSuiteDescriptor.getSetUpActionFactory().apply(Stage.Type.SETUP.create(testSuiteDescriptor, input));
   }
 }
