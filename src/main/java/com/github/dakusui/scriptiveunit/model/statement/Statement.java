@@ -87,12 +87,7 @@ public interface Statement {
         return new Statement() {
           @Override
           public Func<Stage, Object> execute() {
-            return new Func<Stage, Object>() {
-              @Override
-              public Object apply(Stage input) {
-                return input.getArgument((Integer) car);
-              }
-            };
+            return input -> input.getArgument((Integer) car);
           }
 
           @Override

@@ -1,6 +1,6 @@
 {
     "$extends":["tests/regular/regularbase.json"],
-    "description":"An example test suite for Query-Result model with ScriptUnit",
+    "description":"Query-Result model example",
     "factorSpace": {
         "factors": {
             "service" : ["shoppingmall", "bookstore"],
@@ -8,12 +8,12 @@
             "host" : ["localhost"]
         }
     },
-    "runnerType": "groupByTestCase",
+    "runnerType": "groupByTestFixture",
     "setUpBeforeAll" : ["nop"],
     "setUp" : ["sequential", ["print", ["attr", "service"]], ["print", ["attr", "index"]]],
     "testOracles": [
         {
-            "description": "Searching 'iPhone' should not return too many accessories",
+            "description": "{{@TESTSUITE}}: Searching {{terms}} should not return too many accessories",
             "given": ["equals", ["attr", "terms"], ["quote", "iPhone"]],
             "when": ["issue", ["query"] ],
             "then": [">",
@@ -22,7 +22,7 @@
             ]
         },
         {
-            "description": "Searching 'ヒーター' should also return items that contain 'ヒータ' or 'ストーブ'",
+            "description": "{{@TESTSUITE}}: Searching 'ヒーター' should also return items that contain 'ヒータ' or 'ストーブ'",
             "given": ["equals", ["attr", "terms"], ["quote", "ヒーター"]],
             "when": ["issue", ["query"] ],
             "then": ["<",
@@ -34,7 +34,7 @@
             ]
         },
         {
-            "description": "Valid queries should result in 200",
+            "description": "{{@TESTSUITE}}: Valid queries should result in 200",
             "given": ["always"],
             "when": ["issue", ["query"]],
             "then": ["==", ["value", "statusCode", ["result"]], 200]
