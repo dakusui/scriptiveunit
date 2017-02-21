@@ -4,6 +4,7 @@ import com.github.dakusui.scriptiveunit.model.statement.Statement;
 import org.codehaus.jackson.JsonNode;
 import org.codehaus.jackson.node.ObjectNode;
 
+import java.util.Map;
 import java.util.function.Supplier;
 
 import static java.lang.String.format;
@@ -49,5 +50,13 @@ public class SyntaxException extends ScriptiveUnitException {
 
   public static SyntaxException parameterNameShouldBeSpecifiedWithConstant(Statement.Nested statement) {
     throw new SyntaxException(format("Parameter name must be constant but not when accessor is used. (%s %s)", statement.getForm(), statement.getArguments()));
+  }
+
+  public static SyntaxException cyclicTemplatingFound(String context, Map<String, Object> map) {
+    throw new SyntaxException(format("Cyclic templating was detected in %s (%s)", context, map));
+  }
+
+  public static SyntaxException undefinedFactor(String factorName, Object context) {
+    throw new SyntaxException(format("Undefined factor name '%s' was used in %s", factorName, context));
   }
 }

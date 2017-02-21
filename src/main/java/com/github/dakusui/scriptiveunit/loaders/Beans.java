@@ -29,8 +29,7 @@ import java.util.Map;
 import java.util.function.Supplier;
 
 import static com.github.dakusui.actionunit.Actions.named;
-import static com.github.dakusui.scriptiveunit.core.Utils.convertIfNecessary;
-import static com.github.dakusui.scriptiveunit.core.Utils.iterableToString;
+import static com.github.dakusui.scriptiveunit.core.Utils.*;
 import static com.github.dakusui.scriptiveunit.exceptions.ScriptiveUnitException.wrap;
 import static com.github.dakusui.scriptiveunit.model.Stage.Type.*;
 import static com.google.common.base.Preconditions.checkArgument;
@@ -353,7 +352,7 @@ public enum Beans {
          */
         @Override
         public Supplier<Action> createTestActionSupplier(List<Factor> factors, int itemId, String testSuiteDescription, Tuple testCaseTuple) {
-          return () -> named(format("%03d: %s", itemId, description),
+          return () -> named(format("%03d: %s", itemId, template(description, Utils.append(testCaseTuple, "@TESTSUITE", testSuiteDescription))),
               Actions.<Tuple, TestResult>test("verify with: " + Utils.filterSingleLevelFactorsOut(testCaseTuple, factors))
                   .given(new Source<Tuple>() {
                     Statement givenStatement = statementFactory.create(givenClause);

@@ -28,8 +28,10 @@ import java.util.Map;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
-import static com.github.dakusui.scriptiveunit.exceptions.SyntaxException.mergeFailed;
+import static com.github.dakusui.scriptiveunit.exceptions.SyntaxException.*;
 import static com.google.common.base.Preconditions.checkState;
 import static java.lang.Character.*;
 import static java.lang.ClassLoader.getSystemResourceAsStream;
@@ -41,12 +43,35 @@ import static java.util.stream.Collectors.toList;
 public enum Utils {
   ;
 
+  public static String template(String s, Map<String, Object> map) {
+    String ret = s;
+    Pattern pattern = Pattern.compile("\\{\\{(?<keyword>@?[A-Za-z_][A-Za-z0-9_]*)\\}\\}");
+    Matcher matcher;
+    int i = 0;
+    while ((matcher = pattern.matcher(ret)).find()) {
+      String keyword = matcher.group("keyword");
+      check(i++ < map.size(),
+          () -> cyclicTemplatingFound(format("template(%s)", s), map));
+      check(map.containsKey(keyword),
+          () -> undefinedFactor(keyword, format("template(%s)", s)));
+      ret = ret.replaceAll(format("\\{\\{%s\\}\\}", keyword), requireNonNull(map.get(keyword)).toString());
+    }
+    return ret;
+  }
+
   public static Tuple filterSingleLevelFactorsOut(Tuple tuple, List<Factor> factors) {
     Tuple.Builder b = new Tuple.Builder();
     factors.stream()
         .filter(each -> each.levels.size() > 1)
         .filter(each -> tuple.containsKey(each.name))
         .forEach(each -> b.put(each.name, tuple.get(each.name)));
+    return b.build();
+  }
+
+  public static Tuple append(Tuple tuple, String key, Object value) {
+    Tuple.Builder b = new Tuple.Builder();
+    b.putAll(tuple);
+    b.put(key, value);
     return b.build();
   }
 

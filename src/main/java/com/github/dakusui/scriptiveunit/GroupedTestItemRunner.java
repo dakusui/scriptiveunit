@@ -26,7 +26,7 @@ import java.util.stream.Stream;
 import static com.github.dakusui.actionunit.Actions.named;
 import static com.github.dakusui.scriptiveunit.GroupedTestItemRunner.Type.OrderBy.TEST_CASE;
 import static com.github.dakusui.scriptiveunit.GroupedTestItemRunner.Type.OrderBy.TEST_ORACLE;
-import static com.github.dakusui.scriptiveunit.core.Utils.filterSingleLevelFactorsOut;
+import static com.github.dakusui.scriptiveunit.core.Utils.*;
 import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
 import static java.util.stream.Collectors.toList;
@@ -182,7 +182,7 @@ public final class GroupedTestItemRunner extends ParentRunner<Action> {
                 public Action apply(IndexedTestCase input) {
                   try {
                     return Actions.sequential(
-                        format("%03d: %s", i, testOracle.getDescription()),
+                        format("%03d: %s", i, template(testOracle.getDescription(), append(input.getTuple(), "@TESTSUITE", testSuiteDescription))),
                         named(
                             format("%03d: Setup test fixture", i),
                             named(format("fixture: %s", filterSingleLevelFactorsOut(input.getTuple(), factors)),
