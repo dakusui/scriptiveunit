@@ -31,4 +31,8 @@ public class ScriptiveUnitException extends RuntimeException {
       throw new ScriptiveUnitException(format(fmt, args));
     };
   }
+
+  public static ScriptiveUnitException indexOutOfBounds(int index, int size) {
+    return new ScriptiveUnitException(format("%sth element was accessed but the container's length was %s", index, size));
+  }
 }

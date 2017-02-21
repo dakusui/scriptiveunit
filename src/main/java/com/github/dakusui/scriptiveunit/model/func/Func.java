@@ -71,14 +71,6 @@ public interface Func<I, O> extends
       return createProxy((proxy, method, args) -> funcHandler.handleConst(value), Const.class);
     }
 
-    public <T> Func<? extends Stage, T> createArg(int index) {
-      return new Func<Stage, T>() {
-        @Override
-        public T apply(Stage input) {
-          return input.getArgument(index);
-        }
-      };
-    }
     private Func createFunc(String name, Func target) {
       return createProxy(createInvocationHandler(name, target), Func.class);
     }

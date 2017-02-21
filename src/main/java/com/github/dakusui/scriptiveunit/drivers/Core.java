@@ -15,6 +15,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import static com.github.dakusui.scriptiveunit.core.Utils.check;
+import static com.github.dakusui.scriptiveunit.exceptions.ScriptiveUnitException.indexOutOfBounds;
 import static com.github.dakusui.scriptiveunit.exceptions.SyntaxException.attributeNotFound;
 import static java.util.Objects.requireNonNull;
 import static java.util.stream.Collectors.toList;
@@ -81,46 +82,45 @@ public class Core {
   @SafeVarargs
   @Scriptable
   public final <T extends Stage> Func<T, Object> userFunc(Func<T, List<Object>> funcBody, Func<T, ?>... args) {
-    return new Func<T, Object>() {
-      @Override
-      public Object apply(T input) {
-        List<Object> argValues = Arrays.stream(args).map(each -> each.apply(input)).collect(toList());
-        Stage wrappedStage = new Stage() {
-          @Override
-          public Statement.Factory getStatementFactory() {
-            return input.getStatementFactory();
-          }
+    return (T input) -> {
+      List<Object> argValues = Arrays.stream(args).map(each -> each.apply(input)).collect(toList());
+      Stage wrappedStage = new Stage() {
+        @Override
+        public Statement.Factory getStatementFactory() {
+          return input.getStatementFactory();
+        }
 
-          @Override
-          public Tuple getTestCaseTuple() {
-            return input.getTestCaseTuple();
-          }
+        @Override
+        public Tuple getTestCaseTuple() {
+          return input.getTestCaseTuple();
+        }
 
-          @Override
-          public <RESPONSE> RESPONSE response() {
-            return input.response();
-          }
+        @Override
+        public <RESPONSE> RESPONSE response() {
+          return input.response();
+        }
 
-          @Override
-          public Type getType() {
-            return input.getType();
-          }
+        @Override
+        public Type getType() {
+          return input.getType();
+        }
 
-          @Override
-          public <T> T getArgument(int index) {
-            return (T) argValues.get(index);
-          }
+        @Override
+        public <T> T getArgument(int index) {
+          check(index < sizeOfArguments(), () -> indexOutOfBounds(index, sizeOfArguments()));
+          //noinspection unchecked
+          return (T) argValues.get(index);
+        }
 
-          @Override
-          public int sizeOfArguments() {
-            return argValues.size();
-          }
-        };
-        return wrappedStage.getStatementFactory()
-            .create(funcBody.apply((T) wrappedStage))
-            .executeWith(new FuncInvoker.Impl(0))
-            .<Func<Stage, Object>>apply(wrappedStage);
-      }
+        @Override
+        public int sizeOfArguments() {
+          return argValues.size();
+        }
+      };
+      return wrappedStage.getStatementFactory()
+          .create(funcBody.apply((T) wrappedStage))
+          .executeWith(new FuncInvoker.Impl(0))
+          .<Func<Stage, Object>>apply(wrappedStage);
     };
   }
 }

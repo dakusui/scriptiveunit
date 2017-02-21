@@ -351,11 +351,15 @@ public enum Beans {
          * Warning: Created action is not thread safe. Users should create 1 action for 1 thread.
          */
         @Override
-        public Supplier<Action> createTestActionSupplier(List<Factor> factors, int itemId, String testSuiteDescription, Tuple testCaseTuple) {
-          return () -> named(format("%03d: %s", itemId, template(description, Utils.append(testCaseTuple, "@TESTSUITE", testSuiteDescription))),
+        public Supplier<Action> createTestActionSupplier(int itemId, Tuple testCaseTuple, TestSuiteDescriptor testSuiteDescriptor) {
+          List<Factor> factors = testSuiteDescriptor.getFactorSpaceDescriptor().getFactors();
+          String testSuiteDescription = testSuiteDescriptor.getDescription();
+          return () -> named(
+              format("%03d: %s", itemId, template(description, append(testCaseTuple, "@TESTSUITE", testSuiteDescription))),
               Actions.<Tuple, TestResult>test("verify with: " + Utils.filterSingleLevelFactorsOut(testCaseTuple, factors))
                   .given(new Source<Tuple>() {
-                    Statement givenStatement = statementFactory.create(givenClause);
+                    Stage givenStage = GIVEN.create(testSuiteDescriptor, testCaseTuple, null);
+                    Statement givenStatement = givenStage.getStatementFactory().create(givenClause);
                     FuncInvoker funcInvoker = new FuncInvoker.Impl(0);
 
                     @Override
@@ -364,7 +368,7 @@ public enum Beans {
                         @Override
                         public boolean matches(Object item) {
                           return requireNonNull(
-                              createFunc(givenStatement, funcInvoker).apply(GIVEN.create(statementFactory, testCaseTuple, null))
+                              createFunc(givenStatement, funcInvoker).apply(givenStage)
                           );
                         }
 
@@ -394,10 +398,13 @@ public enum Beans {
 
                     @Override
                     public TestResult apply(Tuple testCase, Context context) {
+                      Stage whenStage = WHEN.create(testSuiteDescriptor, testCase, null);
                       return TestResult.create(
                           testCase,
-                          Beans.<Stage, Boolean>toFunc(statementFactory.create(whenClause), funcInvoker)
-                              .apply(WHEN.create(statementFactory, testCase, null)));
+                          Beans.<Stage, Boolean>toFunc(
+                              whenStage.getStatementFactory().create(whenClause),
+                              funcInvoker
+                          ).apply(whenStage));
                     }
 
                     @Override
@@ -410,16 +417,17 @@ public enum Beans {
 
                     @Override
                     public void apply(TestResult testResult, Context context) {
-                      Stage thenStage = THEN.create(statementFactory, testResult.getTestCase(), testResult.getOutput());
+                      Stage thenStage = THEN.create(testSuiteDescriptor, testResult.getTestCase(), testResult.getOutput());
                       assertThat(
                           thenStage,
                           new BaseMatcher<Stage>() {
                             @Override
                             public boolean matches(Object item) {
                               return requireNonNull(
-                                  Beans.<Stage, Boolean>toFunc(statementFactory.create(thenClause), funcInvoker)
-                                      .apply(thenStage)
-                              );
+                                  Beans.<Stage, Boolean>toFunc(
+                                      thenStage.getStatementFactory().create(thenClause),
+                                      funcInvoker
+                                  ).apply(thenStage));
                             }
 
                             @Override

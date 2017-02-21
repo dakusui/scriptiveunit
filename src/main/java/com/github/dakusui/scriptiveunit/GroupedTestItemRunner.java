@@ -74,24 +74,20 @@ public final class GroupedTestItemRunner extends ParentRunner<Action> {
       TEST_CASE {
         Stream<Action> buildSortedActionStreamOrderingBy(List<IndexedTestCase> testCases, AtomicInteger i, TestSuiteDescriptor testSuiteDescriptor) {
           List<? extends TestOracle> testOracles = testSuiteDescriptor.getTestOracles();
-          List<Factor> factors = testSuiteDescriptor.getFactorSpaceDescriptor().getFactors();
-          String testSuiteDescription = testSuiteDescriptor.getDescription();
           return testCases.stream()
               .flatMap(eachTestCase -> testOracles.stream()
                   .map(eachOracle ->
-                      eachOracle.createTestActionSupplier(factors, i.getAndIncrement(), testSuiteDescription, eachTestCase.getTuple()).get()));
+                      eachOracle.createTestActionSupplier(i.getAndIncrement(), eachTestCase.getTuple(), testSuiteDescriptor).get()));
         }
       },
       TEST_ORACLE {
         @Override
         Stream<Action> buildSortedActionStreamOrderingBy(List<IndexedTestCase> testCases, AtomicInteger i, TestSuiteDescriptor testSuiteDescriptor) {
           List<? extends TestOracle> testOracles = testSuiteDescriptor.getTestOracles();
-          List<Factor> factors = testSuiteDescriptor.getFactorSpaceDescriptor().getFactors();
-          String testSuiteDescription = testSuiteDescriptor.getDescription();
           return testOracles.stream()
               .flatMap(eachOracle -> testCases.stream()
                   .map(eachTestCase ->
-                      eachOracle.createTestActionSupplier(factors, i.getAndIncrement(), testSuiteDescription, eachTestCase.getTuple()).get()));
+                      eachOracle.createTestActionSupplier(i.getAndIncrement(), eachTestCase.getTuple(), testSuiteDescriptor).get()));
         }
       };
 
@@ -189,7 +185,7 @@ public final class GroupedTestItemRunner extends ParentRunner<Action> {
                                 requireNonNull(createSetUpAction(testSuiteDescriptor, input.getTuple()))
                             )
                         ),
-                        testOracle.createTestActionSupplier(factors, input.getIndex(), testSuiteDescription, input.getTuple()).get());
+                        testOracle.createTestActionSupplier(input.getIndex(), input.getTuple(), testSuiteDescriptor).get());
                   } finally {
                     i++;
                   }
@@ -205,7 +201,6 @@ public final class GroupedTestItemRunner extends ParentRunner<Action> {
   static GroupedTestItemRunner createRunnerForTestCase(Class<?> testClass, IndexedTestCase testCase, TestSuiteDescriptor testSuiteDescriptor) {
     int testCaseId = testCase.getIndex();
     List<Factor> factors = testSuiteDescriptor.getFactorSpaceDescriptor().getFactors();
-    String testSuiteDescription = testSuiteDescriptor.getDescription();
     List<? extends TestOracle> testOracles = testSuiteDescriptor.getTestOracles();
     try {
       Tuple testCaseTuple = testCase.getTuple();
@@ -218,7 +213,7 @@ public final class GroupedTestItemRunner extends ParentRunner<Action> {
                           requireNonNull(createSetUpAction(testSuiteDescriptor, testCaseTuple)))
                   )),
               testOracles.stream()
-                  .map((TestOracle input) -> input.createTestActionSupplier(factors, testOracles.indexOf(input) + 1, testSuiteDescription, testCaseTuple).get()))
+                  .map((TestOracle input) -> input.createTestActionSupplier(testOracles.indexOf(input) + 1, testCaseTuple, testSuiteDescriptor).get()))
               .collect(toList()),
           testCaseId);
     } catch (InitializationError initializationError) {
@@ -247,6 +242,6 @@ public final class GroupedTestItemRunner extends ParentRunner<Action> {
   }
 
   private static Action createSetUpAction(TestSuiteDescriptor testSuiteDescriptor, Tuple input) {
-    return testSuiteDescriptor.getSetUpActionFactory().apply(Stage.Type.SETUP.create(testSuiteDescriptor, input));
+    return testSuiteDescriptor.getSetUpActionFactory().apply(Stage.Type.SETUP.create(testSuiteDescriptor, input, null));
   }
 }

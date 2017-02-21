@@ -17,17 +17,17 @@ public interface Stage {
   int sizeOfArguments();
 
   enum Type {
-    SETUP_BEFORE_SUITE,
+    SETUP_BEFORE_ALL,
     SETUP,
     GIVEN,
     WHEN,
     THEN;
 
-    public Stage create(TestSuiteDescriptor testSuiteDescriptor, Tuple fixture) {
-      return create(new Statement.Factory(testSuiteDescriptor), fixture, null);
+    public Stage create(TestSuiteDescriptor testSuiteDescriptor, Tuple fixture, Object response) {
+      return _create(new Statement.Factory(testSuiteDescriptor), fixture, response);
     }
 
-    public Stage create(Statement.Factory statementFactory, Tuple fixture, Object response) {
+    private Stage _create(Statement.Factory statementFactory, Tuple fixture, Object response) {
       Type type = this;
       return new Stage() {
         @Override
