@@ -1,6 +1,5 @@
 package com.github.dakusui.scriptiveunit.testutils;
 
-import com.github.dakusui.scriptiveunit.model.func.Func;
 import org.hamcrest.BaseMatcher;
 import org.hamcrest.Description;
 import org.hamcrest.Matcher;
@@ -18,10 +17,10 @@ public abstract class JUnitResultMatcher extends BaseMatcher<Result> {
       return false;
     Result item = (Result) object;
     return allOf(
-        translate((Func<Result, Boolean>) Result::wasSuccessful, resultMatcher()),
-        translate((Func<Result, Integer>) Result::getRunCount, runCountMatcher()),
-        translate((Func<Result, Integer>) Result::getFailureCount, failureCountMatcher()),
-        translate((Func<Result, Integer>) Result::getIgnoreCount, ignoreCountMatcher())
+        translate((Function<Result, Boolean>) Result::wasSuccessful, resultMatcher()),
+        translate((Function<Result, Integer>) Result::getRunCount, runCountMatcher()),
+        translate((Function<Result, Integer>) Result::getFailureCount, failureCountMatcher()),
+        translate((Function<Result, Integer>) Result::getIgnoreCount, ignoreCountMatcher())
     ).matches(item);
   }
 

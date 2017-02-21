@@ -4,6 +4,7 @@ import com.github.dakusui.scriptiveunit.ScriptiveUnit;
 import com.github.dakusui.scriptiveunit.core.ObjectMethod;
 import com.github.dakusui.scriptiveunit.model.TestSuiteDescriptor;
 import com.github.dakusui.scriptiveunit.model.func.Func;
+import com.github.dakusui.scriptiveunit.model.func.FuncInvoker;
 
 import java.lang.reflect.Array;
 import java.util.Iterator;
@@ -17,7 +18,7 @@ import static java.util.stream.Collectors.toList;
 import static java.util.stream.StreamSupport.stream;
 
 public interface Form {
-  Func apply(Arguments arguments);
+  Func apply(FuncInvoker funcInvoker, Arguments arguments);
 
   boolean isAccessor();
 
@@ -81,15 +82,15 @@ public interface Form {
       }
 
       @Override
-      public Func apply(Arguments arguments) {
+      public Func apply(FuncInvoker funcInvoker, Arguments arguments) {
         Object[] args = toArray(stream(arguments.spliterator(), false)
-            .map(Statement::execute)
+            .map(statement -> statement.execute(funcInvoker))
             .collect(toList()), Func.class);
         if (requireNonNull(objectMethod).isVarArgs()) {
           int parameterCount = objectMethod.getParameterCount();
           args = Factory.this.shrinkTo(objectMethod.getParameterTypes()[parameterCount - 1].getComponentType(), parameterCount, args);
         }
-        return funcFactory.create(objectMethod, args);
+        return funcFactory.create(funcInvoker, objectMethod, args);
       }
 
       @Override
@@ -107,8 +108,8 @@ public interface Form {
       }
 
       @Override
-      public Func apply(Arguments arguments) {
-        return super.apply(new Arguments() {
+      public Func apply(FuncInvoker funcInvoker, Arguments arguments) {
+        return super.apply(funcInvoker, new Arguments() {
           Iterable<Statement> statements = concat(of(statementFactory.create(userDefinedFormClause)), arguments);
 
           @Override

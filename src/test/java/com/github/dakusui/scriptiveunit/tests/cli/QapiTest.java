@@ -21,7 +21,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 public class QapiTest extends TestBase {
   public enum TestItem implements TestDef<String, QapiTest, Result> {
     @ReflectivelyReferenced DEFAULT_VALUES("tests/regular/defaultValues.json", false, 18, 6, 0),
-    @ReflectivelyReferenced STANDARD_VALUES("tests/regular/qapi.json", false, 36, 9, 0);
+    @ReflectivelyReferenced STANDARD_VALUES("tests/regular/qapi.json", false, 31, 9, 0);
 
     final private String  scriptResourceName;
     final private boolean wasSuccessful;

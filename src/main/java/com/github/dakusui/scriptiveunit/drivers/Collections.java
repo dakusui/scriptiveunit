@@ -2,10 +2,11 @@ package com.github.dakusui.scriptiveunit.drivers;
 
 import com.github.dakusui.scriptiveunit.annotations.ReflectivelyReferenced;
 import com.github.dakusui.scriptiveunit.annotations.Scriptable;
-import com.github.dakusui.scriptiveunit.model.func.Func;
 import com.github.dakusui.scriptiveunit.model.Stage;
+import com.github.dakusui.scriptiveunit.model.func.Func;
 import com.google.common.collect.Iterables;
 
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import static java.util.Objects.requireNonNull;
@@ -15,21 +16,22 @@ import static java.util.stream.StreamSupport.stream;
 public class Collections {
   @ReflectivelyReferenced
   @Scriptable
-  public <T extends Stage, E> Func<T, Integer> size(Func<T, Iterable<? extends E>> iterable) {
-    return new Func<T, Integer>() {
-      @Override
-      public Integer apply(T input) {
-        return Iterables.size(requireNonNull(iterable.apply(input)));
-      }
-    };
+  public <E> Func<Integer> size(Func<Iterable<? extends E>> iterable) {
+    return (Stage input) -> Iterables.size(requireNonNull(iterable.apply(input)));
   }
 
   @ReflectivelyReferenced
   @Scriptable
-  public <T extends Stage, E> Func<T, Iterable<? super E>> filter(Func<T, Iterable<? extends E>> iterable, Func<T, Func<? super E, Boolean>> predicate) {
-    return i -> {
+  public <E> Func<Integer> concat(Func<Iterable<? extends E>> iterable) {
+    return (Stage input) -> Iterables.size(requireNonNull(iterable.apply(input)));
+  }
+
+  @ReflectivelyReferenced
+  @Scriptable
+  public <E> Func<Iterable<? extends E>> filter(Func<Iterable<? extends E>> iterable, Func<Function<E, Boolean>> predicate) {
+    return (Stage i) -> {
       //noinspection unchecked
-      return (Iterable<? super E>) stream(requireNonNull(iterable.apply(i))
+      return (Iterable<? extends E>) stream(requireNonNull(iterable.apply(i))
           .<E>spliterator(), false)
           .filter(input -> requireNonNull(requireNonNull(predicate.apply(i)).apply(input)))
           .collect(Collectors.<E>toList());
@@ -38,10 +40,10 @@ public class Collections {
 
   @ReflectivelyReferenced
   @Scriptable
-  public <T extends Stage, E> Func<T, Func<E, Boolean>> containedBy(Func<T, Iterable<E>> iterable) {
-    return (T input) -> {
+  public <E> Func<Function<E, Boolean>> containedBy(Func<Iterable<E>> iterable) {
+    return (Stage input) -> {
       Iterable<E> collection = requireNonNull(iterable.apply(input));
-      return (Func<E, Boolean>) entry -> Iterables.contains(collection, entry);
+      return (Function<E, Boolean>) entry -> Iterables.contains(collection, entry);
     };
   }
 }

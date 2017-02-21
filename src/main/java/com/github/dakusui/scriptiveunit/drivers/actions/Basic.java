@@ -14,15 +14,15 @@ import static java.util.stream.Collectors.toList;
 public class Basic {
   @ReflectivelyReferenced
   @Scriptable
-  public <T extends Stage> Func<T, Action> nop() {
+  public Func<Action> nop() {
     return input -> Actions.nop();
   }
 
   @SafeVarargs
   @ReflectivelyReferenced
   @Scriptable
-  public final <T extends Stage> Func<T, Action> sequential(Func<T, Action>... actions) {
-    return (T input) -> Actions.sequential(
+  public final Func<Action> sequential(Func<Action>... actions) {
+    return (Stage input) -> Actions.sequential(
         stream(actions)
             .map(each -> each.apply(input))
             .collect(toList())
@@ -32,8 +32,8 @@ public class Basic {
   @SafeVarargs
   @ReflectivelyReferenced
   @Scriptable
-  public final <T extends Stage> Func<T, Action> concurrent(Func<T, Action>... actions) {
-    return (T input) -> Actions.concurrent(
+  public final Func<Action> concurrent(Func<Action>... actions) {
+    return (Stage input) -> Actions.concurrent(
         stream(actions)
             .map(each -> each.apply(input))
             .collect(toList())
@@ -42,7 +42,7 @@ public class Basic {
 
   @ReflectivelyReferenced
   @Scriptable
-  public <T extends Stage> Func<T, Action> fail(Func<T, String> in) {
+  public Func<Action> fail(Func<String> in) {
     return input -> Actions.simple(() -> {
       throw new RuntimeException(in.apply(input));
     });
@@ -50,7 +50,7 @@ public class Basic {
 
   @ReflectivelyReferenced
   @Scriptable
-  public <T extends Stage> Func<T, Action> print(Func<T, ?> in) {
+  public Func<Action> print(Func<?> in) {
     return input -> Actions.simple(
         new Runnable() {
           @Override

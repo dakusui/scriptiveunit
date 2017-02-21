@@ -10,27 +10,27 @@ import java.util.Map;
 public abstract class Service<REQUEST, RESPONSE> extends Core {
   @ReflectivelyReferenced
   @Scriptable
-  public <T extends Stage> Func.Memoized<T, RESPONSE> service(Func<T, REQUEST> request) {
-    return (T input) -> Service.this.service(request.apply(input));
+  public Func.Memoized<RESPONSE> service(Func<REQUEST> request) {
+    return (Stage input) -> Service.this.service(request.apply(input));
   }
 
   @ReflectivelyReferenced
   @Scriptable
-  public <T extends Stage> Func<T, REQUEST> with(Func<T, Map<String, Object>> values, Func<T, REQUEST> request) {
-    return (T input) -> override(values.apply(input), request.apply(input));
+  public Func<REQUEST> with(Func<Map<String, Object>> values, Func<REQUEST> request) {
+    return (Stage input) -> override(values.apply(input), request.apply(input));
   }
 
   @ReflectivelyReferenced
   @Scriptable
-  public <T extends Stage> Func<T, REQUEST> request() {
-    return (T input) -> buildRequest(input.getTestCaseTuple());
+  public Func<REQUEST> request() {
+    return (Stage input) -> buildRequest(input.getTestCaseTuple());
   }
 
   @ReflectivelyReferenced
   @Scriptable
-  public <T extends Stage> Func<T, RESPONSE> response() {
+  public Func<RESPONSE> response() {
     //noinspection unchecked
-    return (T input) -> (RESPONSE) input.response();
+    return (Stage input) -> (RESPONSE) input.response();
   }
 
   /**

@@ -31,7 +31,7 @@ public class JsonBasedTestSuiteLoader extends TestSuiteLoader.Base {
   }
 
   @Override
-  protected TestSuiteDescriptor loadTestSuite(Class<?> driverClass, String scriptResourceName) {
+  protected TestSuiteDescriptor loadTestSuiteDescriptor(Class<?> driverClass, String scriptResourceName) {
     try {
       return new ObjectMapper()
           .readValue(readScript(scriptResourceName), TestSuiteDescriptorBean.class)

@@ -10,7 +10,7 @@
     },
     "runnerType": "groupByTestFixture",
     "setUpBeforeAll" : ["nop"],
-    "setUp" : ["sequential", ["print", ["attr", "service"]], ["print", ["attr", "index"]]],
+    "setUp" : ["concurrent", ["print", ["attr", "service"]], ["print", ["attr", "index"]]],
     "testOracles": [
         {
             "description": "{{@TESTSUITE}}: Searching {{terms}} should not return too many accessories",

@@ -12,15 +12,13 @@ import com.google.common.collect.Lists;
 import java.util.List;
 import java.util.Objects;
 
+import static com.github.dakusui.scriptiveunit.exceptions.TypeMismatch.headOfCallMustBeString;
 import static java.util.Objects.requireNonNull;
 
 public interface Statement {
-  Func execute();
-
-  Func executeWith(FuncInvoker funcInvoker);
+  Func execute(FuncInvoker invoker);
 
   interface Atom extends Statement {
-
   }
 
   interface Nested extends Statement {
@@ -42,20 +40,9 @@ public interface Statement {
       this.formFactory = new Form.Factory(testSuiteDescriptor, funcFactory, this);
     }
 
-    public Statement create(Object object) {
+    public Statement create(Object object) throws TypeMismatch {
       if (isAtom(object))
-        return new Atom() {
-          @Override
-          public Func<Stage, Object> execute() {
-            return (Func<Stage, Object>) funcFactory.createConst(object);
-          }
-
-          @Override
-          public Func<Stage, Object> executeWith(FuncInvoker funcInvoker) {
-            funcHandler.setFuncInvoker(funcInvoker);
-            return execute();
-          }
-        };
+        return (Atom) invoker -> (Func<Object>) funcFactory.createConst(invoker, object);
       @SuppressWarnings("unchecked") List<Func> raw = (List<Func>) object;
       Object car = car(raw);
       if (car instanceof String) {
@@ -73,31 +60,14 @@ public interface Statement {
           }
 
           @Override
-          public Func<? extends Stage, ?> execute() {
-            return (Func<? extends Stage, ?>) form.apply(arguments);
-          }
-
-          @Override
-          public Func<? extends Stage, ?> executeWith(FuncInvoker funcInvoker) {
-            funcHandler.setFuncInvoker(funcInvoker);
-            return execute();
+          public Func<?> execute(FuncInvoker invoker) {
+            return (Func<?>) form.apply(invoker, arguments);
           }
         };
       } else if (car instanceof Integer) {
-        return new Statement() {
-          @Override
-          public Func<Stage, Object> execute() {
-            return input -> input.getArgument((Integer) car);
-          }
-
-          @Override
-          public Func<Stage, Object> executeWith(FuncInvoker funcInvoker) {
-            funcHandler.setFuncInvoker(funcInvoker);
-            return execute();
-          }
-        };
+        return invoker -> (Func<Object>) input -> input.getArgument((Integer) car);
       }
-      throw TypeMismatch.headOfCallMustBeString(car);
+      throw headOfCallMustBeString(car);
     }
 
     static boolean isAtom(Object object) {
@@ -129,7 +99,7 @@ public interface Statement {
         if (((Nested) statement).getForm().isAccessor()) {
           for (Statement each : ((Nested) statement).getArguments()) {
             if (each instanceof Atom) {
-              work.add(Objects.toString(each.executeWith(new FuncInvoker.Impl(0))));
+              work.add(Objects.toString(each.execute(new FuncInvoker.Impl(0))));
             } else {
               throw SyntaxException.parameterNameShouldBeSpecifiedWithConstant((Nested) statement);
             }

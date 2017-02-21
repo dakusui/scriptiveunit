@@ -9,6 +9,7 @@ import com.google.common.collect.Lists;
 import java.util.*;
 import java.util.function.Function;
 
+import static com.github.dakusui.scriptiveunit.core.Utils.toBigDecimalIfPossible;
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
 import static java.util.Arrays.stream;
@@ -83,7 +84,7 @@ public interface FuncInvoker {
           //noinspection unchecked
           ret = target.apply(stage);
         }
-        return Utils.toBigDecimalIfPossible(ret);
+        return toBigDecimalIfPossible(ret);
       } finally {
         if (!targetIsMemoized || wasAbsent)
           this.writeLine(") -> %s", ret);

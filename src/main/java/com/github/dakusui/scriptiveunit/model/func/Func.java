@@ -17,12 +17,12 @@ import static com.github.dakusui.scriptiveunit.exceptions.ScriptiveUnitException
 import static com.github.dakusui.scriptiveunit.exceptions.TypeMismatch.valueReturnedByScriptableMethodMustBeFunc;
 
 @FunctionalInterface
-public interface Func<I, O> extends
-    java.util.function.Function<I, O>,
-    com.google.common.base.Function<I, O>,
+public interface Func<O> extends
+    java.util.function.Function<Stage, O>,
+    com.google.common.base.Function<Stage, O>,
     Formattable {
   @Override
-  O apply(I input);
+  O apply(Stage input);
 
   @Override
   default void formatTo(Formatter formatter, int flags, int width, int precision) {
@@ -33,7 +33,7 @@ public interface Func<I, O> extends
     }
   }
 
-  interface Memoized<I, O> extends Func<I, O> {
+  interface Memoized<O> extends Func<O> {
   }
 
   /**
@@ -43,7 +43,7 @@ public interface Func<I, O> extends
    *
    * @param <O> Type of output constant.
    */
-  interface Const<O> extends Func<Object, O> {
+  interface Const<O> extends Func<O> {
   }
 
   class Factory {
@@ -53,12 +53,13 @@ public interface Func<I, O> extends
       this.funcHandler = funcHandler;
     }
 
-    public Func create(ObjectMethod objectMethod, /* TODO: Actually, this can be Func[] */ Object[] args) {
+    public Func create(FuncInvoker invoker, ObjectMethod objectMethod, /* TODO: Actually, this can be Func[] */ Object[] args) {
       Object returnedValue;
       /*
        * By using dynamic proxy, we are making it possible to print structured pretty log.
        */
       return createFunc(
+          invoker,
           objectMethod.getName(),
           (Func) check(
               returnedValue = objectMethod.invoke(args),
@@ -67,23 +68,15 @@ public interface Func<I, O> extends
           ));
     }
 
-    public <T> Func<?, T> createConst(T value) {
-      return createProxy((proxy, method, args) -> funcHandler.handleConst(value), Const.class);
+    public <T> Func<T> createConst(FuncInvoker invoker, T value) {
+      return createProxy((proxy, method, args) -> funcHandler.handleConst(invoker, value), Const.class);
     }
 
-    public <T> Func<? extends Stage, T> createArg(int index) {
-      return new Func<Stage, T>() {
-        @Override
-        public T apply(Stage input) {
-          return input.getArgument(index);
-        }
-      };
-    }
-    private Func createFunc(String name, Func target) {
-      return createProxy(createInvocationHandler(name, target), Func.class);
+    private Func createFunc(FuncInvoker invoker, String name, Func target) {
+      return createProxy(createInvocationHandler(invoker, name, target), Func.class);
     }
 
-    private InvocationHandler createInvocationHandler(String name, Func target) {
+    private InvocationHandler createInvocationHandler(FuncInvoker invoker, String name, Func target) {
       return (Object proxy, Method method, Object[] args) -> {
         check("apply".equals(method.getName()),
             fail("This should only be executed on 'apply' method.")
@@ -93,13 +86,13 @@ public interface Func<I, O> extends
                 Arrays.toString(args),
                 Stage.class.getCanonicalName()
             ));
-        return funcHandler.handle(target, (Stage) args[0], name);
+        return funcHandler.handle(invoker, target, (Stage) args[0], name);
       };
     }
 
-    private static <I, O> Func<I, O> createProxy(InvocationHandler handler, Class<? extends Func> interfaceClass) {
+    private static <O> Func<O> createProxy(InvocationHandler handler, Class<? extends Func> interfaceClass) {
       //noinspection unchecked
-      return (Func<I, O>) Proxy.newProxyInstance(
+      return (Func<O>) Proxy.newProxyInstance(
           Func.class.getClassLoader(),
           new Class[] { interfaceClass },
           handler

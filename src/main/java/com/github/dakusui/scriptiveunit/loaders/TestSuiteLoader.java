@@ -15,7 +15,6 @@ public interface TestSuiteLoader {
 
   TestSuiteDescriptor getTestSuiteDescriptor();
 
-
   abstract class Base implements TestSuiteLoader {
 
     private final TestSuiteDescriptor testSuiteDescriptor;
@@ -23,7 +22,7 @@ public interface TestSuiteLoader {
 
     public Base(String scriptResourceName, Class<?> driverClass) {
       this.scriptResourceName = scriptResourceName;
-      this.testSuiteDescriptor = loadTestSuite(driverClass, scriptResourceName);
+      this.testSuiteDescriptor = loadTestSuiteDescriptor(driverClass, scriptResourceName);
     }
 
     @Override
@@ -41,7 +40,7 @@ public interface TestSuiteLoader {
       return this.testSuiteDescriptor;
     }
 
-    abstract protected TestSuiteDescriptor loadTestSuite(Class<?> driverClass, String resourceName);
+    abstract protected TestSuiteDescriptor loadTestSuiteDescriptor(Class<?> driverClass, String resourceName);
   }
 
   interface Factory {
