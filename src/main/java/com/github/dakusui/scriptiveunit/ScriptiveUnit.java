@@ -174,8 +174,7 @@ public class ScriptiveUnit extends Parameterized {
   }
 
   private static Action createSetUpBeforeAllAction(TestSuiteDescriptor testSuiteDescriptor, Tuple commonFixture) {
-    Stage.Type stageType = Stage.Type.SETUP_BEFORE_ALL;
-    return testSuiteDescriptor.getSetUpBeforeAllActionFactory().apply(stageType.create(testSuiteDescriptor, commonFixture, null));
+    return testSuiteDescriptor.getSetUpBeforeAllActionFactory().apply(Stage.Type.SETUP_BEFORE_ALL.create(testSuiteDescriptor, commonFixture, null));
   }
 
   private static <K, V> Map<K, V> project(Map<K, V> in, List<K> keys) {

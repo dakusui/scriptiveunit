@@ -75,7 +75,7 @@ public enum Beans {
         private final Object NOP_CLAUSE = Lists.newArrayList("nop");
         Statement setUpStatement = new Statement.Factory(this).create(setUpClause != null ? setUpClause : NOP_CLAUSE);
         Statement setUpBeforeAllStatement = new Statement.Factory(this).create(setUpBeforeAllClause != null ? setUpBeforeAllClause : NOP_CLAUSE);
-        List<? extends TestOracle> testOracles = testOracleBeanList.stream().map(each -> each.create(new Statement.Factory(this))).collect(toList());
+        List<? extends TestOracle> testOracles = testOracleBeanList.stream().map(BaseForTestOracle::create).collect(toList());
         List<IndexedTestCase> testCases = createTestCases(this);
 
         @Override
@@ -336,10 +336,8 @@ public enum Beans {
      * Test oracles created by this method are not thread safe since invokers ({@code FuncHandler}
      * objects) have their internal states and not created every time the oracles
      * are performed.
-     *
-     * @param statementFactory A factory that creates {@code Statement} objects.
      */
-    public TestOracle create(Statement.Factory statementFactory) {
+    public TestOracle create() {
       //noinspection unchecked,Guava
       return new TestOracle() {
         @Override
