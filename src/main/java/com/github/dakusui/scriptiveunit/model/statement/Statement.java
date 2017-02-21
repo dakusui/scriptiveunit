@@ -15,9 +15,9 @@ import java.util.Objects;
 import static java.util.Objects.requireNonNull;
 
 public interface Statement {
-  Func<? extends Stage, ?> execute();
+  Func execute();
 
-  Func<? extends Stage, ?> executeWith(FuncInvoker funcInvoker);
+  Func executeWith(FuncInvoker funcInvoker);
 
   interface Atom extends Statement {
 
@@ -38,8 +38,8 @@ public interface Statement {
     public Factory(TestSuiteDescriptor testSuiteDescriptor) {
       this.funcHandler = new FuncHandler();
       this.funcFactory = new Func.Factory(funcHandler);
-      this.formFactory = new Form.Factory(testSuiteDescriptor, funcFactory);
       this.argumentsFactory = new Arguments.Factory(this);
+      this.formFactory = new Form.Factory(testSuiteDescriptor, funcFactory, this);
     }
 
     public Statement create(Object object) {
@@ -56,7 +56,7 @@ public interface Statement {
             return execute();
           }
         };
-      @SuppressWarnings("unchecked") List<Object> raw = (List<Object>) object;
+      @SuppressWarnings("unchecked") List<Func> raw = (List<Func>) object;
       Object car = car(raw);
       if (car instanceof String) {
         Form form = this.formFactory.create(String.class.cast(car));
@@ -109,11 +109,11 @@ public interface Statement {
       return !(object instanceof List) || ((List) object).isEmpty();
     }
 
-    static Object car(List<Object> raw) {
+    static Object car(List<Func> raw) {
       return raw.get(0);
     }
 
-    static List<Object> cdr(List<Object> raw) {
+    static List<Func> cdr(List<Func> raw) {
       return raw.subList(1, raw.size());
     }
   }

@@ -65,8 +65,8 @@ public interface FuncInvoker {
     }
 
     @Override
-    public Object invokeFunc(Func target, Stage args, String alias) {
-      List<Object> key = asList(target, args);
+    public Object invokeFunc(Func target, Stage stage, String alias) {
+      List<Object> key = asList(target, stage);
       boolean wasAbsent = !this.memo.containsKey(key);
       boolean targetIsMemoized = target instanceof Func.Memoized;
       Object ret = "(N/A)";
@@ -77,11 +77,11 @@ public interface FuncInvoker {
           //noinspection unchecked
           ret = this.memo.computeIfAbsent(
               key,
-              (List<Object> input) -> target.apply(args)
+              (List<Object> input) -> target.apply(stage)
           );
         } else {
           //noinspection unchecked
-          ret = target.apply(args);
+          ret = target.apply(stage);
         }
         return Utils.toBigDecimalIfPossible(ret);
       } finally {

@@ -53,7 +53,7 @@ public interface Func<I, O> extends
       this.funcHandler = funcHandler;
     }
 
-    public Func create(ObjectMethod objectMethod, Object[] args) {
+    public Func create(ObjectMethod objectMethod, /* TODO: Actually, this can be Func[] */ Object[] args) {
       Object returnedValue;
       /*
        * By using dynamic proxy, we are making it possible to print structured pretty log.

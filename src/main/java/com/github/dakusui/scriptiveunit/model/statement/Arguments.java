@@ -1,5 +1,7 @@
 package com.github.dakusui.scriptiveunit.model.statement;
 
+import com.github.dakusui.scriptiveunit.model.func.Func;
+
 import java.util.Iterator;
 
 public interface Arguments extends Iterable<Statement> {
@@ -10,9 +12,9 @@ public interface Arguments extends Iterable<Statement> {
       this.statementFactory = statementFactory;
     }
 
-    public Arguments create(Iterable<Object> args) {
+    public Arguments create(Iterable<Func> args) {
       return () -> new Iterator<Statement>() {
-        Iterator<Object> i = args.iterator();
+        Iterator<Func> i = args.iterator();
         @Override
         public boolean hasNext() {
           return i.hasNext();

@@ -7,6 +7,8 @@ import com.github.dakusui.scriptiveunit.annotations.Scriptable;
 import com.github.dakusui.scriptiveunit.exceptions.ScriptiveUnitException;
 import com.github.dakusui.scriptiveunit.model.Stage;
 import com.github.dakusui.scriptiveunit.model.func.Func;
+import com.github.dakusui.scriptiveunit.model.func.FuncInvoker;
+import com.github.dakusui.scriptiveunit.model.statement.Statement;
 
 import java.lang.reflect.InvocationTargetException;
 import java.util.Arrays;
@@ -73,5 +75,52 @@ public class Core {
         .stream(values)
         .map((Func<T, ?> each) -> each instanceof Func.Const ? each.apply(input) : each)
         .collect(toList());
+  }
+
+  @ReflectivelyReferenced
+  @SafeVarargs
+  @Scriptable
+  public final <T extends Stage> Func<T, Object> userFunc(Func<T, List<Object>> funcBody, Func<T, ?>... args) {
+    return new Func<T, Object>() {
+      @Override
+      public Object apply(T input) {
+        List<Object> argValues = Arrays.stream(args).map(each -> each.apply(input)).collect(toList());
+        Stage wrappedStage = new Stage() {
+          @Override
+          public Statement.Factory getStatementFactory() {
+            return input.getStatementFactory();
+          }
+
+          @Override
+          public Tuple getTestCaseTuple() {
+            return input.getTestCaseTuple();
+          }
+
+          @Override
+          public <RESPONSE> RESPONSE response() {
+            return input.response();
+          }
+
+          @Override
+          public Type getType() {
+            return input.getType();
+          }
+
+          @Override
+          public <T> T getArgument(int index) {
+            return (T) argValues.get(index);
+          }
+
+          @Override
+          public int sizeOfArguments() {
+            return argValues.size();
+          }
+        };
+        return wrappedStage.getStatementFactory()
+            .create(funcBody.apply((T) wrappedStage))
+            .executeWith(new FuncInvoker.Impl(0))
+            .<Func<Stage, Object>>apply(wrappedStage);
+      }
+    };
   }
 }

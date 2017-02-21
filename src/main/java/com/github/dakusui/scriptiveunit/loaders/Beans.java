@@ -16,7 +16,6 @@ import com.github.dakusui.scriptiveunit.core.Utils;
 import com.github.dakusui.scriptiveunit.model.*;
 import com.github.dakusui.scriptiveunit.model.func.Func;
 import com.github.dakusui.scriptiveunit.model.func.FuncInvoker;
-import com.github.dakusui.scriptiveunit.model.statement.Deform;
 import com.github.dakusui.scriptiveunit.model.statement.Statement;
 import com.google.common.collect.Lists;
 import org.hamcrest.BaseMatcher;
@@ -24,8 +23,9 @@ import org.hamcrest.Description;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
-import java.util.*;
-import java.util.function.BiConsumer;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
 import java.util.function.Supplier;
 
 import static com.github.dakusui.actionunit.Actions.named;
@@ -72,15 +72,7 @@ public enum Beans {
 
 
     public TestSuiteDescriptor create(Object driverObject) {
-      Map<String, Deform> work = new HashMap<>();
-      this.userDefinedFormClauses.forEach(new BiConsumer<String, List<Object>>() {
-        @Override
-        public void accept(String s, List<Object> objects) {
-          work.put(s, new Deform(objects));
-        }
-      });
       return new TestSuiteDescriptor() {
-        private Map<String, Deform> userDefinedForms = Collections.unmodifiableMap(work);
         private final Object NOP_CLAUSE = Lists.newArrayList("nop");
         Statement setUpStatement = new Statement.Factory(this).create(setUpClause != null ? setUpClause : NOP_CLAUSE);
         Statement setUpBeforeAllStatement = new Statement.Factory(this).create(setUpBeforeAllClause != null ? setUpBeforeAllClause : NOP_CLAUSE);
@@ -118,8 +110,8 @@ public enum Beans {
         }
 
         @Override
-        public Map<String, Deform> getUserDefinedForms() {
-          return this.userDefinedForms;
+        public Map<String, List<Object>> getUserDefinedFormClauses() {
+          return userDefinedFormClauses;
         }
 
         @Override
@@ -209,10 +201,7 @@ public enum Beans {
             throw wrap(e);
           }
         }
-
-      }
-
-          ;
+      };
     }
 
   }

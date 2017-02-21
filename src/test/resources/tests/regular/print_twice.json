@@ -3,7 +3,7 @@
   "define": {
     "print_twice": ["sequential", ["print", [0]], ["print", [0]]]
   },
-  "setUp": ["print_twice", "Hello again"],
+  "setUp": ["print_twice", "Hi"],
   "testOracles": [
     {
       "description": "Print a message twice",
