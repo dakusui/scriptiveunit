@@ -27,19 +27,18 @@ public class Core {
    * stages.
    *
    * @param attr Attribute name whose value should be returned
-   * @param <T>  Type of stage
    * @param <E>  Type of attribute value to be returned.
    */
   @ReflectivelyReferenced
   @Scriptable
   @AccessesTestParameter
-  public <T extends Stage, E> Func<T, E> attr(Func<T, String> attr) {
-    return (T input) -> {
+  public <E> Func<E> attr(Func<String> attr) {
+    return (Stage input) -> {
       Tuple fixture = input.getTestCaseTuple();
       String attrName = attr.apply(input);
       check(
           fixture.containsKey(attrName),
-          attributeNotFound(attrName, input.getType().toString().toLowerCase(), fixture.keySet()));
+          attributeNotFound(attrName, input, fixture.keySet()));
       //noinspection unchecked
       return (E) fixture.get(attrName);
     };
@@ -50,13 +49,12 @@ public class Core {
    * of the method will be returned as the function's value.
    *
    * @param entryName A name of method to be invoked.
-   * @param <T>       Type of stage
    * @param <E>       Type of the function's value to be returned.
    */
   @ReflectivelyReferenced
   @Scriptable
-  public <T extends Stage, E> Func<T, E> value(Func<T, String> entryName, Func<T, ?> target) {
-    return (T input) -> {
+  public <E> Func<E> value(Func<String> entryName, Func<?> target) {
+    return (Stage input) -> {
       Object object = requireNonNull(target.apply(input));
       String methodName = requireNonNull(entryName.apply(input));
       try {
@@ -69,20 +67,18 @@ public class Core {
   }
 
   @ReflectivelyReferenced
-  @SafeVarargs
   @Scriptable
-  public final <T extends Stage> Func<T, List<?>> quote(Func<T, ?>... values) {
-    return (T input) -> Arrays
+  public final Func<List<?>> quote(Func<?>... values) {
+    return (Stage input) -> Arrays
         .stream(values)
-        .map((Func<T, ?> each) -> each instanceof Func.Const ? each.apply(input) : each)
+        .map((Func<?> each) -> each instanceof Func.Const ? each.apply(input) : each)
         .collect(toList());
   }
 
   @ReflectivelyReferenced
-  @SafeVarargs
   @Scriptable
-  public final <T extends Stage> Func<T, Object> userFunc(Func<T, List<Object>> funcBody, Func<T, ?>... args) {
-    return (T input) -> {
+  public final Func<Object> userFunc(Func<List<Object>> funcBody, Func<?>... args) {
+    return (Stage input) -> {
       List<Object> argValues = Arrays.stream(args).map(each -> each.apply(input)).collect(toList());
       Stage wrappedStage = new Stage() {
         @Override
@@ -106,10 +102,10 @@ public class Core {
         }
 
         @Override
-        public <T> T getArgument(int index) {
+        public <U> U getArgument(int index) {
           check(index < sizeOfArguments(), () -> indexOutOfBounds(index, sizeOfArguments()));
           //noinspection unchecked
-          return (T) argValues.get(index);
+          return (U) argValues.get(index);
         }
 
         @Override
@@ -118,9 +114,9 @@ public class Core {
         }
       };
       return wrappedStage.getStatementFactory()
-          .create(funcBody.apply((T) wrappedStage))
-          .executeWith(new FuncInvoker.Impl(0))
-          .<Func<Stage, Object>>apply(wrappedStage);
+          .create(funcBody.apply(wrappedStage))
+          .execute(new FuncInvoker.Impl(0))
+          .<Func<Object>>apply(wrappedStage);
     };
   }
 }

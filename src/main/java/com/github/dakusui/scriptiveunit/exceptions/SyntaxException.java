@@ -1,5 +1,6 @@
 package com.github.dakusui.scriptiveunit.exceptions;
 
+import com.github.dakusui.scriptiveunit.model.Stage;
 import com.github.dakusui.scriptiveunit.model.statement.Statement;
 import org.codehaus.jackson.JsonNode;
 import org.codehaus.jackson.node.ObjectNode;
@@ -14,12 +15,12 @@ public class SyntaxException extends ScriptiveUnitException {
     super(message);
   }
 
-  public static Supplier<SyntaxException> attributeNotFound(String attributeName, Object context, Iterable<String> knownAttributeNames) {
+  public static Supplier<SyntaxException> attributeNotFound(String attributeName, Stage context, Iterable<String> knownAttributeNames) {
     return () -> {
       throw new SyntaxException(format(
           "Attribute '%s' is accessed in '%s', but not found in your test case. Known attribute names are %s'",
           attributeName,
-          context,
+          context.getType().toString().toLowerCase(),
           knownAttributeNames));
     };
   }

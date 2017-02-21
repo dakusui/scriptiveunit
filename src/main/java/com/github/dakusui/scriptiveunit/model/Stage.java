@@ -17,6 +17,7 @@ public interface Stage {
   int sizeOfArguments();
 
   enum Type {
+    TOPLEVEL,
     SETUP_BEFORE_ALL,
     SETUP,
     GIVEN,

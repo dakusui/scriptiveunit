@@ -3,8 +3,8 @@ package com.github.dakusui.scriptiveunit.drivers;
 import com.github.dakusui.scriptiveunit.annotations.Doc;
 import com.github.dakusui.scriptiveunit.annotations.ReflectivelyReferenced;
 import com.github.dakusui.scriptiveunit.annotations.Scriptable;
-import com.github.dakusui.scriptiveunit.model.func.Func;
 import com.github.dakusui.scriptiveunit.model.Stage;
+import com.github.dakusui.scriptiveunit.model.func.Func;
 
 import java.util.Objects;
 
@@ -21,10 +21,10 @@ public class Predicates {
       "When one of those predicate is evaluated false, the rest will not be evaluated" +
           "and false will be returned immediately."
   })
-  public final <T extends Stage> Func<T, Boolean> and(
-      @Doc("Predicates to be evaluated.") Func<T, Boolean>... predicates) {
-    return (T input) -> {
-      for (Func<T, Boolean> each : predicates) {
+  public final Func<Boolean> and(
+      @Doc("Predicates to be evaluated.") Func<Boolean>... predicates) {
+    return (Stage input) -> {
+      for (Func<Boolean> each : predicates) {
         if (!(requireNonNull(each.apply(input)))) {
           return false;
         }
@@ -42,10 +42,10 @@ public class Predicates {
       "When one of those predicate is evaluated true, the rest will not be evaluated" +
           "and true will be returned immediately."
   })
-  public final <T extends Stage> Func<T, Boolean> or(
-      @Doc("Predicates to be evaluated.") Func<T, Boolean>... predicates) {
-    return (T input) -> {
-      for (Func<T, Boolean> each : predicates) {
+  public final Func<Boolean> or(
+      @Doc("Predicates to be evaluated.") Func<Boolean>... predicates) {
+    return (Stage input) -> {
+      for (Func<Boolean> each : predicates) {
         if (requireNonNull(each.apply(input))) {
           return true;
         }
@@ -63,10 +63,10 @@ public class Predicates {
       "This function is useful to describe a constraint or a condition to ignore " +
           "a certain test oracle."
   })
-  public <T extends Stage> Func<T, Boolean> ifthen(
-      @Doc("A condition value") Func<T, Boolean> cond,
-      @Doc("A condition value evaluated only when the first condition is met") Func<T, Boolean> then) {
-    return (T input) -> requireNonNull(cond.apply(input)) ?
+  public Func<Boolean> ifthen(
+      @Doc("A condition value") Func<Boolean> cond,
+      @Doc("A condition value evaluated only when the first condition is met") Func<Boolean> then) {
+    return (Stage input) -> requireNonNull(cond.apply(input)) ?
         then.apply(input) :
         true;
   }
@@ -74,7 +74,7 @@ public class Predicates {
   @ReflectivelyReferenced
   @Scriptable
   @Doc("Returns always true.")
-  public <T extends Stage> Func<T, Boolean> always() {
+  public Func<Boolean> always() {
     return input -> true;
   }
 
@@ -83,52 +83,52 @@ public class Predicates {
   @Doc(
       "Checks true if given values are equal to each other, false otherwise."
   )
-  public <T extends Stage, U> Func<T, Boolean> equals(
-      @Doc("A value to be checked") Func<T, U> a,
-      @Doc("A value to be checked") Func<T, U> b) {
+  public <U> Func<Boolean> equals(
+      @Doc("A value to be checked") Func<U> a,
+      @Doc("A value to be checked") Func<U> b) {
     return input -> requireNonNull(Objects.equals(a.apply(input), b.apply(input)));
   }
 
   @ReflectivelyReferenced
   @Scriptable
-  public <T extends Stage> Func<T, Boolean> not(Func<T, Boolean> predicate) {
+  public Func<Boolean> not(Func<Boolean> predicate) {
     return input -> !requireNonNull(predicate.apply(input));
   }
 
   @ReflectivelyReferenced
   @Scriptable
-  public <T extends Stage, U> Func<T, Boolean> gt(Func<T, Comparable<U>> a, Func<T, U> b) {
+  public <U> Func<Boolean> gt(Func<Comparable<U>> a, Func<U> b) {
     return input -> requireNonNull(requireNonNull(compare(a, b)).apply(input)) > 0;
   }
 
   @ReflectivelyReferenced
   @Scriptable
-  public <T extends Stage, U> Func<T, Boolean> ge(Func<T, Comparable<U>> a, Func<T, U> b) {
+  public <U> Func<Boolean> ge(Func<Comparable<U>> a, Func<U> b) {
     return input -> requireNonNull(requireNonNull(compare(a, b)).apply(input)) >= 0;
   }
 
   @ReflectivelyReferenced
   @Scriptable
-  public <T extends Stage, U> Func<T, Boolean> lt(Func<T, Comparable<U>> a, Func<T, U> b) {
+  public <U> Func<Boolean> lt(Func<Comparable<U>> a, Func<U> b) {
     return input -> requireNonNull(requireNonNull(compare(a, b)).apply(input)) < 0;
   }
 
   @ReflectivelyReferenced
   @Scriptable
-  public <T extends Stage, U> Func<T, Boolean> le(Func<T, Comparable<U>> a, Func<T, U> b) {
+  public <U> Func<Boolean> le(Func<Comparable<U>> a, Func<U> b) {
     return input -> requireNonNull(requireNonNull(compare(a, b)).apply(input)) <= 0;
   }
 
   @ReflectivelyReferenced
   @Scriptable
-  public <T extends Stage, U> Func<T, Boolean> eq(Func<T, Comparable<U>> a, Func<T, U> b) {
+  public <U> Func<Boolean> eq(Func<Comparable<U>> a, Func<U> b) {
     return input -> requireNonNull(requireNonNull(compare(a, b)).apply(input)) == 0;
   }
 
   @ReflectivelyReferenced
   @Scriptable
-  public <T extends Stage, U> Func<T, Integer> compare(Func<T, Comparable<U>> a, Func<T, U> b) {
-    return (T input) -> {
+  public <U> Func<Integer> compare(Func<Comparable<U>> a, Func<U> b) {
+    return (Stage input) -> {
       Comparable valueOfA = requireNonNull((Comparable) toBigDecimalIfPossible(a.apply(input)));
       Object valueOfB = requireNonNull(toBigDecimalIfPossible(b.apply(input)));
       //noinspection unchecked

@@ -16,7 +16,6 @@ import com.github.dakusui.scriptiveunit.loaders.TestSuiteLoader;
 import com.github.dakusui.scriptiveunit.model.Stage;
 import com.github.dakusui.scriptiveunit.model.TestOracle;
 import com.github.dakusui.scriptiveunit.model.TestSuiteDescriptor;
-import com.github.dakusui.scriptiveunit.model.func.Func;
 import org.junit.internal.runners.statements.RunBefores;
 import org.junit.runner.Runner;
 import org.junit.runners.Parameterized;
@@ -118,7 +117,7 @@ public class ScriptiveUnit extends Parameterized {
   Iterable<Runner> createRunnersGroupingByTestOracle(final TestSuiteDescriptor testSuiteDescriptor) {
     return testSuiteDescriptor.getTestOracles()
         .stream()
-        .map(new Func<TestOracle, Runner>() {
+        .map(new Function<TestOracle, Runner>() {
           int id = 0;
 
           @Override
@@ -168,8 +167,8 @@ public class ScriptiveUnit extends Parameterized {
   private LinkedList<Tuple> buildFixtures(List<String> involved, List<IndexedTestCase> testCases) {
     return new LinkedList<>(
         testCases.stream()
-            .map((Func<IndexedTestCase, Map<String, Object>>) input -> project(input.getTuple(), involved))
-            .map((Func<Map<String, Object>, Tuple>) input -> new Tuple.Builder().putAll(input).build())
+            .map((IndexedTestCase input) -> project(input.getTuple(), involved))
+            .map((Map<String, Object> input) -> new Tuple.Builder().putAll(input).build())
             .collect(toSet()));
   }
 
