@@ -22,7 +22,11 @@ public interface Stage {
     SETUP,
     GIVEN,
     WHEN,
-    THEN;
+    THEN,
+    TEARDOWN,
+    TEARDOWN_AFTER_ALL
+    ;
+
 
     public Stage create(TestSuiteDescriptor testSuiteDescriptor, Tuple fixture, Object response) {
       return _create(new Statement.Factory(testSuiteDescriptor), fixture, response);

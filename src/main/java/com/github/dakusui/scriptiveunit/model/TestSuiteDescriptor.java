@@ -29,5 +29,9 @@ public interface TestSuiteDescriptor {
 
   Func<Action> getSetUpBeforeAllActionFactory();
 
+  Func<Action> getTearDownActionFactory();
+
+  Func<Action> getTearDownAfterAllActionFactory();
+
   List<String> getInvolvedParameterNamesInSetUpAction();
 }

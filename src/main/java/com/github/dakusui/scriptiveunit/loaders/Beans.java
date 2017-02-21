@@ -49,25 +49,32 @@ public enum Beans {
     final         List<? extends BaseForTestOracle> testOracleBeanList;
     final         String                            description;
     final         Type                              runnerType;
+    private final Map<String, List<Object>>         userDefinedFormClauses;
     private final List<Object>                      setUpClause;
     private final List<Object>                      setUpBeforeAllClause;
-    private final Map<String, List<Object>>         userDefinedFormClauses;
+    private final List<Object>                      tearDownClause;
+    private final List<Object>                      tearDownAfterAllClause;
 
     public BaseForTestSuiteDescriptor(
-        BaseForCoveringArrayEngineConfig coveringArrayEngineConfigBean,
+        String description, BaseForCoveringArrayEngineConfig coveringArrayEngineConfigBean,
         BaseForFactorSpaceDescriptor factorSpaceBean,
+        String runnerType,
         Map<String, List<Object>> userDefinedFormClauses,
-        List<Object> suiteLevelFixture,
-        List<Object> fixture,
-        List<? extends BaseForTestOracle> testOracleBeanList, String description, String runnerType) {
+        List<Object> setUpBeforeAllClause,
+        List<Object> setUpClause,
+        List<? extends BaseForTestOracle> testOracleBeanList,
+        List<Object> tearDownClause,
+        List<Object> tearDownAfterAllClause) {
+      this.description = description;
       this.coveringArrayEngineConfigBean = coveringArrayEngineConfigBean;
       this.runnerType = Type.valueOf(Utils.toALL_CAPS(runnerType));
       this.factorSpaceBean = factorSpaceBean;
       this.userDefinedFormClauses = userDefinedFormClauses;
-      this.setUpBeforeAllClause = suiteLevelFixture;
-      this.setUpClause = fixture;
+      this.setUpBeforeAllClause = setUpBeforeAllClause;
+      this.setUpClause = setUpClause;
       this.testOracleBeanList = testOracleBeanList;
-      this.description = description;
+      this.tearDownClause = tearDownClause;
+      this.tearDownAfterAllClause = tearDownAfterAllClause;
     }
 
 
@@ -78,6 +85,9 @@ public enum Beans {
         Statement setUpStatement = this.topLevel.getStatementFactory().create(setUpClause != null ? setUpClause : NOP_CLAUSE);
         Statement setUpBeforeAllStatement = this.topLevel.getStatementFactory().create(setUpBeforeAllClause != null ? setUpBeforeAllClause : NOP_CLAUSE);
         List<? extends TestOracle> testOracles = testOracleBeanList.stream().map(BaseForTestOracle::create).collect(toList());
+        Statement tearDownStatement = this.topLevel.getStatementFactory().create(tearDownClause != null ? tearDownClause : NOP_CLAUSE);
+        Statement tearDownAfterAllStatement = this.topLevel.getStatementFactory().create(tearDownAfterAllClause != null ? tearDownAfterAllClause : NOP_CLAUSE);
+
         List<IndexedTestCase> testCases = createTestCases(this);
 
         @Override
@@ -121,13 +131,22 @@ public enum Beans {
         }
 
         @Override
-        public List<String> getInvolvedParameterNamesInSetUpAction() {
-          return Statement.Utils.involvedParameters(setUpStatement);
+        public Func<Action> getSetUpBeforeAllActionFactory() {
+          return createActionFactory(format("Suite level set up: %s", description), setUpBeforeAllStatement);
         }
 
         @Override
-        public Func<Action> getSetUpBeforeAllActionFactory() {
+        public Func<Action> getTearDownActionFactory() {
           return createActionFactory(format("Suite level set up: %s", description), setUpBeforeAllStatement);
+        }
+        @Override
+        public Func<Action> getTearDownAfterAllActionFactory() {
+          return createActionFactory(format("Suite level set up: %s", description), setUpBeforeAllStatement);
+        }
+
+        @Override
+        public List<String> getInvolvedParameterNamesInSetUpAction() {
+          return Statement.Utils.involvedParameters(setUpStatement);
         }
 
 

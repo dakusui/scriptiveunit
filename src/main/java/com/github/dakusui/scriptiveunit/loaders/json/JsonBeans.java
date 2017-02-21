@@ -19,9 +19,14 @@ public enum JsonBeans {
         @JsonProperty("define") Map<String, List<Object>> userFormMap,
         @JsonProperty("setUpBeforeAll") List<Object> setUpBeforeAllClause,
         @JsonProperty("setUp") List<Object> setUpClause,
-        @JsonProperty("testOracles") List<TestOracleBean> testOracleBeanList
+        @JsonProperty("defaults/testOracles") List<TestOracleBean> testOracleBeanList,
+        @JsonProperty("tearDown") List<Object> tearDownClause,
+        @JsonProperty("tearDownAfterAll") List<Object> tearDownAfterAllClause
     ) {
-      super(coveringArrayEngineConfig, factorSpaceBean, userFormMap, setUpBeforeAllClause, setUpClause, testOracleBeanList, description, runnerType);
+      super(
+          description, coveringArrayEngineConfig, factorSpaceBean, runnerType, userFormMap,
+          setUpBeforeAllClause, setUpClause,
+          testOracleBeanList, tearDownClause, tearDownAfterAllClause);
     }
 
     public static class CoveringArrayEngineConfigBean extends Beans.BaseForCoveringArrayEngineConfig {

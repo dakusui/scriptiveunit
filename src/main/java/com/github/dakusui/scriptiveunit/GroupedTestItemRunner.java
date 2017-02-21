@@ -244,4 +244,8 @@ public final class GroupedTestItemRunner extends ParentRunner<Action> {
   private static Action createSetUpAction(TestSuiteDescriptor testSuiteDescriptor, Tuple input) {
     return testSuiteDescriptor.getSetUpActionFactory().apply(Stage.Type.SETUP.create(testSuiteDescriptor, input, null));
   }
+
+  private static Action createTearDownAction(TestSuiteDescriptor testSuiteDescriptor, Tuple input) {
+    return testSuiteDescriptor.getSetUpActionFactory().apply(Stage.Type.TEARDOWN.create(testSuiteDescriptor, input, null));
+  }
 }

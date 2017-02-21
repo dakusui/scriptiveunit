@@ -14,5 +14,7 @@
 
   },
   "setUpBeforeAll": null,
-  "setUp": null
+  "setUp": null,
+  "tearDown": null,
+  "tearDownAfterAll": null
 }
