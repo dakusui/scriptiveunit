@@ -1,6 +1,6 @@
-# ScriptUnit
+# ScriptiveUnit
 
-```ScriptUnit``` is a generic framework to build a JSON based DSTL for input-output
+```ScriptiveUnit``` is a generic framework to build a JSON based DSTL for input-output
 systems such as search engines.
 
 # Installation
@@ -10,16 +10,16 @@ Include following xml fragment in your ```pom.xml```.
 
     <dependency>
       <groupId>com.github.dakusui</groupId>
-      <artifactId>scriptunit</artifactId>
-      <version>{Script Unit Version}</version>
+      <artifactId>scriptiveunit</artifactId>
+      <version>{ScriptiveUnit Version}</version>
     </dependency>
 ```
 
-For the released versions, you can refer to [this page](https://github.com/dakusui/scriptunit/releases).
+For the released versions, you can refer to [this page](https://github.com/dakusui/scriptiveunit/releases).
 
 # Usage
 Following is a diagram that illustrates how engineers and assets are
-interacting each other in an ecosystem where ScriptUnit is utilized.
+interacting each other in an ecosystem where ScriptiveUnit is utilized.
 
 
 <img src="doc/images/overview.jpg" alt="Overview" style="width: 640px;"/>
@@ -30,7 +30,7 @@ Full version of this example is found [here](src/test/resources/tests/regular/qa
 
 ```javascript
     {
-        "description":"An example test suite to Query-Result model on ScriptUnit",
+        "description":"An example test suite to Query-Result model on ScriptiveUnit",
         "factorSpace": {
             "factors": {
                 "terms": [["ヒーター"], ["iPhone"]],
@@ -74,13 +74,13 @@ Full version of this example is found [here](src/test/resources/tests/regular/qa
 ```
 
 ## Script driver example
-Full version of this example is found [here](src/test/java/com/github/dakusui/scriptunit/drivers/Qapi.java).
+Full version of this example is found [here](src/test/java/com/github/dakusui/scriptiveunit/drivers/Qapi.java).
 
 ```java
     @Load(
         scriptPackagePrefix = "examples", scriptNamePattern = ".*\\.json",
         with = JsonBasedTestSuiteLoader.Factory.class)
-    @RunWith(ScriptUnit.class)
+    @RunWith(ScriptiveUnit.class)
     public class Qapi {
       ...
 
