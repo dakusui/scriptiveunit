@@ -1,15 +1,18 @@
 package com.github.dakusui.scriptiveunit.model.func;
 
 import com.github.dakusui.scriptiveunit.core.ObjectMethod;
+import com.github.dakusui.scriptiveunit.model.Stage;
 
 import java.io.IOException;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
+import java.util.Arrays;
 import java.util.Formattable;
 import java.util.Formatter;
 
 import static com.github.dakusui.scriptiveunit.core.Utils.check;
+import static com.github.dakusui.scriptiveunit.exceptions.ScriptiveUnitException.fail;
 import static com.github.dakusui.scriptiveunit.exceptions.ScriptiveUnitException.wrap;
 import static com.github.dakusui.scriptiveunit.exceptions.TypeMismatch.valueReturnedByScriptableMethodMustBeFunc;
 
@@ -50,14 +53,17 @@ public interface Func<I, O> extends
       this.funcHandler = funcHandler;
     }
 
-    public Func create(ObjectMethod method, Object[] args) {
+    public Func create(ObjectMethod objectMethod, /* TODO: Actually, this can be Func[] */ Object[] args) {
       Object returnedValue;
+      /*
+       * By using dynamic proxy, we are making it possible to print structured pretty log.
+       */
       return createFunc(
-          method.getName(),
-          check(
-              returnedValue = method.invoke(args),
+          objectMethod.getName(),
+          (Func) check(
+              returnedValue = objectMethod.invoke(args),
               (Object o) -> o instanceof Func,
-              () -> valueReturnedByScriptableMethodMustBeFunc(method.getName(), returnedValue)
+              () -> valueReturnedByScriptableMethodMustBeFunc(objectMethod.getName(), returnedValue)
           ));
     }
 
@@ -65,16 +71,29 @@ public interface Func<I, O> extends
       return createProxy((proxy, method, args) -> funcHandler.handleConst(value), Const.class);
     }
 
-    private Func createFunc(String name, Object target) {
+    public <T> Func<? extends Stage, T> createArg(int index) {
+      return new Func<Stage, T>() {
+        @Override
+        public T apply(Stage input) {
+          return input.getArgument(index);
+        }
+      };
+    }
+    private Func createFunc(String name, Func target) {
       return createProxy(createInvocationHandler(name, target), Func.class);
     }
 
-    private InvocationHandler createInvocationHandler(String name, Object target) {
+    private InvocationHandler createInvocationHandler(String name, Func target) {
       return (Object proxy, Method method, Object[] args) -> {
-        if (!"apply".equals(method.getName())) {
-          return method.invoke(target, args);
-        }
-        return funcHandler.invoke(target, method, args, name);
+        check("apply".equals(method.getName()),
+            fail("This should only be executed on 'apply' method.")
+        );
+        check(args.length == 1 && args[0] instanceof Stage,
+            fail("The argument should be an array of length 1 and its first element should be '%s', but: %s",
+                Arrays.toString(args),
+                Stage.class.getCanonicalName()
+            ));
+        return funcHandler.handle(target, (Stage) args[0], name);
       };
     }
 

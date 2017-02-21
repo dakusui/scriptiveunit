@@ -51,16 +51,19 @@ public enum Beans {
     final         Type                              runnerType;
     private final List<Object>                      setUpClause;
     private final List<Object>                      setUpBeforeAllClause;
+    private final Map<String, List<Object>>         userDefinedFormClauses;
 
     public BaseForTestSuiteDescriptor(
         BaseForCoveringArrayEngineConfig coveringArrayEngineConfigBean,
         BaseForFactorSpaceDescriptor factorSpaceBean,
+        Map<String, List<Object>> userDefinedFormClauses,
         List<Object> suiteLevelFixture,
         List<Object> fixture,
         List<? extends BaseForTestOracle> testOracleBeanList, String description, String runnerType) {
       this.coveringArrayEngineConfigBean = coveringArrayEngineConfigBean;
       this.runnerType = Type.valueOf(Utils.toALL_CAPS(runnerType));
       this.factorSpaceBean = factorSpaceBean;
+      this.userDefinedFormClauses = userDefinedFormClauses;
       this.setUpBeforeAllClause = suiteLevelFixture;
       this.setUpClause = fixture;
       this.testOracleBeanList = testOracleBeanList;
@@ -71,10 +74,15 @@ public enum Beans {
     public TestSuiteDescriptor create(Object driverObject) {
       return new TestSuiteDescriptor() {
         private final Object NOP_CLAUSE = Lists.newArrayList("nop");
-        Statement setUpStatement = new Statement.Factory(driverObject).create(setUpClause != null ? setUpClause : NOP_CLAUSE);
-        Statement setUpBeforeAllStatement = new Statement.Factory(driverObject).create(setUpBeforeAllClause != null ? setUpBeforeAllClause : NOP_CLAUSE);
-        List<? extends TestOracle> testOracles = testOracleBeanList.stream().map(each -> each.create(new Statement.Factory(driverObject))).collect(toList());
+        Statement setUpStatement = new Statement.Factory(this).create(setUpClause != null ? setUpClause : NOP_CLAUSE);
+        Statement setUpBeforeAllStatement = new Statement.Factory(this).create(setUpBeforeAllClause != null ? setUpBeforeAllClause : NOP_CLAUSE);
+        List<? extends TestOracle> testOracles = testOracleBeanList.stream().map(each -> each.create(new Statement.Factory(this))).collect(toList());
         List<IndexedTestCase> testCases = createTestCases(this);
+
+        @Override
+        public Object getDriverObject() {
+          return driverObject;
+        }
 
         @Override
         public String getDescription() {
@@ -83,7 +91,7 @@ public enum Beans {
 
         @Override
         public FactorSpaceDescriptor getFactorSpaceDescriptor() {
-          return factorSpaceBean.create(new Statement.Factory(driverObject));
+          return factorSpaceBean.create(new Statement.Factory(this));
         }
 
         @Override
@@ -99,6 +107,11 @@ public enum Beans {
         @Override
         public List<IndexedTestCase> getTestCases() {
           return this.testCases;
+        }
+
+        @Override
+        public Map<String, List<Object>> getUserDefinedFormClauses() {
+          return userDefinedFormClauses;
         }
 
         @Override
@@ -118,12 +131,17 @@ public enum Beans {
 
 
         private Func<Stage, Action> createActionFactory(String actionName, Statement statement) {
-          return input -> Actions.named(
-              actionName,
-              statement == null ?
-                  Actions.nop() :
-                  requireNonNull(Beans.<Stage, Action>toFunc(statement, new FuncInvoker.Impl(0)).apply(input))
-          );
+          return new Func<Stage, Action>() {
+            @Override
+            public Action apply(Stage input) {
+              Object result =
+                  statement == null ?
+                      Actions.nop() :
+                      toFunc(statement, new FuncInvoker.Impl(0)).apply(input);
+              //noinspection ConstantConditions
+              return Actions.named(actionName, Action.class.cast(result));
+            }
+          };
         }
 
         @Override
@@ -131,7 +149,8 @@ public enum Beans {
           return runnerType;
         }
 
-        List<IndexedTestCase> createTestCases(TestSuiteDescriptor testSuiteDescriptor) {
+        List<IndexedTestCase> createTestCases(TestSuiteDescriptor
+            testSuiteDescriptor) {
           FactorSpaceDescriptor factorSpaceDescriptor = testSuiteDescriptor.getFactorSpaceDescriptor();
           CoveringArrayEngineConfig coveringArrayEngineConfig = testSuiteDescriptor.getCoveringArrayEngineConfig();
 
@@ -159,7 +178,8 @@ public enum Beans {
               ).collect(toList());
         }
 
-        CoveringArrayEngine createEngine(CoveringArrayEngineConfig coveringArrayEngineConfig) {
+        CoveringArrayEngine createEngine(CoveringArrayEngineConfig
+            coveringArrayEngineConfig) {
           try {
             Constructor<CoveringArrayEngine> constructor;
             return (constructor = Utils.getConstructor(coveringArrayEngineConfig.getEngineClass()))
@@ -181,7 +201,6 @@ public enum Beans {
             throw wrap(e);
           }
         }
-
       };
     }
 
@@ -250,6 +269,11 @@ public enum Beans {
                   public boolean apply(Tuple in) {
                     return requireNonNull(func.apply(new Stage() {
                       @Override
+                      public Statement.Factory getStatementFactory() {
+                        return statementFactory;
+                      }
+
+                      @Override
                       public Tuple getTestCaseTuple() {
                         return in;
                       }
@@ -262,6 +286,16 @@ public enum Beans {
                       @Override
                       public Type getType() {
                         return GIVEN;
+                      }
+
+                      @Override
+                      public <T> T getArgument(int index) {
+                        throw new UnsupportedOperationException();
+                      }
+
+                      @Override
+                      public int sizeOfArguments() {
+                        throw new UnsupportedOperationException();
                       }
                     }));
                   }
@@ -327,11 +361,11 @@ public enum Beans {
 
                     @Override
                     public Tuple apply(Context context) {
-                      assumeThat(Statement.Utils.prettifyTuple(testCaseTuple, givenStatement), new BaseMatcher<Tuple>() {
+                      assumeThat(testCaseTuple, new BaseMatcher<Tuple>() {
                         @Override
                         public boolean matches(Object item) {
                           return requireNonNull(
-                              createFunc(givenStatement, funcInvoker).apply(GIVEN.create(testCaseTuple))
+                              createFunc(givenStatement, funcInvoker).apply(GIVEN.create(statementFactory, testCaseTuple, null))
                           );
                         }
 
@@ -364,7 +398,7 @@ public enum Beans {
                       return TestResult.create(
                           testCase,
                           Beans.<Stage, Boolean>toFunc(statementFactory.create(whenClause), funcInvoker)
-                              .apply(WHEN.create(testCase)));
+                              .apply(WHEN.create(statementFactory, testCase, null)));
                     }
 
                     @Override
@@ -377,7 +411,7 @@ public enum Beans {
 
                     @Override
                     public void apply(TestResult testResult, Context context) {
-                      Stage thenStage = THEN.create(testResult.getTestCase(), testResult.getOutput());
+                      Stage thenStage = THEN.create(statementFactory, testResult.getTestCase(), testResult.getOutput());
                       assertThat(
                           thenStage,
                           new BaseMatcher<Stage>() {
@@ -417,6 +451,7 @@ public enum Beans {
         }
       };
     }
+
   }
 
   private static <T extends Stage, U> Func<T, U> toFunc(Statement statement, FuncInvoker funcInvoker) {

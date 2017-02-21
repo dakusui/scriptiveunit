@@ -1,6 +1,6 @@
 package com.github.dakusui.scriptiveunit.model.func;
 
-import java.lang.reflect.Method;
+import com.github.dakusui.scriptiveunit.model.Stage;
 
 public class FuncHandler {
   private ThreadLocal<FuncInvoker> funcInvoker = new ThreadLocal<>();
@@ -12,9 +12,9 @@ public class FuncHandler {
     this.funcInvoker.set(funcInvoker);
   }
 
-  public Object invoke(Object target, Method method, Object[] args, String alias) {
+  public Object handle(Func target, Stage stage, String alias) {
     FuncInvoker funcInvoker = this.funcInvoker.get();
-    return funcInvoker.invokeMethod(target, method, args, alias);
+    return funcInvoker.invokeFunc(target, stage, alias);
   }
 
   public <T> T handleConst(T value) {

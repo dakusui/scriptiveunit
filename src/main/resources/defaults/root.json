@@ -10,6 +10,9 @@
     ]
   },
   "runnerType": "groupByTestOracle",
+  "define": {
+
+  },
   "setUpBeforeAll": null,
   "setUp": null
 }

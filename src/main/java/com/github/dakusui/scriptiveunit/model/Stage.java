@@ -1,15 +1,20 @@
 package com.github.dakusui.scriptiveunit.model;
 
 import com.github.dakusui.jcunit.core.tuples.Tuple;
-
-import static java.util.Objects.requireNonNull;
+import com.github.dakusui.scriptiveunit.model.statement.Statement;
 
 public interface Stage {
+  Statement.Factory getStatementFactory();
+
   Tuple getTestCaseTuple();
 
   <RESPONSE> RESPONSE response();
 
   Type getType();
+
+  <T> T getArgument(int index);
+
+  int sizeOfArguments();
 
   enum Type {
     SETUP_BEFORE_SUITE,
@@ -18,17 +23,18 @@ public interface Stage {
     WHEN,
     THEN;
 
-    public Stage create(Tuple fixture) {
-      return _create(fixture, null);
+    public Stage create(TestSuiteDescriptor testSuiteDescriptor, Tuple fixture) {
+      return create(new Statement.Factory(testSuiteDescriptor), fixture, null);
     }
 
-    public Stage create(Tuple fixture, Object response) {
-      return _create(fixture, requireNonNull(response));
-    }
-
-    private Stage _create(Tuple fixture, Object response) {
+    public Stage create(Statement.Factory statementFactory, Tuple fixture, Object response) {
       Type type = this;
       return new Stage() {
+        @Override
+        public Statement.Factory getStatementFactory() {
+          return statementFactory;
+        }
+
         @Override
         public Tuple getTestCaseTuple() {
           return fixture;
@@ -45,6 +51,16 @@ public interface Stage {
         @Override
         public Type getType() {
           return type;
+        }
+
+        @Override
+        public <T> T getArgument(int index) {
+          throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public int sizeOfArguments() {
+          throw new UnsupportedOperationException();
         }
       };
     }

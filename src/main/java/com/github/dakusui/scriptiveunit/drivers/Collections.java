@@ -16,7 +16,12 @@ public class Collections {
   @ReflectivelyReferenced
   @Scriptable
   public <T extends Stage, E> Func<T, Integer> size(Func<T, Iterable<? extends E>> iterable) {
-    return input -> Iterables.size(requireNonNull(iterable.apply(input)));
+    return new Func<T, Integer>() {
+      @Override
+      public Integer apply(T input) {
+        return Iterables.size(requireNonNull(iterable.apply(input)));
+      }
+    };
   }
 
   @ReflectivelyReferenced
@@ -36,12 +41,7 @@ public class Collections {
   public <T extends Stage, E> Func<T, Func<E, Boolean>> containedBy(Func<T, Iterable<E>> iterable) {
     return (T input) -> {
       Iterable<E> collection = requireNonNull(iterable.apply(input));
-      return (Func<E, Boolean>) new Func<E, Boolean>() {
-        @Override
-        public Boolean apply(E entry) {
-          return Iterables.contains(collection, entry);
-        }
-      };
+      return (Func<E, Boolean>) entry -> Iterables.contains(collection, entry);
     };
   }
 }

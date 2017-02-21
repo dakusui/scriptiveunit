@@ -94,7 +94,7 @@ public class ScriptiveUnit extends Parameterized {
       @Override
       public void evaluate() throws Throwable {
         Utils.performActionWithLogging(createSetUpBeforeAllAction(
-            testSuiteLoader.getTestSuiteDescriptor().getSetUpBeforeAllActionFactory(),
+            testSuiteLoader.getTestSuiteDescriptor(),
             createCommonFixture(testSuiteLoader.getTestSuiteDescriptor().getFactorSpaceDescriptor().getFactors()))
         );
         super.evaluate();
@@ -173,9 +173,9 @@ public class ScriptiveUnit extends Parameterized {
             .collect(toSet()));
   }
 
-  private static Action createSetUpBeforeAllAction(Func<Stage, Action> setUpFactory, Tuple commonFixture) {
+  private static Action createSetUpBeforeAllAction(TestSuiteDescriptor testSuiteDescriptor, Tuple commonFixture) {
     Stage.Type stageType = Stage.Type.SETUP_BEFORE_SUITE;
-    return setUpFactory.apply(stageType.create(commonFixture));
+    return testSuiteDescriptor.getSetUpBeforeAllActionFactory().apply(stageType.create(testSuiteDescriptor, commonFixture));
   }
 
   private static <K, V> Map<K, V> project(Map<K, V> in, List<K> keys) {

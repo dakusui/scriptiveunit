@@ -23,7 +23,7 @@ public class JsonBasedTestSuiteLoader extends TestSuiteLoader.Base {
   /**
    * A resource that holds default values of ScriptiveUnit.
    */
-  private static final String DEFAULTS_JSON   = "defaults.json";
+  private static final String DEFAULTS_JSON   = "defaults/root.json";
 
   @SuppressWarnings("WeakerAccess")
   protected JsonBasedTestSuiteLoader(Class<?> driverClass, String resourceName) {

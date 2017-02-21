@@ -1,0 +1,9 @@
+{
+  "define": {
+    "print_twice": [
+        "sequential",
+        ["print", [0]],
+        ["print", [0]]
+      ]
+  }
+}

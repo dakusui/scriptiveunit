@@ -36,8 +36,7 @@ public interface ObjectMethod {
 
   Object invoke(Object... args);
 
-
-  static ObjectMethod create(Object object, Method method, Map<String, String> aliases) {
+  static ObjectMethod create(Object driverObjecet, Method method, Map<String, String> aliases) {
     return new ObjectMethod() {
       @Override
       public String getName() {
@@ -81,7 +80,7 @@ public interface ObjectMethod {
       @Override
       public Object invoke(Object... args) {
         try {
-          return method.invoke(object, args);
+          return method.invoke(driverObjecet, args);
         } catch (IllegalAccessException | InvocationTargetException | IllegalArgumentException e) {
           String message = format("Failed to invoke %s#%s(%s) with %s", method.getDeclaringClass().getCanonicalName(), method.getName(), Arrays.toString(method.getParameterTypes()), Arrays.toString(args));
           throw wrap(e, message);
@@ -98,7 +97,7 @@ public interface ObjectMethod {
 
       @Override
       public String toString() {
-        return String.format("%s(%s of %s)", method.getName(), method, object);
+        return String.format("%s(%s of %s)", method.getName(), method, driverObjecet);
       }
     };
   }
