@@ -17,10 +17,10 @@ public abstract class JUnitResultMatcher extends BaseMatcher<Result> {
       return false;
     Result item = (Result) object;
     return allOf(
-        translate((Function<Result, Boolean>) Result::wasSuccessful, resultMatcher()),
-        translate((Function<Result, Integer>) Result::getRunCount, runCountMatcher()),
-        translate((Function<Result, Integer>) Result::getFailureCount, failureCountMatcher()),
-        translate((Function<Result, Integer>) Result::getIgnoreCount, ignoreCountMatcher())
+        translate(Result::wasSuccessful, resultMatcher()),
+        translate(Result::getRunCount, runCountMatcher()),
+        translate(Result::getFailureCount, failureCountMatcher()),
+        translate(Result::getIgnoreCount, ignoreCountMatcher())
     ).matches(item);
   }
 
@@ -32,7 +32,7 @@ public abstract class JUnitResultMatcher extends BaseMatcher<Result> {
 
   abstract protected Matcher<Integer> ignoreCountMatcher();
 
-  <T, U> Matcher<T> translate(Function<T, U> translator, Matcher<U> matcher) {
+  private <T, U> Matcher<T> translate(Function<T, U> translator, Matcher<U> matcher) {
     return new BaseMatcher<T>() {
       @Override
       public boolean matches(Object item) {
