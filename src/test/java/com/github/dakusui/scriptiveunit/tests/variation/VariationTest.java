@@ -12,7 +12,7 @@ import com.github.dakusui.scriptiveunit.annotations.Scriptable;
 import com.github.dakusui.scriptiveunit.testutils.Resource;
 import com.github.dakusui.scriptiveunit.testutils.ResourceLevelsProvider;
 import com.github.dakusui.scriptiveunit.testutils.drivers.Loader;
-import com.github.dakusui.scriptiveunit.drivers.Simple;
+import com.github.dakusui.scriptiveunit.testutils.drivers.Simple;
 import org.codehaus.jackson.node.ObjectNode;
 import org.junit.Before;
 import org.junit.Test;

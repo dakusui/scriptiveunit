@@ -1,6 +1,7 @@
 package com.github.dakusui.scriptiveunit.model.statement;
 
 import com.github.dakusui.scriptiveunit.ScriptiveUnit;
+import com.github.dakusui.scriptiveunit.annotations.Doc;
 import com.github.dakusui.scriptiveunit.core.ObjectMethod;
 import com.github.dakusui.scriptiveunit.model.TestSuiteDescriptor;
 import com.github.dakusui.scriptiveunit.model.func.Func;
@@ -47,7 +48,7 @@ public interface Form {
       List<Object> deformClause = testSuiteDescriptor.getUserDefinedFormClauses().get(name);
       if (deformClause == null)
         return null;
-      return new UserForm(Factory.this.getObjectMethodFromDriver("userFunc"), deformClause);
+      return new UserForm(rename(Factory.this.getObjectMethodFromDriver("userFunc"), name), deformClause);
     }
 
     private Object[] shrinkTo(Class<?> componentType, int count, Object[] args) {
@@ -68,6 +69,50 @@ public interface Form {
           return each;
       }
       return null;
+    }
+
+    private ObjectMethod rename(ObjectMethod objectMethod, String newName) {
+      return new ObjectMethod() {
+        @Override
+        public String getName() {
+          return newName;
+        }
+
+        @Override
+        public int getParameterCount() {
+          return objectMethod.getParameterCount();
+        }
+
+        @Override
+        public Class<?>[] getParameterTypes() {
+          return objectMethod.getParameterTypes();
+        }
+
+        @Override
+        public Doc getParameterDoc(int index) {
+          return objectMethod.getParameterDoc(index);
+        }
+
+        @Override
+        public Doc doc() {
+          return objectMethod.doc();
+        }
+
+        @Override
+        public boolean isVarArgs() {
+          return objectMethod.isVarArgs();
+        }
+
+        @Override
+        public boolean isAccessor() {
+          return objectMethod.isAccessor();
+        }
+
+        @Override
+        public Object invoke(Object... args) {
+          return objectMethod.invoke(args);
+        }
+      };
     }
 
     private String getMethodName(ObjectMethod method) {

@@ -19,7 +19,7 @@ public enum JsonBeans {
         @JsonProperty("define") Map<String, List<Object>> userFormMap,
         @JsonProperty("setUpBeforeAll") List<Object> setUpBeforeAllClause,
         @JsonProperty("setUp") List<Object> setUpClause,
-        @JsonProperty("defaults/testOracles") List<TestOracleBean> testOracleBeanList,
+        @JsonProperty("testOracles") List<TestOracleBean> testOracleBeanList,
         @JsonProperty("tearDown") List<Object> tearDownClause,
         @JsonProperty("tearDownAfterAll") List<Object> tearDownAfterAllClause
     ) {
@@ -50,11 +50,13 @@ public enum JsonBeans {
       @JsonCreator
       public TestOracleBean(
           @JsonProperty("description") String description,
+          @JsonProperty("before") List<Object> before,
           @JsonProperty("given") List<Object> given,
           @JsonProperty("when") List<Object> when,
-          @JsonProperty("then") List<Object> then
+          @JsonProperty("then") List<Object> then,
+          @JsonProperty("after") List<Object> after
       ) {
-        super(description, given, when, then);
+        super(description, before, given, when, then, after);
       }
     }
   }

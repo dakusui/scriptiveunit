@@ -17,7 +17,6 @@ import com.github.dakusui.scriptiveunit.model.*;
 import com.github.dakusui.scriptiveunit.model.func.Func;
 import com.github.dakusui.scriptiveunit.model.func.FuncInvoker;
 import com.github.dakusui.scriptiveunit.model.statement.Statement;
-import com.google.common.collect.Lists;
 import org.hamcrest.BaseMatcher;
 import org.hamcrest.Description;
 
@@ -29,7 +28,7 @@ import java.util.Map;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
-import static com.github.dakusui.actionunit.Actions.named;
+import static com.github.dakusui.actionunit.Actions.*;
 import static com.github.dakusui.scriptiveunit.core.Utils.*;
 import static com.github.dakusui.scriptiveunit.exceptions.ScriptiveUnitException.wrap;
 import static com.github.dakusui.scriptiveunit.model.Stage.Type.*;
@@ -42,6 +41,7 @@ import static org.junit.Assume.assumeThat;
 
 public enum Beans {
   ;
+  private static final Object NOP_CLAUSE = Actions.nop(); //"nop";//Lists.newArrayList("nop");
 
   public abstract static class BaseForTestSuiteDescriptor {
     final         BaseForCoveringArrayEngineConfig  coveringArrayEngineConfigBean;
@@ -81,9 +81,8 @@ public enum Beans {
     public TestSuiteDescriptor create(Object driverObject) {
       return new TestSuiteDescriptor() {
         private final Stage topLevel = Stage.Type.TOPLEVEL.create(this, new Tuple.Builder().build(), null);
-        private final Object NOP_CLAUSE = Lists.newArrayList("nop");
-        Statement setUpStatement = this.topLevel.getStatementFactory().create(setUpClause != null ? setUpClause : NOP_CLAUSE);
         Statement setUpBeforeAllStatement = this.topLevel.getStatementFactory().create(setUpBeforeAllClause != null ? setUpBeforeAllClause : NOP_CLAUSE);
+        Statement setUpStatement = this.topLevel.getStatementFactory().create(setUpClause != null ? setUpClause : NOP_CLAUSE);
         List<? extends TestOracle> testOracles = testOracleBeanList.stream().map(BaseForTestOracle::create).collect(toList());
         Statement tearDownStatement = this.topLevel.getStatementFactory().create(tearDownClause != null ? tearDownClause : NOP_CLAUSE);
         Statement tearDownAfterAllStatement = this.topLevel.getStatementFactory().create(tearDownAfterAllClause != null ? tearDownAfterAllClause : NOP_CLAUSE);
@@ -126,22 +125,23 @@ public enum Beans {
         }
 
         @Override
-        public Func<Action> getSetUpActionFactory() {
-          return createActionFactory("Fixture set up", setUpStatement);
-        }
-
-        @Override
         public Func<Action> getSetUpBeforeAllActionFactory() {
           return createActionFactory(format("Suite level set up: %s", description), setUpBeforeAllStatement);
         }
 
         @Override
-        public Func<Action> getTearDownActionFactory() {
-          return createActionFactory(format("Suite level set up: %s", description), setUpBeforeAllStatement);
+        public Func<Action> getSetUpActionFactory() {
+          return createActionFactory("Fixture set up", setUpStatement);
         }
+
+        @Override
+        public Func<Action> getTearDownActionFactory() {
+          return createActionFactory("Fixture tear down", tearDownStatement);
+        }
+
         @Override
         public Func<Action> getTearDownAfterAllActionFactory() {
-          return createActionFactory(format("Suite level set up: %s", description), setUpBeforeAllStatement);
+          return createActionFactory(format("Suite level tear down: %s", description), tearDownAfterAllStatement);
         }
 
         @Override
@@ -149,12 +149,11 @@ public enum Beans {
           return Statement.Utils.involvedParameters(setUpStatement);
         }
 
-
         private Func<Action> createActionFactory(String actionName, Statement statement) {
           return input -> {
             Object result =
                 statement == null ?
-                    Actions.nop() :
+                    nop() :
                     toFunc(statement, new FuncInvoker.Impl(0)).apply(input);
             //noinspection ConstantConditions
             return Actions.named(actionName, Action.class.cast(result));
@@ -166,8 +165,7 @@ public enum Beans {
           return runnerType;
         }
 
-        List<IndexedTestCase> createTestCases(TestSuiteDescriptor
-            testSuiteDescriptor) {
+        List<IndexedTestCase> createTestCases(TestSuiteDescriptor testSuiteDescriptor) {
           FactorSpaceDescriptor factorSpaceDescriptor = testSuiteDescriptor.getFactorSpaceDescriptor();
           CoveringArrayEngineConfig coveringArrayEngineConfig = testSuiteDescriptor.getCoveringArrayEngineConfig();
 
@@ -340,12 +338,16 @@ public enum Beans {
     private final List<Object> givenClause;
     private final List<Object> whenClause;
     private final List<Object> thenClause;
+    private final List<Object> afterClause;
+    private final List<Object> beforeClause;
 
-    public BaseForTestOracle(String description, List<Object> givenClause, List<Object> whenClause, List<Object> thenClause) {
+    public BaseForTestOracle(String description, List<Object> beforeClause, List<Object> givenClause, List<Object> whenClause, List<Object> thenClause, List<Object> afterClause) {
       this.description = description;
+      this.beforeClause = beforeClause;
       this.givenClause = givenClause;
       this.whenClause = whenClause;
       this.thenClause = thenClause;
+      this.afterClause = afterClause;
     }
 
     /**
@@ -368,107 +370,115 @@ public enum Beans {
         public Supplier<Action> createTestActionSupplier(int itemId, Tuple testCaseTuple, TestSuiteDescriptor testSuiteDescriptor) {
           List<Factor> factors = testSuiteDescriptor.getFactorSpaceDescriptor().getFactors();
           String testSuiteDescription = testSuiteDescriptor.getDescription();
-          return () -> named(
+          return () -> sequential(
               format("%03d: %s", itemId, template(description, append(testCaseTuple, "@TESTSUITE", testSuiteDescription))),
-              Actions.<Tuple, TestResult>test("verify with: " + Utils.filterSingleLevelFactorsOut(testCaseTuple, factors))
-                  .given(new Source<Tuple>() {
-                    Stage givenStage = GIVEN.create(testSuiteDescriptor, testCaseTuple, null);
-                    Statement givenStatement = givenStage.getStatementFactory().create(givenClause);
-                    FuncInvoker funcInvoker = new FuncInvoker.Impl(0);
-
-                    @Override
-                    public Tuple apply(Context context) {
-                      assumeThat(testCaseTuple, new BaseMatcher<Tuple>() {
-                        @Override
-                        public boolean matches(Object item) {
-                          return requireNonNull(
-                              createFunc(givenStatement, funcInvoker).apply(givenStage)
-                          );
-                        }
+              named("Before", createActionFromClause(beforeClause, BEFORE, testCaseTuple, testSuiteDescriptor)),
+              attempt(
+                  Actions.<Tuple, TestResult>test("Verify with: " + Utils.filterSingleLevelFactorsOut(testCaseTuple, factors))
+                      .given(new Source<Tuple>() {
+                        Stage givenStage = GIVEN.create(testSuiteDescriptor, testCaseTuple, null);
+                        Statement givenStatement = givenStage.getStatementFactory().create(givenClause);
+                        FuncInvoker funcInvoker = new FuncInvoker.Impl(0);
 
                         @Override
-                        public void describeTo(Description description) {
-                          description.appendText(
-                              format("input (%s) should have made true following criterion but not.:%n'%s' defined in stage:%s",
-                                  testCaseTuple,
-                                  funcInvoker.asString(),
-                                  GIVEN));
-                        }
-
-                        private Func<Boolean> createFunc(Statement statement, FuncInvoker invoker) {
-                          return Beans.toFunc(statement, invoker);
-                        }
-                      });
-                      return testCaseTuple;
-                    }
-
-                    @Override
-                    public String toString() {
-                      return format("%n%s", funcInvoker.asString());
-                    }
-                  })
-                  .when(new Pipe<Tuple, TestResult>() {
-                    FuncInvoker funcInvoker = new FuncInvoker.Impl(0);
-
-                    @Override
-                    public TestResult apply(Tuple testCase, Context context) {
-                      Stage whenStage = WHEN.create(testSuiteDescriptor, testCase, null);
-                      return TestResult.create(
-                          testCase,
-                          Beans.<Boolean>toFunc(
-                              whenStage.getStatementFactory().create(whenClause),
-                              funcInvoker
-                          ).apply(whenStage));
-                    }
-
-                    @Override
-                    public String toString() {
-                      return format("%n%s", funcInvoker.asString());
-                    }
-                  })
-                  .then(new Sink<TestResult>() {
-                    FuncInvoker funcInvoker = new FuncInvoker.Impl(0);
-
-                    @Override
-                    public void apply(TestResult testResult, Context context) {
-                      Stage thenStage = THEN.create(testSuiteDescriptor, testResult.getTestCase(), testResult.getOutput());
-                      assertThat(
-                          thenStage,
-                          new BaseMatcher<Stage>() {
+                        public Tuple apply(Context context) {
+                          assumeThat(testCaseTuple, new BaseMatcher<Tuple>() {
                             @Override
                             public boolean matches(Object item) {
-                              return requireNonNull(
-                                  Beans.<Boolean>toFunc(
-                                      thenStage.getStatementFactory().create(thenClause),
-                                      funcInvoker
-                                  ).apply(thenStage));
+                              return requireNonNull(Beans.<Boolean>toFunc(givenStatement, funcInvoker).apply(givenStage));
                             }
 
                             @Override
                             public void describeTo(Description description) {
-                              description.appendText(format("output should have made true the criterion defined in stage:%s", thenStage.getType()));
+                              description.appendText(
+                                  format("input (%s) should have made true following criterion but not.:%n'%s' defined in stage:%s",
+                                      testCaseTuple,
+                                      funcInvoker.asString(),
+                                      GIVEN));
                             }
+                          });
+                          return testCaseTuple;
+                        }
 
-                            @Override
-                            public void describeMismatch(Object item, Description description) {
-                              Object output = testResult.getOutput() instanceof Iterable ?
-                                  iterableToString((Iterable<?>) testResult.getOutput()) :
-                                  testResult.getOutput();
-                              description.appendText(format("output '%s' created from '%s' did not satisfy it.:%n'%s'",
-                                  output,
-                                  testResult.getTestCase(),
-                                  funcInvoker.asString()));
-                            }
-                          }
-                      );
-                    }
+                        @Override
+                        public String toString() {
+                          return format("%n%s", funcInvoker.asString());
+                        }
+                      })
+                      .when(new Pipe<Tuple, TestResult>() {
+                        FuncInvoker funcInvoker = new FuncInvoker.Impl(0);
 
-                    @Override
-                    public String toString() {
-                      return format("%n%s", funcInvoker.asString());
-                    }
-                  }).build()
+                        @Override
+                        public TestResult apply(Tuple testCase, Context context) {
+                          Stage whenStage = WHEN.create(testSuiteDescriptor, testCase, null);
+                          return TestResult.create(
+                              testCase,
+                              Beans.<Boolean>toFunc(
+                                  whenStage.getStatementFactory().create(whenClause),
+                                  funcInvoker
+                              ).apply(whenStage));
+                        }
+
+                        @Override
+                        public String toString() {
+                          return format("%n%s", funcInvoker.asString());
+                        }
+                      })
+                      .then(new Sink<TestResult>() {
+                        FuncInvoker funcInvoker = new FuncInvoker.Impl(0);
+
+                        @Override
+                        public void apply(TestResult testResult, Context context) {
+                          Stage thenStage = THEN.create(testSuiteDescriptor, testResult.getTestCase(), testResult.getOutput());
+                          assertThat(
+                              thenStage,
+                              new BaseMatcher<Stage>() {
+                                @Override
+                                public boolean matches(Object item) {
+                                  return requireNonNull(
+                                      Beans.<Boolean>toFunc(
+                                          thenStage.getStatementFactory().create(thenClause),
+                                          funcInvoker
+                                      ).apply(thenStage));
+                                }
+
+                                @Override
+                                public void describeTo(Description description) {
+                                  description.appendText(format("output should have made true the criterion defined in stage:%s", thenStage.getType()));
+                                }
+
+                                @Override
+                                public void describeMismatch(Object item, Description description) {
+                                  Object output = testResult.getOutput() instanceof Iterable ?
+                                      iterableToString((Iterable<?>) testResult.getOutput()) :
+                                      testResult.getOutput();
+                                  description.appendText(format("output '%s' created from '%s' did not satisfy it.:%n'%s'",
+                                      output,
+                                      testResult.getTestCase(),
+                                      funcInvoker.asString()));
+                                }
+                              }
+                          );
+                        }
+
+                        @Override
+                        public String toString() {
+                          return format("%n%s", funcInvoker.asString());
+                        }
+                      }).build())
+                  .ensure(
+                      named("After", createActionFromClause(afterClause, AFTER, testCaseTuple, testSuiteDescriptor)))
+                  .build()
           );
+        }
+
+        private Action createActionFromClause(List<Object> clause, Stage.Type stageType, final Tuple testCaseTuple, final TestSuiteDescriptor testSuiteDescriptor) {
+          if (clause == null)
+            return (Action) NOP_CLAUSE;
+          Stage stage = stageType.create(testSuiteDescriptor, testCaseTuple, null);
+          Statement statement = stage.getStatementFactory().create(clause);
+          FuncInvoker funcInvoker = new FuncInvoker.Impl(0);
+          return Beans.<Action>toFunc(statement, funcInvoker).apply(stage);
         }
       };
     }

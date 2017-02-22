@@ -25,9 +25,9 @@ public interface TestSuiteDescriptor {
 
   List<IndexedTestCase> getTestCases();
 
-  Func<Action> getSetUpActionFactory();
-
   Func<Action> getSetUpBeforeAllActionFactory();
+
+  Func<Action> getSetUpActionFactory();
 
   Func<Action> getTearDownActionFactory();
 

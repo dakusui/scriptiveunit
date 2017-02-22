@@ -20,20 +20,16 @@ public interface Stage {
     TOPLEVEL,
     SETUP_BEFORE_ALL,
     SETUP,
+    BEFORE,
     GIVEN,
     WHEN,
     THEN,
+    AFTER,
     TEARDOWN,
-    TEARDOWN_AFTER_ALL
-    ;
-
+    TEARDOWN_AFETR_ALL;
 
     public Stage create(TestSuiteDescriptor testSuiteDescriptor, Tuple fixture, Object response) {
-      return _create(new Statement.Factory(testSuiteDescriptor), fixture, response);
-    }
-
-    private Stage _create(Statement.Factory statementFactory, Tuple fixture, Object response) {
-      Type type = this;
+      Statement.Factory statementFactory = new Statement.Factory(testSuiteDescriptor);
       return new Stage() {
         @Override
         public Statement.Factory getStatementFactory() {
@@ -55,7 +51,7 @@ public interface Stage {
 
         @Override
         public Type getType() {
-          return type;
+          return Type.this;
         }
 
         @Override
