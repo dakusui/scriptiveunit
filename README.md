@@ -77,9 +77,7 @@ Full version of this example is found [here](src/test/resources/tests/regular/qa
 Full version of this example is found [here](src/test/java/com/github/dakusui/scriptiveunit/drivers/Qapi.java).
 
 ```java
-    @Load(
-        scriptPackagePrefix = "examples", scriptNamePattern = ".*\\.json",
-        with = JsonBasedTestSuiteLoader.Factory.class)
+    @Load(with = JsonBasedTestSuiteLoader.Factory.class)
     @RunWith(ScriptiveUnit.class)
     public class Qapi {
       ...
