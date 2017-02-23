@@ -1,5 +1,6 @@
 package com.github.dakusui.scriptiveunit.loaders.json;
 
+import com.github.dakusui.scriptiveunit.core.Config;
 import com.github.dakusui.scriptiveunit.loaders.TestSuiteLoader;
 import com.github.dakusui.scriptiveunit.loaders.json.JsonBeans.TestSuiteDescriptorBean;
 import com.github.dakusui.scriptiveunit.model.TestSuiteDescriptor;
@@ -26,17 +27,17 @@ public class JsonBasedTestSuiteLoader extends TestSuiteLoader.Base {
   private static final String DEFAULTS_JSON   = "defaults/values.json";
 
   @SuppressWarnings("WeakerAccess")
-  protected JsonBasedTestSuiteLoader(Class<?> driverClass, String resourceName) {
-    super(resourceName, driverClass);
+  protected JsonBasedTestSuiteLoader(Config config) {
+    super(config);
   }
 
   @Override
-  protected TestSuiteDescriptor loadTestSuiteDescriptor(Class<?> driverClass, String scriptResourceName) {
+  protected TestSuiteDescriptor loadTestSuiteDescriptor(Config config) {
     try {
       return new ObjectMapper()
-          .readValue(readScript(scriptResourceName), TestSuiteDescriptorBean.class)
-          .create(driverClass.newInstance());
-    } catch (IOException | IllegalAccessException | InstantiationException e) {
+          .readValue(readScript(config.getScriptResourceName()), TestSuiteDescriptorBean.class)
+          .create(config);
+    } catch (IOException e) {
       throw wrap(e);
     }
   }
@@ -88,8 +89,8 @@ public class JsonBasedTestSuiteLoader extends TestSuiteLoader.Base {
 
   public static class Factory implements TestSuiteLoader.Factory {
     @Override
-    public TestSuiteLoader create(String resourceName, Class<?> driverClass) {
-      return new JsonBasedTestSuiteLoader(driverClass, resourceName);
+    public TestSuiteLoader create(Config config) {
+      return new JsonBasedTestSuiteLoader(config);
     }
   }
 }

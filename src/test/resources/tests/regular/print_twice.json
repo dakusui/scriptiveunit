@@ -8,6 +8,7 @@
     "double": ["+", [0], [0]],
     "print_double" : ["print", ["double", [0]]]
   },
+  "setUpBeforeAll": ["tag", "Hello!"],
   "setUp": ["sequential", ["print_twice", "Hi"], ["print_double", 123]],
   "testOracles": [
     {

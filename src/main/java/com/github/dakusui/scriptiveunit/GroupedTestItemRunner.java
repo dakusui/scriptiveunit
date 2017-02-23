@@ -11,6 +11,7 @@ import com.github.dakusui.scriptiveunit.loaders.IndexedTestCase;
 import com.github.dakusui.scriptiveunit.model.Stage;
 import com.github.dakusui.scriptiveunit.model.TestOracle;
 import com.github.dakusui.scriptiveunit.model.TestSuiteDescriptor;
+import org.junit.internal.runners.statements.RunAfters;
 import org.junit.internal.runners.statements.RunBefores;
 import org.junit.runner.Description;
 import org.junit.runner.Runner;
@@ -207,15 +208,15 @@ public final class GroupedTestItemRunner extends ParentRunner<Action> {
     return new RunBefores(statement, Collections.emptyList(), null) {
       @Override
       public void evaluate() throws Throwable {
-        Utils.performActionWithLogging(beforeAction);
         super.evaluate();
+        Utils.performActionWithLogging(beforeAction);
       }
     };
   }
 
   @Override
   protected Statement withAfterClasses(Statement statement) {
-    return new RunBefores(statement, Collections.emptyList(), null) {
+    return new RunAfters(statement, Collections.emptyList(), null) {
       @Override
       public void evaluate() throws Throwable {
         super.evaluate();

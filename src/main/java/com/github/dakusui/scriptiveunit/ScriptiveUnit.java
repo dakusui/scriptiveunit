@@ -20,12 +20,16 @@ import org.junit.runners.model.Statement;
 import org.junit.runners.model.TestClass;
 
 import java.lang.annotation.Annotation;
-import java.util.*;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
 
 import static com.github.dakusui.actionunit.Utils.createTestClassMock;
 import static com.google.common.collect.Lists.newLinkedList;
 import static java.util.Objects.requireNonNull;
-import static java.util.stream.Collectors.*;
+import static java.util.stream.Collectors.toList;
+import static java.util.stream.Collectors.toMap;
 
 /**
  * A main test runner class of ScriptiveUnit.
@@ -44,18 +48,18 @@ public class ScriptiveUnit extends Parameterized {
    */
   @ReflectivelyReferenced
   public ScriptiveUnit(Class<?> klass) throws Throwable {
-    this(klass, System.getProperties());
+    this(klass, new Config.Builder(klass, System.getProperties()).build());
   }
 
   /**
    * A constructor for testing.
    *
-   * @param klass      A test class
-   * @param properties A properties object. Typically a value returned by {@code System.getProperties()}.
+   * @param klass  A test class
+   * @param config A config object.
    */
   @ReflectivelyReferenced
-  protected ScriptiveUnit(Class<?> klass, Properties properties) throws Throwable {
-    this(klass, createTestSuiteLoader(klass, Config.create(klass, properties).getScriptResourceName()));
+  protected ScriptiveUnit(Class<?> klass, Config config) throws Throwable {
+    this(klass, createTestSuiteLoader(config));
   }
 
   public ScriptiveUnit(Class<?> klass, TestSuiteLoader testSuiteLoader) throws Throwable {
@@ -66,12 +70,12 @@ public class ScriptiveUnit extends Parameterized {
 
   @Override
   public String getName() {
-    return
-        this.testSuiteLoader.getScriptResourceName()
-            .replaceAll(".+/", "")
-            .replaceAll("\\.[^.]*$", "")
-            + ":" + this.testSuiteLoader.getTestSuiteDescriptor().getDescription();
+    return this.testSuiteLoader.getScriptResourceName()
+        .replaceAll(".+/", "")
+        .replaceAll("\\.[^.]*$", "")
+        + ":" + this.testSuiteLoader.getTestSuiteDescriptor().getDescription();
   }
+
 
   @Override
   public List<Runner> getChildren() {
@@ -128,14 +132,10 @@ public class ScriptiveUnit extends Parameterized {
   }
 
 
-  private static TestSuiteLoader createTestSuiteLoader(Class javaClass, String scriptResourceName) {
-    Load annLoad = getAnnotationWithDefault(javaClass, Load.DEFAULT_INSTANCE);
+  private static TestSuiteLoader createTestSuiteLoader(Config config) {
     return TestSuiteLoader.Factory
-        .create(annLoad.with())
-        .create(
-            scriptResourceName,
-            javaClass
-        );
+        .create(getAnnotationWithDefault(config.getDriverClass(), Load.DEFAULT_INSTANCE).with())
+        .create(config);
   }
 
   public static List<ObjectMethod> getAnnotatedMethodsFromImportedFieldsInObject(Object object) {

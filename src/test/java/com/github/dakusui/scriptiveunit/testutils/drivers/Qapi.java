@@ -11,6 +11,10 @@ import com.github.dakusui.scriptiveunit.drivers.*;
 import com.github.dakusui.scriptiveunit.drivers.actions.Basic;
 import com.github.dakusui.scriptiveunit.loaders.json.JsonBasedTestSuiteLoader;
 import com.google.common.collect.Maps;
+import org.junit.Rule;
+import org.junit.rules.TestRule;
+import org.junit.rules.TestWatcher;
+import org.junit.runner.Description;
 import org.junit.runner.RunWith;
 
 import java.util.Collection;
@@ -31,6 +35,14 @@ import static java.util.Objects.requireNonNull;
 @RunWith(ScriptiveUnit.class)
 public class Qapi {
   @ReflectivelyReferenced
+  @Rule
+  public TestRule testRule = new TestWatcher() {
+    @Override
+    protected void starting(Description description) {
+      System.out.println("Hello");
+    }
+  };
+  @ReflectivelyReferenced
   @Import({
       @Alias(value = "*"),
       @Alias(value = "add", as = "+"),
@@ -38,7 +50,7 @@ public class Qapi {
       @Alias(value = "mul", as = "*"),
       @Alias(value = "div", as = "/")
   })
-  public Object arith = new Arith();
+  public Object   arith    = new Arith();
 
   @ReflectivelyReferenced
   @Import({
@@ -59,6 +71,14 @@ public class Qapi {
   @ReflectivelyReferenced
   @Import
   public Object collections = new Collections();
+
+  @ReflectivelyReferenced
+  @Import({
+      @Alias(value = "*"),
+      @Alias(value = "configAttr", as = "config_attr"),
+      @Alias(value = "systemProperty", as = "system_property"),
+  })
+  public Object core = new Core();
 
   @ReflectivelyReferenced
   @Import

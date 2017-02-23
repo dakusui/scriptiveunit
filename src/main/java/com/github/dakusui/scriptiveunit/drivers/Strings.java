@@ -4,6 +4,9 @@ import com.github.dakusui.scriptiveunit.annotations.ReflectivelyReferenced;
 import com.github.dakusui.scriptiveunit.annotations.Scriptable;
 import com.github.dakusui.scriptiveunit.model.func.Func;
 
+import java.util.stream.Collectors;
+
+import static java.util.Arrays.stream;
 import static java.util.Objects.requireNonNull;
 
 public class Strings {
@@ -39,4 +42,15 @@ public class Strings {
     return input -> requireNonNull(str.apply(input)).matches(requireNonNull(regex.apply(input)));
   }
 
+  @SafeVarargs
+  @ReflectivelyReferenced
+  @Scriptable
+  public final Func<String> format(Func<String> in, Func<Object>... args) {
+    return input -> String.format(requireNonNull(in.apply(input)),
+        stream(args)
+            .map(each -> each.apply(input))
+            .collect(Collectors.toList())
+            .toArray()
+    );
+  }
 }

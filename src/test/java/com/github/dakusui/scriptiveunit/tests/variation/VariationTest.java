@@ -9,6 +9,7 @@ import com.github.dakusui.jcunit.runners.standard.annotations.*;
 import com.github.dakusui.scriptiveunit.ScriptiveUnit;
 import com.github.dakusui.scriptiveunit.annotations.ReflectivelyReferenced;
 import com.github.dakusui.scriptiveunit.annotations.Scriptable;
+import com.github.dakusui.scriptiveunit.core.Config;
 import com.github.dakusui.scriptiveunit.testutils.Resource;
 import com.github.dakusui.scriptiveunit.testutils.ResourceLevelsProvider;
 import com.github.dakusui.scriptiveunit.testutils.drivers.Loader;
@@ -18,6 +19,8 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.JUnitCore;
 import org.junit.runner.RunWith;
+
+import java.util.Properties;
 
 import static java.lang.String.format;
 import static org.hamcrest.CoreMatchers.containsString;
@@ -133,8 +136,7 @@ public class VariationTest {
         new ScriptiveUnit(
             Simple.class,
             Loader.create(
-                Simple.class,
-                "components/root.json",
+                new Config.Builder(Simple.class, new Properties()).withScriptResourceName("components/root.json").build(),
                 _extends,
                 description,
                 factors,

@@ -12,6 +12,7 @@ import com.github.dakusui.jcunit.framework.TestCase;
 import com.github.dakusui.jcunit.framework.TestSuite;
 import com.github.dakusui.jcunit.plugins.caengines.CoveringArrayEngine;
 import com.github.dakusui.scriptiveunit.GroupedTestItemRunner.Type;
+import com.github.dakusui.scriptiveunit.core.Config;
 import com.github.dakusui.scriptiveunit.core.Utils;
 import com.github.dakusui.scriptiveunit.model.*;
 import com.github.dakusui.scriptiveunit.model.func.Func;
@@ -41,7 +42,7 @@ import static org.junit.Assume.assumeThat;
 
 public enum Beans {
   ;
-  private static final Object NOP_CLAUSE = Actions.nop(); //"nop";//Lists.newArrayList("nop");
+  private static final Object NOP_CLAUSE = Actions.nop();
 
   public abstract static class BaseForTestSuiteDescriptor {
     final         BaseForCoveringArrayEngineConfig  coveringArrayEngineConfigBean;
@@ -78,143 +79,153 @@ public enum Beans {
     }
 
 
-    public TestSuiteDescriptor create(Object driverObject) {
-      return new TestSuiteDescriptor() {
-        private final Stage topLevel = Stage.Type.TOPLEVEL.create(this, new Tuple.Builder().build(), null);
-        Statement setUpBeforeAllStatement = this.topLevel.getStatementFactory().create(setUpBeforeAllClause != null ? setUpBeforeAllClause : NOP_CLAUSE);
-        Statement setUpStatement = this.topLevel.getStatementFactory().create(setUpClause != null ? setUpClause : NOP_CLAUSE);
-        List<? extends TestOracle> testOracles = testOracleBeanList.stream().map(BaseForTestOracle::create).collect(toList());
-        Statement tearDownStatement = this.topLevel.getStatementFactory().create(tearDownClause != null ? tearDownClause : NOP_CLAUSE);
-        Statement tearDownAfterAllStatement = this.topLevel.getStatementFactory().create(tearDownAfterAllClause != null ? tearDownAfterAllClause : NOP_CLAUSE);
+    public TestSuiteDescriptor create(Config config) {
+      try {
+        return new TestSuiteDescriptor() {
+          private Object driverObject = config.getDriverClass().newInstance();
+          private final Stage topLevel = Stage.Type.TOPLEVEL.create(this, new Tuple.Builder().build(), null);
+          private Statement setUpBeforeAllStatement = this.topLevel.getStatementFactory().create(setUpBeforeAllClause != null ? setUpBeforeAllClause : NOP_CLAUSE);
+          private Statement setUpStatement = this.topLevel.getStatementFactory().create(setUpClause != null ? setUpClause : NOP_CLAUSE);
+          private List<? extends TestOracle> testOracles = testOracleBeanList.stream().map(BaseForTestOracle::create).collect(toList());
+          private Statement tearDownStatement = this.topLevel.getStatementFactory().create(tearDownClause != null ? tearDownClause : NOP_CLAUSE);
+          private Statement tearDownAfterAllStatement = this.topLevel.getStatementFactory().create(tearDownAfterAllClause != null ? tearDownAfterAllClause : NOP_CLAUSE);
 
-        List<IndexedTestCase> testCases = createTestCases(this);
+          List<IndexedTestCase> testCases = createTestCases(this);
 
-        @Override
-        public Object getDriverObject() {
-          return driverObject;
-        }
-
-        @Override
-        public String getDescription() {
-          return description;
-        }
-
-        @Override
-        public FactorSpaceDescriptor getFactorSpaceDescriptor() {
-          return factorSpaceBean.create(new Statement.Factory(this));
-        }
-
-        @Override
-        public CoveringArrayEngineConfig getCoveringArrayEngineConfig() {
-          return coveringArrayEngineConfigBean.create();
-        }
-
-        @Override
-        public List<? extends TestOracle> getTestOracles() {
-          return this.testOracles;
-        }
-
-        @Override
-        public List<IndexedTestCase> getTestCases() {
-          return this.testCases;
-        }
-
-        @Override
-        public Map<String, List<Object>> getUserDefinedFormClauses() {
-          return userDefinedFormClauses;
-        }
-
-        @Override
-        public Func<Action> getSetUpBeforeAllActionFactory() {
-          return createActionFactory(format("Suite level set up: %s", description), setUpBeforeAllStatement);
-        }
-
-        @Override
-        public Func<Action> getSetUpActionFactory() {
-          return createActionFactory("Fixture set up", setUpStatement);
-        }
-
-        @Override
-        public Func<Action> getTearDownActionFactory() {
-          return createActionFactory("Fixture tear down", tearDownStatement);
-        }
-
-        @Override
-        public Func<Action> getTearDownAfterAllActionFactory() {
-          return createActionFactory(format("Suite level tear down: %s", description), tearDownAfterAllStatement);
-        }
-
-        @Override
-        public List<String> getInvolvedParameterNamesInSetUpAction() {
-          return Statement.Utils.involvedParameters(setUpStatement);
-        }
-
-        private Func<Action> createActionFactory(String actionName, Statement statement) {
-          return input -> {
-            Object result =
-                statement == null ?
-                    nop() :
-                    toFunc(statement, new FuncInvoker.Impl(0)).apply(input);
-            //noinspection ConstantConditions
-            return Actions.named(actionName, Action.class.cast(result));
-          };
-        }
-
-        @Override
-        public Type getRunnerType() {
-          return runnerType;
-        }
-
-        List<IndexedTestCase> createTestCases(TestSuiteDescriptor testSuiteDescriptor) {
-          FactorSpaceDescriptor factorSpaceDescriptor = testSuiteDescriptor.getFactorSpaceDescriptor();
-          CoveringArrayEngineConfig coveringArrayEngineConfig = testSuiteDescriptor.getCoveringArrayEngineConfig();
-
-          TestSuite.Builder builder = new TestSuite.Builder(createEngine(coveringArrayEngineConfig));
-          builder.disableNegativeTests();
-          if (!factorSpaceDescriptor.getFactors().isEmpty()) {
-            factorSpaceDescriptor.getFactors().forEach(builder::addFactor);
-          } else {
-            builder.addFactor("*dummyFactor*", "*dummyLevel*");
+          @Override
+          public Object getDriverObject() {
+            return driverObject;
           }
 
-          for (TestSuite.Predicate each : factorSpaceDescriptor.getConstraints()) {
-            builder.addConstraint(each);
+          @Override
+          public String getDescription() {
+            return description;
           }
-          return builder.build().getTestCases().stream()
-              .map(new Function<TestCase, IndexedTestCase>() {
-                int i = 0;
 
-                @Override
-                public IndexedTestCase apply(TestCase input) {
-                  return new IndexedTestCase(i++, input);
-                }
-              }).collect(toList());
-        }
+          @Override
+          public FactorSpaceDescriptor getFactorSpaceDescriptor() {
+            return factorSpaceBean.create(config, new Statement.Factory(this));
+          }
 
-        CoveringArrayEngine createEngine(CoveringArrayEngineConfig
-            coveringArrayEngineConfig) {
-          try {
-            Constructor<CoveringArrayEngine> constructor;
-            return (constructor = Utils.getConstructor(coveringArrayEngineConfig.getEngineClass()))
-                .newInstance(coveringArrayEngineConfig.getOptions().stream()
-                    .map(new Function<Object, Object>() {
-                      int i = 0;
+          @Override
+          public CoveringArrayEngineConfig getCoveringArrayEngineConfig() {
+            return coveringArrayEngineConfigBean.create();
+          }
 
-                      @Override
-                      public Object apply(Object input) {
-                        try {
-                          return convertIfNecessary(input, constructor.getParameterTypes()[i]);
-                        } finally {
-                          i++;
+          @Override
+          public List<? extends TestOracle> getTestOracles() {
+            return this.testOracles;
+          }
+
+          @Override
+          public List<IndexedTestCase> getTestCases() {
+            return this.testCases;
+          }
+
+          @Override
+          public Map<String, List<Object>> getUserDefinedFormClauses() {
+            return userDefinedFormClauses;
+          }
+
+          @Override
+          public Func<Action> getSetUpBeforeAllActionFactory() {
+            return createActionFactory(format("Suite level set up: %s", description), setUpBeforeAllStatement);
+          }
+
+          @Override
+          public Func<Action> getSetUpActionFactory() {
+            return createActionFactory("Fixture set up", setUpStatement);
+          }
+
+          @Override
+          public Func<Action> getTearDownActionFactory() {
+            return createActionFactory("Fixture tear down", tearDownStatement);
+          }
+
+          @Override
+          public Func<Action> getTearDownAfterAllActionFactory() {
+            return createActionFactory(format("Suite level tear down: %s", description), tearDownAfterAllStatement);
+          }
+
+          @Override
+          public List<String> getInvolvedParameterNamesInSetUpAction() {
+            return Statement.Utils.involvedParameters(setUpStatement);
+          }
+
+          @Override
+          public Config getConfig() {
+            return config;
+          }
+
+          private Func<Action> createActionFactory(String actionName, Statement statement) {
+            return input -> {
+              Object result =
+                  statement == null ?
+                      nop() :
+                      toFunc(statement, new FuncInvoker.Impl(0)).apply(input);
+              //noinspection ConstantConditions
+              return Actions.named(actionName, Action.class.cast(result));
+            };
+          }
+
+          @Override
+          public Type getRunnerType() {
+            return runnerType;
+          }
+
+          List<IndexedTestCase> createTestCases(TestSuiteDescriptor testSuiteDescriptor) {
+            FactorSpaceDescriptor factorSpaceDescriptor = testSuiteDescriptor.getFactorSpaceDescriptor();
+            CoveringArrayEngineConfig coveringArrayEngineConfig = testSuiteDescriptor.getCoveringArrayEngineConfig();
+
+            TestSuite.Builder builder = new TestSuite.Builder(createEngine(coveringArrayEngineConfig));
+            builder.disableNegativeTests();
+            if (!factorSpaceDescriptor.getFactors().isEmpty()) {
+              factorSpaceDescriptor.getFactors().forEach(builder::addFactor);
+            } else {
+              builder.addFactor("*dummyFactor*", "*dummyLevel*");
+            }
+
+            for (TestSuite.Predicate each : factorSpaceDescriptor.getConstraints()) {
+              builder.addConstraint(each);
+            }
+            return builder.build().getTestCases().stream()
+                .map(new Function<TestCase, IndexedTestCase>() {
+                  int i = 0;
+
+                  @Override
+                  public IndexedTestCase apply(TestCase input) {
+                    return new IndexedTestCase(i++, input);
+                  }
+                }).collect(toList());
+          }
+
+          CoveringArrayEngine createEngine(CoveringArrayEngineConfig
+              coveringArrayEngineConfig) {
+            try {
+              Constructor<CoveringArrayEngine> constructor;
+              return (constructor = Utils.getConstructor(coveringArrayEngineConfig.getEngineClass()))
+                  .newInstance(coveringArrayEngineConfig.getOptions().stream()
+                      .map(new Function<Object, Object>() {
+                        int i = 0;
+
+                        @Override
+                        public Object apply(Object input) {
+                          try {
+                            return convertIfNecessary(input, constructor.getParameterTypes()[i]);
+                          } finally {
+                            i++;
+                          }
                         }
-                      }
-                    })
-                    .collect(toList()).toArray());
-          } catch (InstantiationException | IllegalAccessException | InvocationTargetException e) {
-            throw wrap(e);
+                      })
+                      .collect(toList()).toArray());
+            } catch (InstantiationException | IllegalAccessException | InvocationTargetException e) {
+              throw wrap(e);
+            }
           }
-        }
-      };
+        };
+      } catch (Exception e) {
+        throw wrap(e);
+      }
     }
 
   }
@@ -262,7 +273,7 @@ public enum Beans {
       this.constraintList = constraintList;
     }
 
-    public FactorSpaceDescriptor create(Statement.Factory statementFactory) {
+    public FactorSpaceDescriptor create(Config config, Statement.Factory statementFactory) {
       return new FactorSpaceDescriptor() {
         @Override
         public List<Factor> getFactors() {
@@ -309,6 +320,11 @@ public enum Beans {
                       @Override
                       public int sizeOfArguments() {
                         throw new UnsupportedOperationException();
+                      }
+
+                      @Override
+                      public Config getConfig() {
+                        return config;
                       }
                     }));
                   }
