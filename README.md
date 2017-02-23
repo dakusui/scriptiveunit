@@ -84,11 +84,9 @@ Full version of this example is found [here](src/test/java/com/github/dakusui/sc
     public class Qapi {
       ...
 
-      @ReflectivelyReferenced
       @Import
       public Object collections = new Collections();
 
-      @ReflectivelyReferenced
       @Import({
           @Alias(value = "*"),
           @Alias(value = "request", as = "query"),
@@ -138,25 +136,15 @@ Full version of this example is found [here](src/test/java/com/github/dakusui/sc
 
       @ReflectivelyReferenced
       public enum Entry {
-        @ReflectivelyReferenced
         ITEM_01("ヒータ", 15_000),
-        @ReflectivelyReferenced
         ITEM_02("ヒーター", 14_800),
-        @ReflectivelyReferenced
         ITEM_03("ストーブ", 16_800),
-        @ReflectivelyReferenced
         ITEM_03a("ストーブ用ポンプ", 200),
-        @ReflectivelyReferenced
         ITEM_03b("ストーブ用替え扉", 480),
-        @ReflectivelyReferenced
         ITEM_04("ヒーター", 9_800),
-        @ReflectivelyReferenced
         ITEM_05("iPhone 7 ケース", 2_000),
-        @ReflectivelyReferenced
         ITEM_06("iPhone 7 シルバー", 48_000),
-        @ReflectivelyReferenced
         ITEM_07("iPhone 6 ケース", 1_980),
-        @ReflectivelyReferenced
         ITEM_08("iPhone 6Plus シルバー", 68_000),;
         ...
       }
