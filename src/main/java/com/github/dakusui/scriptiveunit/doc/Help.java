@@ -55,7 +55,7 @@ public interface Help {
 
   static void help(Class<?> testClass, Writer writer) {
     String className = testClass.getCanonicalName();
-    String scriptSystemPropertyKey = Config.create(testClass, System.getProperties()).getScriptSystemPropertyKey();
+    String scriptSystemPropertyKey = new Config.Builder(testClass, System.getProperties()).build().getScriptResourceNameKey();
     writer.writeLine(format(
         "This is a test class " + className + ".%n"
             + "You can run this as a JUnit test class from your IDE, build tool, etc.%n%n"
@@ -197,7 +197,10 @@ public interface Help {
               @Override
               public List<String> content() {
                 try {
-                  return singletonList(new JsonBasedTestSuiteLoader(driverClass, name()) {
+                  Config config = new Config.Builder(driverClass, System.getProperties())
+                      .withScriptResourceName(name)
+                      .build();
+                  return singletonList(new JsonBasedTestSuiteLoader(config) {
                   }.getTestSuiteDescriptor().getDescription());
                 } catch (Exception e) {
                   throw wrap(e);

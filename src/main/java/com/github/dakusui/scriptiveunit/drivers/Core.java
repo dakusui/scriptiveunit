@@ -4,7 +4,9 @@ import com.github.dakusui.jcunit.core.tuples.Tuple;
 import com.github.dakusui.scriptiveunit.annotations.AccessesTestParameter;
 import com.github.dakusui.scriptiveunit.annotations.ReflectivelyReferenced;
 import com.github.dakusui.scriptiveunit.annotations.Scriptable;
+import com.github.dakusui.scriptiveunit.core.Config;
 import com.github.dakusui.scriptiveunit.exceptions.ScriptiveUnitException;
+import com.github.dakusui.scriptiveunit.exceptions.SyntaxException;
 import com.github.dakusui.scriptiveunit.model.Stage;
 import com.github.dakusui.scriptiveunit.model.func.Func;
 import com.github.dakusui.scriptiveunit.model.func.FuncInvoker;
@@ -112,11 +114,48 @@ public class Core {
         public int sizeOfArguments() {
           return argValues.size();
         }
+
+        @Override
+        public Config getConfig() {
+          return input.getConfig();
+        }
       };
       return wrappedStage.getStatementFactory()
           .create(funcBody.apply(wrappedStage))
           .execute(new FuncInvoker.Impl(0))
           .<Func<Object>>apply(wrappedStage);
+    };
+  }
+
+  @ReflectivelyReferenced
+  @Scriptable
+  public Func<Object> configAttr(Func<String> attrName) {
+    return input -> {
+      String attr = requireNonNull(attrName.apply(input));
+      Config config = input.getConfig();
+      final Object retValue;
+      switch (attr) {
+      case "driverClass":
+        retValue = config.getDriverClass().getCanonicalName();
+        break;
+      case "scriptResourceName":
+        retValue = config.getScriptResourceName();
+        break;
+      case "scriptResourceNameKey":
+        retValue = config.getScriptResourceNameKey();
+        break;
+      default:
+        throw SyntaxException.systemAttributeNotFound(attr, input);
+      }
+      return retValue;
+    };
+  }
+
+  @ReflectivelyReferenced
+  @Scriptable
+  public Func<Object> systemProperty(Func<String> attrName) {
+    return input -> {
+      return System.getProperties().getProperty(requireNonNull(attrName.apply(input)));
     };
   }
 }

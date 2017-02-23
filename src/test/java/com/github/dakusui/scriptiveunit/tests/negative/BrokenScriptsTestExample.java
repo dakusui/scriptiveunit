@@ -1,8 +1,8 @@
 package com.github.dakusui.scriptiveunit.tests.negative;
 
 import com.github.dakusui.scriptiveunit.core.Config;
-import com.github.dakusui.scriptiveunit.testutils.drivers.Qapi;
 import com.github.dakusui.scriptiveunit.testutils.TestBase;
+import com.github.dakusui.scriptiveunit.testutils.drivers.Qapi;
 import org.junit.Test;
 import org.junit.runner.Description;
 import org.junit.runner.JUnitCore;
@@ -70,7 +70,7 @@ public class BrokenScriptsTestExample extends TestBase {
 
 
   private void use(String s) {
-    String scriptSystemPropertyKey = Config.create(Qapi.class, System.getProperties()).getScriptSystemPropertyKey();
+    String scriptSystemPropertyKey = new Config.Builder(Qapi.class, System.getProperties()).build().getScriptResourceNameKey();
     System.setProperty(scriptSystemPropertyKey, s);
   }
 }

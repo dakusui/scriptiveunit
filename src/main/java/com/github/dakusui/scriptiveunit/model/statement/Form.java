@@ -45,10 +45,10 @@ public interface Form {
     }
 
     private Form createUserForm(String name) {
-      List<Object> deformClause = testSuiteDescriptor.getUserDefinedFormClauses().get(name);
-      if (deformClause == null)
+      List<Object> userFormClause = testSuiteDescriptor.getUserDefinedFormClauses().get(name);
+      if (userFormClause == null)
         return null;
-      return new UserForm(rename(Factory.this.getObjectMethodFromDriver("userFunc"), name), deformClause);
+      return new UserForm(rename(Factory.this.getObjectMethodFromDriver("userFunc"), name), userFormClause);
     }
 
     private Object[] shrinkTo(Class<?> componentType, int count, Object[] args) {

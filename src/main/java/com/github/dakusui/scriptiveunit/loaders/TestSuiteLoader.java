@@ -1,6 +1,7 @@
 package com.github.dakusui.scriptiveunit.loaders;
 
 import com.github.dakusui.scriptiveunit.GroupedTestItemRunner.Type;
+import com.github.dakusui.scriptiveunit.core.Config;
 import com.github.dakusui.scriptiveunit.core.Utils;
 import com.github.dakusui.scriptiveunit.model.TestSuiteDescriptor;
 
@@ -19,10 +20,12 @@ public interface TestSuiteLoader {
 
     private final TestSuiteDescriptor testSuiteDescriptor;
     private final String              scriptResourceName;
+    private final Config              config;
 
-    public Base(String scriptResourceName, Class<?> driverClass) {
-      this.scriptResourceName = scriptResourceName;
-      this.testSuiteDescriptor = loadTestSuiteDescriptor(driverClass, scriptResourceName);
+    public Base(Config config) {
+      this.config = config;
+      this.scriptResourceName = config.getScriptResourceName();
+      this.testSuiteDescriptor = loadTestSuiteDescriptor(config);
     }
 
     @Override
@@ -40,11 +43,11 @@ public interface TestSuiteLoader {
       return this.testSuiteDescriptor;
     }
 
-    abstract protected TestSuiteDescriptor loadTestSuiteDescriptor(Class<?> driverClass, String resourceName);
+    abstract protected TestSuiteDescriptor loadTestSuiteDescriptor(Config config);
   }
 
   interface Factory {
-    TestSuiteLoader create(String resourceName, Class<?> driverClass);
+    TestSuiteLoader create(Config config);
 
     static Factory create(Class<? extends Factory> klass) {
       try {

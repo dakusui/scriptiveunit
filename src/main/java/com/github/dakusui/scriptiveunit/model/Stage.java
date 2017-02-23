@@ -1,6 +1,7 @@
 package com.github.dakusui.scriptiveunit.model;
 
 import com.github.dakusui.jcunit.core.tuples.Tuple;
+import com.github.dakusui.scriptiveunit.core.Config;
 import com.github.dakusui.scriptiveunit.model.statement.Statement;
 
 public interface Stage {
@@ -15,6 +16,8 @@ public interface Stage {
   <T> T getArgument(int index);
 
   int sizeOfArguments();
+
+  Config getConfig();
 
   enum Type {
     TOPLEVEL,
@@ -62,6 +65,11 @@ public interface Stage {
         @Override
         public int sizeOfArguments() {
           throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public Config getConfig() {
+          return testSuiteDescriptor.getConfig();
         }
       };
     }

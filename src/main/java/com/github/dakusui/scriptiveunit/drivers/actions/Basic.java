@@ -4,8 +4,10 @@ import com.github.dakusui.actionunit.Action;
 import com.github.dakusui.actionunit.Actions;
 import com.github.dakusui.scriptiveunit.annotations.ReflectivelyReferenced;
 import com.github.dakusui.scriptiveunit.annotations.Scriptable;
-import com.github.dakusui.scriptiveunit.model.func.Func;
 import com.github.dakusui.scriptiveunit.model.Stage;
+import com.github.dakusui.scriptiveunit.model.func.Func;
+
+import java.util.Objects;
 
 import static java.util.Arrays.stream;
 import static java.util.stream.Collectors.toList;
@@ -64,5 +66,20 @@ public class Basic {
           }
         }
     );
+  }
+
+  @ReflectivelyReferenced
+  @Scriptable
+  public final Func<Action> tag(Func<String> s) {
+    return input -> Actions.simple(new Runnable() {
+      @Override
+      public void run() {
+      }
+
+      @Override
+      public String toString() {
+        return Objects.toString(s.apply(input));
+      }
+    });
   }
 }

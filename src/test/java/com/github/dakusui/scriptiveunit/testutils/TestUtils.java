@@ -10,7 +10,7 @@ public enum TestUtils {
   }
 
   public static void configureScriptNameSystemProperty(String scriptName, Class driverClass) {
-    String scriptSystemPropertyKey = Config.create(driverClass, System.getProperties()).getScriptSystemPropertyKey();
+    String scriptSystemPropertyKey = new Config.Builder(driverClass, System.getProperties()).build().getScriptResourceNameKey();
     System.setProperty(scriptSystemPropertyKey, scriptName);
   }
 }

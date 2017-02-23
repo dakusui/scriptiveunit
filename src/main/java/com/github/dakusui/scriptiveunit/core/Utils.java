@@ -164,6 +164,13 @@ public enum Utils {
     return target;
   }
 
+  public static <V> V check(V target, Predicate<? super V> predicate, String fmt, Object... args) {
+    if (!requireNonNull(predicate).test(target))
+      throw new ScriptiveUnitException(String.format(fmt, args));
+    return target;
+  }
+
+
   public static BigDecimal toBigDecimal(Number number) {
     if (number instanceof BigDecimal)
       return BigDecimal.class.cast(number);

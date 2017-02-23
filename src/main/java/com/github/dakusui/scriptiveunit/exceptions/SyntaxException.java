@@ -15,6 +15,16 @@ public class SyntaxException extends ScriptiveUnitException {
     super(message);
   }
 
+  public static Supplier<SyntaxException> systemAttributeNotFound(String attributeName, Stage context, Iterable<String> knownAttributeNames) {
+    return () -> {
+      throw new SyntaxException(format(
+          "Attribute '%s' is accessed in '%s', but not found in your test case. Known attribute names are %s'",
+          attributeName,
+          context.getType().toString().toLowerCase(),
+          knownAttributeNames));
+    };
+  }
+
   public static Supplier<SyntaxException> attributeNotFound(String attributeName, Stage context, Iterable<String> knownAttributeNames) {
     return () -> {
       throw new SyntaxException(format(
@@ -59,5 +69,9 @@ public class SyntaxException extends ScriptiveUnitException {
 
   public static SyntaxException undefinedFactor(String factorName, Object context) {
     throw new SyntaxException(format("Undefined factor name '%s' was used in %s", factorName, context));
+  }
+
+  public static SyntaxException systemAttributeNotFound(String attr, Stage input) {
+    throw new SyntaxException(format("Unknown system attribute '%s' was accessed in '%s'", attr, input));
   }
 }
