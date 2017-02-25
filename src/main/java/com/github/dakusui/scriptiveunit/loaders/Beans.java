@@ -12,6 +12,7 @@ import com.github.dakusui.jcunit.framework.TestCase;
 import com.github.dakusui.jcunit.framework.TestSuite;
 import com.github.dakusui.jcunit.plugins.caengines.CoveringArrayEngine;
 import com.github.dakusui.scriptiveunit.GroupedTestItemRunner.Type;
+import com.github.dakusui.scriptiveunit.Session;
 import com.github.dakusui.scriptiveunit.core.Config;
 import com.github.dakusui.scriptiveunit.core.Utils;
 import com.github.dakusui.scriptiveunit.model.*;
@@ -26,8 +27,8 @@ import java.lang.reflect.InvocationTargetException;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
-import java.util.function.Supplier;
 
 import static com.github.dakusui.actionunit.Actions.*;
 import static com.github.dakusui.scriptiveunit.core.Utils.*;
@@ -79,23 +80,23 @@ public enum Beans {
     }
 
 
-    public TestSuiteDescriptor create(Config config) {
+    public TestSuiteDescriptor create(Session session) {
       try {
         return new TestSuiteDescriptor() {
-          private Object driverObject = config.getDriverClass().newInstance();
-          private final Stage topLevel = Stage.Type.TOPLEVEL.create(this, new Tuple.Builder().build(), null);
-          private Statement setUpBeforeAllStatement = this.topLevel.getStatementFactory().create(setUpBeforeAllClause != null ? setUpBeforeAllClause : NOP_CLAUSE);
-          private Statement setUpStatement = this.topLevel.getStatementFactory().create(setUpClause != null ? setUpClause : NOP_CLAUSE);
-          private List<? extends TestOracle> testOracles = testOracleBeanList.stream().map(BaseForTestOracle::create).collect(toList());
-          private Statement tearDownStatement = this.topLevel.getStatementFactory().create(tearDownClause != null ? tearDownClause : NOP_CLAUSE);
-          private Statement tearDownAfterAllStatement = this.topLevel.getStatementFactory().create(tearDownAfterAllClause != null ? tearDownAfterAllClause : NOP_CLAUSE);
+          Stage topLevel = session.createTopLevelStage();
+          private Statement setUpBeforeAllStatement = topLevel.getStatementFactory().create(setUpBeforeAllClause != null ? setUpBeforeAllClause : NOP_CLAUSE);
+          private Statement setUpStatement = topLevel.getStatementFactory().create(setUpClause != null ? setUpClause : NOP_CLAUSE);
+          private List<? extends TestOracle> testOracles = createTestOracles();
+
+          private List<TestOracle> createTestOracles() {
+            AtomicInteger i = new AtomicInteger(0);
+            return testOracleBeanList.stream().map((BaseForTestOracle each) -> each.create(i.getAndIncrement(), session)).collect(toList());
+          }
+
+          private Statement tearDownStatement = topLevel.getStatementFactory().create(tearDownClause != null ? tearDownClause : NOP_CLAUSE);
+          private Statement tearDownAfterAllStatement = topLevel.getStatementFactory().create(tearDownAfterAllClause != null ? tearDownAfterAllClause : NOP_CLAUSE);
 
           List<IndexedTestCase> testCases = createTestCases(this);
-
-          @Override
-          public Object getDriverObject() {
-            return driverObject;
-          }
 
           @Override
           public String getDescription() {
@@ -104,7 +105,7 @@ public enum Beans {
 
           @Override
           public FactorSpaceDescriptor getFactorSpaceDescriptor() {
-            return factorSpaceBean.create(config, new Statement.Factory(this));
+            return factorSpaceBean.create(session.getConfig(), new Statement.Factory(session));
           }
 
           @Override
@@ -154,7 +155,7 @@ public enum Beans {
 
           @Override
           public Config getConfig() {
-            return config;
+            return session.getConfig();
           }
 
           private Func<Action> createActionFactory(String actionName, Statement statement) {
@@ -291,42 +292,7 @@ public enum Beans {
                 return new TestSuite.Predicate("(constraint)", Statement.Utils.involvedParameters(statement).toArray(new String[0])) {
                   @Override
                   public boolean apply(Tuple in) {
-                    return requireNonNull(func.apply(new Stage() {
-                      @Override
-                      public Statement.Factory getStatementFactory() {
-                        return statementFactory;
-                      }
-
-                      @Override
-                      public Tuple getTestCaseTuple() {
-                        return in;
-                      }
-
-                      @Override
-                      public <RESPONSE> RESPONSE response() {
-                        throw new UnsupportedOperationException();
-                      }
-
-                      @Override
-                      public Type getType() {
-                        return GIVEN;
-                      }
-
-                      @Override
-                      public <T> T getArgument(int index) {
-                        throw new UnsupportedOperationException();
-                      }
-
-                      @Override
-                      public int sizeOfArguments() {
-                        throw new UnsupportedOperationException();
-                      }
-
-                      @Override
-                      public Config getConfig() {
-                        return config;
-                      }
-                    }));
+                    return requireNonNull(func.apply(Stage.Factory.createConstraintGenerationStage(config, statementFactory, in)));
                   }
                 };
               })
@@ -371,28 +337,31 @@ public enum Beans {
      * objects) have their internal states and not created every time the oracles
      * are performed.
      */
-    public TestOracle create() {
+    public TestOracle create(int index, Session session) {
       //noinspection unchecked,Guava
       return new TestOracle() {
+        @Override
+        public int getIndex() {
+          return index;
+        }
         @Override
         public String getDescription() {
           return description;
         }
-
         /**
          * Warning: Created action is not thread safe. Users should create 1 action for 1 thread.
          */
         @Override
-        public Supplier<Action> createTestActionSupplier(int itemId, Tuple testCaseTuple, TestSuiteDescriptor testSuiteDescriptor) {
-          List<Factor> factors = testSuiteDescriptor.getFactorSpaceDescriptor().getFactors();
-          String testSuiteDescription = testSuiteDescriptor.getDescription();
-          return () -> sequential(
-              format("%03d: %s", itemId, template(description, append(testCaseTuple, "@TESTSUITE", testSuiteDescription))),
-              named("Before", createActionFromClause(beforeClause, BEFORE, testCaseTuple, testSuiteDescriptor)),
+        public Function<Session, Action> createTestActionFactory(TestItem testItem, Tuple testCaseTuple) {
+          int itemId = testItem.getTestItemId();
+          Report report = session.createReport(testItem);
+          return (Session session) -> sequential(
+              format("%03d: %s", itemId, template(description, append(testCaseTuple, "@TESTSUITE", session.getDescriptor().getDescription()))),
+              named("Before", createActionFromClause(BEFORE, beforeClause, testCaseTuple, report)),
               attempt(
-                  Actions.<Tuple, TestResult>test("Verify with: " + Utils.filterSingleLevelFactorsOut(testCaseTuple, factors))
+                  Actions.<Tuple, TestResult>test("Verify with: " + Utils.filterSingleLevelFactorsOut(testCaseTuple, session.getDescriptor().getFactorSpaceDescriptor().getFactors()))
                       .given(new Source<Tuple>() {
-                        Stage givenStage = GIVEN.create(testSuiteDescriptor, testCaseTuple, null);
+                        Stage givenStage = Stage.Factory.createOracleLevelStage(GIVEN, session, testCaseTuple, report);
                         Statement givenStatement = givenStage.getStatementFactory().create(givenClause);
                         FuncInvoker funcInvoker = new FuncInvoker.Impl(0);
 
@@ -426,7 +395,7 @@ public enum Beans {
 
                         @Override
                         public TestResult apply(Tuple testCase, Context context) {
-                          Stage whenStage = WHEN.create(testSuiteDescriptor, testCase, null);
+                          Stage whenStage = Stage.Factory.createOracleLevelStage(WHEN, session, testCase, report);
                           return TestResult.create(
                               testCase,
                               Beans.<Boolean>toFunc(
@@ -445,7 +414,7 @@ public enum Beans {
 
                         @Override
                         public void apply(TestResult testResult, Context context) {
-                          Stage thenStage = THEN.create(testSuiteDescriptor, testResult.getTestCase(), testResult.getOutput());
+                          Stage thenStage = Stage.Factory.createVerificationStage(session, testResult.getTestCase(), testResult.getOutput(), report);
                           assertThat(
                               thenStage,
                               new BaseMatcher<Stage>() {
@@ -483,22 +452,21 @@ public enum Beans {
                         }
                       }).build())
                   .ensure(
-                      named("After", createActionFromClause(afterClause, AFTER, testCaseTuple, testSuiteDescriptor)))
+                      named("After", createActionFromClause(AFTER, afterClause, testCaseTuple, report)))
                   .build()
           );
         }
 
-        private Action createActionFromClause(List<Object> clause, Stage.Type stageType, final Tuple testCaseTuple, final TestSuiteDescriptor testSuiteDescriptor) {
+        private Action createActionFromClause(Stage.Type stageType, List<Object> clause, final Tuple testCaseTuple, Report report) {
           if (clause == null)
             return (Action) NOP_CLAUSE;
-          Stage stage = stageType.create(testSuiteDescriptor, testCaseTuple, null);
+          Stage stage = Stage.Factory.createOracleLevelStage(stageType, session, testCaseTuple, report);
           Statement statement = stage.getStatementFactory().create(clause);
           FuncInvoker funcInvoker = new FuncInvoker.Impl(0);
           return Beans.<Action>toFunc(statement, funcInvoker).apply(stage);
         }
       };
     }
-
   }
 
   private static <U> Func<U> toFunc(Statement statement, FuncInvoker funcInvoker) {

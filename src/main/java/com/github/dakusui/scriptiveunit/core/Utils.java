@@ -32,7 +32,6 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import static com.github.dakusui.scriptiveunit.exceptions.SyntaxException.*;
-import static com.google.common.base.Preconditions.checkState;
 import static java.lang.Character.*;
 import static java.lang.ClassLoader.getSystemResourceAsStream;
 import static java.lang.String.format;
@@ -42,6 +41,20 @@ import static java.util.stream.Collectors.toList;
 
 public enum Utils {
   ;
+
+  public static Runnable prettify(String prettyString, Runnable runnable) {
+    return new Runnable() {
+      @Override
+      public void run() {
+        runnable.run();
+      }
+
+      @Override
+      public String toString() {
+        return prettyString;
+      }
+    };
+  }
 
   public static String template(String s, Map<String, Object> map) {
     String ret = s;
@@ -144,7 +157,8 @@ public enum Utils {
   public static <T> Constructor<T> getConstructor(Class<? extends T> clazz) {
     Constructor[] constructors = clazz.getConstructors();
     checkState(
-        constructors.length == 1,
+        constructors,
+        constructors1 -> constructors1.length == 1,
         "There must be 1 and only 1 public constructor in order to use '%s' as a JCUnit plug-in(%s found). Also please make sure the class is public and static.",
         clazz,
         constructors.length
@@ -170,6 +184,17 @@ public enum Utils {
     return target;
   }
 
+  public static <V> V checkState(V target, Predicate<? super V> predicate) {
+    if (predicate.test(target))
+      return target;
+    throw new IllegalStateException();
+  }
+
+  public static <V> V checkState(V target, Predicate<? super V> predicate, String fmt, Object... args) {
+    if (predicate.test(target))
+      return target;
+    throw new IllegalStateException(String.format(fmt, args));
+  }
 
   public static BigDecimal toBigDecimal(Number number) {
     if (number instanceof BigDecimal)

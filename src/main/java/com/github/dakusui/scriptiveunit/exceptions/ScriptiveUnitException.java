@@ -18,7 +18,7 @@ public class ScriptiveUnitException extends RuntimeException {
     super(nested);
   }
 
-  public static ScriptiveUnitException wrap(Throwable t, String format, String... args) {
+  public static ScriptiveUnitException wrap(Throwable t, String format, Object... args) {
     throw new ScriptiveUnitException(format(format, (Object[]) args), requireNonNull(t));
   }
 

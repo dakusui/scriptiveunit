@@ -3,13 +3,14 @@ package com.github.dakusui.scriptiveunit.doc;
 import com.github.dakusui.actionunit.visitors.ActionPrinter.Writer;
 import com.github.dakusui.actionunit.visitors.ActionPrinter.Writer.Std;
 import com.github.dakusui.scriptiveunit.GroupedTestItemRunner;
+import com.github.dakusui.scriptiveunit.Session;
 import com.github.dakusui.scriptiveunit.annotations.Doc;
 import com.github.dakusui.scriptiveunit.annotations.Load;
 import com.github.dakusui.scriptiveunit.core.Config;
 import com.github.dakusui.scriptiveunit.core.ObjectMethod;
 import com.github.dakusui.scriptiveunit.core.Utils;
 import com.github.dakusui.scriptiveunit.exceptions.ScriptiveUnitException;
-import com.github.dakusui.scriptiveunit.loaders.json.JsonBasedTestSuiteLoader;
+import com.github.dakusui.scriptiveunit.loaders.json.JsonBasedLoader;
 import org.reflections.Reflections;
 import org.reflections.scanners.ResourcesScanner;
 
@@ -200,8 +201,8 @@ public interface Help {
                   Config config = new Config.Builder(driverClass, System.getProperties())
                       .withScriptResourceName(name)
                       .build();
-                  return singletonList(new JsonBasedTestSuiteLoader(config) {
-                  }.getTestSuiteDescriptor().getDescription());
+                  return singletonList(Session.create(new JsonBasedLoader(config) {
+                  }).getDescriptor().getDescription());
                 } catch (Exception e) {
                   throw wrap(e);
                 }

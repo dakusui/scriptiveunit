@@ -6,6 +6,7 @@ import com.github.dakusui.scriptiveunit.model.Stage;
 import com.github.dakusui.scriptiveunit.model.func.Func;
 import com.google.common.collect.Iterables;
 
+import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -45,5 +46,17 @@ public class Collections {
       Iterable<E> collection = requireNonNull(iterable.apply(input));
       return (Function<E, Boolean>) entry -> Iterables.contains(collection, entry);
     };
+  }
+
+  @ReflectivelyReferenced
+  @Scriptable
+  public Func<Object> writeTo(Func<Map<String, Object>> map, Func<String> itemName, Func<Object> itemValue) {
+    return input -> requireNonNull(map.apply(input)).put(itemName.apply(input), itemValue.apply(input));
+  }
+
+  @ReflectivelyReferenced
+  @Scriptable
+  public Func<Object> readFrom(Func<Map<String, Object>> map, Func<String> itemName) {
+    return input -> requireNonNull(map.apply(input)).get(itemName.apply(input));
   }
 }

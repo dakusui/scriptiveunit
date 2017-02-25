@@ -10,7 +10,6 @@ import com.github.dakusui.scriptiveunit.annotations.Scriptable;
 import com.github.dakusui.scriptiveunit.core.Config;
 import com.github.dakusui.scriptiveunit.core.ObjectMethod;
 import com.github.dakusui.scriptiveunit.core.Utils;
-import com.github.dakusui.scriptiveunit.loaders.TestSuiteLoader;
 import com.github.dakusui.scriptiveunit.model.Stage;
 import com.github.dakusui.scriptiveunit.model.TestSuiteDescriptor;
 import org.junit.internal.runners.statements.RunBefores;
@@ -26,6 +25,9 @@ import java.util.List;
 import java.util.Map;
 
 import static com.github.dakusui.actionunit.Utils.createTestClassMock;
+import static com.github.dakusui.scriptiveunit.core.Utils.performActionWithLogging;
+import static com.github.dakusui.scriptiveunit.model.Stage.Type.SETUP_BEFORE_ALL;
+import static com.github.dakusui.scriptiveunit.model.Stage.Type.TEARDOWN_AFTER_ALL;
 import static com.google.common.collect.Lists.newLinkedList;
 import static java.util.Objects.requireNonNull;
 import static java.util.stream.Collectors.toList;
@@ -38,8 +40,8 @@ public class ScriptiveUnit extends Parameterized {
   /**
    * Test runners each of which runs a test case represented by an action.
    */
-  private final List<Runner>    runners;
-  private final TestSuiteLoader testSuiteLoader;
+  private final List<Runner> runners;
+  private final Session      session;
 
   /**
    * Only called reflectively. Do not use programmatically.
@@ -59,21 +61,21 @@ public class ScriptiveUnit extends Parameterized {
    */
   @ReflectivelyReferenced
   protected ScriptiveUnit(Class<?> klass, Config config) throws Throwable {
-    this(klass, createTestSuiteLoader(config));
+    this(klass, createTestSuiteDescriptorLoader(config));
   }
 
-  public ScriptiveUnit(Class<?> klass, TestSuiteLoader testSuiteLoader) throws Throwable {
+  public ScriptiveUnit(Class<?> klass, TestSuiteDescriptor.Loader loader) throws Throwable {
     super(klass);
-    this.testSuiteLoader = testSuiteLoader;
-    this.runners = newLinkedList(GroupedTestItemRunner.createRunners(this.testSuiteLoader.getTestSuiteDescriptor()));
+    this.session = Session.create(loader);
+    this.runners = newLinkedList(session.createTestItemRunners());
   }
 
   @Override
   public String getName() {
-    return this.testSuiteLoader.getScriptResourceName()
+    return this.session.getDescriptor().getConfig().getScriptResourceName()
         .replaceAll(".+/", "")
         .replaceAll("\\.[^.]*$", "")
-        + ":" + this.testSuiteLoader.getTestSuiteDescriptor().getDescription();
+        + ":" + this.session.getDescriptor().getDescription();
   }
 
 
@@ -92,10 +94,13 @@ public class ScriptiveUnit extends Parameterized {
     return new RunBefores(statement, Collections.emptyList(), null) {
       @Override
       public void evaluate() throws Throwable {
-        Utils.performActionWithLogging(createSetUpBeforeAllAction(
-            testSuiteLoader.getTestSuiteDescriptor(),
-            createCommonFixture(testSuiteLoader.getTestSuiteDescriptor().getFactorSpaceDescriptor().getFactors()))
-        );
+        performActionWithLogging(
+            createSuiteLevelAction(
+                SETUP_BEFORE_ALL,
+                session,
+                createCommonFixture(
+                    session.getDescriptor().getFactorSpaceDescriptor().getFactors()
+                )));
         super.evaluate();
       }
     };
@@ -106,10 +111,13 @@ public class ScriptiveUnit extends Parameterized {
     return new RunBefores(statement, Collections.emptyList(), null) {
       @Override
       public void evaluate() throws Throwable {
+        TestSuiteDescriptor descriptor = session.getDescriptor();
         super.evaluate();
-        Utils.performActionWithLogging(createTearDownAfterAllAction(
-            testSuiteLoader.getTestSuiteDescriptor(),
-            createCommonFixture(testSuiteLoader.getTestSuiteDescriptor().getFactorSpaceDescriptor().getFactors()))
+        performActionWithLogging(
+            createSuiteLevelAction(
+                TEARDOWN_AFTER_ALL,
+                session,
+                createCommonFixture(descriptor.getFactorSpaceDescriptor().getFactors()))
         );
       }
     };
@@ -123,19 +131,19 @@ public class ScriptiveUnit extends Parameterized {
     return b.build();
   }
 
-  private static Action createSetUpBeforeAllAction(TestSuiteDescriptor testSuiteDescriptor, Tuple commonFixture) {
-    return testSuiteDescriptor.getSetUpBeforeAllActionFactory().apply(Stage.Type.SETUP_BEFORE_ALL.create(testSuiteDescriptor, commonFixture, null));
-  }
-
-  private static Action createTearDownAfterAllAction(TestSuiteDescriptor testSuiteDescriptor, Tuple commonFixture) {
-    return testSuiteDescriptor.getTearDownAfterAllActionFactory().apply(Stage.Type.TEARDOWN_AFETR_ALL.create(testSuiteDescriptor, commonFixture, null));
+  private static Action createSuiteLevelAction(Stage.Type stageType, Session session, Tuple commonFixture) {
+    return stageType.getSuiteLevelActionFactory(session).apply(Stage.Factory.createSuiteLevelStage(stageType, session, commonFixture));
   }
 
 
-  private static TestSuiteLoader createTestSuiteLoader(Config config) {
-    return TestSuiteLoader.Factory
-        .create(getAnnotationWithDefault(config.getDriverClass(), Load.DEFAULT_INSTANCE).with())
-        .create(config);
+    private static TestSuiteDescriptor.Loader createTestSuiteDescriptorLoader(Config config) {
+    return TestSuiteDescriptor.Loader.createInstance(
+        getAnnotationWithDefault(
+            config.getDriverClass(),
+            Load.DEFAULT_INSTANCE
+        ).with(),
+        config
+    );
   }
 
   public static List<ObjectMethod> getAnnotatedMethodsFromImportedFieldsInObject(Object object) {
