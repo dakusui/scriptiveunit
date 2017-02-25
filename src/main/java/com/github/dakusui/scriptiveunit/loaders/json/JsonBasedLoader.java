@@ -1,7 +1,8 @@
 package com.github.dakusui.scriptiveunit.loaders.json;
 
+import com.github.dakusui.scriptiveunit.Session;
+import com.github.dakusui.scriptiveunit.annotations.ReflectivelyReferenced;
 import com.github.dakusui.scriptiveunit.core.Config;
-import com.github.dakusui.scriptiveunit.loaders.TestSuiteLoader;
 import com.github.dakusui.scriptiveunit.loaders.json.JsonBeans.TestSuiteDescriptorBean;
 import com.github.dakusui.scriptiveunit.model.TestSuiteDescriptor;
 import org.codehaus.jackson.JsonNode;
@@ -18,7 +19,7 @@ import static com.github.dakusui.scriptiveunit.core.Utils.*;
 import static com.github.dakusui.scriptiveunit.exceptions.ScriptiveUnitException.wrap;
 import static com.github.dakusui.scriptiveunit.exceptions.SyntaxException.*;
 
-public class JsonBasedTestSuiteLoader extends TestSuiteLoader.Base {
+public class JsonBasedLoader extends TestSuiteDescriptor.Loader.Base {
 
   private static final String EXTENDS_KEYWORD = "$extends";
   /**
@@ -26,17 +27,23 @@ public class JsonBasedTestSuiteLoader extends TestSuiteLoader.Base {
    */
   private static final String DEFAULTS_JSON   = "defaults/values.json";
 
-  @SuppressWarnings("WeakerAccess")
-  protected JsonBasedTestSuiteLoader(Config config) {
+  @ReflectivelyReferenced
+  public JsonBasedLoader(Config config) {
     super(config);
   }
 
   @Override
-  protected TestSuiteDescriptor loadTestSuiteDescriptor(Config config) {
+  public TestSuiteDescriptor loadTestSuiteDescriptor(Session session) {
     try {
       return new ObjectMapper()
-          .readValue(readScript(config.getScriptResourceName()), TestSuiteDescriptorBean.class)
-          .create(config);
+          .readValue(
+              readScript(session
+                      .getConfig()
+                      .getScriptResourceName()
+              ),
+              TestSuiteDescriptorBean.class
+          )
+          .create(session);
     } catch (IOException e) {
       throw wrap(e);
     }
@@ -85,12 +92,5 @@ public class JsonBasedTestSuiteLoader extends TestSuiteLoader.Base {
 
   private ArrayNode checkArrayNode(JsonNode curr) {
     return (ArrayNode) check(curr, v -> curr.isArray(), () -> nonArray(curr));
-  }
-
-  public static class Factory implements TestSuiteLoader.Factory {
-    @Override
-    public TestSuiteLoader create(Config config) {
-      return new JsonBasedTestSuiteLoader(config);
-    }
   }
 }

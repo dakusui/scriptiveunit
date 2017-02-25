@@ -2,11 +2,14 @@ package com.github.dakusui.scriptiveunit.model;
 
 import com.github.dakusui.actionunit.Action;
 import com.github.dakusui.jcunit.core.tuples.Tuple;
+import com.github.dakusui.scriptiveunit.Session;
 
-import java.util.function.Supplier;
+import java.util.function.Function;
 
 public interface TestOracle {
+  int getIndex();
+
   String getDescription();
 
-  Supplier<Action> createTestActionSupplier(int itemId, Tuple testCase, TestSuiteDescriptor testSuiteDescriptor);
+  Function<Session, Action> createTestActionFactory(TestItem testItem, Tuple testCaseTuple);
 }

@@ -1,9 +1,11 @@
 package com.github.dakusui.scriptiveunit.model.statement;
 
+import com.github.dakusui.jcunit.core.tuples.Tuple;
+import com.github.dakusui.scriptiveunit.Session;
+import com.github.dakusui.scriptiveunit.core.Config;
 import com.github.dakusui.scriptiveunit.exceptions.SyntaxException;
 import com.github.dakusui.scriptiveunit.exceptions.TypeMismatch;
 import com.github.dakusui.scriptiveunit.model.Stage;
-import com.github.dakusui.scriptiveunit.model.TestSuiteDescriptor;
 import com.github.dakusui.scriptiveunit.model.func.Func;
 import com.github.dakusui.scriptiveunit.model.func.FuncHandler;
 import com.github.dakusui.scriptiveunit.model.func.FuncInvoker;
@@ -12,7 +14,9 @@ import com.google.common.collect.Lists;
 import java.util.List;
 import java.util.Objects;
 
+import static com.github.dakusui.scriptiveunit.core.Utils.checkState;
 import static com.github.dakusui.scriptiveunit.exceptions.TypeMismatch.headOfCallMustBeString;
+import static com.github.dakusui.scriptiveunit.model.Stage.Type.CONSTRAINT_GENERATION;
 import static java.util.Objects.requireNonNull;
 
 public interface Statement {
@@ -33,11 +37,11 @@ public interface Statement {
     private final Func.Factory      funcFactory;
     private final FuncHandler       funcHandler;
 
-    public Factory(TestSuiteDescriptor testSuiteDescriptor) {
+    public Factory(Session session) {
       this.funcHandler = new FuncHandler();
       this.funcFactory = new Func.Factory(funcHandler);
       this.argumentsFactory = new Arguments.Factory(this);
-      this.formFactory = new Form.Factory(testSuiteDescriptor, funcFactory, this);
+      this.formFactory = new Form.Factory(session, funcFactory, this);
     }
 
     public Statement create(Object object) throws TypeMismatch {

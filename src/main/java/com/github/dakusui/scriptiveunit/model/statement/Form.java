@@ -1,9 +1,9 @@
 package com.github.dakusui.scriptiveunit.model.statement;
 
 import com.github.dakusui.scriptiveunit.ScriptiveUnit;
+import com.github.dakusui.scriptiveunit.Session;
 import com.github.dakusui.scriptiveunit.annotations.Doc;
 import com.github.dakusui.scriptiveunit.core.ObjectMethod;
-import com.github.dakusui.scriptiveunit.model.TestSuiteDescriptor;
 import com.github.dakusui.scriptiveunit.model.func.Func;
 import com.github.dakusui.scriptiveunit.model.func.FuncInvoker;
 
@@ -24,14 +24,14 @@ public interface Form {
   boolean isAccessor();
 
   class Factory {
-    private final Object              driver;
-    private final Func.Factory        funcFactory;
-    private final TestSuiteDescriptor testSuiteDescriptor;
-    private final Statement.Factory   statementFactory;
+    private final Object            driver;
+    private final Func.Factory      funcFactory;
+    private final Session           session;
+    private final Statement.Factory statementFactory;
 
-    public Factory(TestSuiteDescriptor testSuiteDescriptor, Func.Factory funcFactory, Statement.Factory statementFactory) {
-      this.testSuiteDescriptor = testSuiteDescriptor;
-      this.driver = requireNonNull(testSuiteDescriptor.getDriverObject());
+    public Factory(Session session, Func.Factory funcFactory, Statement.Factory statementFactory) {
+      this.session = requireNonNull(session);
+      this.driver = requireNonNull(session.getConfig().getDriverObject());
       this.funcFactory = funcFactory;
       this.statementFactory = statementFactory;
     }
@@ -45,7 +45,7 @@ public interface Form {
     }
 
     private Form createUserForm(String name) {
-      List<Object> userFormClause = testSuiteDescriptor.getUserDefinedFormClauses().get(name);
+      List<Object> userFormClause = session.getDescriptor().getUserDefinedFormClauses().get(name);
       if (userFormClause == null)
         return null;
       return new UserForm(rename(Factory.this.getObjectMethodFromDriver("userFunc"), name), userFormClause);

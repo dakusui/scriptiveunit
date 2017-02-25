@@ -1,0 +1,18 @@
+{
+  "description":"Simple",
+  "factorSpace": {
+    "factors":{"f":[50,150]}
+  },
+  "testOracles": [
+    {
+      "description": "Report example",
+      "given": ["always"],
+      "when": ["nop"],
+      "then": [">",
+        ["write_report", "valueOfF", ["attr", "f"]],
+        ["write_report", "threshold", 100]
+      ],
+      "after": ["submit"]
+    }
+  ]
+}

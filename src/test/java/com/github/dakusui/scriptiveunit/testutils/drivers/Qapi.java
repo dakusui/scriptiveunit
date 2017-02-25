@@ -9,7 +9,7 @@ import com.github.dakusui.scriptiveunit.annotations.ReflectivelyReferenced;
 import com.github.dakusui.scriptiveunit.doc.Help;
 import com.github.dakusui.scriptiveunit.drivers.*;
 import com.github.dakusui.scriptiveunit.drivers.actions.Basic;
-import com.github.dakusui.scriptiveunit.loaders.json.JsonBasedTestSuiteLoader;
+import com.github.dakusui.scriptiveunit.loaders.json.JsonBasedLoader;
 import com.google.common.collect.Maps;
 import org.junit.Rule;
 import org.junit.rules.TestRule;
@@ -31,7 +31,7 @@ import static java.util.Objects.requireNonNull;
  * A driver example.
  */
 @Load(
-    scriptPackagePrefix = "tests", scriptNamePattern = ".*\\.json", with = JsonBasedTestSuiteLoader.Factory.class)
+    scriptPackagePrefix = "tests", scriptNamePattern = ".*\\.json", with = JsonBasedLoader.class)
 @RunWith(ScriptiveUnit.class)
 public class Qapi {
   @ReflectivelyReferenced

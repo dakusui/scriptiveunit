@@ -78,9 +78,8 @@ public interface Func<O> extends
 
     private InvocationHandler createInvocationHandler(FuncInvoker invoker, String name, Func target) {
       return (Object proxy, Method method, Object[] args) -> {
-        check("apply".equals(method.getName()),
-            fail("This should only be executed on 'apply' method.")
-        );
+        if (!"apply".equals(method.getName()))
+          return method.invoke(target, args);
         check(args.length == 1 && args[0] instanceof Stage,
             fail("The argument should be an array of length 1 and its first element should be '%s', but: %s",
                 Arrays.toString(args),

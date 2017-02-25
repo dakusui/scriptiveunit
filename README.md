@@ -1,7 +1,7 @@
 # ScriptiveUnit
 
-```ScriptiveUnit``` is a generic framework to build a JSON based DSTL for input-output
-systems such as search engines.
+```ScriptiveUnit``` is a generic framework to build a JSON based DSTL (domain specific testing language)
+for mainly input-output systems such as search engines.
 
 # Installation
 Include following xml fragment in your ```pom.xml```.
@@ -15,7 +15,7 @@ Include following xml fragment in your ```pom.xml```.
     </dependency>
 ```
 
-For the released versions, you can refer to [this page](https://github.com/dakusui/scriptiveunit/releases).
+For the released **ScriptiveUnit version**s, you can refer to [this page](https://github.com/dakusui/scriptiveunit/releases).
 
 # Usage
 Following is a diagram that illustrates how engineers and assets are
@@ -29,6 +29,7 @@ interacting each other in an ecosystem where ScriptiveUnit is utilized.
 Full version of this example is found [here](src/test/resources/tests/regular/qapi.json).
 
 ```javascript
+
     {
         "description":"An example test suite to Query-Result model on ScriptiveUnit",
         "factorSpace": {
@@ -77,6 +78,7 @@ Full version of this example is found [here](src/test/resources/tests/regular/qa
 Full version of this example is found [here](src/test/java/com/github/dakusui/scriptiveunit/drivers/Qapi.java).
 
 ```java
+
     @Load(with = JsonBasedTestSuiteLoader.Factory.class)
     @RunWith(ScriptiveUnit.class)
     public class Qapi {
@@ -99,24 +101,13 @@ Full version of this example is found [here](src/test/java/com/github/dakusui/sc
 
         @Override
         protected Response service(Request request) {
-          List<Entry> matched = new LinkedList<>();
-          L:
-          for (Entry eachEntry : Entry.values()) {
-            for (Request.Term eachTerm : request.getTerms()) {
-              if (eachTerm.matches(eachEntry)) {
-                matched.add(eachEntry);
-                continue L;
-              }
-            }
-          }
+          ...
           return new Response(matched);
         }
 
         @Override
         protected Request override(Map<String, Object> values, Request request) {
-          Map<String, Object> work = Maps.newTreeMap();
-          work.putAll(request.toMap());
-          work.putAll(values);
+          ...
           return buildRequest(work);
         }
       };
@@ -131,29 +122,18 @@ Full version of this example is found [here](src/test/java/com/github/dakusui/sc
       public static class Response extends LinkedList<Entry> implements Iterable<Entry> {
         ...
       }
-
-      @ReflectivelyReferenced
-      public enum Entry {
-        ITEM_01("ヒータ", 15_000),
-        ITEM_02("ヒーター", 14_800),
-        ITEM_03("ストーブ", 16_800),
-        ITEM_03a("ストーブ用ポンプ", 200),
-        ITEM_03b("ストーブ用替え扉", 480),
-        ITEM_04("ヒーター", 9_800),
-        ITEM_05("iPhone 7 ケース", 2_000),
-        ITEM_06("iPhone 7 シルバー", 48_000),
-        ITEM_07("iPhone 6 ケース", 1_980),
-        ITEM_08("iPhone 6Plus シルバー", 68_000),;
-        ...
-      }
     }
 ```
+## Output example
+The Script and driver mentioned above will generate test results like following.
+
+<img src="doc/images/screenshot.png" alt="Screenshot" style="width: 800px;"/>
 
 # Future works
-* Fixture support
 * "Regex" factor support
-* "Defmacro" and "Defun" supports
+* Support 'preprocessing'
 * Evaluation inside a JSON object
+* Dependency mechanism
 
 # References
 * [JCUnit](https://github.com/dakusui/jcunit)

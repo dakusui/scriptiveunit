@@ -10,6 +10,7 @@ import com.github.dakusui.scriptiveunit.exceptions.SyntaxException;
 import com.github.dakusui.scriptiveunit.model.Stage;
 import com.github.dakusui.scriptiveunit.model.func.Func;
 import com.github.dakusui.scriptiveunit.model.func.FuncInvoker;
+import com.github.dakusui.scriptiveunit.model.Report;
 import com.github.dakusui.scriptiveunit.model.statement.Statement;
 
 import java.lang.reflect.InvocationTargetException;
@@ -118,6 +119,11 @@ public class Core {
         @Override
         public Config getConfig() {
           return input.getConfig();
+        }
+
+        @Override
+        public Report getReport() {
+          return input.getReport();
         }
       };
       return wrappedStage.getStatementFactory()
