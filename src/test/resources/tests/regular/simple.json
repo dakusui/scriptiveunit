@@ -3,6 +3,8 @@
   "factorSpace": {
     "factors":{"f":[50,150]}
   },
+  "runnerType": "groupByTestFixture",
+  "setUp":["print", "HelloSetup"],
   "testOracles": [
     {
       "description": "Report example",

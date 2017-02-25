@@ -7,10 +7,10 @@ import com.github.dakusui.scriptiveunit.annotations.Scriptable;
 import com.github.dakusui.scriptiveunit.core.Config;
 import com.github.dakusui.scriptiveunit.exceptions.ScriptiveUnitException;
 import com.github.dakusui.scriptiveunit.exceptions.SyntaxException;
+import com.github.dakusui.scriptiveunit.model.Report;
 import com.github.dakusui.scriptiveunit.model.Stage;
 import com.github.dakusui.scriptiveunit.model.func.Func;
 import com.github.dakusui.scriptiveunit.model.func.FuncInvoker;
-import com.github.dakusui.scriptiveunit.model.Report;
 import com.github.dakusui.scriptiveunit.model.statement.Statement;
 
 import java.lang.reflect.InvocationTargetException;
@@ -51,8 +51,9 @@ public class Core {
    * Returns a function to invoke a method of a specified name. The returned value
    * of the method will be returned as the function's value.
    *
-   * @param entryName A name of method to be invoked.
    * @param <E>       Type of the function's value to be returned.
+   * @param entryName A name of method to be invoked.
+   * @param target    A target from which value of {@code entryName} will be returned.
    */
   @ReflectivelyReferenced
   @Scriptable

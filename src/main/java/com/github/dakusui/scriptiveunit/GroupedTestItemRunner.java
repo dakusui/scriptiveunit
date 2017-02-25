@@ -312,20 +312,24 @@ public final class GroupedTestItemRunner extends ParentRunner<Action> {
                                 requireNonNull(createFixtureLevelAction(SETUP, session, input.getTuple()))
                             )
                         ),
-                        testOracle.createTestActionFactory(
-                            TestItem.create(
-                                input.getIndex(),
-                                testOracleId,
-                                input.getIndex()
-                            ),
-                            input.getTuple()
-                        ).apply(session),
-                        named(
-                            format("%03d: Tear down fixture", i),
-                            named(format("fixture: %s", prettifiedTestCaseTuple),
-                                requireNonNull(createFixtureLevelAction(TEARDOWN, session, input.getTuple()))
-                            )
-                        )
+                        Actions
+                            .attempt(
+                                testOracle.createTestActionFactory(
+                                    TestItem.create(
+                                        input.getIndex(),
+                                        testOracleId,
+                                        input.getIndex()
+                                    ),
+                                    input.getTuple()
+                                ).apply(session))
+                            .ensure(
+                                named(
+                                    format("%03d: Tear down fixture", i),
+                                    named(format("fixture: %s", prettifiedTestCaseTuple),
+                                        requireNonNull(createFixtureLevelAction(TEARDOWN, session, input.getTuple()))
+                                    )
+                                ))
+                            .build()
                     );
                   } finally {
                     i++;

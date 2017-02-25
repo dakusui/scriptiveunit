@@ -1,6 +1,9 @@
 package com.github.dakusui.scriptiveunit.core;
 
 import com.github.dakusui.actionunit.Action;
+import com.github.dakusui.actionunit.Context;
+import com.github.dakusui.actionunit.connectors.Pipe;
+import com.github.dakusui.actionunit.connectors.Source;
 import com.github.dakusui.actionunit.visitors.ActionRunner;
 import com.github.dakusui.jcunit.core.factor.Factor;
 import com.github.dakusui.jcunit.core.tuples.Tuple;
@@ -47,6 +50,36 @@ public enum Utils {
       @Override
       public void run() {
         runnable.run();
+      }
+
+      @Override
+      public String toString() {
+        return prettyString;
+      }
+    };
+  }
+
+  public static <T> Source prettify(String prettyString, Source<T> source) {
+    return new Source<T>() {
+      @Override
+      public T apply(Context context) {
+        return source.apply(context);
+      }
+
+      @Override
+      public String toString() {
+        return prettyString;
+      }
+    };
+  }
+
+
+  public static <T, U> Pipe<T, U> prettify(String prettyString, Pipe<T, U> pipe) {
+    return new Pipe<T, U>() {
+
+      @Override
+      public U apply(T t, Context context) {
+        return pipe.apply(t, context);
       }
 
       @Override
