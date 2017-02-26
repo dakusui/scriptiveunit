@@ -481,7 +481,7 @@ public enum Beans {
                           testIO.getOutput();
                       description.appendText(String.format("output '%s' created from '%s' did not satisfy it.:%n'%s'",
                           output,
-                          testIO.getInput(),
+                          testItem.getTestCaseTuple(),
                           funcInvoker.asString()));
                     }
                   }
