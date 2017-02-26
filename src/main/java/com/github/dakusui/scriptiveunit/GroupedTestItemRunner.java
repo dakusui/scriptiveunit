@@ -167,7 +167,7 @@ public final class GroupedTestItemRunner extends ParentRunner<Action> {
                   .map(eachOracle ->
                       eachOracle
                           .createTestActionFactory(
-                              TestItem.create(eachTestCase.getIndex(), eachOracle.getIndex(), i.getAndIncrement()),
+                              TestItem.create(eachTestCase, eachOracle, i.getAndIncrement()),
                               eachTestCase.getTuple()
                           ).apply(session)
                   ));
@@ -182,7 +182,7 @@ public final class GroupedTestItemRunner extends ParentRunner<Action> {
               .flatMap(eachOracle -> testCases.stream()
                   .map(eachTestCase ->
                       eachOracle.createTestActionFactory(
-                          TestItem.create(eachTestCase.getIndex(), eachOracle.getIndex(), i.getAndIncrement()),
+                          TestItem.create(eachTestCase, eachOracle, i.getAndIncrement()),
                           eachTestCase.getTuple()
                       ).apply(session)));
         }
@@ -316,8 +316,8 @@ public final class GroupedTestItemRunner extends ParentRunner<Action> {
                             .attempt(
                                 testOracle.createTestActionFactory(
                                     TestItem.create(
-                                        input.getIndex(),
-                                        testOracleId,
+                                        input,
+                                        testOracle,
                                         input.getIndex()
                                     ),
                                     input.getTuple()
@@ -361,8 +361,8 @@ public final class GroupedTestItemRunner extends ParentRunner<Action> {
           testOracles.stream()
               .map((TestOracle input) -> input.createTestActionFactory(
                   TestItem.create(
-                      testCaseId,
-                      input.getIndex(),
+                      testCase,
+                      input,
                       input.getIndex()
                   ),
                   testCaseTuple

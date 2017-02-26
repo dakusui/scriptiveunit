@@ -54,9 +54,10 @@ public enum JsonBeans {
           @JsonProperty("given") List<Object> given,
           @JsonProperty("when") List<Object> when,
           @JsonProperty("then") List<Object> then,
+          @JsonProperty("onFailure") List<Object> onFailure,
           @JsonProperty("after") List<Object> after
       ) {
-        super(description, before, given, when, then, after);
+        super(description, before, given, when, then, onFailure, after);
       }
     }
   }

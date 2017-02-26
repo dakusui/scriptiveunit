@@ -1,22 +1,39 @@
 package com.github.dakusui.scriptiveunit.model;
 
+import com.github.dakusui.jcunit.core.tuples.Tuple;
+import com.github.dakusui.scriptiveunit.loaders.IndexedTestCase;
+
 public interface TestItem {
   int getTestCaseId();
 
+  Tuple getTestCaseTuple();
+
   int getTestOracleId();
+
+  String getTestOracleDescription();
 
   int getTestItemId();
 
-  static TestItem create(int testCaseId, int testOracleId, int testItemId) {
+  static TestItem create(IndexedTestCase testCase, TestOracle testOracle, int testItemId) {
     return new TestItem() {
       @Override
       public int getTestCaseId() {
-        return testCaseId;
+        return testCase.getIndex();
+      }
+
+      @Override
+      public Tuple getTestCaseTuple() {
+        return testCase.getTuple();
       }
 
       @Override
       public int getTestOracleId() {
-        return testOracleId;
+        return testOracle.getIndex();
+      }
+
+      @Override
+      public String getTestOracleDescription() {
+        return testOracle.getDescription();
       }
 
       @Override

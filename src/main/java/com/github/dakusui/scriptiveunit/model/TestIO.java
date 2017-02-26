@@ -7,21 +7,21 @@ import com.github.dakusui.jcunit.core.tuples.Tuple;
  *
  * @param <T>
  */
-public interface TestResult<T> {
+public interface TestIO<T> {
   /**
    * Returns a test case object.
    */
-  Tuple getTestCase();
+  Tuple getInput();
 
   /**
    * Returns output from SUT as an object of {@code T}.
    */
   T getOutput();
 
-  static <T> TestResult<T> create(Tuple testCase, T output) {
-    return new TestResult<T>() {
+  static <T> TestIO<T> create(Tuple testCase, T output) {
+    return new TestIO<T>() {
       @Override
-      public Tuple getTestCase() {
+      public Tuple getInput() {
         return testCase;
       }
 

@@ -10,9 +10,15 @@
       "description": "Report example",
       "given": ["always"],
       "when": ["nop"],
-      "then": [">",
-        ["write_report", "valueOfF", ["attr", "f"]],
-        ["write_report", "threshold", 100]
+      "then": ["write_report", "wasSuccessful",
+        [">",
+          ["write_report", "valueOfF", ["attr", "f"]],
+          ["write_report", "threshold", 100]
+        ]
+      ],
+      "onFailure": ["sequential",
+        ["print", "hello error handling"],
+        ["dumb", ["write_report", "errorMessage", ["value", "getMessage", ["exception"]]]]
       ],
       "after": ["submit"]
     }

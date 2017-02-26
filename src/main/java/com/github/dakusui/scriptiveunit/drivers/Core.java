@@ -7,11 +7,9 @@ import com.github.dakusui.scriptiveunit.annotations.Scriptable;
 import com.github.dakusui.scriptiveunit.core.Config;
 import com.github.dakusui.scriptiveunit.exceptions.ScriptiveUnitException;
 import com.github.dakusui.scriptiveunit.exceptions.SyntaxException;
-import com.github.dakusui.scriptiveunit.model.Report;
 import com.github.dakusui.scriptiveunit.model.Stage;
 import com.github.dakusui.scriptiveunit.model.func.Func;
 import com.github.dakusui.scriptiveunit.model.func.FuncInvoker;
-import com.github.dakusui.scriptiveunit.model.statement.Statement;
 
 import java.lang.reflect.InvocationTargetException;
 import java.util.Arrays;
@@ -72,6 +70,18 @@ public class Core {
 
   @ReflectivelyReferenced
   @Scriptable
+  public Func<Throwable> exception() {
+    return Stage::getThrowable;
+  }
+
+  @ReflectivelyReferenced
+  @Scriptable
+  public Func<Throwable> testInfo() {
+    return Stage::getTestInfo;
+  }
+
+  @ReflectivelyReferenced
+  @Scriptable
   public final Func<List<?>> quote(Func<?>... values) {
     return (Stage input) -> Arrays
         .stream(values)
@@ -84,27 +94,7 @@ public class Core {
   public final Func<Object> userFunc(Func<List<Object>> funcBody, Func<?>... args) {
     return (Stage input) -> {
       List<Object> argValues = Arrays.stream(args).map(each -> each.apply(input)).collect(toList());
-      Stage wrappedStage = new Stage() {
-        @Override
-        public Statement.Factory getStatementFactory() {
-          return input.getStatementFactory();
-        }
-
-        @Override
-        public Tuple getTestCaseTuple() {
-          return input.getTestCaseTuple();
-        }
-
-        @Override
-        public <RESPONSE> RESPONSE response() {
-          return input.response();
-        }
-
-        @Override
-        public Type getType() {
-          return input.getType();
-        }
-
+      Stage wrappedStage = new Stage.Delegating(input) {
         @Override
         public <U> U getArgument(int index) {
           check(index < sizeOfArguments(), () -> indexOutOfBounds(index, sizeOfArguments()));
@@ -115,16 +105,6 @@ public class Core {
         @Override
         public int sizeOfArguments() {
           return argValues.size();
-        }
-
-        @Override
-        public Config getConfig() {
-          return input.getConfig();
-        }
-
-        @Override
-        public Report getReport() {
-          return input.getReport();
         }
       };
       return wrappedStage.getStatementFactory()
@@ -161,8 +141,6 @@ public class Core {
   @ReflectivelyReferenced
   @Scriptable
   public Func<Object> systemProperty(Func<String> attrName) {
-    return input -> {
-      return System.getProperties().getProperty(requireNonNull(attrName.apply(input)));
-    };
+    return input -> System.getProperties().getProperty(requireNonNull(attrName.apply(input)));
   }
 }

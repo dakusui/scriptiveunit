@@ -2,6 +2,7 @@ package com.github.dakusui.scriptiveunit.drivers.actions;
 
 import com.github.dakusui.actionunit.Action;
 import com.github.dakusui.actionunit.Actions;
+import com.github.dakusui.scriptiveunit.annotations.Doc;
 import com.github.dakusui.scriptiveunit.annotations.ReflectivelyReferenced;
 import com.github.dakusui.scriptiveunit.annotations.Scriptable;
 import com.github.dakusui.scriptiveunit.model.Stage;
@@ -9,6 +10,7 @@ import com.github.dakusui.scriptiveunit.model.func.Func;
 
 import java.util.Objects;
 
+import static com.github.dakusui.scriptiveunit.core.Utils.prettify;
 import static java.util.Arrays.stream;
 import static java.util.stream.Collectors.toList;
 
@@ -65,6 +67,16 @@ public class Basic {
             return "print";
           }
         }
+    );
+  }
+
+  @Doc("Prints to a given value to a 'dumb' output.")
+  @ReflectivelyReferenced
+  @Scriptable
+  public Func<Action> dumb(@Doc("A value to be printed") Func<?> in) {
+    return input -> Actions.simple(prettify("dumb",
+        // Even if it doesn't go anywhere, we must do 'apply'.
+        () -> in.apply(input))
     );
   }
 
