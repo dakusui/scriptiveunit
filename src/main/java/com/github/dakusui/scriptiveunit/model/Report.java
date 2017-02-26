@@ -16,6 +16,7 @@ public interface Report extends Map<String, Object> {
   void submit();
 
   static Report create(Config config, TestItem testItem) {
+    String testSuiteName = config.getScriptResourceName();
     int testCaseId = testItem.getTestCaseId();
     int oracleId = testItem.getTestOracleId();
     return new Base() {
@@ -33,11 +34,13 @@ public interface Report extends Map<String, Object> {
         return
             new File(
                 new File("reports"),
-                new File(
-                    this.baseDirectory(),
+                new File(testSuiteName,
                     new File(
-                        Integer.toString(oracleId),
-                        Integer.toString(testCaseId)
+                        this.baseDirectory(),
+                        new File(
+                            Integer.toString(oracleId),
+                            Integer.toString(testCaseId)
+                        ).getPath()
                     ).getPath()
                 ).getPath()
             );

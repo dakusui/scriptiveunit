@@ -59,7 +59,7 @@ public class Simple {
 
 
   @RunWith(ScriptiveSuiteSet.class)
-  @ScriptiveSuiteSet.SuiteScripts(driverClass = Simple.class, includes = ".*simple\\.json")
+  @ScriptiveSuiteSet.SuiteScripts(driverClass = Simple.class, includes = ".*reporting\\.json")
   public static class Run {
 
   }
