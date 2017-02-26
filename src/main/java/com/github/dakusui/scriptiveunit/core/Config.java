@@ -28,7 +28,8 @@ public interface Config {
 
     public Builder(Class<?> driverClass, Properties properties) {
       this.driverClass = driverClass;
-      this.properties = properties;
+      this.properties = new Properties();
+      this.properties.putAll(properties);
       this.loadAnnotation = Utils.getAnnotation(driverClass, Load.class, Load.DEFAULT_INSTANCE);
     }
 
@@ -41,6 +42,7 @@ public interface Config {
       try {
         return new Config() {
           Object driverObject = Builder.this.driverClass.newInstance();
+
           @Override
           public Class<?> getDriverClass() {
             return Builder.this.driverClass;

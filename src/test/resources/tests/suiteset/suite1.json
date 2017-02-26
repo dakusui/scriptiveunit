@@ -1,0 +1,22 @@
+{
+  "description":"Suite 1",
+  "factorSpace": {
+    "factors":{"f":[50,150]}
+  },
+  "testOracles": [
+    {
+      "description": "{{@TESTSUITE}}: {{f}}",
+      "given": ["always"],
+      "when": ["nop"],
+      "then": ["<", 100, ["attr", "f"]]
+    }
+  ],
+  "tearDownAfterAll": ["tag",
+    ["format", "java -cp '%s' -D%s=%s org.junit.runner.JUnitCore %s",
+      ["system_property", "java.class.path"],
+      ["config_attr", "scriptResourceNameKey"],
+      ["config_attr", "scriptResourceName"],
+      ["config_attr", "driverClass"]
+    ]
+  ]
+}
