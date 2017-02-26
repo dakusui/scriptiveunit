@@ -20,11 +20,13 @@ public interface TestItem {
     private final IndexedTestCase testCase;
     private final TestOracle      testOracle;
     private final int             testItemId;
+    private final String          testSuiteDescription;
 
-    Impl(IndexedTestCase testCase, TestOracle testOracle, int testItemId) {
+    Impl(String testSuiteDescription, IndexedTestCase testCase, TestOracle testOracle, int testItemId) {
       this.testCase = testCase;
       this.testOracle = testOracle;
       this.testItemId = testItemId;
+      this.testSuiteDescription = testSuiteDescription;
     }
 
     @Override
@@ -44,7 +46,7 @@ public interface TestItem {
 
     @Override
     public String getTestOracleDescription() {
-      return testOracle.templateDescription(testCase.getTuple(), "");
+      return testOracle.templateDescription(testCase.getTuple(), testSuiteDescription);
     }
 
     @Override
@@ -54,6 +56,6 @@ public interface TestItem {
   }
 
   static TestItem create(String testSuiteDescription, IndexedTestCase testCase, TestOracle testOracle, int testItemId) {
-    return new Impl(testCase, testOracle, testItemId);
+    return new Impl(testSuiteDescription, testCase, testOracle, testItemId);
   }
 }
