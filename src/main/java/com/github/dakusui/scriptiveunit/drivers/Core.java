@@ -94,7 +94,7 @@ public class Core {
   @Scriptable
   public final Func<Object> userFunc(Func<List<Object>> funcBody, Func<?>... args) {
     return (Stage input) -> {
-      List<Object> argValues = Arrays.stream(args).map(each -> each.apply(input)).collect(toList());
+      List<Object> argValues = Arrays.stream(args).map((Func each) -> each.apply(input)).collect(toList());
       Stage wrappedStage = new Stage.Delegating(input) {
         @Override
         public <U> U getArgument(int index) {
