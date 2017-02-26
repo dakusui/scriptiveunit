@@ -1,0 +1,45 @@
+{
+  "description":"Simple",
+  "factorSpace": {
+    "factors":{"f":[50,150]}
+  },
+  "runnerType": "groupByTestCase",
+  "setUp":["print", "HelloSetup"],
+  "testOracles": [
+    {
+      "description": "Report example 0: {{f}}",
+      "given": ["always"],
+      "when": ["nop"],
+      "then": ["write_report", "wasSuccessful",
+        [">",
+          ["write_report", "valueOfF", ["attr", "f"]],
+          ["write_report", "threshold", 100]
+        ]
+      ],
+      "onFailure": ["sequential",
+        ["print", ["write_report", "description", ["value", "getTestOracleDescription", ["testItem"]]]],
+        ["print", "hello error handling"],
+        ["dumb", ["write_report", "errorMessage", ["value", "getMessage", ["exception"]]]]
+      ],
+      "after": ["submit"]
+    },
+    {
+      "description": "Report example 1 : {{f}}",
+      "given": ["always"],
+      "when": ["nop"],
+      "then": ["write_report", "wasSuccessful",
+        [">",
+          ["write_report", "valueOfF", ["attr", "f"]],
+          ["write_report", "threshold", 100]
+        ]
+      ],
+      "onFailure": ["sequential",
+        ["print", ["write_report", "description", ["value", "getTestOracleDescription", ["testItem"]]]],
+        ["print", "hello error handling"],
+        ["dumb", ["write_report", "errorMessage", ["value", "getMessage", ["exception"]]]]
+      ],
+      "after": ["submit"]
+    }
+
+  ]
+}

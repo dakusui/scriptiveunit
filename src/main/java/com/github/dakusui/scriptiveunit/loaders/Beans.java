@@ -320,15 +320,17 @@ public enum Beans {
     private final List<Object> givenClause;
     private final List<Object> whenClause;
     private final List<Object> thenClause;
+    private final List<Object> onFailureClause;
     private final List<Object> afterClause;
     private final List<Object> beforeClause;
 
-    public BaseForTestOracle(String description, List<Object> beforeClause, List<Object> givenClause, List<Object> whenClause, List<Object> thenClause, List<Object> afterClause) {
+    public BaseForTestOracle(String description, List<Object> beforeClause, List<Object> givenClause, List<Object> whenClause, List<Object> thenClause, List<Object> onFailureClause, List<Object> afterClause) {
       this.description = description;
       this.beforeClause = beforeClause;
       this.givenClause = givenClause;
       this.whenClause = whenClause;
       this.thenClause = thenClause;
+      this.onFailureClause = onFailureClause;
       this.afterClause = afterClause;
     }
 
@@ -344,10 +346,17 @@ public enum Beans {
         public int getIndex() {
           return index;
         }
+
         @Override
         public String getDescription() {
           return description;
         }
+
+        @Override
+        public String templateDescription(Tuple testCaseTuple, String testSuiteDescription) {
+          return TestOracle.templateTestOracleDescription(this, testCaseTuple, testSuiteDescription);
+        }
+
         /**
          * Warning: Created action is not thread safe. Users should create 1 action for 1 thread.
          */
@@ -356,111 +365,166 @@ public enum Beans {
           int itemId = testItem.getTestItemId();
           Report report = session.createReport(testItem);
           return (Session session) -> sequential(
-              format("%03d: %s", itemId, template(description, append(testCaseTuple, "@TESTSUITE", session.getDescriptor().getDescription()))),
-              named("Before", createActionFromClause(BEFORE, beforeClause, testCaseTuple, report)),
+              format("%03d: %s", itemId, composeDescription(testCaseTuple, session)),
+              named("Before", createBefore(testItem, report)),
               attempt(
-                  Actions.<Tuple, TestResult>test("Verify with: " + Utils.filterSingleLevelFactorsOut(testCaseTuple, session.getDescriptor().getFactorSpaceDescriptor().getFactors()))
-                      .given(new Source<Tuple>() {
-                        Stage givenStage = Stage.Factory.createOracleLevelStage(GIVEN, session, testCaseTuple, report);
-                        Statement givenStatement = givenStage.getStatementFactory().create(givenClause);
-                        FuncInvoker funcInvoker = new FuncInvoker.Impl(0);
-
-                        @Override
-                        public Tuple apply(Context context) {
-                          assumeThat(testCaseTuple, new BaseMatcher<Tuple>() {
-                            @Override
-                            public boolean matches(Object item) {
-                              return requireNonNull(Beans.<Boolean>toFunc(givenStatement, funcInvoker).apply(givenStage));
-                            }
-
-                            @Override
-                            public void describeTo(Description description) {
-                              description.appendText(
-                                  format("input (%s) should have made true following criterion but not.:%n'%s' defined in stage:%s",
-                                      testCaseTuple,
-                                      funcInvoker.asString(),
-                                      GIVEN));
-                            }
-                          });
-                          return testCaseTuple;
-                        }
-
-                        @Override
-                        public String toString() {
-                          return format("%n%s", funcInvoker.asString());
-                        }
-                      })
-                      .when(new Pipe<Tuple, TestResult>() {
-                        FuncInvoker funcInvoker = new FuncInvoker.Impl(0);
-
-                        @Override
-                        public TestResult apply(Tuple testCase, Context context) {
-                          Stage whenStage = Stage.Factory.createOracleLevelStage(WHEN, session, testCase, report);
-                          return TestResult.create(
-                              testCase,
-                              Beans.<Boolean>toFunc(
-                                  whenStage.getStatementFactory().create(whenClause),
-                                  funcInvoker
-                              ).apply(whenStage));
-                        }
-
-                        @Override
-                        public String toString() {
-                          return format("%n%s", funcInvoker.asString());
-                        }
-                      })
-                      .then(new Sink<TestResult>() {
-                        FuncInvoker funcInvoker = new FuncInvoker.Impl(0);
-
-                        @Override
-                        public void apply(TestResult testResult, Context context) {
-                          Stage thenStage = Stage.Factory.createVerificationStage(session, testResult.getTestCase(), testResult.getOutput(), report);
-                          assertThat(
-                              thenStage,
-                              new BaseMatcher<Stage>() {
-                                @Override
-                                public boolean matches(Object item) {
-                                  return requireNonNull(
-                                      Beans.<Boolean>toFunc(
-                                          thenStage.getStatementFactory().create(thenClause),
-                                          funcInvoker
-                                      ).apply(thenStage));
-                                }
-
-                                @Override
-                                public void describeTo(Description description) {
-                                  description.appendText(format("output should have made true the criterion defined in stage:%s", thenStage.getType()));
-                                }
-
-                                @Override
-                                public void describeMismatch(Object item, Description description) {
-                                  Object output = testResult.getOutput() instanceof Iterable ?
-                                      iterableToString((Iterable<?>) testResult.getOutput()) :
-                                      testResult.getOutput();
-                                  description.appendText(format("output '%s' created from '%s' did not satisfy it.:%n'%s'",
-                                      output,
-                                      testResult.getTestCase(),
-                                      funcInvoker.asString()));
-                                }
-                              }
-                          );
-                        }
-
-                        @Override
-                        public String toString() {
-                          return format("%n%s", funcInvoker.asString());
-                        }
-                      }).build())
-                  .ensure(
-                      named("After", createActionFromClause(AFTER, afterClause, testCaseTuple, report)))
-                  .build()
+                  Actions.<Tuple, TestIO>test("Verify with: " + projectMultiLevelFactors(testCaseTuple, session))
+                      .given(createGiven(testItem, report, session))
+                      .when(createWhen(testItem, report, session))
+                      .then(createThen(testItem, report, session)).build()
+              ).recover(
+                  AssertionError.class,
+                  onTestFailure(testItem, report, session)
+              ).ensure(
+                  named("After", createAfter(testItem, report))
+              ).build()
           );
         }
 
-        private Action createActionFromClause(Stage.Type stageType, List<Object> clause, final Tuple testCaseTuple, Report report) {
+        private Tuple projectMultiLevelFactors(Tuple testCaseTuple, Session session) {
+          return Utils.filterSingleLevelFactorsOut(testCaseTuple, session.getDescriptor().getFactorSpaceDescriptor().getFactors());
+        }
+
+        private String composeDescription(Tuple testCaseTuple, Session session) {
+          return template(description, append(testCaseTuple, "@TESTSUITE", session.getDescriptor().getDescription()));
+        }
+
+
+        private Action createBefore(TestItem testItem, Report report) {
+          return createActionFromClause(BEFORE, beforeClause, testItem, report);
+        }
+
+        private Source<Tuple> createGiven(final TestItem testItem, final Report report, final Session session) {
+          Tuple testCaseTuple = testItem.getTestCaseTuple();
+          return new Source<Tuple>() {
+            FuncInvoker funcInvoker = new FuncInvoker.Impl(0);
+            Stage givenStage = Stage.Factory.createOracleLevelStage(GIVEN, session, testItem, report);
+            Statement givenStatement = givenStage.getStatementFactory().create(givenClause);
+
+            @Override
+            public Tuple apply(Context context) {
+              assumeThat(testCaseTuple, new BaseMatcher<Tuple>() {
+                @Override
+                public boolean matches(Object item) {
+                  return requireNonNull(Beans.<Boolean>toFunc(givenStatement, funcInvoker).apply(givenStage));
+                }
+
+                @Override
+                public void describeTo(Description description) {
+                  description.appendText(
+                      format("input (%s) should have made true following criterion but not.:%n'%s' defined in stage:%s",
+                          testCaseTuple,
+                          funcInvoker.asString(),
+                          GIVEN));
+                }
+              });
+              return testCaseTuple;
+            }
+
+            @Override
+            public String toString() {
+              return format("%n%s", funcInvoker.asString());
+            }
+          };
+        }
+
+        private Pipe<Tuple, TestIO> createWhen(final TestItem testItem, final Report report, final Session session) {
+          return new Pipe<Tuple, TestIO>() {
+            FuncInvoker funcInvoker = new FuncInvoker.Impl(0);
+
+            @Override
+            public TestIO apply(Tuple testCase, Context context) {
+              Stage whenStage = Stage.Factory.createOracleLevelStage(WHEN, session, testItem, report);
+              return TestIO.create(
+                  testCase,
+                  Beans.<Boolean>toFunc(
+                      whenStage.getStatementFactory().create(whenClause),
+                      funcInvoker
+                  ).apply(whenStage));
+            }
+
+            @Override
+            public String toString() {
+              return format("%n%s", funcInvoker.asString());
+            }
+          };
+        }
+
+        private Sink<TestIO> createThen(TestItem testItem, final Report report, final Session session) {
+          return new Sink<TestIO>() {
+            FuncInvoker funcInvoker = new FuncInvoker.Impl(0);
+
+            @Override
+            public void apply(TestIO testIO, Context context) {
+              Stage thenStage = Stage.Factory.createOracleVerificationStage(session, testItem, testIO.getOutput(), report);
+              assertThat(
+                  thenStage,
+                  new BaseMatcher<Stage>() {
+                    @Override
+                    public boolean matches(Object item) {
+                      return requireNonNull(
+                          Beans.<Boolean>toFunc(
+                              thenStage.getStatementFactory().create(thenClause),
+                              funcInvoker
+                          ).apply(thenStage));
+                    }
+
+                    @Override
+                    public void describeTo(Description description) {
+                      description.appendText(format("output should have made true the criterion defined in stage:%s", thenStage.getType()));
+                    }
+
+                    @Override
+                    public void describeMismatch(Object item, Description description) {
+                      Object output = testIO.getOutput() instanceof Iterable ?
+                          iterableToString((Iterable<?>) testIO.getOutput()) :
+                          testIO.getOutput();
+                      description.appendText(String.format("output '%s' created from '%s' did not satisfy it.:%n'%s'",
+                          output,
+                          testItem.getTestCaseTuple(),
+                          funcInvoker.asString()));
+                    }
+                  }
+              );
+            }
+
+            @Override
+            public String toString() {
+              return format("%n%s", funcInvoker.asString());
+            }
+          };
+        }
+
+        private <T extends AssertionError> Sink<T> onTestFailure(TestItem testItem, Report report, Session session) {
+          return new Sink<T>() {
+            FuncInvoker funcInvoker = new FuncInvoker.Impl(0);
+
+            @Override
+            public void apply(T input, Context context) {
+              Stage onFailureStage = Stage.Factory.createOracleFailureHandlingStage(session, testItem, input, report);
+              Statement onFailureStatement = onFailureStage.getStatementFactory().create(onFailureClause);
+              Utils.performActionWithLogging(requireNonNull(
+                  onFailureClause != null ?
+                      Beans.<Action>toFunc(onFailureStatement, funcInvoker) :
+                      (Func<Action>) input1 -> Actions.nop()).apply(onFailureStage));
+              throw requireNonNull(input);
+            }
+
+            @Override
+            public String toString() {
+              return format("%n%s", funcInvoker.asString());
+            }
+          };
+        }
+
+        private Action createAfter(TestItem testItem, Report report) {
+          return createActionFromClause(AFTER, afterClause, testItem, report);
+        }
+
+        private Action createActionFromClause(Stage.Type stageType, List<Object> clause, final TestItem testItem, Report report) {
           if (clause == null)
             return (Action) NOP_CLAUSE;
-          Stage stage = Stage.Factory.createOracleLevelStage(stageType, session, testCaseTuple, report);
+          Stage stage = Stage.Factory.createOracleLevelStage(stageType, session, testItem, report);
           Statement statement = stage.getStatementFactory().create(clause);
           FuncInvoker funcInvoker = new FuncInvoker.Impl(0);
           return Beans.<Action>toFunc(statement, funcInvoker).apply(stage);

@@ -1,6 +1,10 @@
 package com.github.dakusui.scriptiveunit.core;
 
 import com.github.dakusui.actionunit.Action;
+import com.github.dakusui.actionunit.Context;
+import com.github.dakusui.actionunit.connectors.Pipe;
+import com.github.dakusui.actionunit.connectors.Sink;
+import com.github.dakusui.actionunit.connectors.Source;
 import com.github.dakusui.actionunit.visitors.ActionRunner;
 import com.github.dakusui.jcunit.core.factor.Factor;
 import com.github.dakusui.jcunit.core.tuples.Tuple;
@@ -56,9 +60,54 @@ public enum Utils {
     };
   }
 
+  public static <T> Source<T> prettify(String prettyString, Source<T> source) {
+    return new Source<T>() {
+      @Override
+      public T apply(Context context) {
+        return source.apply(context);
+      }
+
+      @Override
+      public String toString() {
+        return prettyString;
+      }
+    };
+  }
+
+
+  public static <T, U> Pipe<T, U> prettify(String prettyString, Pipe<T, U> pipe) {
+    return new Pipe<T, U>() {
+
+      @Override
+      public U apply(T t, Context context) {
+        return pipe.apply(t, context);
+      }
+
+      @Override
+      public String toString() {
+        return prettyString;
+      }
+    };
+  }
+
+  public static <T> Sink<T> prettify(String prettyString, Sink<T> sink) {
+    return new Sink<T>() {
+
+      @Override
+      public void apply(T t, Context context) {
+        sink.apply(t, context);
+      }
+
+      @Override
+      public String toString() {
+        return prettyString;
+      }
+    };
+  }
+
   public static String template(String s, Map<String, Object> map) {
     String ret = s;
-    Pattern pattern = Pattern.compile("\\{\\{(?<keyword>@?[A-Za-z_][A-Za-z0-9_]*)\\}\\}");
+    Pattern pattern = Pattern.compile("\\{\\{(?<keyword>@?[A-Za-z_][A-Za-z0-9_]*)}}");
     Matcher matcher;
     int i = 0;
     while ((matcher = pattern.matcher(ret)).find()) {
