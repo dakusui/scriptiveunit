@@ -44,7 +44,12 @@ public class QapiTest extends TestBase {
 
     @Override
     public Matcher<Result> getOracle(QapiTest testObject) {
-      return new JUnitResultMatcher.Impl(this.wasSuccessful, this.expectedRunCount, this.expectedFailureCount, this.expectedIgnoreCount);
+      return new JUnitResultMatcher.Builder()
+          .withExpectedResult(this.wasSuccessful)
+          .withExpectedRunCount(this.expectedRunCount)
+          .withExpectedFailureCount(this.expectedFailureCount)
+          .withExpectedIgnoreCount(this.expectedIgnoreCount)
+          .build();
     }
   }
 

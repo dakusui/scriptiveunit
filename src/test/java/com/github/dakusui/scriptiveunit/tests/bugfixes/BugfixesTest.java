@@ -26,7 +26,12 @@ public class BugfixesTest {
 
       @Override
       public JUnitResultMatcher getOracle(BugfixesTest testObject) {
-        return new JUnitResultMatcher.Impl(true, 5, 0, 0);
+        return new JUnitResultMatcher.Builder()
+            .withExpectedResult(true)
+            .withExpectedRunCount(5)
+            .withExpectedFailureCount(0)
+            .withExpectedIgnoreCount(0)
+            .build();
       }
     }
   }

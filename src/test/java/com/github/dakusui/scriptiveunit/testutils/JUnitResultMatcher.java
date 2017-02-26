@@ -5,6 +5,8 @@ import org.hamcrest.Description;
 import org.hamcrest.Matcher;
 import org.junit.runner.Result;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.function.Function;
 
 import static org.hamcrest.CoreMatchers.allOf;
@@ -20,7 +22,8 @@ public abstract class JUnitResultMatcher extends BaseMatcher<Result> {
         translate(Result::wasSuccessful, resultMatcher()),
         translate(Result::getRunCount, runCountMatcher()),
         translate(Result::getFailureCount, failureCountMatcher()),
-        translate(Result::getIgnoreCount, ignoreCountMatcher())
+        translate(Result::getIgnoreCount, ignoreCountMatcher()),
+        translate(Result::getFailures, failuresMatcher())
     ).matches(item);
   }
 
@@ -31,6 +34,8 @@ public abstract class JUnitResultMatcher extends BaseMatcher<Result> {
   abstract protected Matcher<Integer> failureCountMatcher();
 
   abstract protected Matcher<Integer> ignoreCountMatcher();
+
+  abstract protected FailuresMatcher failuresMatcher();
 
   private <T, U> Matcher<T> translate(Function<T, U> translator, Matcher<U> matcher) {
     return new BaseMatcher<T>() {
@@ -55,7 +60,7 @@ public abstract class JUnitResultMatcher extends BaseMatcher<Result> {
         .appendText("runCount: ").appendDescriptionOf(runCountMatcher()).appendText(", ")
         .appendText("failureCount: ").appendDescriptionOf(failureCountMatcher()).appendText(", and ")
         .appendText("ignoreCount: ").appendDescriptionOf(ignoreCountMatcher())
-    ;
+        .appendText("failures").appendDescriptionOf(failuresMatcher());
   }
 
   @Override
@@ -67,8 +72,8 @@ public abstract class JUnitResultMatcher extends BaseMatcher<Result> {
           .appendText("wasSuccessful: ").appendValue(result.wasSuccessful()).appendText(", ")
           .appendText("runCount: ").appendValue(result.getRunCount()).appendText(", ")
           .appendText("failureCount: ").appendValue(result.getFailureCount()).appendText(", and ")
-          .appendText("ignoreCount: ").appendValue(result.getIgnoreCount())
-      ;
+          .appendText("ignoreCountMatcher: ").appendValue(result.getIgnoreCount())
+          .appendText("failuresMatcher: ").appendValue(result.getFailures());
     } else {
       description.appendText("was ").appendValue(item);
     }
@@ -77,36 +82,104 @@ public abstract class JUnitResultMatcher extends BaseMatcher<Result> {
 
   public static class Impl extends JUnitResultMatcher {
 
-    final private boolean expectedResult;
-    final private int     expectedRunCount;
-    final private int     expectedFailureCount;
-    final private int     expectedIgnoreCount;
+    final private Matcher<Boolean> expectedResult;
+    final private Matcher<Integer> expectedRunCount;
+    final private Matcher<Integer> expectedFailureCount;
+    final private Matcher<Integer> expectedIgnoreCount;
+    private final FailuresMatcher  failuresMatcher;
 
-    public Impl(boolean expectedResult, int expectedRunCount, Integer expectedFailureCount, Integer expectedIgnoreCount) {
+    Impl(Matcher<Boolean> expectedResult, Matcher<Integer> expectedRunCount, Matcher<Integer> expectedFailureCount, Matcher<Integer> expectedIgnoreCount, FailuresMatcher failuresMatcher) {
       this.expectedResult = expectedResult;
       this.expectedRunCount = expectedRunCount;
       this.expectedFailureCount = expectedFailureCount;
       this.expectedIgnoreCount = expectedIgnoreCount;
+      this.failuresMatcher = failuresMatcher;
     }
 
     @Override
     protected Matcher<Boolean> resultMatcher() {
-      return equalTo(this.expectedResult);
+      return this.expectedResult;
     }
 
     @Override
     protected Matcher<Integer> runCountMatcher() {
-      return equalTo(this.expectedRunCount);
+      return this.expectedRunCount;
     }
 
     @Override
     protected Matcher<Integer> failureCountMatcher() {
-      return equalTo(this.expectedFailureCount);
+      return this.expectedFailureCount;
     }
 
     @Override
     protected Matcher<Integer> ignoreCountMatcher() {
-      return equalTo(this.expectedIgnoreCount);
+      return this.expectedIgnoreCount;
+    }
+
+    @Override
+    protected FailuresMatcher failuresMatcher() {
+      return this.failuresMatcher;
+    }
+  }
+
+  public static class Builder {
+    private Matcher<Boolean> resultMatcher;
+    private Matcher<Integer> runCountMatcher;
+    private Matcher<Integer> ignoreCountMatcher;
+    private Matcher<Integer> failureCountMatcher;
+    private Map<Integer, FailuresMatcher.EntryMatcher> failureMatchers = new HashMap<>();
+
+    public Builder() {
+    }
+
+    public Builder withExpectedResult(boolean expectedResult) {
+      this.resultMatcher = equalTo(expectedResult);
+      return this;
+    }
+
+    public Builder withExpectedRunCount(int expectedRunCount) {
+      this.runCountMatcher = equalTo(expectedRunCount);
+      return this;
+    }
+
+    public Builder withExpectedIgnoreCount(int expectedIgnoreCount) {
+      this.ignoreCountMatcher = equalTo(expectedIgnoreCount);
+      return this;
+    }
+
+    public Builder withExpectedFailureCount(int expectedFailureCount) {
+      this.failureCountMatcher = equalTo(expectedFailureCount);
+      return this;
+    }
+
+    public Builder addFailureMatcher(int index, FailuresMatcher.EntryMatcher failureMatcher) {
+      this.failureMatchers.put(index, failureMatcher);
+      return this;
+    }
+
+    public JUnitResultMatcher build() {
+      FailuresMatcher failuresMatcher = new FailuresMatcher() {
+        @Override
+        public void describeTo(Description description) {
+          description
+              .appendText("Failure matchers: ")
+              .appendValue(failureMatchers);
+        }
+
+        @Override
+        protected EntryMatcher forEntryAt(int index) {
+          return failureMatchers.containsKey(index) ?
+              failureMatchers.get(index) :
+              EntryMatcher.MATCHES_ALWAYS;
+        }
+      };
+      return new Impl(
+          this.resultMatcher,
+          this.runCountMatcher,
+          this.failureCountMatcher,
+          this.ignoreCountMatcher,
+          failuresMatcher
+      );
     }
   }
 }
