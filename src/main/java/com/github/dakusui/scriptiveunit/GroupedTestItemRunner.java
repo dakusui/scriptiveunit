@@ -388,7 +388,7 @@ public final class GroupedTestItemRunner extends ParentRunner<Action> {
           testClass,
           fixtureId,
           named(
-              format("%03d: Setup test fixture", i.getAndIncrement()),
+              "Setup test fixture",
               named(format("fixture: %s", fixture),
                   requireNonNull(createFixtureLevelAction(SETUP, session, fixture)))),
           testSuiteDescriptor.getRunnerType()
@@ -396,7 +396,7 @@ public final class GroupedTestItemRunner extends ParentRunner<Action> {
               .buildSortedActionStreamOrderingBy(session, testCasesFilteredByFixture, i)
               .collect(toList()),
           named(
-              format("%03d: Tear down fixture", testCasesFilteredByFixture.size() + 1),
+              "Tear down fixture",
               named(format("fixture: %s", fixture),
                   requireNonNull(createFixtureLevelAction(TEARDOWN, session, fixture))
               )
