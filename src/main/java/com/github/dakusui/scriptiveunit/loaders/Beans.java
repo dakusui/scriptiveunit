@@ -352,6 +352,11 @@ public enum Beans {
           return description;
         }
 
+        @Override
+        public String templateDescription(Tuple testCaseTuple, String testSuiteDescription) {
+          return TestOracle.templateTestOracleDescription(this, testCaseTuple, testSuiteDescription);
+        }
+
         /**
          * Warning: Created action is not thread safe. Users should create 1 action for 1 thread.
          */
@@ -361,17 +366,17 @@ public enum Beans {
           Report report = session.createReport(testItem);
           return (Session session) -> sequential(
               format("%03d: %s", itemId, composeDescription(testCaseTuple, session)),
-              named("Before", createBefore(testCaseTuple, report)),
+              named("Before", createBefore(testItem, report)),
               attempt(
                   Actions.<Tuple, TestIO>test("Verify with: " + projectMultiLevelFactors(testCaseTuple, session))
-                      .given(createGiven(testCaseTuple, report, session))
-                      .when(createWhen(report, session))
-                      .then(createThen(report, session)).build()
+                      .given(createGiven(testItem, report, session))
+                      .when(createWhen(testItem, report, session))
+                      .then(createThen(testItem, report, session)).build()
               ).recover(
                   AssertionError.class,
-                  onTestFailure(testCaseTuple, report, session)
+                  onTestFailure(testItem, report, session)
               ).ensure(
-                  named("After", createAfter(testCaseTuple, report))
+                  named("After", createAfter(testItem, report))
               ).build()
           );
         }
@@ -385,14 +390,15 @@ public enum Beans {
         }
 
 
-        private Action createBefore(Tuple testCaseTuple, Report report) {
-          return createActionFromClause(BEFORE, beforeClause, testCaseTuple, report);
+        private Action createBefore(TestItem testItem, Report report) {
+          return createActionFromClause(BEFORE, beforeClause, testItem, report);
         }
 
-        private Source<Tuple> createGiven(final Tuple testCaseTuple, final Report report, final Session session) {
+        private Source<Tuple> createGiven(final TestItem testItem, final Report report, final Session session) {
+          Tuple testCaseTuple = testItem.getTestCaseTuple();
           return new Source<Tuple>() {
             FuncInvoker funcInvoker = new FuncInvoker.Impl(0);
-            Stage givenStage = Stage.Factory.createOracleLevelStage(GIVEN, session, testCaseTuple, report);
+            Stage givenStage = Stage.Factory.createOracleLevelStage(GIVEN, session, testItem, report);
             Statement givenStatement = givenStage.getStatementFactory().create(givenClause);
 
             @Override
@@ -422,13 +428,13 @@ public enum Beans {
           };
         }
 
-        private Pipe<Tuple, TestIO> createWhen(final Report report, final Session session) {
+        private Pipe<Tuple, TestIO> createWhen(final TestItem testItem, final Report report, final Session session) {
           return new Pipe<Tuple, TestIO>() {
             FuncInvoker funcInvoker = new FuncInvoker.Impl(0);
 
             @Override
             public TestIO apply(Tuple testCase, Context context) {
-              Stage whenStage = Stage.Factory.createOracleLevelStage(WHEN, session, testCase, report);
+              Stage whenStage = Stage.Factory.createOracleLevelStage(WHEN, session, testItem, report);
               return TestIO.create(
                   testCase,
                   Beans.<Boolean>toFunc(
@@ -444,13 +450,13 @@ public enum Beans {
           };
         }
 
-        private Sink<TestIO> createThen(final Report report, final Session session) {
+        private Sink<TestIO> createThen(TestItem testItem, final Report report, final Session session) {
           return new Sink<TestIO>() {
             FuncInvoker funcInvoker = new FuncInvoker.Impl(0);
 
             @Override
             public void apply(TestIO testIO, Context context) {
-              Stage thenStage = Stage.Factory.createOracleVerificationStage(session, testIO.getInput(), testIO.getOutput(), report);
+              Stage thenStage = Stage.Factory.createOracleVerificationStage(session, testItem, testIO.getOutput(), report);
               assertThat(
                   thenStage,
                   new BaseMatcher<Stage>() {
@@ -489,13 +495,13 @@ public enum Beans {
           };
         }
 
-        private <T extends AssertionError> Sink<T> onTestFailure(Tuple testCaseTuple, Report report, Session session) {
+        private <T extends AssertionError> Sink<T> onTestFailure(TestItem testItem, Report report, Session session) {
           return new Sink<T>() {
             FuncInvoker funcInvoker = new FuncInvoker.Impl(0);
 
             @Override
             public void apply(T input, Context context) {
-              Stage onFailureStage = Stage.Factory.createOracleFailureHandlingStage(session, testCaseTuple, input, report);
+              Stage onFailureStage = Stage.Factory.createOracleFailureHandlingStage(session, testItem, input, report);
               Statement onFailureStatement = onFailureStage.getStatementFactory().create(onFailureClause);
               Utils.performActionWithLogging(requireNonNull(
                   onFailureClause != null ?
@@ -511,14 +517,14 @@ public enum Beans {
           };
         }
 
-        private Action createAfter(Tuple testCaseTuple, Report report) {
-          return createActionFromClause(AFTER, afterClause, testCaseTuple, report);
+        private Action createAfter(TestItem testItem, Report report) {
+          return createActionFromClause(AFTER, afterClause, testItem, report);
         }
 
-        private Action createActionFromClause(Stage.Type stageType, List<Object> clause, final Tuple testCaseTuple, Report report) {
+        private Action createActionFromClause(Stage.Type stageType, List<Object> clause, final TestItem testItem, Report report) {
           if (clause == null)
             return (Action) NOP_CLAUSE;
-          Stage stage = Stage.Factory.createOracleLevelStage(stageType, session, testCaseTuple, report);
+          Stage stage = Stage.Factory.createOracleLevelStage(stageType, session, testItem, report);
           Statement statement = stage.getStatementFactory().create(clause);
           FuncInvoker funcInvoker = new FuncInvoker.Impl(0);
           return Beans.<Action>toFunc(statement, funcInvoker).apply(stage);

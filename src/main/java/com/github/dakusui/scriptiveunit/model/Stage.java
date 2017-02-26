@@ -1,7 +1,6 @@
 package com.github.dakusui.scriptiveunit.model;
 
 import com.github.dakusui.actionunit.Action;
-import com.github.dakusui.actionunit.connectors.Sink;
 import com.github.dakusui.jcunit.core.tuples.Tuple;
 import com.github.dakusui.scriptiveunit.Session;
 import com.github.dakusui.scriptiveunit.core.Config;
@@ -43,8 +42,7 @@ public interface Stage {
 
   TestItem getTestItem();
 
-
-  abstract class Delegating implements Stage {
+    abstract class Delegating implements Stage {
     private final Stage target;
 
     protected Delegating(Stage stage) {
@@ -95,40 +93,45 @@ public interface Stage {
     public Report getReport() {
       return this.target.getReport();
     }
+
+    @Override
+    public TestItem getTestItem() {
+      return this.target.getTestItem();
+    }
   }
 
   enum Factory {
     ;
 
     public static Stage createConstraintGenerationStage(Config config, Statement.Factory statementFactory, Tuple tuple) {
-      return _create(CONSTRAINT_GENERATION, config, statementFactory, tuple, null, null, null);
+      return _create(CONSTRAINT_GENERATION, config, statementFactory, tuple, null, null, null, null);
     }
 
     public static Stage createTopLevel(Session session) {
-      return _create(Type.TOPLEVEL, session.getConfig(), new Statement.Factory(session), new Tuple.Builder().build(), null, null, null);
+      return _create(Type.TOPLEVEL, session.getConfig(), new Statement.Factory(session), new Tuple.Builder().build(), null, null, null, null);
     }
 
     public static Stage createSuiteLevelStage(Type type /* should be either SETUP_BEFORE_ALL or TEARDOWN_AFTER_ALL */, Session session, Tuple commonFixture) {
-      return _create(type, session.getConfig(), new Statement.Factory(session), commonFixture, null, null, null);
+      return _create(type, session.getConfig(), new Statement.Factory(session), commonFixture, null, null, null, null);
     }
 
     public static Stage createFixtureLevelStage(Type type /* should be either SETUP or TEARDOWN */, Session session, Tuple fixture) {
-      return _create(type, session.getConfig(), new Statement.Factory(session), fixture, null, null, null);
+      return _create(type, session.getConfig(), new Statement.Factory(session), fixture, null, null, null, null);
     }
 
-    public static Stage createOracleLevelStage(Type type /* should be either GIVEN, WHEN, BEFORE, or AFTER */, Session session, Tuple testCase, Report report) {
-      return _create(type, session.getConfig(), new Statement.Factory(session), testCase, null, null, report);
+    public static Stage createOracleLevelStage(Type type /* should be either GIVEN, WHEN, BEFORE, or AFTER */, Session session, TestItem testItem, Report report) {
+      return _create(type, session.getConfig(), new Statement.Factory(session), testItem.getTestCaseTuple(), testItem, null, null, report);
     }
 
-    public static <RESPONSE> Stage createOracleVerificationStage(Session session, Tuple testCase, RESPONSE response, Report report) {
-      return _create(Type.THEN, session.getConfig(), new Statement.Factory(session), testCase, requireNonNull(response), null, report);
+    public static <RESPONSE> Stage createOracleVerificationStage(Session session, TestItem testItem, RESPONSE response, Report report) {
+      return _create(Type.THEN, session.getConfig(), new Statement.Factory(session), testItem.getTestCaseTuple(), testItem, requireNonNull(response), null, report);
     }
 
-    public static Stage createOracleFailureHandlingStage(Session session, Tuple testCase, Throwable throwable, Report report) {
-      return _create(Type.FAILURE_HANDLING, session.getConfig(), new Statement.Factory(session), testCase, null, throwable, report);
+    public static Stage createOracleFailureHandlingStage(Session session, TestItem testItem, Throwable throwable, Report report) {
+      return _create(Type.FAILURE_HANDLING, session.getConfig(), new Statement.Factory(session), testItem.getTestCaseTuple(), testItem, null, throwable, report);
     }
 
-    private static <RESPONSE> Stage _create(Type type, Config config, Statement.Factory statementFactory, Tuple fixture, RESPONSE response, Throwable throwable, Report report) {
+    private static <RESPONSE> Stage _create(Type type, Config config, Statement.Factory statementFactory, Tuple testCase, TestItem testItem, RESPONSE response, Throwable throwable, Report report) {
       return new Stage() {
         @Override
         public Statement.Factory getStatementFactory() {
@@ -137,7 +140,7 @@ public interface Stage {
 
         @Override
         public Tuple getTestCaseTuple() {
-          return fixture;
+          return testCase;
         }
 
         @Override
@@ -180,7 +183,11 @@ public interface Stage {
 
         @Override
         public TestItem getTestItem() {
-          return null; //.testItem;
+          return checkState(
+              testItem,
+              Objects::nonNull,
+              "This method is not allowed to be called in '%s' stage.", this
+          );
         }
       };
     }
@@ -205,7 +212,7 @@ public interface Stage {
     GIVEN,
     WHEN,
     THEN,
-    FAILURE_HANDLING ,
+    FAILURE_HANDLING,
     AFTER,
     TEARDOWN {
       @Override
@@ -225,10 +232,6 @@ public interface Stage {
     }
 
     public Function<Stage, Action> getFixtureLevelActionFactory(Session session) {
-      throw new UnsupportedOperationException();
-    }
-
-    public <T extends AssertionError> Function<Stage, Sink<T>> getErrorHandlingSinkFactory(Session session) {
       throw new UnsupportedOperationException();
     }
   }

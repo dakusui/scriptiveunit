@@ -8,6 +8,7 @@ import com.github.dakusui.scriptiveunit.core.Config;
 import com.github.dakusui.scriptiveunit.exceptions.ScriptiveUnitException;
 import com.github.dakusui.scriptiveunit.exceptions.SyntaxException;
 import com.github.dakusui.scriptiveunit.model.Stage;
+import com.github.dakusui.scriptiveunit.model.TestItem;
 import com.github.dakusui.scriptiveunit.model.func.Func;
 import com.github.dakusui.scriptiveunit.model.func.FuncInvoker;
 
@@ -35,13 +36,13 @@ public class Core {
   @AccessesTestParameter
   public <E> Func<E> attr(Func<String> attr) {
     return (Stage input) -> {
-      Tuple fixture = input.getTestCaseTuple();
+      Tuple testCase = input.getTestCaseTuple();
       String attrName = attr.apply(input);
       check(
-          fixture.containsKey(attrName),
-          attributeNotFound(attrName, input, fixture.keySet()));
+          testCase.containsKey(attrName),
+          attributeNotFound(attrName, input, testCase.keySet()));
       //noinspection unchecked
-      return (E) fixture.get(attrName);
+      return (E) testCase.get(attrName);
     };
   }
 
@@ -76,8 +77,8 @@ public class Core {
 
   @ReflectivelyReferenced
   @Scriptable
-  public Func<Throwable> testInfo() {
-    return Stage::getTestInfo;
+  public Func<TestItem> testItem() {
+    return Stage::getTestItem;
   }
 
   @ReflectivelyReferenced

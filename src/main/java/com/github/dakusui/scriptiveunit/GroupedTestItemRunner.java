@@ -31,7 +31,7 @@ import static com.github.dakusui.actionunit.Actions.named;
 import static com.github.dakusui.actionunit.Actions.nop;
 import static com.github.dakusui.scriptiveunit.GroupedTestItemRunner.Type.OrderBy.TEST_CASE;
 import static com.github.dakusui.scriptiveunit.GroupedTestItemRunner.Type.OrderBy.TEST_ORACLE;
-import static com.github.dakusui.scriptiveunit.core.Utils.*;
+import static com.github.dakusui.scriptiveunit.core.Utils.filterSingleLevelFactorsOut;
 import static com.github.dakusui.scriptiveunit.model.Stage.Type.SETUP;
 import static com.github.dakusui.scriptiveunit.model.Stage.Type.TEARDOWN;
 import static java.lang.String.format;
@@ -167,7 +167,7 @@ public final class GroupedTestItemRunner extends ParentRunner<Action> {
                   .map(eachOracle ->
                       eachOracle
                           .createTestActionFactory(
-                              TestItem.create(eachTestCase, eachOracle, i.getAndIncrement()),
+                              TestItem.create(testSuiteDescriptor.getDescription(), eachTestCase, eachOracle, i.getAndIncrement()),
                               eachTestCase.getTuple()
                           ).apply(session)
                   ));
@@ -182,7 +182,7 @@ public final class GroupedTestItemRunner extends ParentRunner<Action> {
               .flatMap(eachOracle -> testCases.stream()
                   .map(eachTestCase ->
                       eachOracle.createTestActionFactory(
-                          TestItem.create(eachTestCase, eachOracle, i.getAndIncrement()),
+                          TestItem.create(testSuiteDescriptor.getDescription(), eachTestCase, eachOracle, i.getAndIncrement()),
                           eachTestCase.getTuple()
                       ).apply(session)));
         }
@@ -305,7 +305,7 @@ public final class GroupedTestItemRunner extends ParentRunner<Action> {
                   try {
                     Tuple prettifiedTestCaseTuple = filterSingleLevelFactorsOut(input.getTuple(), factors);
                     return Actions.sequential(
-                        format("%03d: %s", i, template(testOracle.getDescription(), append(input.getTuple(), "@TESTSUITE", testSuiteDescription))),
+                        format("%03d: %s", i, testOracle.templateDescription(input.getTuple(), testSuiteDescription)),
                         named(
                             format("%03d: Setup test fixture", i),
                             named(format("fixture: %s", prettifiedTestCaseTuple),
@@ -316,7 +316,7 @@ public final class GroupedTestItemRunner extends ParentRunner<Action> {
                             .attempt(
                                 testOracle.createTestActionFactory(
                                     TestItem.create(
-                                        input,
+                                        testSuiteDescriptor.getDescription(), input,
                                         testOracle,
                                         input.getIndex()
                                     ),
@@ -361,7 +361,7 @@ public final class GroupedTestItemRunner extends ParentRunner<Action> {
           testOracles.stream()
               .map((TestOracle input) -> input.createTestActionFactory(
                   TestItem.create(
-                      testCase,
+                      testSuiteDescriptor.getDescription(), testCase,
                       input,
                       input.getIndex()
                   ),

@@ -7,7 +7,7 @@
   "setUp":["print", "HelloSetup"],
   "testOracles": [
     {
-      "description": "Report example",
+      "description": "Report example: {{f}}",
       "given": ["always"],
       "when": ["nop"],
       "then": ["write_report", "wasSuccessful",
@@ -17,6 +17,7 @@
         ]
       ],
       "onFailure": ["sequential",
+        ["print", ["write_report", "description", ["value", "getTestOracleDescription", ["testItem"]]]],
         ["print", "hello error handling"],
         ["dumb", ["write_report", "errorMessage", ["value", "getMessage", ["exception"]]]]
       ],
