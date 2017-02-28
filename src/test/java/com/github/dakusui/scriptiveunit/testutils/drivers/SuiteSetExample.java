@@ -7,7 +7,7 @@ import org.junit.runner.RunWith;
 @RunWith(ScriptiveSuiteSet.class)
 @SuiteScripts(
     driverClass = Qapi.class,
-    includes = { ".*api.json", ".*issue.*json", ".*print_twice.json" },
+    includes = { /*".*api.json", ".*issue.*json",*/ ".*print_twice.json" },
     excludes = { ".*iss.*" })
 public class SuiteSetExample {
 }

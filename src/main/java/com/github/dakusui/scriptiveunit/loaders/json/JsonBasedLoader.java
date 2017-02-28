@@ -3,6 +3,7 @@ package com.github.dakusui.scriptiveunit.loaders.json;
 import com.github.dakusui.scriptiveunit.Session;
 import com.github.dakusui.scriptiveunit.annotations.ReflectivelyReferenced;
 import com.github.dakusui.scriptiveunit.core.Config;
+import com.github.dakusui.scriptiveunit.core.Preprocessor;
 import com.github.dakusui.scriptiveunit.loaders.json.JsonBeans.TestSuiteDescriptorBean;
 import com.github.dakusui.scriptiveunit.model.TestSuiteDescriptor;
 import org.codehaus.jackson.JsonNode;
@@ -14,6 +15,8 @@ import org.codehaus.jackson.node.TextNode;
 
 import java.io.IOException;
 import java.util.AbstractList;
+import java.util.Collections;
+import java.util.List;
 
 import static com.github.dakusui.scriptiveunit.core.Utils.*;
 import static com.github.dakusui.scriptiveunit.exceptions.ScriptiveUnitException.wrap;
@@ -38,8 +41,8 @@ public class JsonBasedLoader extends TestSuiteDescriptor.Loader.Base {
       return new ObjectMapper()
           .readValue(
               readScript(session
-                      .getConfig()
-                      .getScriptResourceName()
+                  .getConfig()
+                  .getScriptResourceName()
               ),
               TestSuiteDescriptorBean.class
           )
@@ -50,12 +53,24 @@ public class JsonBasedLoader extends TestSuiteDescriptor.Loader.Base {
   }
 
   protected ObjectNode readObjectNodeWithMerging(String resourceName) {
-    ObjectNode child = checkObjectNode(readJsonNodeFromStream(openResourceAsStream(resourceName)));
+    ObjectNode child = checkObjectNode(preprocess(readJsonNodeFromStream(openResourceAsStream(resourceName))));
     ObjectNode work = JsonNodeFactory.instance.objectNode();
     if (child.has(EXTENDS_KEYWORD)) {
       getParentsOf(child).forEach(s -> deepMerge(checkObjectNode(readObjectNodeWithMerging(s)), work));
     }
     return deepMerge(child, work);
+  }
+
+  protected JsonNode preprocess(JsonNode inputNode) {
+    JsonNode ret = inputNode;
+    for (Preprocessor each : getPreprocessors()) {
+      ret = Preprocessor.translate(each, ret);
+    }
+    return ret;
+  }
+
+  protected List<Preprocessor> getPreprocessors() {
+    return Collections.emptyList();
   }
 
   private ObjectNode readScript(String scriptResourceName) {

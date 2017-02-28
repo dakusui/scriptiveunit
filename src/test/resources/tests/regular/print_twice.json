@@ -15,7 +15,8 @@
       "description": "Print a message twice",
       "given": ["always"],
       "when": ["nop"],
-      "then": ["always"]
+      "then": ["always"],
+      "after": ["print", "AFTER CLAUSE"]
     }
   ],
   "tearDown": ["print", "Hello tearDown"],

@@ -6,11 +6,17 @@ import com.github.dakusui.scriptiveunit.annotations.Import;
 import com.github.dakusui.scriptiveunit.annotations.Import.Alias;
 import com.github.dakusui.scriptiveunit.annotations.Load;
 import com.github.dakusui.scriptiveunit.annotations.ReflectivelyReferenced;
+import com.github.dakusui.scriptiveunit.core.Config;
+import com.github.dakusui.scriptiveunit.core.Preprocessor;
 import com.github.dakusui.scriptiveunit.doc.Help;
 import com.github.dakusui.scriptiveunit.drivers.*;
 import com.github.dakusui.scriptiveunit.drivers.actions.Basic;
+import com.github.dakusui.scriptiveunit.exceptions.SyntaxException;
 import com.github.dakusui.scriptiveunit.loaders.json.JsonBasedLoader;
 import com.google.common.collect.Maps;
+import org.codehaus.jackson.JsonNode;
+import org.codehaus.jackson.node.ArrayNode;
+import org.codehaus.jackson.node.ObjectNode;
 import org.junit.Rule;
 import org.junit.rules.TestRule;
 import org.junit.rules.TestWatcher;
@@ -23,17 +29,62 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import static com.github.dakusui.scriptiveunit.core.Utils.check;
+import static com.github.dakusui.scriptiveunit.core.Utils.deepMerge;
 import static java.lang.String.format;
+import static java.util.Collections.singletonList;
 import static java.util.Collections.unmodifiableMap;
 import static java.util.Objects.requireNonNull;
+import static org.codehaus.jackson.node.JsonNodeFactory.instance;
 
 /**
  * A driver example.
  */
 @Load(
-    scriptPackagePrefix = "tests", scriptNamePattern = ".*\\.json", with = JsonBasedLoader.class)
+    scriptPackagePrefix = "tests", scriptNamePattern = ".*\\.json", with = Qapi.Loader.class)
 @RunWith(ScriptiveUnit.class)
 public class Qapi {
+  public static class Loader extends JsonBasedLoader {
+    public Loader(Config config) {
+      super(config);
+    }
+
+    @Override
+    protected List<Preprocessor> getPreprocessors() {
+      return singletonList(new Preprocessor() {
+        @Override
+        public JsonNode translate(JsonNode targetElement) {
+          check(
+              targetElement instanceof ObjectNode, () -> {
+                throw SyntaxException.nonObject(targetElement);
+              });
+          ObjectNode ret = instance.objectNode();
+          ArrayNode after = instance.arrayNode();
+          after.add("print");
+          after.add("overridden default after, overridden default after");
+          ret.put("after", after);
+          return deepMerge(
+              ((ObjectNode) targetElement),
+              ret
+          );
+        }
+
+        @Override
+        public boolean matches(Path pathToTargetElement) {
+          List<Path.Component> pathComponents = pathToTargetElement.asComponentList();
+          System.out.println(pathComponents);
+          if (pathComponents.size() != 2) {
+            return false;
+          }
+          if (!"testOracles".equals(pathComponents.get(0).value())) {
+            return false;
+          }
+          return pathComponents.get(1) instanceof Path.Component.Num;
+        }
+      });
+    }
+  }
+
   @ReflectivelyReferenced
   @Rule
   public TestRule testRule = new TestWatcher() {
