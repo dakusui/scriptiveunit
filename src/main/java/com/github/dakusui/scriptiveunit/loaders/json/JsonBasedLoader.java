@@ -61,7 +61,7 @@ public class JsonBasedLoader extends TestSuiteDescriptor.Loader.Base {
     return deepMerge(child, work);
   }
 
-  protected JsonNode preprocess(JsonNode inputNode) {
+  private JsonNode preprocess(JsonNode inputNode) {
     JsonNode ret = inputNode;
     for (Preprocessor each : getPreprocessors()) {
       ret = Preprocessor.translate(each, ret);

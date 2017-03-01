@@ -5,11 +5,14 @@ import com.github.dakusui.actionunit.Actions;
 import com.github.dakusui.scriptiveunit.annotations.Doc;
 import com.github.dakusui.scriptiveunit.annotations.ReflectivelyReferenced;
 import com.github.dakusui.scriptiveunit.annotations.Scriptable;
+import com.github.dakusui.scriptiveunit.core.Utils;
 import com.github.dakusui.scriptiveunit.model.Stage;
 import com.github.dakusui.scriptiveunit.model.func.Func;
 
+import java.util.Arrays;
 import java.util.Objects;
 
+import static com.github.dakusui.actionunit.Actions.simple;
 import static com.github.dakusui.scriptiveunit.core.Utils.prettify;
 import static java.util.Arrays.stream;
 import static java.util.stream.Collectors.toList;
@@ -47,7 +50,7 @@ public class Basic {
   @ReflectivelyReferenced
   @Scriptable
   public Func<Action> fail(Func<String> in) {
-    return input -> Actions.simple(() -> {
+    return input -> simple(() -> {
       throw new RuntimeException(in.apply(input));
     });
   }
@@ -55,18 +58,9 @@ public class Basic {
   @ReflectivelyReferenced
   @Scriptable
   public Func<Action> print(Func<?> in) {
-    return input -> Actions.simple(
-        new Runnable() {
-          @Override
-          public void run() {
-            System.out.println(in.apply(input));
-          }
-
-          @Override
-          public String toString() {
-            return "print";
-          }
-        }
+    return input -> simple(prettify(
+        "print",
+        () -> System.out.println(in.apply(input)))
     );
   }
 
@@ -74,7 +68,7 @@ public class Basic {
   @ReflectivelyReferenced
   @Scriptable
   public Func<Action> dumb(@Doc("A value to be printed") Func<?> in) {
-    return input -> Actions.simple(prettify("dumb",
+    return input -> simple(prettify("dumb",
         // Even if it doesn't go anywhere, we must do 'apply'.
         () -> in.apply(input))
     );
@@ -83,15 +77,23 @@ public class Basic {
   @ReflectivelyReferenced
   @Scriptable
   public final Func<Action> tag(Func<String> s) {
-    return input -> Actions.simple(new Runnable() {
-      @Override
-      public void run() {
-      }
+    return input -> simple(prettify(
+        Objects.toString(s.apply(input)),
+        () -> {
+        }));
+  }
 
-      @Override
-      public String toString() {
-        return Objects.toString(s.apply(input));
-      }
-    });
+  @SafeVarargs
+  @ReflectivelyReferenced
+  @Scriptable
+  public final Func<Boolean> perform(Func<Action>... actions) {
+    return input -> {
+      Utils.performActionWithLogging(
+          Actions.sequential(Arrays.stream(actions).map(
+              actionFunc -> actionFunc.apply(input)
+          ).collect(toList()))
+      );
+      return true;
+    };
   }
 }
