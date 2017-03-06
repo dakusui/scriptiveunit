@@ -1,11 +1,12 @@
-package com.github.dakusui.scriptiveunit.tests.cli;
+package com.github.dakusui.scriptiveunit.tests.cli.compat;
 
 import com.github.dakusui.jcunit.plugins.constraints.SmartConstraintCheckerImpl;
 import com.github.dakusui.jcunit.runners.standard.JCUnit;
 import com.github.dakusui.jcunit.runners.standard.annotations.*;
-import com.github.dakusui.scriptiveunit.doc.Help;
+import com.github.dakusui.scriptiveunit.doc.HelpWriter;
 import com.github.dakusui.scriptiveunit.testutils.drivers.Qapi;
 import com.github.dakusui.scriptiveunit.exceptions.ScriptiveUnitException;
+import com.github.dakusui.scriptiveunit.testutils.drivers.SuiteSetExample;
 import com.google.common.collect.ImmutableMap;
 import org.junit.Before;
 import org.junit.Test;
@@ -16,7 +17,7 @@ import java.util.Objects;
 
 @RunWith(JCUnit.class)
 @GenerateCoveringArrayWith(checker = @Checker(SmartConstraintCheckerImpl.class))
-public class HelpTest {
+public class DocumentationCliTest {
   private static final String                NULL                = "(NULL)";
   private static final int                   NULL_FOR_SECOND_ARG = -1;
   private static final String                INVALID             = "(INVALID)";
@@ -70,25 +71,25 @@ public class HelpTest {
   @Given("argLengthIs0")
   @Test
   public void runHelp0() {
-    Help.help(Qapi.class);
+    HelpWriter.help(Qapi.class);
   }
 
   @Given("argLengthIs1")
   @Test
   public void runHelp1() {
-    Help.help(Qapi.class, arg1);
+    HelpWriter.help(Qapi.class, arg1);
   }
 
   @Given("argLengthIs2&&!secondParameterIsInvalid")
   @Test
   public void runHelp2() {
-    Help.help(Qapi.class, arg1, arg1Values.get(arg1)[arg2]);
+    HelpWriter.help(SuiteSetExample.class, arg1, arg1Values.get(arg1)[arg2]);
   }
 
   @Given("argLengthIs2&&secondParameterIsInvalid")
   @Test(expected = ScriptiveUnitException.class)
   public void runHelp2withInvalidSecondParameter() {
-    Help.help(Qapi.class, arg1, arg1Values.get(arg1)[arg2]);
+    HelpWriter.help(Qapi.class, arg1, arg1Values.get(arg1)[arg2]);
   }
 
   public String toString() {

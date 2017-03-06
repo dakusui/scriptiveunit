@@ -11,8 +11,7 @@ import com.github.dakusui.scriptiveunit.drivers.actions.Basic;
 import com.github.dakusui.scriptiveunit.loaders.json.JsonBasedLoader;
 import org.junit.runner.RunWith;
 
-@Load(
-    scriptPackagePrefix = "tests", scriptNamePattern = ".*\\.json", with = JsonBasedLoader.class)
+@Load(with = JsonBasedLoader.class)
 @RunWith(ScriptiveUnit.class)
 public class Simple {
   @ReflectivelyReferenced

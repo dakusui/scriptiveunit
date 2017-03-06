@@ -1,6 +1,5 @@
 package com.github.dakusui.scriptiveunit;
 
-import com.github.dakusui.scriptiveunit.annotations.Load;
 import com.github.dakusui.scriptiveunit.annotations.ReflectivelyReferenced;
 import com.github.dakusui.scriptiveunit.core.Config;
 import com.github.dakusui.scriptiveunit.exceptions.ScriptiveUnitException;
@@ -36,6 +35,26 @@ public class ScriptiveSuiteSet extends ParentRunner<Runner> {
     String[] includes() default {};
 
     String[] excludes() default {};
+
+    String prefix() default "";
+
+    class Streamer {
+      private final SuiteScripts annotationInstance;
+
+      public Streamer(SuiteScripts ann) {
+        this.annotationInstance = ann;
+      }
+
+      public Stream<String> stream() {
+        return targetScripts(this.annotationInstance);
+      }
+
+      private static Stream<String> targetScripts(SuiteScripts suiteScripts) {
+        return allScriptsUnder(suiteScripts.prefix())
+            .filter(matchesAnyOf(toPatterns(suiteScripts.includes())))
+            .filter(not(matchesAnyOf(toPatterns(suiteScripts.excludes()))));
+      }
+    }
   }
 
   private List<Runner> runners;
@@ -50,17 +69,11 @@ public class ScriptiveSuiteSet extends ParentRunner<Runner> {
   public ScriptiveSuiteSet(Class<?> klass, RunnerBuilder builder) throws InitializationError {
     this(
         klass,
-        targetScripts(klass.getAnnotation(SuiteScripts.class))
+        new SuiteScripts.Streamer(klass.getAnnotation(SuiteScripts.class)).stream()
             .map(
                 scriptResourceName ->
                     createRunner(scriptResourceName, figureOutDriverClass(klass)))
             .collect(toList()));
-  }
-
-  private static Stream<String> targetScripts(SuiteScripts suiteScripts) {
-    return allScripts()
-        .filter(matchesAnyOf(toPatterns(suiteScripts.includes())))
-        .filter(not(matchesAnyOf(toPatterns(suiteScripts.excludes()))));
   }
 
   private static List<Pattern> toPatterns(String[] patterns) {
@@ -81,8 +94,8 @@ public class ScriptiveSuiteSet extends ParentRunner<Runner> {
     return s -> !input.test(s);
   }
 
-  private static Stream<String> allScripts() {
-    return new Reflections(Load.DEFAULT_SCRIPT_PACKAGE_PREFIX, new ResourcesScanner()).getResources(Pattern.compile(Load.DEFAULT_SCRIPT_NAME_PATTERN)).stream();
+  private static Stream<String> allScriptsUnder(String prefix) {
+    return new Reflections(prefix, new ResourcesScanner()).getResources(Pattern.compile(".*")).stream();
   }
 
 

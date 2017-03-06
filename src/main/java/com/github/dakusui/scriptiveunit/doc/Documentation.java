@@ -1,28 +1,30 @@
 package com.github.dakusui.scriptiveunit.doc;
 
-import com.github.dakusui.actionunit.visitors.ActionPrinter.Writer;
-import com.github.dakusui.actionunit.visitors.ActionPrinter.Writer.Std;
 import com.github.dakusui.scriptiveunit.GroupedTestItemRunner;
+import com.github.dakusui.scriptiveunit.ScriptiveSuiteSet;
+import com.github.dakusui.scriptiveunit.ScriptiveSuiteSet.SuiteScripts;
+import com.github.dakusui.scriptiveunit.ScriptiveUnit;
 import com.github.dakusui.scriptiveunit.Session;
 import com.github.dakusui.scriptiveunit.annotations.Doc;
-import com.github.dakusui.scriptiveunit.annotations.Load;
 import com.github.dakusui.scriptiveunit.core.Config;
 import com.github.dakusui.scriptiveunit.core.ObjectMethod;
 import com.github.dakusui.scriptiveunit.core.Utils;
 import com.github.dakusui.scriptiveunit.exceptions.ScriptiveUnitException;
 import com.github.dakusui.scriptiveunit.loaders.json.JsonBasedLoader;
+import org.junit.runner.RunWith;
+import org.junit.runner.Runner;
 import org.reflections.Reflections;
-import org.reflections.scanners.ResourcesScanner;
 
+import java.lang.annotation.Annotation;
 import java.util.AbstractList;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
-import java.util.regex.Pattern;
+import java.util.stream.Stream;
 
 import static com.github.dakusui.scriptiveunit.ScriptiveUnit.getAnnotatedMethodsFromImportedFieldsInObject;
 import static com.github.dakusui.scriptiveunit.core.Utils.*;
 import static com.github.dakusui.scriptiveunit.exceptions.ScriptiveUnitException.wrap;
+import static java.lang.Class.forName;
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
 import static java.util.Arrays.stream;
@@ -31,85 +33,23 @@ import static java.util.Comparator.comparing;
 import static java.util.Objects.requireNonNull;
 import static java.util.stream.Collectors.toList;
 
-public interface Help {
-  static void help(Class<?> testClass, Writer stdout, Writer stderr, String... args) {
-    boolean succeeded = false;
-    try {
-      if (args.length == 0)
-        help(testClass, stdout);
-      else if (args.length == 1)
-        help(testClass, stdout, EntityType.valueOf(args[0]));
-      else if (args.length == 2)
-        help(testClass, stdout, EntityType.valueOf(args[0]), args[1]);
-      else
-        throw new IllegalArgumentException("Too many arguments");
-      succeeded = true;
-    } finally {
-      if (!succeeded)
-        help(testClass, stderr);
-    }
-  }
-
-  static void help(Class<?> testClass, String... args) {
-    help(testClass, Std.OUT, Std.ERR, args);
-  }
-
-  static void help(Class<?> testClass, Writer writer) {
-    String className = testClass.getCanonicalName();
-    String scriptSystemPropertyKey = new Config.Builder(testClass, System.getProperties()).build().getScriptResourceNameKey();
-    writer.writeLine(format(
-        "This is a test class " + className + ".%n"
-            + "You can run this as a JUnit test class from your IDE, build tool, etc.%n%n"
-            + " Use -D" + scriptSystemPropertyKey + "={path to your script on your class path}"
-            + " to specify script to be run.%n%n"
-            + "By running this as an application, you can see this message and other helps."
-            + " To list all the available scripts on your classpath, run%n%n"
-            + "    " + className + " help " + EntityType.SCRIPT + "%n%n"
-            + " To list all the available functions that can be used in your scripts, run%n%n"
-            + "    " + className + " help " + EntityType.FUNCTION + "%n%n"
-            + " To list all the available runners by which you can run your scripts, run%n%n"
-            + "    " + className + " help " + EntityType.RUNNER + "%n%n"
-            + " To describe, a script, a function, or a runner, run %n%n"
-            + "    " + className + " help " + EntityType.SCRIPT + " {script name}%n"
-            + "    " + className + " help " + EntityType.FUNCTION + " {function name}%n"
-            + "    " + className + " help " + EntityType.RUNNER + " {runner name}%n"
-            + "%n"));
-  }
-
-  static void help(Class<?> testClass, Writer writer, EntityType type) {
-    create(testClass, type)
-        .list()
-        .forEach(writer::writeLine);
-  }
-
-  static void help(Class<?> testClass, Writer writer, EntityType type, String name) {
-    Description description = create(testClass, type).describe(name);
-    writeDescription(writer, 0, description);
-  }
-
-  static void writeDescription(Writer writer, int level, Description description) {
-    StringBuilder b = new StringBuilder();
-    b.append(format("%s: ", description.name()));
-    description.content().forEach(b::append);
-    writer.writeLine(indent(level) + b.toString());
-    description.children().forEach(input -> writeDescription(writer, level + 1, input));
-  }
+public interface Documentation {
 
   List<String> list();
 
   Description describe(String name);
 
-  static Help create(Class<?> driverClass, EntityType entityType) {
-    return requireNonNull(entityType).create(requireNonNull(driverClass));
+  static Documentation create(Class<?> driverClass, EntryType entryType) {
+    return requireNonNull(entryType).create(requireNonNull(driverClass));
   }
 
-  enum EntityType {
+  enum EntryType {
     FUNCTION {
       @Override
-      public Help create(Class<?> driverClass) {
+      public Documentation create(Class<?> driverClass) {
         try {
           Object object = driverClass.newInstance();
-          return new Help() {
+          return new Documentation() {
             List<ObjectMethod> functions = sort(
                 getAnnotatedMethodsFromImportedFieldsInObject(object),
                 comparing(ObjectMethod::getName));
@@ -175,47 +115,94 @@ public interface Help {
         }
       }
     },
-    SCRIPT {
+    DRIVER {
       @Override
-      public Help create(Class<?> driverClass) {
-        Load loadAnn = getAnnotation(driverClass, Load.class, Load.DEFAULT_INSTANCE);
-
-        Reflections reflections = new Reflections(loadAnn.scriptPackagePrefix(), new ResourcesScanner());
-        return new Help() {
+      public Documentation create(Class<?> driverClass) {
+        return new Documentation() {
           @Override
           public List<String> list() {
-            return new LinkedList<>(reflections.getResources(Pattern.compile(loadAnn.scriptNamePattern())));
+            return getRunnerClasses(ScriptiveUnit.class);
           }
 
           @Override
           public Description describe(String name) {
-            return new Description() {
-              @Override
-              public String name() {
-                return name;
-              }
-
-              @Override
-              public List<String> content() {
-                try {
-                  Config config = new Config.Builder(driverClass, System.getProperties())
-                      .withScriptResourceName(name)
-                      .build();
-                  return singletonList(Session.create(new JsonBasedLoader(config) {
-                  }).getDescriptor().getDescription());
-                } catch (Exception e) {
-                  throw wrap(e);
-                }
-              }
-            };
+            return createDescriptionFromSpecifiedClass(name);
           }
         };
       }
     },
+    SUITESET {
+      @Override
+      public Documentation create(Class<?> none) {
+        return new Documentation() {
+          @Override
+          public List<String> list() {
+            return getRunnerClasses(ScriptiveSuiteSet.class);
+          }
+
+          @Override
+          public Description describe(String name) {
+            return createDescriptionFromSpecifiedClass(name);
+          }
+        };
+      }
+    },
+    SCRIPT {
+      @Override
+      public Documentation create(Class<?> suiteSetClass) {
+        if (suiteSetClass.isAnnotationPresent(RunWith.class)) {
+          Class<? extends Runner> runnerClass = suiteSetClass.getAnnotation(RunWith.class).value();
+          if (runnerClass.equals(ScriptiveSuiteSet.class)) {
+            if (!suiteSetClass.isAnnotationPresent(SuiteScripts.class))
+              throw new ScriptiveUnitException(format(
+                  "'%s' is not annotated with '%s'",
+                  suiteSetClass.getCanonicalName(),
+                  SuiteScripts.class.getCanonicalName()
+              ));
+            SuiteScripts loadAnn = getAnnotation(suiteSetClass, SuiteScripts.class, null);
+            return new Documentation() {
+              @Override
+              public List<String> list() {
+                return new SuiteScripts.Streamer(loadAnn).stream().collect(toList());
+              }
+
+              @Override
+              public Description describe(String name) {
+                return new Description() {
+                  @Override
+                  public String name() {
+                    return name;
+                  }
+
+                  @Override
+                  public List<String> content() {
+                    try {
+                      Config config = new Config.Builder(suiteSetClass, System.getProperties())
+                          .withScriptResourceName(name)
+                          .build();
+                      return singletonList(Session.create(new JsonBasedLoader(config) {
+                      }).getDescriptor().getDescription());
+                    } catch (Exception e) {
+                      throw wrap(e);
+                    }
+                  }
+                };
+              }
+            };
+          }
+          throw new ScriptiveUnitException(format(
+              "This class is not run by '%s'(%s)", ScriptiveSuiteSet.class.getCanonicalName(), runnerClass.getCanonicalName()
+          ));
+        }
+        throw new ScriptiveUnitException(format(
+            "This class (%s) is not annotated with '%s'", suiteSetClass.getCanonicalName(), RunWith.class.getCanonicalName()
+        ));
+      }
+    },
     RUNNER {
       @Override
-      public Help create(Class<?> driverClass) {
-        return new Help() {
+      public Documentation create(Class<?> driverClass) {
+        return new Documentation() {
           @Override
           public List<String> list() {
             return stream(GroupedTestItemRunner.Type.values()).map(GroupedTestItemRunner.Type::name).map(Utils::toCamelCase).collect(toList());
@@ -243,6 +230,41 @@ public interface Help {
       }
     };
 
-    public abstract Help create(Class<?> driverClass);
+    private static List<String> getDocFromSpecifiedClass(String name) {
+      try {
+        return asList(forName(name).getAnnotation(Doc.class).value());
+      } catch (ClassNotFoundException e) {
+        throw new RuntimeException(format("Suite set '%s' was not found in your class path.", name), e);
+      }
+    }
+
+    public abstract Documentation create(Class<?> driverClass);
+
+    private static Stream<Class<?>> allClassesAnnotatedWith(Class<? extends Annotation> annotationClass) {
+      return new Reflections("").getTypesAnnotatedWith(annotationClass).stream();
+    }
+
+    private static List<String> getRunnerClasses(Class<? extends Runner> runnerClass) {
+      return EntryType
+          .allClassesAnnotatedWith(RunWith.class)
+          .filter(aClass -> aClass.getAnnotation(RunWith.class).value().equals(runnerClass))
+          .map(Class::getCanonicalName)
+          .collect(toList());
+    }
+
+    private static Description createDescriptionFromSpecifiedClass(String name) {
+      return new Description() {
+        @Override
+        public String name() {
+          return name;
+        }
+
+        @Override
+        public List<String> content() {
+          return getDocFromSpecifiedClass(name);
+        }
+      };
+    }
   }
+
 }

@@ -9,7 +9,7 @@ import com.github.dakusui.scriptiveunit.annotations.ReflectivelyReferenced;
 import com.github.dakusui.scriptiveunit.core.Config;
 import com.github.dakusui.scriptiveunit.core.JsonUtils;
 import com.github.dakusui.scriptiveunit.core.Preprocessor;
-import com.github.dakusui.scriptiveunit.doc.Help;
+import com.github.dakusui.scriptiveunit.doc.HelpWriter;
 import com.github.dakusui.scriptiveunit.drivers.*;
 import com.github.dakusui.scriptiveunit.drivers.actions.Basic;
 import com.github.dakusui.scriptiveunit.loaders.json.JsonBasedLoader;
@@ -34,8 +34,7 @@ import static java.util.Objects.requireNonNull;
 /**
  * A driver example.
  */
-@Load(
-    scriptPackagePrefix = "tests", scriptNamePattern = ".*\\.json", with = Qapi.Loader.class)
+@Load(with = Qapi.Loader.class)
 @RunWith(ScriptiveUnit.class)
 public class Qapi {
   public static class Loader extends JsonBasedLoader {
@@ -237,6 +236,6 @@ public class Qapi {
 
 
   public static void main(String... args) {
-    Help.help(Qapi.class, args);
+    HelpWriter.help(Qapi.class, args);
   }
 }
