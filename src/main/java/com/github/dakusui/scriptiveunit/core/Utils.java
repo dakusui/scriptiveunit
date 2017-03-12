@@ -16,8 +16,6 @@ import com.google.common.collect.Iterables;
 import org.codehaus.jackson.JsonNode;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.node.ObjectNode;
-import org.junit.Test;
-import org.junit.runner.RunWith;
 import org.reflections.Reflections;
 import org.reflections.scanners.ResourcesScanner;
 import org.reflections.util.ClasspathHelper;
@@ -392,7 +390,7 @@ public enum Utils {
   }
 
   public static <T> Stream<T> findEntitiesUnder(String prefix, Function<Reflections, Set<T>> func) {
-    return func.apply(new Reflections(prefix, new ConfigurationBuilder().setUrls(ClasspathHelper.forPackage(prefix)))).stream();
+    return func.apply(new Reflections(new ConfigurationBuilder().setUrls(ClasspathHelper.forPackage(prefix)).build())).stream();
   }
 
   private interface Converter<FROM, TO> extends Function<FROM, TO> {
@@ -418,13 +416,4 @@ public enum Utils {
       .add(Converter.create(Number.class, BigDecimal.class, (Number input) -> new BigDecimal(input.toString(), DECIMAL128)))
       .build();
 
-
-  public static class UtilsTest {
-    @Test
-    public void main() {
-      //      System.out.println(new Reflections("tests", new ResourcesScanner()).getResources(Pattern.compile(".json")));
-      System.out.println(allScriptsUnder("tests").collect(toList()));
-      System.out.println(allTypesAnnotatedWith("com", RunWith.class));
-    }
-  }
 }
