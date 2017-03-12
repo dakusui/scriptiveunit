@@ -17,6 +17,38 @@ import static java.util.Arrays.asList;
 import static org.junit.Assume.assumeTrue;
 
 
+/**
+ * cli {subcommand} {target type} {test class} {target name}
+ * <p>
+ * subcommand - run, list, describe
+ * target type - function, driver, suiteset, script, runner
+ * test class - FQCN of driver class. Must be annotated with ScriptiveUnit or ScriptiveSuiteSet
+ * target - script resource name, function name,  or driver class
+ * <p>
+ * cli list function
+ * - your.DriverClass                  -> Only 'built-in' functions will be listed
+ * - your.DriverClass your/script.json
+ * <p>
+ * cli list driver                     -> Lists classes annotated with @RunWith(ScriptiveUnit.class)
+ * - (none)
+ * cli list suiteset                   -> Lists classes annotated with @RunWith(ScriptiveSuiteSet.class)
+ * - (none)
+ * <p>
+ * cli list runner
+ * - (none)                            -> Lists supported runners
+ * cli list script
+ * -  your.SuiteSetClass               -> Lists scripts run by specified SuiteSetClass.
+ * <p>
+ * cli run driver     your.DriverClass       your/script.json
+ * cli run suiteset   your.SuiteSetClass
+ * <p>
+ * cli describe function   your/Script.json yourFunction
+ * cli describe driver     your.DriverClass
+ * cli describe your/script.json
+ * cli describe suiteset   your.SuiteSetClass
+ * <p>
+ * cli list (
+ */
 @RunWith(JCUnit.class)
 @GenerateCoveringArrayWith(
     engine = @Generator(value = IpoGcCoveringArrayEngine.class, args = @Value("2")),

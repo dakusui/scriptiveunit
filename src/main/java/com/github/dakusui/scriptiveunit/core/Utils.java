@@ -16,6 +16,12 @@ import com.google.common.collect.Iterables;
 import org.codehaus.jackson.JsonNode;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.node.ObjectNode;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.reflections.Reflections;
+import org.reflections.scanners.ResourcesScanner;
+import org.reflections.util.ClasspathHelper;
+import org.reflections.util.ConfigurationBuilder;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -25,15 +31,13 @@ import java.lang.reflect.AnnotatedElement;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.math.BigDecimal;
-import java.util.Arrays;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Stream;
 
 import static com.github.dakusui.scriptiveunit.exceptions.SyntaxException.*;
 import static java.lang.Character.*;
@@ -379,6 +383,18 @@ public enum Utils {
     return b.toString();
   }
 
+  public static Stream<String> allScriptsUnder(String prefix) {
+    return new Reflections(prefix, new ResourcesScanner()).getResources(Pattern.compile(".*")).stream();
+  }
+
+  public static Stream<Class<?>> allTypesAnnotatedWith(String prefix, Class<? extends Annotation> annotation) {
+    return findEntitiesUnder(prefix, (Reflections reflections) -> reflections.getTypesAnnotatedWith(annotation));
+  }
+
+  public static <T> Stream<T> findEntitiesUnder(String prefix, Function<Reflections, Set<T>> func) {
+    return func.apply(new Reflections(prefix, new ConfigurationBuilder().setUrls(ClasspathHelper.forPackage(prefix)))).stream();
+  }
+
   private interface Converter<FROM, TO> extends Function<FROM, TO> {
     boolean supports(Object input, Class<?> to);
 
@@ -401,4 +417,14 @@ public enum Utils {
       .add(Converter.create(BigDecimal.class, Integer.class, BigDecimal::intValue))
       .add(Converter.create(Number.class, BigDecimal.class, (Number input) -> new BigDecimal(input.toString(), DECIMAL128)))
       .build();
+
+
+  public static class UtilsTest {
+    @Test
+    public void main() {
+      //      System.out.println(new Reflections("tests", new ResourcesScanner()).getResources(Pattern.compile(".json")));
+      System.out.println(allScriptsUnder("tests").collect(toList()));
+      System.out.println(allTypesAnnotatedWith("com", RunWith.class));
+    }
+  }
 }

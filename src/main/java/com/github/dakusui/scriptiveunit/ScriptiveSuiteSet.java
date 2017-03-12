@@ -2,6 +2,7 @@ package com.github.dakusui.scriptiveunit;
 
 import com.github.dakusui.scriptiveunit.annotations.ReflectivelyReferenced;
 import com.github.dakusui.scriptiveunit.core.Config;
+import com.github.dakusui.scriptiveunit.core.Utils;
 import com.github.dakusui.scriptiveunit.exceptions.ScriptiveUnitException;
 import org.junit.runner.Description;
 import org.junit.runner.Runner;
@@ -9,8 +10,6 @@ import org.junit.runner.notification.RunNotifier;
 import org.junit.runners.ParentRunner;
 import org.junit.runners.model.InitializationError;
 import org.junit.runners.model.RunnerBuilder;
-import org.reflections.Reflections;
-import org.reflections.scanners.ResourcesScanner;
 
 import java.lang.annotation.*;
 import java.util.Arrays;
@@ -50,7 +49,7 @@ public class ScriptiveSuiteSet extends ParentRunner<Runner> {
       }
 
       private static Stream<String> targetScripts(SuiteScripts suiteScripts) {
-        return allScriptsUnder(suiteScripts.prefix())
+        return Utils.allScriptsUnder(suiteScripts.prefix())
             .filter(matchesAnyOf(toPatterns(suiteScripts.includes())))
             .filter(not(matchesAnyOf(toPatterns(suiteScripts.excludes()))));
       }
@@ -92,10 +91,6 @@ public class ScriptiveSuiteSet extends ParentRunner<Runner> {
 
   private static Predicate<String> not(Predicate<String> input) {
     return s -> !input.test(s);
-  }
-
-  private static Stream<String> allScriptsUnder(String prefix) {
-    return new Reflections(prefix, new ResourcesScanner()).getResources(Pattern.compile(".*")).stream();
   }
 
 
