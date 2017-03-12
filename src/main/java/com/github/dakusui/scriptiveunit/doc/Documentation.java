@@ -13,13 +13,10 @@ import com.github.dakusui.scriptiveunit.exceptions.ScriptiveUnitException;
 import com.github.dakusui.scriptiveunit.loaders.json.JsonBasedLoader;
 import org.junit.runner.RunWith;
 import org.junit.runner.Runner;
-import org.reflections.Reflections;
 
-import java.lang.annotation.Annotation;
 import java.util.AbstractList;
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Stream;
 
 import static com.github.dakusui.scriptiveunit.ScriptiveUnit.getAnnotatedMethodsFromImportedFieldsInObject;
 import static com.github.dakusui.scriptiveunit.core.Utils.*;
@@ -240,13 +237,8 @@ public interface Documentation {
 
     public abstract Documentation create(Class<?> driverClass);
 
-    private static Stream<Class<?>> allClassesAnnotatedWith(Class<? extends Annotation> annotationClass) {
-      return new Reflections("").getTypesAnnotatedWith(annotationClass).stream();
-    }
-
     private static List<String> getRunnerClasses(Class<? extends Runner> runnerClass) {
-      return EntryType
-          .allClassesAnnotatedWith(RunWith.class)
+      return Utils.allTypesAnnotatedWith("", RunWith.class)
           .filter(aClass -> aClass.getAnnotation(RunWith.class).value().equals(runnerClass))
           .map(Class::getCanonicalName)
           .collect(toList());

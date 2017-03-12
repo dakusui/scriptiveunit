@@ -382,15 +382,23 @@ public enum Utils {
   }
 
   public static Stream<String> allScriptsUnder(String prefix) {
-    return new Reflections(prefix, new ResourcesScanner()).getResources(Pattern.compile(".*")).stream();
+    return allScriptsUnderMatching(prefix, Pattern.compile(".*"));
+  }
+
+  public static Stream<String> allScriptsUnderMatching(String prefix, Pattern pattern) {
+    return new Reflections(prefix, new ResourcesScanner()).getResources(pattern).stream();
   }
 
   public static Stream<Class<?>> allTypesAnnotatedWith(String prefix, Class<? extends Annotation> annotation) {
     return findEntitiesUnder(prefix, (Reflections reflections) -> reflections.getTypesAnnotatedWith(annotation));
   }
 
-  public static <T> Stream<T> findEntitiesUnder(String prefix, Function<Reflections, Set<T>> func) {
-    return func.apply(new Reflections(new ConfigurationBuilder().setUrls(ClasspathHelper.forPackage(prefix)).build())).stream();
+  public static Stream<Class<?>> findEntitiesUnder(String prefix, Function<Reflections, Set<Class<?>>> func) {
+    return func.apply(new Reflections(
+        ConfigurationBuilder.build(
+            ClasspathHelper.forPackage(prefix)
+        ))
+    ).stream();
   }
 
   private interface Converter<FROM, TO> extends Function<FROM, TO> {
