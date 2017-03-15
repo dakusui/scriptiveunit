@@ -1,9 +1,16 @@
 package com.github.dakusui.scriptiveunit;
 
+import com.github.dakusui.scriptiveunit.core.Utils;
 import com.github.dakusui.scriptiveunit.doc.Documentation;
 import org.junit.runner.Result;
+import org.junit.runner.RunWith;
 
+import java.util.Arrays;
 import java.util.List;
+import java.util.function.Function;
+
+import static com.github.dakusui.scriptiveunit.FacadeException.validateDriverClass;
+import static java.util.stream.Collectors.toList;
 
 /**
  * A facade to ScriptiveUnit's functionalities.
@@ -33,19 +40,31 @@ public class ScriptiveUnitCore {
   }
 
   public List<String> listFunctions(Class<?> driverClass, String scriptResourceName) {
+    validateDriverClass(driverClass);
+    Object driverObject = null;
+    // getObjectMethodsFromImportedFieldsInObject
     return null;
   }
 
   public List<Class<?>> listDrivers(String packagePrefix) {
-    return null;
+    return Utils.allTypesAnnotatedWith(packagePrefix, RunWith.class)
+        .filter(aClass -> aClass.getAnnotation(RunWith.class).value().equals(ScriptiveUnit.class))
+        .collect(toList());
   }
 
   public List<String> listRunners() {
-    return null;
+    return Arrays.stream(GroupedTestItemRunner.Type.values()).map(new Function<GroupedTestItemRunner.Type, String>() {
+      @Override
+      public String apply(GroupedTestItemRunner.Type type) {
+        return Utils.toCamelCase(type.name());
+      }
+    }).collect(toList());
   }
 
   public List<Class<?>> listSuiteSets(String packagePrefix) {
-    return null;
+    return Utils.allTypesAnnotatedWith(packagePrefix, RunWith.class)
+        .filter(aClass -> aClass.getAnnotation(RunWith.class).value().equals(ScriptiveSuiteSet.class))
+        .collect(toList());
   }
 
   public List<String> listScripts() {

@@ -48,8 +48,23 @@ public interface Form {
       List<Object> userFormClause = session.getDescriptor().getUserDefinedFormClauses().get(name);
       if (userFormClause == null)
         return null;
-      return new UserForm(rename(Factory.this.getObjectMethodFromDriver("userFunc"), name), userFormClause);
+      return new UserForm(
+          rename(
+              Factory.this.getObjectMethodFromDriver("userFunc"),
+              name
+          ),
+          userFormClause
+      );
     }
+
+    private ObjectMethod getObjectMethodFromDriver(String methodName) {
+      for (ObjectMethod each : ScriptiveUnit.getObjectMethodsFromImportedFieldsInObject(this.driver)) {
+        if (getMethodName(each).equals(methodName))
+          return each;
+      }
+      return null;
+    }
+
 
     private Object[] shrinkTo(Class<?> componentType, int count, Object[] args) {
       Object[] ret = new Object[count];
@@ -61,14 +76,6 @@ public interface Form {
       System.arraycopy(args, ret.length - 1, var, 0, args.length - count + 1);
       ret[ret.length - 1] = var;
       return ret;
-    }
-
-    private ObjectMethod getObjectMethodFromDriver(String methodName) {
-      for (ObjectMethod each : ScriptiveUnit.getAnnotatedMethodsFromImportedFieldsInObject(this.driver)) {
-        if (getMethodName(each).equals(methodName))
-          return each;
-      }
-      return null;
     }
 
     private ObjectMethod rename(ObjectMethod objectMethod, String newName) {
@@ -122,7 +129,7 @@ public interface Form {
     private class Impl implements Form {
       private final ObjectMethod objectMethod;
 
-      Impl(ObjectMethod objectMethod) {
+      private Impl(ObjectMethod objectMethod) {
         this.objectMethod = objectMethod;
       }
 

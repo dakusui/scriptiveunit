@@ -2,7 +2,6 @@ package com.github.dakusui.scriptiveunit.tests.suiteset;
 
 import com.github.dakusui.jcunit.runners.standard.JCUnit;
 import com.github.dakusui.jcunit.runners.standard.annotations.FactorField;
-import com.github.dakusui.scriptiveunit.annotations.ReflectivelyReferenced;
 import com.github.dakusui.scriptiveunit.testutils.FailuresMatcher;
 import com.github.dakusui.scriptiveunit.testutils.JUnitResultMatcher;
 import com.github.dakusui.scriptiveunit.testutils.TestBase;
@@ -21,7 +20,7 @@ import static org.junit.Assert.assertThat;
 @RunWith(JCUnit.class)
 public class SuiteSetTest extends TestBase {
   public enum TestItem implements TestDef<Class, SuiteSetTest, Result> {
-    @ReflectivelyReferenced
+    @SuppressWarnings("unused")
     SUITESET_NORMAL_TEST {
       @Override
       public Matcher<Result> getOracle(SuiteSetTest testObject) {
@@ -62,7 +61,7 @@ public class SuiteSetTest extends TestBase {
     }
   }
 
-  @ReflectivelyReferenced
+  @SuppressWarnings("unused")
   @FactorField
   public TestItem testItem;
 

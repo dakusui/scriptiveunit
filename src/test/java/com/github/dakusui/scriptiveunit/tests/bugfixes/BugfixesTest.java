@@ -2,7 +2,6 @@ package com.github.dakusui.scriptiveunit.tests.bugfixes;
 
 import com.github.dakusui.jcunit.runners.standard.JCUnit;
 import com.github.dakusui.jcunit.runners.standard.annotations.FactorField;
-import com.github.dakusui.scriptiveunit.annotations.ReflectivelyReferenced;
 import com.github.dakusui.scriptiveunit.testutils.JUnitResultMatcher;
 import com.github.dakusui.scriptiveunit.testutils.TestDef;
 import com.github.dakusui.scriptiveunit.testutils.drivers.Simple;
@@ -18,7 +17,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 public class BugfixesTest {
 
   public enum TestItem implements TestDef<String, BugfixesTest, Result> {
-    @ReflectivelyReferenced ISSUE_1_NONTERMINATING_NUMBER_HANDLING {
+    @SuppressWarnings("unused") ISSUE_1_NONTERMINATING_NUMBER_HANDLING {
       @Override
       public String getTestInput() {
         return "tests/bugfixes/issue-2.json";
@@ -36,7 +35,7 @@ public class BugfixesTest {
     }
   }
 
-  @ReflectivelyReferenced
+  @SuppressWarnings("unused")
   @FactorField
   public TestItem testItem;
 

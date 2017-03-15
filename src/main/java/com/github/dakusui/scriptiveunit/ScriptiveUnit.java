@@ -5,7 +5,6 @@ import com.github.dakusui.jcunit.core.factor.Factor;
 import com.github.dakusui.jcunit.core.tuples.Tuple;
 import com.github.dakusui.scriptiveunit.annotations.Import;
 import com.github.dakusui.scriptiveunit.annotations.Load;
-import com.github.dakusui.scriptiveunit.annotations.ReflectivelyReferenced;
 import com.github.dakusui.scriptiveunit.annotations.Scriptable;
 import com.github.dakusui.scriptiveunit.core.Config;
 import com.github.dakusui.scriptiveunit.core.ObjectMethod;
@@ -23,6 +22,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Stream;
 
 import static com.github.dakusui.actionunit.Utils.createTestClassMock;
 import static com.github.dakusui.scriptiveunit.core.Utils.performActionWithLogging;
@@ -48,7 +48,7 @@ public class ScriptiveUnit extends Parameterized {
    *
    * @param klass A test class.
    */
-  @ReflectivelyReferenced
+  @SuppressWarnings("unused")
   public ScriptiveUnit(Class<?> klass) throws Throwable {
     this(klass, new Config.Builder(klass, System.getProperties()).build());
   }
@@ -59,7 +59,7 @@ public class ScriptiveUnit extends Parameterized {
    * @param klass  A test class
    * @param config A config object.
    */
-  @ReflectivelyReferenced
+  @SuppressWarnings("unused")
   protected ScriptiveUnit(Class<?> klass, Config config) throws Throwable {
     this(klass, createTestSuiteDescriptorLoader(config));
   }
@@ -136,7 +136,7 @@ public class ScriptiveUnit extends Parameterized {
   }
 
 
-    private static TestSuiteDescriptor.Loader createTestSuiteDescriptorLoader(Config config) {
+  private static TestSuiteDescriptor.Loader createTestSuiteDescriptorLoader(Config config) {
     return TestSuiteDescriptor.Loader.createInstance(
         getAnnotationWithDefault(
             config.getDriverClass(),
@@ -146,7 +146,19 @@ public class ScriptiveUnit extends Parameterized {
     );
   }
 
-  public static List<ObjectMethod> getAnnotatedMethodsFromImportedFieldsInObject(Object object) {
+  public List<String> getFormNames(Object driverObject) {
+    return Stream.concat(
+        getObjectMethodsFromImportedFieldsInObject(driverObject)
+            .stream()
+            .map(ObjectMethod::getName),
+        getObjectMethodNamesFromScript().stream()).collect(toList());
+  }
+
+  private List<String> getObjectMethodNamesFromScript() {
+    return this.session.getDescriptor().getUserDefinedFormClauses().keySet().stream().collect(toList());
+  }
+
+  public static List<ObjectMethod> getObjectMethodsFromImportedFieldsInObject(Object object) {
     return Utils.getAnnotatedFields(object, Import.class)
         .stream()
         .map(each -> Utils.getAnnotatedMethods(

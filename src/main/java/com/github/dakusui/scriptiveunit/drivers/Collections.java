@@ -1,6 +1,5 @@
 package com.github.dakusui.scriptiveunit.drivers;
 
-import com.github.dakusui.scriptiveunit.annotations.ReflectivelyReferenced;
 import com.github.dakusui.scriptiveunit.annotations.Scriptable;
 import com.github.dakusui.scriptiveunit.model.Stage;
 import com.github.dakusui.scriptiveunit.model.func.Func;
@@ -13,21 +12,21 @@ import java.util.stream.Collectors;
 import static java.util.Objects.requireNonNull;
 import static java.util.stream.StreamSupport.stream;
 
-@ReflectivelyReferenced
+@SuppressWarnings("unused")
 public class Collections {
-  @ReflectivelyReferenced
+  @SuppressWarnings("unused")
   @Scriptable
   public <E> Func<Integer> size(Func<Iterable<? extends E>> iterable) {
     return (Stage input) -> Iterables.size(requireNonNull(iterable.apply(input)));
   }
 
-  @ReflectivelyReferenced
+  @SuppressWarnings("unused")
   @Scriptable
   public <E> Func<Integer> concat(Func<Iterable<? extends E>> iterable) {
     return (Stage input) -> Iterables.size(requireNonNull(iterable.apply(input)));
   }
 
-  @ReflectivelyReferenced
+  @SuppressWarnings("unused")
   @Scriptable
   public <E> Func<Iterable<? extends E>> filter(Func<Iterable<? extends E>> iterable, Func<Function<E, Boolean>> predicate) {
     return (Stage i) -> {
@@ -39,7 +38,7 @@ public class Collections {
     };
   }
 
-  @ReflectivelyReferenced
+  @SuppressWarnings("unused")
   @Scriptable
   public <E> Func<Function<E, Boolean>> containedBy(Func<Iterable<E>> iterable) {
     return (Stage input) -> {
@@ -48,13 +47,13 @@ public class Collections {
     };
   }
 
-  @ReflectivelyReferenced
+  @SuppressWarnings("unused")
   @Scriptable
   public Func<Object> writeTo(Func<Map<String, Object>> map, Func<String> itemName, Func<Object> itemValue) {
     return input -> requireNonNull(map.apply(input)).put(itemName.apply(input), itemValue.apply(input));
   }
 
-  @ReflectivelyReferenced
+  @SuppressWarnings("unused")
   @Scriptable
   public Func<Object> readFrom(Func<Map<String, Object>> map, Func<String> itemName) {
     return input -> requireNonNull(map.apply(input)).get(itemName.apply(input));

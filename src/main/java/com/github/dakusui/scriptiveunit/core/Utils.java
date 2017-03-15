@@ -18,8 +18,8 @@ import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.node.ObjectNode;
 import org.reflections.Reflections;
 import org.reflections.scanners.ResourcesScanner;
-import org.reflections.util.ClasspathHelper;
-import org.reflections.util.ConfigurationBuilder;
+import org.reflections.scanners.SubTypesScanner;
+import org.reflections.scanners.TypeAnnotationsScanner;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -53,6 +53,20 @@ public enum Utils {
       @Override
       public void run() {
         runnable.run();
+      }
+
+      @Override
+      public String toString() {
+        return prettyString;
+      }
+    };
+  }
+
+  public static <T> Supplier<T> prettify(String prettyString, Supplier<T> supplier) {
+    return new Supplier<T>() {
+      @Override
+      public T get() {
+        return supplier.get();
       }
 
       @Override
@@ -311,6 +325,15 @@ public enum Utils {
     return convert(input, type);
   }
 
+  /**
+   * Returns an annotation element of a specified type ({@code annotationClass})
+   * attached to {@code annotatedElement}.
+   * If it is not present, {@code defaultInstance} will be returned.
+   *
+   * @param annotatedElement An element from which annotation object to be returned is retrieved.
+   * @param annotationClass  An annotation class of the instance to be returned.
+   * @param defaultInstance  An annotation object to be returned in the {@code annotatedElement} doesn't have it.
+   */
   public static <T extends Annotation> T getAnnotation(AnnotatedElement annotatedElement, Class<T> annotationClass, T defaultInstance) {
     return annotatedElement.isAnnotationPresent(annotationClass) ?
         annotatedElement.getAnnotation(annotationClass) :
@@ -395,9 +418,10 @@ public enum Utils {
 
   public static Stream<Class<?>> findEntitiesUnder(String prefix, Function<Reflections, Set<Class<?>>> func) {
     return func.apply(new Reflections(
-        ConfigurationBuilder.build(
-            ClasspathHelper.forPackage(prefix)
-        ))
+            prefix,
+            new TypeAnnotationsScanner(),
+            new SubTypesScanner()
+        )
     ).stream();
   }
 

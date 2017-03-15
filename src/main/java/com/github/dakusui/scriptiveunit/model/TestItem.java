@@ -1,7 +1,6 @@
 package com.github.dakusui.scriptiveunit.model;
 
 import com.github.dakusui.jcunit.core.tuples.Tuple;
-import com.github.dakusui.scriptiveunit.annotations.ReflectivelyReferenced;
 import com.github.dakusui.scriptiveunit.loaders.IndexedTestCase;
 
 public interface TestItem {
@@ -11,7 +10,7 @@ public interface TestItem {
 
   int getTestOracleId();
 
-  @ReflectivelyReferenced
+  @SuppressWarnings("unused")
   String getTestOracleDescription();
 
   int getTestItemId();

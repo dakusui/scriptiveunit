@@ -1,7 +1,6 @@
 package com.github.dakusui.scriptiveunit.drivers;
 
 import com.github.dakusui.scriptiveunit.annotations.Doc;
-import com.github.dakusui.scriptiveunit.annotations.ReflectivelyReferenced;
 import com.github.dakusui.scriptiveunit.annotations.Scriptable;
 import com.github.dakusui.scriptiveunit.model.Stage;
 import com.github.dakusui.scriptiveunit.model.func.Func;
@@ -12,7 +11,7 @@ import static com.github.dakusui.scriptiveunit.core.Utils.toBigDecimalIfPossible
 import static java.util.Objects.requireNonNull;
 
 public class Predicates {
-  @ReflectivelyReferenced
+  @SuppressWarnings("unused")
   @SafeVarargs
   @Scriptable
   @Doc({
@@ -33,7 +32,7 @@ public class Predicates {
     };
   }
 
-  @ReflectivelyReferenced
+  @SuppressWarnings("unused")
   @SafeVarargs
   @Scriptable
   @Doc({
@@ -54,7 +53,7 @@ public class Predicates {
     };
   }
 
-  @ReflectivelyReferenced
+  @SuppressWarnings("unused")
   @Scriptable
   @Doc({
       "If the first argument is evaluated true, the second argument is evaluated" +
@@ -71,14 +70,14 @@ public class Predicates {
         true;
   }
 
-  @ReflectivelyReferenced
+  @SuppressWarnings("unused")
   @Scriptable
   @Doc("Returns always true.")
   public Func<Boolean> always() {
     return input -> true;
   }
 
-  @ReflectivelyReferenced
+  @SuppressWarnings("unused")
   @Scriptable
   @Doc(
       "Checks true if given values are equal to each other, false otherwise."
@@ -89,43 +88,43 @@ public class Predicates {
     return input -> requireNonNull(Objects.equals(a.apply(input), b.apply(input)));
   }
 
-  @ReflectivelyReferenced
+  @SuppressWarnings("unused")
   @Scriptable
   public Func<Boolean> not(Func<Boolean> predicate) {
     return input -> !requireNonNull(predicate.apply(input));
   }
 
-  @ReflectivelyReferenced
+  @SuppressWarnings("unused")
   @Scriptable
   public <U> Func<Boolean> gt(Func<Comparable<U>> a, Func<U> b) {
     return input -> requireNonNull(requireNonNull(compare(a, b)).apply(input)) > 0;
   }
 
-  @ReflectivelyReferenced
+  @SuppressWarnings("unused")
   @Scriptable
   public <U> Func<Boolean> ge(Func<Comparable<U>> a, Func<U> b) {
     return input -> requireNonNull(requireNonNull(compare(a, b)).apply(input)) >= 0;
   }
 
-  @ReflectivelyReferenced
+  @SuppressWarnings("unused")
   @Scriptable
   public <U> Func<Boolean> lt(Func<Comparable<U>> a, Func<U> b) {
     return input -> requireNonNull(requireNonNull(compare(a, b)).apply(input)) < 0;
   }
 
-  @ReflectivelyReferenced
+  @SuppressWarnings("unused")
   @Scriptable
   public <U> Func<Boolean> le(Func<Comparable<U>> a, Func<U> b) {
     return input -> requireNonNull(requireNonNull(compare(a, b)).apply(input)) <= 0;
   }
 
-  @ReflectivelyReferenced
+  @SuppressWarnings("unused")
   @Scriptable
   public <U> Func<Boolean> eq(Func<Comparable<U>> a, Func<U> b) {
     return input -> requireNonNull(requireNonNull(compare(a, b)).apply(input)) == 0;
   }
 
-  @ReflectivelyReferenced
+  @SuppressWarnings("unused")
   @Scriptable
   public <U> Func<Integer> compare(Func<Comparable<U>> a, Func<U> b) {
     return (Stage input) -> {

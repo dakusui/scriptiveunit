@@ -3,7 +3,6 @@ package com.github.dakusui.scriptiveunit.drivers.actions;
 import com.github.dakusui.actionunit.Action;
 import com.github.dakusui.actionunit.Actions;
 import com.github.dakusui.scriptiveunit.annotations.Doc;
-import com.github.dakusui.scriptiveunit.annotations.ReflectivelyReferenced;
 import com.github.dakusui.scriptiveunit.annotations.Scriptable;
 import com.github.dakusui.scriptiveunit.core.Utils;
 import com.github.dakusui.scriptiveunit.model.Stage;
@@ -17,16 +16,16 @@ import static com.github.dakusui.scriptiveunit.core.Utils.prettify;
 import static java.util.Arrays.stream;
 import static java.util.stream.Collectors.toList;
 
-@ReflectivelyReferenced
+@SuppressWarnings("unused")
 public class Basic {
-  @ReflectivelyReferenced
+  @SuppressWarnings("unused")
   @Scriptable
   public Func<Action> nop() {
     return input -> Actions.nop();
   }
 
   @SafeVarargs
-  @ReflectivelyReferenced
+  @SuppressWarnings("unused")
   @Scriptable
   public final Func<Action> sequential(Func<Action>... actions) {
     return (Stage input) -> Actions.sequential(
@@ -37,7 +36,7 @@ public class Basic {
   }
 
   @SafeVarargs
-  @ReflectivelyReferenced
+  @SuppressWarnings("unused")
   @Scriptable
   public final Func<Action> concurrent(Func<Action>... actions) {
     return (Stage input) -> Actions.concurrent(
@@ -47,7 +46,7 @@ public class Basic {
             .toArray(new Action[actions.length]));
   }
 
-  @ReflectivelyReferenced
+  @SuppressWarnings("unused")
   @Scriptable
   public Func<Action> fail(Func<String> in) {
     return input -> simple(() -> {
@@ -55,7 +54,7 @@ public class Basic {
     });
   }
 
-  @ReflectivelyReferenced
+  @SuppressWarnings("unused")
   @Scriptable
   public Func<Action> print(Func<?> in) {
     return input -> simple(prettify(
@@ -64,17 +63,17 @@ public class Basic {
     );
   }
 
-  @Doc("Prints to a given value to a 'dumb' output.")
-  @ReflectivelyReferenced
+  @Doc("Prints to a given value to a 'dumb' output, which doesn't do anything.")
+  @SuppressWarnings("unused")
   @Scriptable
   public Func<Action> dumb(@Doc("A value to be printed") Func<?> in) {
-    return input -> simple(prettify("dumb",
+    return (Stage input) -> simple(prettify("dumb",
         // Even if it doesn't go anywhere, we must do 'apply'.
-        () -> in.apply(input))
+        (Runnable) () -> in.apply(input))
     );
   }
 
-  @ReflectivelyReferenced
+  @SuppressWarnings("unused")
   @Scriptable
   public final Func<Action> tag(Func<String> s) {
     return input -> simple(prettify(
@@ -84,7 +83,7 @@ public class Basic {
   }
 
   @SafeVarargs
-  @ReflectivelyReferenced
+  @SuppressWarnings("unused")
   @Scriptable
   public final Func<Boolean> perform(Func<Action>... actions) {
     return input -> {

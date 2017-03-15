@@ -18,7 +18,7 @@ import java.util.AbstractList;
 import java.util.List;
 import java.util.Optional;
 
-import static com.github.dakusui.scriptiveunit.ScriptiveUnit.getAnnotatedMethodsFromImportedFieldsInObject;
+import static com.github.dakusui.scriptiveunit.ScriptiveUnit.getObjectMethodsFromImportedFieldsInObject;
 import static com.github.dakusui.scriptiveunit.core.Utils.*;
 import static com.github.dakusui.scriptiveunit.exceptions.ScriptiveUnitException.wrap;
 import static java.lang.Class.forName;
@@ -48,7 +48,7 @@ public interface Documentation {
           Object object = driverClass.newInstance();
           return new Documentation() {
             List<ObjectMethod> functions = sort(
-                getAnnotatedMethodsFromImportedFieldsInObject(object),
+                getObjectMethodsFromImportedFieldsInObject(object),
                 comparing(ObjectMethod::getName));
 
             @Override

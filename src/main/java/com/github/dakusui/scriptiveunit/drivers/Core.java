@@ -2,7 +2,6 @@ package com.github.dakusui.scriptiveunit.drivers;
 
 import com.github.dakusui.jcunit.core.tuples.Tuple;
 import com.github.dakusui.scriptiveunit.annotations.AccessesTestParameter;
-import com.github.dakusui.scriptiveunit.annotations.ReflectivelyReferenced;
 import com.github.dakusui.scriptiveunit.annotations.Scriptable;
 import com.github.dakusui.scriptiveunit.core.Config;
 import com.github.dakusui.scriptiveunit.exceptions.ScriptiveUnitException;
@@ -31,7 +30,7 @@ public class Core {
    * @param attr Attribute name whose value should be returned
    * @param <E>  Type of attribute value to be returned.
    */
-  @ReflectivelyReferenced
+  @SuppressWarnings("unused")
   @Scriptable
   @AccessesTestParameter
   public <E> Func<E> attr(Func<String> attr) {
@@ -54,7 +53,7 @@ public class Core {
    * @param entryName A name of method to be invoked.
    * @param target    A target from which value of {@code entryName} will be returned.
    */
-  @ReflectivelyReferenced
+  @SuppressWarnings("unused")
   @Scriptable
   public <E> Func<E> value(Func<String> entryName, Func<?> target) {
     return (Stage input) -> {
@@ -69,19 +68,19 @@ public class Core {
     };
   }
 
-  @ReflectivelyReferenced
+  @SuppressWarnings("unused")
   @Scriptable
   public Func<Throwable> exception() {
     return Stage::getThrowable;
   }
 
-  @ReflectivelyReferenced
+  @SuppressWarnings("unused")
   @Scriptable
   public Func<TestItem> testItem() {
     return Stage::getTestItem;
   }
 
-  @ReflectivelyReferenced
+  @SuppressWarnings("unused")
   @Scriptable
   public final Func<List<?>> quote(Func<?>... values) {
     return (Stage input) -> Arrays
@@ -90,7 +89,7 @@ public class Core {
         .collect(toList());
   }
 
-  @ReflectivelyReferenced
+  @SuppressWarnings("unused")
   @Scriptable
   public final Func<Object> userFunc(Func<List<Object>> funcBody, Func<?>... args) {
     return (Stage input) -> {
@@ -115,7 +114,7 @@ public class Core {
     };
   }
 
-  @ReflectivelyReferenced
+  @SuppressWarnings("unused")
   @Scriptable
   public Func<Object> configAttr(Func<String> attrName) {
     return input -> {
@@ -139,7 +138,7 @@ public class Core {
     };
   }
 
-  @ReflectivelyReferenced
+  @SuppressWarnings("unused")
   @Scriptable
   public Func<Object> systemProperty(Func<String> attrName) {
     return input -> System.getProperties().getProperty(requireNonNull(attrName.apply(input)));

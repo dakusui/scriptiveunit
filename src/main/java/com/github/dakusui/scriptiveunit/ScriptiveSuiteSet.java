@@ -1,6 +1,5 @@
 package com.github.dakusui.scriptiveunit;
 
-import com.github.dakusui.scriptiveunit.annotations.ReflectivelyReferenced;
 import com.github.dakusui.scriptiveunit.core.Config;
 import com.github.dakusui.scriptiveunit.core.Utils;
 import com.github.dakusui.scriptiveunit.exceptions.ScriptiveUnitException;
@@ -64,7 +63,7 @@ public class ScriptiveSuiteSet extends ParentRunner<Runner> {
    * @param klass   the root class
    * @param builder builds runners for classes in the suite
    */
-  @ReflectivelyReferenced
+  @SuppressWarnings({"unused"})
   public ScriptiveSuiteSet(Class<?> klass, RunnerBuilder builder) throws InitializationError {
     this(
         klass,
