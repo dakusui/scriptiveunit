@@ -1,13 +1,11 @@
 package com.github.dakusui.scriptiveunit;
 
 import com.github.dakusui.scriptiveunit.core.Config;
+import com.github.dakusui.scriptiveunit.model.Report;
 import com.github.dakusui.scriptiveunit.model.Stage;
 import com.github.dakusui.scriptiveunit.model.TestItem;
 import com.github.dakusui.scriptiveunit.model.TestSuiteDescriptor;
-import com.github.dakusui.scriptiveunit.model.Report;
 import org.junit.runner.Runner;
-
-import static java.util.Objects.requireNonNull;
 
 public interface Session {
   Config getConfig();
@@ -25,14 +23,13 @@ public interface Session {
   }
 
   class Impl implements Session {
-    private final Config                     config;
-    private final TestSuiteDescriptor.Loader loader;
-    private       TestSuiteDescriptor        testSuiteDescriptor;
+    private final Config              config;
+    private final TestSuiteDescriptor testSuiteDescriptor;
 
     @SuppressWarnings("WeakerAccess")
     protected Impl(TestSuiteDescriptor.Loader loader) {
-      this.loader = requireNonNull(loader);
       this.config = loader.getConfig();
+      this.testSuiteDescriptor = loader.loadTestSuiteDescriptor(this);
     }
 
     @Override
@@ -47,9 +44,6 @@ public interface Session {
 
     @Override
     synchronized public TestSuiteDescriptor getDescriptor() {
-      if (this.testSuiteDescriptor == null) {
-        this.testSuiteDescriptor = loader.loadTestSuiteDescriptor(this);
-      }
       return this.testSuiteDescriptor;
     }
 

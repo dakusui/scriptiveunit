@@ -59,8 +59,7 @@ public class ScriptiveUnit extends Parameterized {
    * @param klass  A test class
    * @param config A config object.
    */
-  @SuppressWarnings("unused")
-  protected ScriptiveUnit(Class<?> klass, Config config) throws Throwable {
+  public ScriptiveUnit(Class<?> klass, Config config) throws Throwable {
     this(klass, createTestSuiteDescriptorLoader(config));
   }
 
@@ -136,7 +135,7 @@ public class ScriptiveUnit extends Parameterized {
   }
 
 
-  private static TestSuiteDescriptor.Loader createTestSuiteDescriptorLoader(Config config) {
+  public static TestSuiteDescriptor.Loader createTestSuiteDescriptorLoader(Config config) {
     return TestSuiteDescriptor.Loader.createInstance(
         getAnnotationWithDefault(
             config.getDriverClass(),

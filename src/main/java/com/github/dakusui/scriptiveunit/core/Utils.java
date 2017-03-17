@@ -106,6 +106,21 @@ public enum Utils {
     };
   }
 
+  public static <T> Predicate<T> prettify(String prettyString, Predicate<T> predicate) {
+    return new Predicate<T>() {
+
+      @Override
+      public boolean test(T t) {
+        return predicate.test(t);
+      }
+
+      @Override
+      public String toString() {
+        return prettyString;
+      }
+    };
+  }
+
   public static <T> Sink<T> prettify(String prettyString, Sink<T> sink) {
     return new Sink<T>() {
 

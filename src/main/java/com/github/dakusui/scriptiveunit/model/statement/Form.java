@@ -4,6 +4,7 @@ import com.github.dakusui.scriptiveunit.ScriptiveUnit;
 import com.github.dakusui.scriptiveunit.Session;
 import com.github.dakusui.scriptiveunit.annotations.Doc;
 import com.github.dakusui.scriptiveunit.core.ObjectMethod;
+import com.github.dakusui.scriptiveunit.model.TestSuiteDescriptor;
 import com.github.dakusui.scriptiveunit.model.func.Func;
 import com.github.dakusui.scriptiveunit.model.func.FuncInvoker;
 
@@ -24,16 +25,16 @@ public interface Form {
   boolean isAccessor();
 
   class Factory {
-    private final Object            driver;
-    private final Func.Factory      funcFactory;
-    private final Session           session;
-    private final Statement.Factory statementFactory;
+    private final Object              driver;
+    private final Func.Factory        funcFactory;
+    private final Statement.Factory   statementFactory;
+    private final TestSuiteDescriptor testSuiteDescriptor;
 
     public Factory(Session session, Func.Factory funcFactory, Statement.Factory statementFactory) {
-      this.session = requireNonNull(session);
       this.driver = requireNonNull(session.getConfig().getDriverObject());
       this.funcFactory = funcFactory;
       this.statementFactory = statementFactory;
+      this.testSuiteDescriptor = session.getDescriptor();
     }
 
     @SuppressWarnings("WeakerAccess")
@@ -45,7 +46,7 @@ public interface Form {
     }
 
     private Form createUserForm(String name) {
-      List<Object> userFormClause = session.getDescriptor().getUserDefinedFormClauses().get(name);
+      List<Object> userFormClause = requireNonNull(testSuiteDescriptor.getUserDefinedFormClauses()).get(name);
       if (userFormClause == null)
         return null;
       return new UserForm(

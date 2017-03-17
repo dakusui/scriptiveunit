@@ -1,22 +1,28 @@
 package com.github.dakusui.scriptiveunit;
 
+import com.github.dakusui.scriptiveunit.ScriptiveSuiteSet.SuiteScripts;
+import com.github.dakusui.scriptiveunit.ScriptiveSuiteSet.SuiteScripts.Streamer;
+import com.github.dakusui.scriptiveunit.core.Config;
 import com.github.dakusui.scriptiveunit.core.Utils;
 import com.github.dakusui.scriptiveunit.doc.Documentation;
+import com.github.dakusui.scriptiveunit.exceptions.ScriptiveUnitException;
 import org.junit.runner.Result;
 import org.junit.runner.RunWith;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Properties;
 import java.util.function.Function;
 
-import static com.github.dakusui.scriptiveunit.FacadeException.validateDriverClass;
+import static com.github.dakusui.scriptiveunit.exceptions.FacadeException.validateDriverClass;
+import static com.github.dakusui.scriptiveunit.exceptions.FacadeException.validateSuiteSetClass;
 import static java.util.stream.Collectors.toList;
 
 /**
  * A facade to ScriptiveUnit's functionalities.
  */
-public class ScriptiveUnitCore {
-  public ScriptiveUnitCore() {
+public class ScriptiveCore {
+  public ScriptiveCore() {
   }
 
   public Documentation describeFunction(Class<?> driverClass, String scriptResourceName, String functionName) {
@@ -40,8 +46,16 @@ public class ScriptiveUnitCore {
   }
 
   public List<String> listFunctions(Class<?> driverClass, String scriptResourceName) {
-    validateDriverClass(driverClass);
-    Object driverObject = null;
+    try {
+      new ScriptiveUnit(
+          validateDriverClass(driverClass),
+          new Config.Builder(driverClass, new Properties())
+              .withScriptResourceName(scriptResourceName)
+              .build()
+      );
+    } catch (Throwable throwable) {
+      throw ScriptiveUnitException.wrap(throwable);
+    }
     // getObjectMethodsFromImportedFieldsInObject
     return null;
   }
@@ -67,8 +81,8 @@ public class ScriptiveUnitCore {
         .collect(toList());
   }
 
-  public List<String> listScripts() {
-    return null;
+  public List<String> listScripts(Class<?> suiteSetClass) {
+    return new Streamer(validateSuiteSetClass(suiteSetClass).getAnnotation(SuiteScripts.class)).stream().collect(toList());
   }
 
   public Result runSuiteSet() {

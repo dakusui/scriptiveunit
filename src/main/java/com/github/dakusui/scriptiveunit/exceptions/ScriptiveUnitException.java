@@ -39,23 +39,29 @@ public class ScriptiveUnitException extends RuntimeException {
     return new ScriptiveUnitException(format("%sth element was accessed but the container's length was %s", index, size));
   }
 
-  protected static <E extends ScriptiveUnitException, T> T validate(Function<String, E> exceptionFactory, Supplier<T> target, Predicate/*<T>*/... predicates) {
-    Validator<T> validator = Validator.create(target, predicates);
+  protected static <E extends ScriptiveUnitException, T> T validate(String format, Function<String, E> exceptionFactory, T target, Predicate/*<T>*/... predicates) {
+    Validator<T> validator = Validator.create(format, target, predicates);
     if (validator.getAsBoolean())
-      return target.get();
+      return target;
     throw exceptionFactory.apply(validator.toString());
   }
 
   interface Validator<T> extends BooleanSupplier {
-    static <T> Validator<T> create(Supplier<T> target, Predicate/*<T>*/... predicates) {
+    /**
+     * Creates and returns a validator for {@code target} object.
+     *
+     * @param format     has one and only one '%s' place holder. The value of {@code target#toString()} will be embedded there.
+     * @param target     An object to be validated.
+     * @param predicates predicates used for validation.
+     * @param <T>        Type of target
+     */
+    static <T> Validator<T> create(String format, T target, Predicate/*<T>*/... predicates) {
       return new Validator<T>() {
-        T object = target.get();
-
         @Override
         public boolean getAsBoolean() {
           //noinspection unchecked
           for (Predicate<T> each : predicates) {
-            if (each.test(object))
+            if (!each.test(target))
               return false;
           }
           return true;
@@ -63,23 +69,21 @@ public class ScriptiveUnitException extends RuntimeException {
 
         @Override
         public String toString() {
-          StringBuilder builder = new StringBuilder();
+          StringBuilder builder = new StringBuilder(format(format, target));
+          builder.append(format("%n"));
           boolean failureAlreadyFound = false;
           //noinspection unchecked
           for (Predicate<T> each : predicates) {
-            String keyword;
-            if (each.test(object)) {
-              builder.append(format("[OK] %s%n", each));
+            if (failureAlreadyFound) {
+              builder.append(format("[--] %s%n", each));
             } else {
-              if (!failureAlreadyFound) {
-                keyword = "NG";
+              if (each.test(target)) {
+                builder.append(format("[OK] %s%n", each));
               } else {
-                keyword = "--";
+                builder.append(format("[NG] %s%n", each));
+                failureAlreadyFound = true;
               }
-              builder.append(format("[%s] %s (%s)%n", keyword, object, each));
-              failureAlreadyFound = true;
             }
-
           }
           return builder.toString();
         }

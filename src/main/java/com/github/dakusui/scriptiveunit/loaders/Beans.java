@@ -87,16 +87,16 @@ public enum Beans {
           private Statement setUpBeforeAllStatement = topLevel.getStatementFactory().create(setUpBeforeAllClause != null ? setUpBeforeAllClause : NOP_CLAUSE);
           private Statement setUpStatement = topLevel.getStatementFactory().create(setUpClause != null ? setUpClause : NOP_CLAUSE);
           private List<? extends TestOracle> testOracles = createTestOracles();
+          private Statement tearDownStatement = topLevel.getStatementFactory().create(tearDownClause != null ? tearDownClause : NOP_CLAUSE);
+          private Statement tearDownAfterAllStatement = topLevel.getStatementFactory().create(tearDownAfterAllClause != null ? tearDownAfterAllClause : NOP_CLAUSE);
+
+          List<IndexedTestCase> testCases = createTestCases(this);
 
           private List<TestOracle> createTestOracles() {
             AtomicInteger i = new AtomicInteger(0);
             return testOracleBeanList.stream().map((BaseForTestOracle each) -> each.create(i.getAndIncrement(), session)).collect(toList());
           }
 
-          private Statement tearDownStatement = topLevel.getStatementFactory().create(tearDownClause != null ? tearDownClause : NOP_CLAUSE);
-          private Statement tearDownAfterAllStatement = topLevel.getStatementFactory().create(tearDownAfterAllClause != null ? tearDownAfterAllClause : NOP_CLAUSE);
-
-          List<IndexedTestCase> testCases = createTestCases(this);
 
           @Override
           public String getDescription() {
@@ -224,6 +224,8 @@ public enum Beans {
             }
           }
         };
+      } catch (RuntimeException e) {
+        throw e;
       } catch (Exception e) {
         throw wrap(e);
       }
