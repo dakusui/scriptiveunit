@@ -44,8 +44,7 @@ public class JsonBasedLoader extends TestSuiteDescriptor.Loader.Base {
                   .getScriptResourceName()
               ),
               TestSuiteDescriptorBean.class
-          )
-          .create(session);
+          ).create(session);
     } catch (IOException e) {
       throw wrap(e);
     }

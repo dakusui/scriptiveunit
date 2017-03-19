@@ -12,7 +12,7 @@ public interface Session {
 
   Report createReport(TestItem testItem);
 
-  TestSuiteDescriptor getDescriptor();
+  TestSuiteDescriptor loadTestSuiteDescriptor();
 
   Iterable<Runner> createTestItemRunners();
 
@@ -23,13 +23,14 @@ public interface Session {
   }
 
   class Impl implements Session {
-    private final Config              config;
-    private final TestSuiteDescriptor testSuiteDescriptor;
+    private final Config                     config;
+    private final TestSuiteDescriptor.Loader testSuiteDescriptorLoader;
+    private       TestSuiteDescriptor        testSuiteDescriptor;
 
     @SuppressWarnings("WeakerAccess")
     protected Impl(TestSuiteDescriptor.Loader loader) {
       this.config = loader.getConfig();
-      this.testSuiteDescriptor = loader.loadTestSuiteDescriptor(this);
+      this.testSuiteDescriptorLoader = loader;
     }
 
     @Override
@@ -43,13 +44,16 @@ public interface Session {
     }
 
     @Override
-    synchronized public TestSuiteDescriptor getDescriptor() {
+    synchronized public TestSuiteDescriptor loadTestSuiteDescriptor() {
+      if (this.testSuiteDescriptor == null) {
+        this.testSuiteDescriptor = testSuiteDescriptorLoader.loadTestSuiteDescriptor(this);
+      }
       return this.testSuiteDescriptor;
     }
 
     @Override
     public Iterable<Runner> createTestItemRunners() {
-      return getDescriptor().getRunnerType().createRunners(this);
+      return loadTestSuiteDescriptor().getRunnerType().createRunners(this);
     }
 
     @Override

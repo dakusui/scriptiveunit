@@ -8,7 +8,6 @@ import com.github.dakusui.scriptiveunit.annotations.Load;
 import com.github.dakusui.scriptiveunit.core.Config;
 import com.github.dakusui.scriptiveunit.core.JsonUtils;
 import com.github.dakusui.scriptiveunit.core.Preprocessor;
-import com.github.dakusui.scriptiveunit.doc.HelpWriter;
 import com.github.dakusui.scriptiveunit.drivers.*;
 import com.github.dakusui.scriptiveunit.drivers.actions.Basic;
 import com.github.dakusui.scriptiveunit.loaders.json.JsonBasedLoader;
@@ -231,10 +230,5 @@ public class Qapi {
     public String toString() {
       return format("%s:%s(%s)", this.name(), this.content, this.price);
     }
-  }
-
-
-  public static void main(String... args) {
-    HelpWriter.help(Qapi.class, args);
   }
 }

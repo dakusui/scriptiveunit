@@ -2,24 +2,70 @@ package com.github.dakusui.scriptiveunit.core;
 
 import com.github.dakusui.scriptiveunit.ScriptiveCore;
 import com.github.dakusui.scriptiveunit.exceptions.FacadeException;
+import com.github.dakusui.scriptiveunit.exceptions.ResourceException;
 import com.github.dakusui.scriptiveunit.testassets.Driver1;
 import com.github.dakusui.scriptiveunit.testassets.Driver2;
 import com.github.dakusui.scriptiveunit.testassets.SuiteSet1;
 import com.github.dakusui.scriptiveunit.testassets.SuiteSet2;
+import com.github.dakusui.scriptiveunit.testutils.JUnitResultMatcher;
+import com.github.dakusui.scriptiveunit.testutils.TestBase;
+import com.github.dakusui.scriptiveunit.testutils.drivers.ExampleSuiteSet;
+import com.github.dakusui.scriptiveunit.testutils.drivers.Qapi;
 import org.junit.Test;
 
 import static java.util.Arrays.asList;
+import static java.util.Collections.emptyList;
+import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.toList;
+import static org.hamcrest.CoreMatchers.equalTo;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.assertEquals;
 
-public class ScriptiveCoreTest {
+public class ScriptiveCoreTest extends TestBase {
   private static final String ASSET_PACKAGE = "com.github.dakusui.scriptiveunit.testassets";
+
+  @Test
+  public void whenDescribeFunction$thenDescribed() {
+    Description description = new ScriptiveCore().describeFunction(Driver1.class, "tests/regular/driver1.json", "helloWorld");
+    assertThat(description.content(), equalTo(asList("Hello, world", "everyone")));
+    assertThat(description.children(), equalTo(emptyList()));
+  }
+
+  @Test
+  public void whenDescribeUserDefinedFunction$thenDescribed() {
+    Description description = new ScriptiveCore().describeFunction(Driver1.class, "tests/regular/driver1.json", "print_twice");
+    assertThat(description.content(), equalTo(asList("(print", "  (print", "    (0)", "  )", ")")));
+    assertThat(description.children(), equalTo(emptyList()));
+  }
+
+  @Test
+  public void whenDescribeUserDefinedEmptyFunction$thenDescribed() {
+    Description description = new ScriptiveCore().describeFunction(Driver1.class, "tests/regular/driver1.json", "empty");
+    assertThat(description.content(), equalTo(singletonList("()")));
+    assertThat(description.children(), equalTo(emptyList()));
+  }
+
+  @Test(expected = ResourceException.class)
+  public void whenDescribeUndefinedEmptyFunction$thenDescribed() {
+    new ScriptiveCore().describeFunction(Driver1.class, "tests/regular/driver1.json", "undefined");
+  }
+
+  @Test(expected = ResourceException.class)
+  public void whenListFunctionsForDriver2$thenResourceExceptionThrown() {
+    new ScriptiveCore().listFunctions(
+        Driver1.class,
+        "tests/regular/notExistingDriver.json"
+    );
+  }
 
   @Test
   public void whenListFunctions$thenListed() {
     assertEquals(
-        asList("print_twice", "print"),
-        new ScriptiveCore().listFunctions(Driver1.class, "tests/suiteset/suite1.json").stream()
+        asList("empty", "helloWorld", "print", "print_twice"),
+        new ScriptiveCore().listFunctions(
+            Driver1.class,
+            "tests/regular/driver1.json"
+        ).stream()
             .sorted()
             .collect(toList())
     );
@@ -81,5 +127,31 @@ public class ScriptiveCoreTest {
   @Test(expected = FacadeException.class)
   public void whenListScriptsOnInvalidSuiteSetClass$thenFacadeExceptionWillBeThrown() {
     new ScriptiveCore().listScripts(SuiteSet2.class);
+  }
+
+  @Test
+  public void whenRunScript$thenOK() {
+    assertThat(
+        new ScriptiveCore().runScript(Qapi.class, "tests/regular/print_twice.json"),
+        new JUnitResultMatcher.Builder()
+            .withExpectedResult(true)
+            .withExpectedRunCount(2)
+            .withExpectedIgnoreCount(0)
+            .withExpectedFailureCount(0)
+            .build()
+    );
+  }
+
+  @Test
+  public void whenRunSuiteSet$thenOK() {
+    assertThat(
+        new ScriptiveCore().runSuiteSet(ExampleSuiteSet.class),
+        new JUnitResultMatcher.Builder()
+            .withExpectedResult(false)
+            .withExpectedRunCount(4)
+            .withExpectedIgnoreCount(0)
+            .withExpectedFailureCount(2)
+            .build()
+    );
   }
 }

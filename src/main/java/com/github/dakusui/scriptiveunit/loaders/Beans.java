@@ -159,13 +159,19 @@ public enum Beans {
           }
 
           private Func<Action> createActionFactory(String actionName, Statement statement) {
-            return input -> {
+            return (Stage input) -> {
               Object result =
                   statement == null ?
                       nop() :
                       toFunc(statement, new FuncInvoker.Impl(0)).apply(input);
               //noinspection ConstantConditions
-              return Actions.named(actionName, Action.class.cast(result));
+              return Actions.named(
+                  actionName,
+                  Action.class.cast(
+                      requireNonNull(
+                          result,
+                          String.format("statement for '%s' was not valid '%s'", actionName, statement)
+                      )));
             };
           }
 
@@ -384,11 +390,11 @@ public enum Beans {
         }
 
         private Tuple projectMultiLevelFactors(Tuple testCaseTuple, Session session) {
-          return Utils.filterSingleLevelFactorsOut(testCaseTuple, session.getDescriptor().getFactorSpaceDescriptor().getFactors());
+          return Utils.filterSingleLevelFactorsOut(testCaseTuple, session.loadTestSuiteDescriptor().getFactorSpaceDescriptor().getFactors());
         }
 
         private String composeDescription(Tuple testCaseTuple, Session session) {
-          return template(description, append(testCaseTuple, "@TESTSUITE", session.getDescriptor().getDescription()));
+          return template(description, append(testCaseTuple, "@TESTSUITE", session.loadTestSuiteDescriptor().getDescription()));
         }
 
 
@@ -537,6 +543,6 @@ public enum Beans {
 
   private static <U> Func<U> toFunc(Statement statement, FuncInvoker funcInvoker) {
     //noinspection unchecked
-    return Func.class.<U>cast(statement.execute(funcInvoker));
+    return Func.class.<U>cast(statement.compile(funcInvoker));
   }
 }

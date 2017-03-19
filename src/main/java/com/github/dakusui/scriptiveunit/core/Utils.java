@@ -8,6 +8,7 @@ import com.github.dakusui.actionunit.connectors.Source;
 import com.github.dakusui.actionunit.visitors.ActionRunner;
 import com.github.dakusui.jcunit.core.factor.Factor;
 import com.github.dakusui.jcunit.core.tuples.Tuple;
+import com.github.dakusui.scriptiveunit.exceptions.ResourceException;
 import com.github.dakusui.scriptiveunit.exceptions.ScriptiveUnitException;
 import com.github.dakusui.scriptiveunit.exceptions.SyntaxException;
 import com.google.common.collect.ImmutableList;
@@ -393,7 +394,7 @@ public enum Utils {
   }
 
   public static InputStream openResourceAsStream(String resourceName) {
-    return requireNonNull(getSystemResourceAsStream(resourceName), format("Failed to open '%s'. Make sure it is available on your classpath.", resourceName));
+    return ResourceException.scriptExists(getSystemResourceAsStream(resourceName), resourceName);
   }
 
   public static JsonNode readJsonNodeFromStream(InputStream is) {

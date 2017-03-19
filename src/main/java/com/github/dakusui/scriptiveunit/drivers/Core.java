@@ -9,14 +9,12 @@ import com.github.dakusui.scriptiveunit.exceptions.SyntaxException;
 import com.github.dakusui.scriptiveunit.model.Stage;
 import com.github.dakusui.scriptiveunit.model.TestItem;
 import com.github.dakusui.scriptiveunit.model.func.Func;
-import com.github.dakusui.scriptiveunit.model.func.FuncInvoker;
 
 import java.lang.reflect.InvocationTargetException;
 import java.util.Arrays;
 import java.util.List;
 
 import static com.github.dakusui.scriptiveunit.core.Utils.check;
-import static com.github.dakusui.scriptiveunit.exceptions.ScriptiveUnitException.indexOutOfBounds;
 import static com.github.dakusui.scriptiveunit.exceptions.SyntaxException.attributeNotFound;
 import static java.util.Objects.requireNonNull;
 import static java.util.stream.Collectors.toList;
@@ -87,31 +85,6 @@ public class Core {
         .stream(values)
         .map((Func<?> each) -> each instanceof Func.Const ? each.apply(input) : each)
         .collect(toList());
-  }
-
-  @SuppressWarnings("unused")
-  @Scriptable
-  public final Func<Object> userFunc(Func<List<Object>> funcBody, Func<?>... args) {
-    return (Stage input) -> {
-      List<Object> argValues = Arrays.stream(args).map((Func each) -> each.apply(input)).collect(toList());
-      Stage wrappedStage = new Stage.Delegating(input) {
-        @Override
-        public <U> U getArgument(int index) {
-          check(index < sizeOfArguments(), () -> indexOutOfBounds(index, sizeOfArguments()));
-          //noinspection unchecked
-          return (U) argValues.get(index);
-        }
-
-        @Override
-        public int sizeOfArguments() {
-          return argValues.size();
-        }
-      };
-      return wrappedStage.getStatementFactory()
-          .create(funcBody.apply(wrappedStage))
-          .execute(new FuncInvoker.Impl(0))
-          .<Func<Object>>apply(wrappedStage);
-    };
   }
 
   @SuppressWarnings("unused")
