@@ -50,7 +50,8 @@ public class ScriptiveSuiteSet extends ParentRunner<Runner> {
       private static Stream<String> targetScripts(SuiteScripts suiteScripts) {
         return Utils.allScriptsUnder(suiteScripts.prefix())
             .filter(matchesAnyOf(toPatterns(suiteScripts.includes())))
-            .filter(not(matchesAnyOf(toPatterns(suiteScripts.excludes()))));
+            .filter(not(matchesAnyOf(toPatterns(suiteScripts.excludes()))))
+            .sorted();
       }
     }
   }

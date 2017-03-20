@@ -29,7 +29,7 @@ public class SuiteSetTest extends TestBase {
             .withExpectedRunCount(4)
             .withExpectedFailureCount(2)
             .withExpectedIgnoreCount(0)
-            .addFailureMatcher(0, new FailuresMatcher.EntryMatcher() {
+            .addFailureMatcher(1, new FailuresMatcher.EntryMatcher() {
               @Override
               protected boolean matchesFailure(Failure failure) {
                 return failure.getTestHeader().contains("Suite 1");
@@ -37,7 +37,7 @@ public class SuiteSetTest extends TestBase {
 
               @Override
               public void describeTo(Description description) {
-                description.appendText("Expected to contain a string 'Suite'");
+                description.appendText("Expected to contain a string 'Suite 1'");
               }
             })
             .addFailureMatcher(1, new FailuresMatcher.EntryMatcher() {
@@ -48,7 +48,7 @@ public class SuiteSetTest extends TestBase {
 
               @Override
               public void describeTo(Description description) {
-                description.appendText("Expected to contain a string 'Suite'");
+                description.appendText("Expected to contain a string 'Suite 2'");
               }
             })
             .build();
@@ -61,7 +61,7 @@ public class SuiteSetTest extends TestBase {
     }
   }
 
-  @SuppressWarnings("unused")
+  @SuppressWarnings({ "unused", "WeakerAccess" })
   @FactorField
   public TestItem testItem;
 
