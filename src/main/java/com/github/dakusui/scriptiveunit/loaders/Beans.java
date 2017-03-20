@@ -87,16 +87,16 @@ public enum Beans {
           private Statement setUpBeforeAllStatement = topLevel.getStatementFactory().create(setUpBeforeAllClause != null ? setUpBeforeAllClause : NOP_CLAUSE);
           private Statement setUpStatement = topLevel.getStatementFactory().create(setUpClause != null ? setUpClause : NOP_CLAUSE);
           private List<? extends TestOracle> testOracles = createTestOracles();
+          private Statement tearDownStatement = topLevel.getStatementFactory().create(tearDownClause != null ? tearDownClause : NOP_CLAUSE);
+          private Statement tearDownAfterAllStatement = topLevel.getStatementFactory().create(tearDownAfterAllClause != null ? tearDownAfterAllClause : NOP_CLAUSE);
+
+          List<IndexedTestCase> testCases = createTestCases(this);
 
           private List<TestOracle> createTestOracles() {
             AtomicInteger i = new AtomicInteger(0);
             return testOracleBeanList.stream().map((BaseForTestOracle each) -> each.create(i.getAndIncrement(), session)).collect(toList());
           }
 
-          private Statement tearDownStatement = topLevel.getStatementFactory().create(tearDownClause != null ? tearDownClause : NOP_CLAUSE);
-          private Statement tearDownAfterAllStatement = topLevel.getStatementFactory().create(tearDownAfterAllClause != null ? tearDownAfterAllClause : NOP_CLAUSE);
-
-          List<IndexedTestCase> testCases = createTestCases(this);
 
           @Override
           public String getDescription() {
@@ -159,13 +159,19 @@ public enum Beans {
           }
 
           private Func<Action> createActionFactory(String actionName, Statement statement) {
-            return input -> {
+            return (Stage input) -> {
               Object result =
                   statement == null ?
                       nop() :
                       toFunc(statement, new FuncInvoker.Impl(0)).apply(input);
               //noinspection ConstantConditions
-              return Actions.named(actionName, Action.class.cast(result));
+              return Actions.named(
+                  actionName,
+                  Action.class.cast(
+                      requireNonNull(
+                          result,
+                          String.format("statement for '%s' was not valid '%s'", actionName, statement)
+                      )));
             };
           }
 
@@ -224,6 +230,8 @@ public enum Beans {
             }
           }
         };
+      } catch (RuntimeException e) {
+        throw e;
       } catch (Exception e) {
         throw wrap(e);
       }
@@ -382,11 +390,11 @@ public enum Beans {
         }
 
         private Tuple projectMultiLevelFactors(Tuple testCaseTuple, Session session) {
-          return Utils.filterSingleLevelFactorsOut(testCaseTuple, session.getDescriptor().getFactorSpaceDescriptor().getFactors());
+          return Utils.filterSingleLevelFactorsOut(testCaseTuple, session.loadTestSuiteDescriptor().getFactorSpaceDescriptor().getFactors());
         }
 
         private String composeDescription(Tuple testCaseTuple, Session session) {
-          return template(description, append(testCaseTuple, "@TESTSUITE", session.getDescriptor().getDescription()));
+          return template(description, append(testCaseTuple, "@TESTSUITE", session.loadTestSuiteDescriptor().getDescription()));
         }
 
 
@@ -535,6 +543,6 @@ public enum Beans {
 
   private static <U> Func<U> toFunc(Statement statement, FuncInvoker funcInvoker) {
     //noinspection unchecked
-    return Func.class.<U>cast(statement.execute(funcInvoker));
+    return Func.class.<U>cast(statement.compile(funcInvoker));
   }
 }

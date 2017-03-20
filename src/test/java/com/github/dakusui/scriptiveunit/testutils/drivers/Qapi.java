@@ -5,22 +5,15 @@ import com.github.dakusui.scriptiveunit.ScriptiveUnit;
 import com.github.dakusui.scriptiveunit.annotations.Import;
 import com.github.dakusui.scriptiveunit.annotations.Import.Alias;
 import com.github.dakusui.scriptiveunit.annotations.Load;
-import com.github.dakusui.scriptiveunit.annotations.ReflectivelyReferenced;
 import com.github.dakusui.scriptiveunit.core.Config;
+import com.github.dakusui.scriptiveunit.core.JsonUtils;
 import com.github.dakusui.scriptiveunit.core.Preprocessor;
-import com.github.dakusui.scriptiveunit.doc.Help;
 import com.github.dakusui.scriptiveunit.drivers.*;
 import com.github.dakusui.scriptiveunit.drivers.actions.Basic;
-import com.github.dakusui.scriptiveunit.exceptions.SyntaxException;
 import com.github.dakusui.scriptiveunit.loaders.json.JsonBasedLoader;
 import com.google.common.collect.Maps;
 import org.codehaus.jackson.JsonNode;
-import org.codehaus.jackson.node.ArrayNode;
 import org.codehaus.jackson.node.ObjectNode;
-import org.junit.Rule;
-import org.junit.rules.TestRule;
-import org.junit.rules.TestWatcher;
-import org.junit.runner.Description;
 import org.junit.runner.RunWith;
 
 import java.util.Collection;
@@ -29,19 +22,17 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import static com.github.dakusui.scriptiveunit.core.Utils.check;
+import static com.github.dakusui.scriptiveunit.core.JsonUtils.*;
 import static com.github.dakusui.scriptiveunit.core.Utils.deepMerge;
 import static java.lang.String.format;
 import static java.util.Collections.singletonList;
 import static java.util.Collections.unmodifiableMap;
 import static java.util.Objects.requireNonNull;
-import static org.codehaus.jackson.node.JsonNodeFactory.instance;
 
 /**
  * A driver example.
  */
-@Load(
-    scriptPackagePrefix = "tests", scriptNamePattern = ".*\\.json", with = Qapi.Loader.class)
+@Load(with = Qapi.Loader.class)
 @RunWith(ScriptiveUnit.class)
 public class Qapi {
   public static class Loader extends JsonBasedLoader {
@@ -51,49 +42,22 @@ public class Qapi {
 
     @Override
     protected List<Preprocessor> getPreprocessors() {
-      return singletonList(new Preprocessor() {
-        @Override
-        public JsonNode translate(JsonNode targetElement) {
-          check(
-              targetElement instanceof ObjectNode, () -> {
-                throw SyntaxException.nonObject(targetElement);
-              });
-          ObjectNode ret = instance.objectNode();
-          ArrayNode after = instance.arrayNode();
-          after.add("print");
-          after.add("overridden default after, overridden default after");
-          ret.put("after", after);
-          return deepMerge(
-              ((ObjectNode) targetElement),
-              ret
-          );
-        }
-
-        @Override
-        public boolean matches(Path pathToTargetElement) {
-          List<Path.Component> pathComponents = pathToTargetElement.asComponentList();
-          System.out.println(pathComponents);
-          if (pathComponents.size() != 2) {
-            return false;
-          }
-          if (!"testOracles".equals(pathComponents.get(0).value())) {
-            return false;
-          }
-          return pathComponents.get(1) instanceof Path.Component.Num;
-        }
-      });
+      return singletonList(JsonUtils.preprocessor(
+          (JsonNode targetElement) ->
+              deepMerge(
+                  ((ObjectNode) targetElement),
+                  object()
+                      .$("after", array()
+                          .$("print")
+                          .$("overridden default for 'after'").build()
+                      ).build()
+              ),
+          pathMatcher("testOracles", ".*")
+      ));
     }
   }
 
-  @ReflectivelyReferenced
-  @Rule
-  public TestRule testRule = new TestWatcher() {
-    @Override
-    protected void starting(Description description) {
-      System.out.println("Hello");
-    }
-  };
-  @ReflectivelyReferenced
+  @SuppressWarnings("unused")
   @Import({
       @Alias(value = "*"),
       @Alias(value = "add", as = "+"),
@@ -101,9 +65,9 @@ public class Qapi {
       @Alias(value = "mul", as = "*"),
       @Alias(value = "div", as = "/")
   })
-  public Object   arith    = new Arith();
+  public Object arith = new Arith();
 
-  @ReflectivelyReferenced
+  @SuppressWarnings("unused")
   @Import({
       @Alias(value = "*"),
       @Alias(value = "gt", as = ">"),
@@ -115,15 +79,15 @@ public class Qapi {
   })
   public Object predicates = new Predicates();
 
-  @ReflectivelyReferenced
+  @SuppressWarnings("unused")
   @Import
   public Object strings = new Strings();
 
-  @ReflectivelyReferenced
+  @SuppressWarnings("unused")
   @Import
   public Object collections = new Collections();
 
-  @ReflectivelyReferenced
+  @SuppressWarnings("unused")
   @Import({
       @Alias(value = "*"),
       @Alias(value = "configAttr", as = "config_attr"),
@@ -131,11 +95,11 @@ public class Qapi {
   })
   public Object core = new Core();
 
-  @ReflectivelyReferenced
+  @SuppressWarnings("unused")
   @Import
   public Object basicActions = new Basic();
 
-  @ReflectivelyReferenced
+  @SuppressWarnings("unused")
   @Import({
       @Alias(value = "*"),
       @Alias(value = "request", as = "query"),
@@ -220,34 +184,34 @@ public class Qapi {
       this.addAll(entries);
     }
 
-    @ReflectivelyReferenced
+    @SuppressWarnings("unused")
     public int statusCode() {
       return this.isEmpty() ? 404 : 200;
     }
 
   }
 
-  @ReflectivelyReferenced
+  @SuppressWarnings("unused")
   public enum Entry {
-    @ReflectivelyReferenced
+    @SuppressWarnings("unused")
     ITEM_01("ヒータ", 15_000),
-    @ReflectivelyReferenced
+    @SuppressWarnings("unused")
     ITEM_02("ヒーター", 14_800),
-    @ReflectivelyReferenced
+    @SuppressWarnings("unused")
     ITEM_03("ストーブ", 16_800),
-    @ReflectivelyReferenced
+    @SuppressWarnings("unused")
     ITEM_03a("ストーブ用ポンプ", 200),
-    @ReflectivelyReferenced
+    @SuppressWarnings("unused")
     ITEM_03b("ストーブ用替え扉", 480),
-    @ReflectivelyReferenced
+    @SuppressWarnings("unused")
     ITEM_04("ヒーター", 9_800),
-    @ReflectivelyReferenced
+    @SuppressWarnings("unused")
     ITEM_05("iPhone 7 ケース", 2_000),
-    @ReflectivelyReferenced
+    @SuppressWarnings("unused")
     ITEM_06("iPhone 7 シルバー", 48_000),
-    @ReflectivelyReferenced
+    @SuppressWarnings("unused")
     ITEM_07("iPhone 6 ケース", 1_980),
-    @ReflectivelyReferenced
+    @SuppressWarnings("unused")
     ITEM_08("iPhone 6Plus シルバー", 68_000),;
 
     private final String content;
@@ -266,10 +230,5 @@ public class Qapi {
     public String toString() {
       return format("%s:%s(%s)", this.name(), this.content, this.price);
     }
-  }
-
-
-  public static void main(String... args) {
-    Help.help(Qapi.class, args);
   }
 }

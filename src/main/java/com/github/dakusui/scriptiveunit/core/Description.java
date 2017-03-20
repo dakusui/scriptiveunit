@@ -1,4 +1,4 @@
-package com.github.dakusui.scriptiveunit.doc;
+package com.github.dakusui.scriptiveunit.core;
 
 import java.util.Collections;
 import java.util.List;

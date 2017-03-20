@@ -15,7 +15,18 @@ public class TestBase {
   private PrintStream stderr = System.err;
 
   @Before
-  public void suppressStdOutErr() {
+  public void before() {
+    this.suppressStdOutErr();
+    this.keepSystemProperties();
+  }
+
+  @After
+  public void after() {
+    this.restoreStdOutErr();
+    this.restoreSystemProperties();
+  }
+
+  private void suppressStdOutErr() {
     if (TestUtils.isRunUnderSurefire()) {
       System.setOut(new PrintStream(new OutputStream() {
         @Override
@@ -30,18 +41,15 @@ public class TestBase {
     }
   }
 
-  @Before
-  public void keepSystemProperties() {
+  private void keepSystemProperties() {
     this.systemProperties = (Properties) System.getProperties().clone();
   }
 
-  @After
-  public void restoreSystemProperties() {
+  private void restoreSystemProperties() {
     System.setProperties(this.systemProperties);
   }
 
-  @After
-  public void restoreStdOutErr() {
+  private void restoreStdOutErr() {
     System.setOut(stdout);
     System.setOut(stderr);
   }

@@ -1,11 +1,8 @@
 package com.github.dakusui.scriptiveunit.model.statement;
 
-import com.github.dakusui.jcunit.core.tuples.Tuple;
 import com.github.dakusui.scriptiveunit.Session;
-import com.github.dakusui.scriptiveunit.core.Config;
 import com.github.dakusui.scriptiveunit.exceptions.SyntaxException;
 import com.github.dakusui.scriptiveunit.exceptions.TypeMismatch;
-import com.github.dakusui.scriptiveunit.model.Stage;
 import com.github.dakusui.scriptiveunit.model.func.Func;
 import com.github.dakusui.scriptiveunit.model.func.FuncHandler;
 import com.github.dakusui.scriptiveunit.model.func.FuncInvoker;
@@ -14,13 +11,11 @@ import com.google.common.collect.Lists;
 import java.util.List;
 import java.util.Objects;
 
-import static com.github.dakusui.scriptiveunit.core.Utils.checkState;
 import static com.github.dakusui.scriptiveunit.exceptions.TypeMismatch.headOfCallMustBeString;
-import static com.github.dakusui.scriptiveunit.model.Stage.Type.CONSTRAINT_GENERATION;
 import static java.util.Objects.requireNonNull;
 
 public interface Statement {
-  Func execute(FuncInvoker invoker);
+  Func compile(FuncInvoker invoker);
 
   interface Atom extends Statement {
   }
@@ -64,7 +59,7 @@ public interface Statement {
           }
 
           @Override
-          public Func<?> execute(FuncInvoker invoker) {
+          public Func<?> compile(FuncInvoker invoker) {
             return (Func<?>) form.apply(invoker, arguments);
           }
         };
@@ -103,7 +98,7 @@ public interface Statement {
         if (((Nested) statement).getForm().isAccessor()) {
           for (Statement each : ((Nested) statement).getArguments()) {
             if (each instanceof Atom) {
-              work.add(Objects.toString(each.execute(new FuncInvoker.Impl(0))));
+              work.add(Objects.toString(each.compile(new FuncInvoker.Impl(0))));
             } else {
               throw SyntaxException.parameterNameShouldBeSpecifiedWithConstant((Nested) statement);
             }

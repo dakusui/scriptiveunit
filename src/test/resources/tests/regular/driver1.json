@@ -1,0 +1,7 @@
+{
+  "$extends":["tests/suiteset/suite1.json"],
+  "define": {
+    "print_twice": ["print", ["print", [0]]],
+    "empty" : []
+  }
+}

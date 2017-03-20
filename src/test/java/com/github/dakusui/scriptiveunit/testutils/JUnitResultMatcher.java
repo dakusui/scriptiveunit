@@ -123,10 +123,10 @@ public abstract class JUnitResultMatcher extends BaseMatcher<Result> {
   }
 
   public static class Builder {
-    private Matcher<Boolean> resultMatcher;
-    private Matcher<Integer> runCountMatcher;
-    private Matcher<Integer> ignoreCountMatcher;
-    private Matcher<Integer> failureCountMatcher;
+    private Matcher<Boolean> resultMatcher = equalTo(true);
+    private Matcher<Integer> runCountMatcher = equalTo(0);
+    private Matcher<Integer> ignoreCountMatcher = equalTo(0);
+    private Matcher<Integer> failureCountMatcher = equalTo(0);
     private Map<Integer, FailuresMatcher.EntryMatcher> failureMatchers = new HashMap<>();
 
     public Builder() {

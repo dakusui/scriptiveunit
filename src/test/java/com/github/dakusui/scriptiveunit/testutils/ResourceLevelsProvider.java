@@ -3,22 +3,22 @@ package com.github.dakusui.scriptiveunit.testutils;
 import com.github.dakusui.jcunit.plugins.levelsproviders.LevelsProvider;
 import com.github.dakusui.scriptiveunit.core.Utils;
 import org.codehaus.jackson.node.ObjectNode;
-import org.reflections.Reflections;
-import org.reflections.scanners.ResourcesScanner;
 
 import java.io.InputStream;
-import java.util.LinkedList;
+import java.util.List;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
+
+import static com.github.dakusui.scriptiveunit.core.Utils.allScriptsUnderMatching;
 
 public abstract class ResourceLevelsProvider<T> extends LevelsProvider.Base {
-  private final LinkedList<String> resourceNames;
+  private final List<String> resourceNames;
 
   public ResourceLevelsProvider(String resourcePackagePrefix, String suffix) {
-    this.resourceNames = new LinkedList<>(
-        new Reflections(
-            resourcePackagePrefix,
-            new ResourcesScanner()
-        ).getResources(Pattern.compile(".+\\." + suffix + "$")));
+    this.resourceNames = allScriptsUnderMatching(
+        resourcePackagePrefix,
+        Pattern.compile(".+\\." + suffix + "$")
+    ).collect(Collectors.toList());
   }
 
   @Override

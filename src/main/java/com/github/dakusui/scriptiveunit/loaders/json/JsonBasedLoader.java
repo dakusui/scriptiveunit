@@ -1,7 +1,6 @@
 package com.github.dakusui.scriptiveunit.loaders.json;
 
 import com.github.dakusui.scriptiveunit.Session;
-import com.github.dakusui.scriptiveunit.annotations.ReflectivelyReferenced;
 import com.github.dakusui.scriptiveunit.core.Config;
 import com.github.dakusui.scriptiveunit.core.Preprocessor;
 import com.github.dakusui.scriptiveunit.loaders.json.JsonBeans.TestSuiteDescriptorBean;
@@ -30,7 +29,7 @@ public class JsonBasedLoader extends TestSuiteDescriptor.Loader.Base {
    */
   private static final String DEFAULTS_JSON   = "defaults/values.json";
 
-  @ReflectivelyReferenced
+  @SuppressWarnings("unused")
   public JsonBasedLoader(Config config) {
     super(config);
   }
@@ -45,8 +44,7 @@ public class JsonBasedLoader extends TestSuiteDescriptor.Loader.Base {
                   .getScriptResourceName()
               ),
               TestSuiteDescriptorBean.class
-          )
-          .create(session);
+          ).create(session);
     } catch (IOException e) {
       throw wrap(e);
     }
@@ -61,7 +59,7 @@ public class JsonBasedLoader extends TestSuiteDescriptor.Loader.Base {
     return deepMerge(child, work);
   }
 
-  protected JsonNode preprocess(JsonNode inputNode) {
+  private JsonNode preprocess(JsonNode inputNode) {
     JsonNode ret = inputNode;
     for (Preprocessor each : getPreprocessors()) {
       ret = Preprocessor.translate(each, ret);

@@ -2,7 +2,6 @@ package com.github.dakusui.scriptiveunit.drivers;
 
 import com.github.dakusui.jcunit.core.tuples.Tuple;
 import com.github.dakusui.scriptiveunit.annotations.AccessesTestParameter;
-import com.github.dakusui.scriptiveunit.annotations.ReflectivelyReferenced;
 import com.github.dakusui.scriptiveunit.annotations.Scriptable;
 import com.github.dakusui.scriptiveunit.core.Config;
 import com.github.dakusui.scriptiveunit.exceptions.ScriptiveUnitException;
@@ -10,14 +9,12 @@ import com.github.dakusui.scriptiveunit.exceptions.SyntaxException;
 import com.github.dakusui.scriptiveunit.model.Stage;
 import com.github.dakusui.scriptiveunit.model.TestItem;
 import com.github.dakusui.scriptiveunit.model.func.Func;
-import com.github.dakusui.scriptiveunit.model.func.FuncInvoker;
 
 import java.lang.reflect.InvocationTargetException;
 import java.util.Arrays;
 import java.util.List;
 
 import static com.github.dakusui.scriptiveunit.core.Utils.check;
-import static com.github.dakusui.scriptiveunit.exceptions.ScriptiveUnitException.indexOutOfBounds;
 import static com.github.dakusui.scriptiveunit.exceptions.SyntaxException.attributeNotFound;
 import static java.util.Objects.requireNonNull;
 import static java.util.stream.Collectors.toList;
@@ -31,7 +28,7 @@ public class Core {
    * @param attr Attribute name whose value should be returned
    * @param <E>  Type of attribute value to be returned.
    */
-  @ReflectivelyReferenced
+  @SuppressWarnings("unused")
   @Scriptable
   @AccessesTestParameter
   public <E> Func<E> attr(Func<String> attr) {
@@ -54,7 +51,7 @@ public class Core {
    * @param entryName A name of method to be invoked.
    * @param target    A target from which value of {@code entryName} will be returned.
    */
-  @ReflectivelyReferenced
+  @SuppressWarnings("unused")
   @Scriptable
   public <E> Func<E> value(Func<String> entryName, Func<?> target) {
     return (Stage input) -> {
@@ -69,19 +66,19 @@ public class Core {
     };
   }
 
-  @ReflectivelyReferenced
+  @SuppressWarnings("unused")
   @Scriptable
   public Func<Throwable> exception() {
     return Stage::getThrowable;
   }
 
-  @ReflectivelyReferenced
+  @SuppressWarnings("unused")
   @Scriptable
   public Func<TestItem> testItem() {
     return Stage::getTestItem;
   }
 
-  @ReflectivelyReferenced
+  @SuppressWarnings("unused")
   @Scriptable
   public final Func<List<?>> quote(Func<?>... values) {
     return (Stage input) -> Arrays
@@ -90,32 +87,7 @@ public class Core {
         .collect(toList());
   }
 
-  @ReflectivelyReferenced
-  @Scriptable
-  public final Func<Object> userFunc(Func<List<Object>> funcBody, Func<?>... args) {
-    return (Stage input) -> {
-      List<Object> argValues = Arrays.stream(args).map((Func each) -> each.apply(input)).collect(toList());
-      Stage wrappedStage = new Stage.Delegating(input) {
-        @Override
-        public <U> U getArgument(int index) {
-          check(index < sizeOfArguments(), () -> indexOutOfBounds(index, sizeOfArguments()));
-          //noinspection unchecked
-          return (U) argValues.get(index);
-        }
-
-        @Override
-        public int sizeOfArguments() {
-          return argValues.size();
-        }
-      };
-      return wrappedStage.getStatementFactory()
-          .create(funcBody.apply(wrappedStage))
-          .execute(new FuncInvoker.Impl(0))
-          .<Func<Object>>apply(wrappedStage);
-    };
-  }
-
-  @ReflectivelyReferenced
+  @SuppressWarnings("unused")
   @Scriptable
   public Func<Object> configAttr(Func<String> attrName) {
     return input -> {
@@ -139,7 +111,7 @@ public class Core {
     };
   }
 
-  @ReflectivelyReferenced
+  @SuppressWarnings("unused")
   @Scriptable
   public Func<Object> systemProperty(Func<String> attrName) {
     return input -> System.getProperties().getProperty(requireNonNull(attrName.apply(input)));

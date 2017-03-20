@@ -2,7 +2,6 @@ package com.github.dakusui.scriptiveunit.tests.suiteset;
 
 import com.github.dakusui.jcunit.runners.standard.JCUnit;
 import com.github.dakusui.jcunit.runners.standard.annotations.FactorField;
-import com.github.dakusui.scriptiveunit.annotations.ReflectivelyReferenced;
 import com.github.dakusui.scriptiveunit.testutils.FailuresMatcher;
 import com.github.dakusui.scriptiveunit.testutils.JUnitResultMatcher;
 import com.github.dakusui.scriptiveunit.testutils.TestBase;
@@ -21,7 +20,7 @@ import static org.junit.Assert.assertThat;
 @RunWith(JCUnit.class)
 public class SuiteSetTest extends TestBase {
   public enum TestItem implements TestDef<Class, SuiteSetTest, Result> {
-    @ReflectivelyReferenced
+    @SuppressWarnings("unused")
     SUITESET_NORMAL_TEST {
       @Override
       public Matcher<Result> getOracle(SuiteSetTest testObject) {
@@ -30,7 +29,7 @@ public class SuiteSetTest extends TestBase {
             .withExpectedRunCount(4)
             .withExpectedFailureCount(2)
             .withExpectedIgnoreCount(0)
-            .addFailureMatcher(0, new FailuresMatcher.EntryMatcher() {
+            .addFailureMatcher(1, new FailuresMatcher.EntryMatcher() {
               @Override
               protected boolean matchesFailure(Failure failure) {
                 return failure.getTestHeader().contains("Suite 1");
@@ -38,7 +37,7 @@ public class SuiteSetTest extends TestBase {
 
               @Override
               public void describeTo(Description description) {
-                description.appendText("Expected to contain a string 'Suite'");
+                description.appendText("Expected to contain a string 'Suite 1'");
               }
             })
             .addFailureMatcher(1, new FailuresMatcher.EntryMatcher() {
@@ -49,7 +48,7 @@ public class SuiteSetTest extends TestBase {
 
               @Override
               public void describeTo(Description description) {
-                description.appendText("Expected to contain a string 'Suite'");
+                description.appendText("Expected to contain a string 'Suite 2'");
               }
             })
             .build();
@@ -62,7 +61,7 @@ public class SuiteSetTest extends TestBase {
     }
   }
 
-  @ReflectivelyReferenced
+  @SuppressWarnings({ "unused", "WeakerAccess" })
   @FactorField
   public TestItem testItem;
 

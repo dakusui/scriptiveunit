@@ -5,13 +5,14 @@ import com.github.dakusui.jcunit.core.factor.Factor;
 import com.github.dakusui.jcunit.core.tuples.Tuple;
 import com.github.dakusui.scriptiveunit.annotations.Import;
 import com.github.dakusui.scriptiveunit.annotations.Load;
-import com.github.dakusui.scriptiveunit.annotations.ReflectivelyReferenced;
 import com.github.dakusui.scriptiveunit.annotations.Scriptable;
 import com.github.dakusui.scriptiveunit.core.Config;
 import com.github.dakusui.scriptiveunit.core.ObjectMethod;
 import com.github.dakusui.scriptiveunit.core.Utils;
+import com.github.dakusui.scriptiveunit.core.Description;
 import com.github.dakusui.scriptiveunit.model.Stage;
 import com.github.dakusui.scriptiveunit.model.TestSuiteDescriptor;
+import com.github.dakusui.scriptiveunit.model.statement.Form;
 import org.junit.internal.runners.statements.RunBefores;
 import org.junit.runner.Runner;
 import org.junit.runners.Parameterized;
@@ -19,13 +20,12 @@ import org.junit.runners.model.Statement;
 import org.junit.runners.model.TestClass;
 
 import java.lang.annotation.Annotation;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.stream.Stream;
 
 import static com.github.dakusui.actionunit.Utils.createTestClassMock;
 import static com.github.dakusui.scriptiveunit.core.Utils.performActionWithLogging;
+import static com.github.dakusui.scriptiveunit.exceptions.ResourceException.functionNotFound;
 import static com.github.dakusui.scriptiveunit.model.Stage.Type.SETUP_BEFORE_ALL;
 import static com.github.dakusui.scriptiveunit.model.Stage.Type.TEARDOWN_AFTER_ALL;
 import static com.google.common.collect.Lists.newLinkedList;
@@ -48,7 +48,7 @@ public class ScriptiveUnit extends Parameterized {
    *
    * @param klass A test class.
    */
-  @ReflectivelyReferenced
+  @SuppressWarnings("unused")
   public ScriptiveUnit(Class<?> klass) throws Throwable {
     this(klass, new Config.Builder(klass, System.getProperties()).build());
   }
@@ -59,8 +59,7 @@ public class ScriptiveUnit extends Parameterized {
    * @param klass  A test class
    * @param config A config object.
    */
-  @ReflectivelyReferenced
-  protected ScriptiveUnit(Class<?> klass, Config config) throws Throwable {
+  public ScriptiveUnit(Class<?> klass, Config config) throws Throwable {
     this(klass, createTestSuiteDescriptorLoader(config));
   }
 
@@ -72,10 +71,10 @@ public class ScriptiveUnit extends Parameterized {
 
   @Override
   public String getName() {
-    return this.session.getDescriptor().getConfig().getScriptResourceName()
+    return this.session.loadTestSuiteDescriptor().getConfig().getScriptResourceName()
         .replaceAll(".+/", "")
         .replaceAll("\\.[^.]*$", "")
-        + ":" + this.session.getDescriptor().getDescription();
+        + ":" + this.session.loadTestSuiteDescriptor().getDescription();
   }
 
 
@@ -99,7 +98,7 @@ public class ScriptiveUnit extends Parameterized {
                 SETUP_BEFORE_ALL,
                 session,
                 createCommonFixture(
-                    session.getDescriptor().getFactorSpaceDescriptor().getFactors()
+                    session.loadTestSuiteDescriptor().getFactorSpaceDescriptor().getFactors()
                 )));
         super.evaluate();
       }
@@ -111,7 +110,7 @@ public class ScriptiveUnit extends Parameterized {
     return new RunBefores(statement, Collections.emptyList(), null) {
       @Override
       public void evaluate() throws Throwable {
-        TestSuiteDescriptor descriptor = session.getDescriptor();
+        TestSuiteDescriptor descriptor = session.loadTestSuiteDescriptor();
         super.evaluate();
         performActionWithLogging(
             createSuiteLevelAction(
@@ -136,7 +135,7 @@ public class ScriptiveUnit extends Parameterized {
   }
 
 
-    private static TestSuiteDescriptor.Loader createTestSuiteDescriptorLoader(Config config) {
+  public static TestSuiteDescriptor.Loader createTestSuiteDescriptorLoader(Config config) {
     return TestSuiteDescriptor.Loader.createInstance(
         getAnnotationWithDefault(
             config.getDriverClass(),
@@ -146,7 +145,35 @@ public class ScriptiveUnit extends Parameterized {
     );
   }
 
-  public static List<ObjectMethod> getAnnotatedMethodsFromImportedFieldsInObject(Object object) {
+  public Description describeFunction(Object driverObject, String functionName) {
+    Optional<Description> value =
+        Stream.concat(
+            getObjectMethodsFromImportedFieldsInObject(driverObject).stream().map(ObjectMethod::describe),
+            getUserDefinedFormClauses().entrySet().stream().map((Map.Entry<String, List<Object>> entry) -> Form.describe(entry.getKey(), entry.getValue()))
+        ).filter(t -> functionName.equals(t.name())).findFirst();
+    if (value.isPresent())
+      return value.get();
+    throw functionNotFound(functionName);
+  }
+
+  public List<String> getFormNames(Object driverObject) {
+    return Stream.concat(
+        getObjectMethodsFromImportedFieldsInObject(driverObject)
+            .stream()
+            .map(ObjectMethod::getName),
+        getUserDefinedFormClauseNamesFromScript().stream()).collect(toList());
+  }
+
+
+  private List<String> getUserDefinedFormClauseNamesFromScript() {
+    return getUserDefinedFormClauses().keySet().stream().collect(toList());
+  }
+
+  private Map<String, List<Object>> getUserDefinedFormClauses() {
+    return this.session.loadTestSuiteDescriptor().getUserDefinedFormClauses();
+  }
+
+  public static List<ObjectMethod> getObjectMethodsFromImportedFieldsInObject(Object object) {
     return Utils.getAnnotatedFields(object, Import.class)
         .stream()
         .map(each -> Utils.getAnnotatedMethods(
