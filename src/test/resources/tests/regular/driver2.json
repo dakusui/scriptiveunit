@@ -1,0 +1,5 @@
+{
+  "$extends": [
+    "tests/suiteset/suite1.json"
+  ]
+}

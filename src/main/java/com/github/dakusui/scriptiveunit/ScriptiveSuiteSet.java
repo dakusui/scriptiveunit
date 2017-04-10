@@ -1,6 +1,5 @@
 package com.github.dakusui.scriptiveunit;
 
-import com.github.dakusui.scriptiveunit.annotations.ReflectivelyReferenced;
 import com.github.dakusui.scriptiveunit.core.Config;
 import com.github.dakusui.scriptiveunit.core.Utils;
 import com.github.dakusui.scriptiveunit.exceptions.ScriptiveUnitException;
@@ -51,7 +50,8 @@ public class ScriptiveSuiteSet extends ParentRunner<Runner> {
       private static Stream<String> targetScripts(SuiteScripts suiteScripts) {
         return Utils.allScriptsUnder(suiteScripts.prefix())
             .filter(matchesAnyOf(toPatterns(suiteScripts.includes())))
-            .filter(not(matchesAnyOf(toPatterns(suiteScripts.excludes()))));
+            .filter(not(matchesAnyOf(toPatterns(suiteScripts.excludes()))))
+            .sorted();
       }
     }
   }
@@ -64,7 +64,7 @@ public class ScriptiveSuiteSet extends ParentRunner<Runner> {
    * @param klass   the root class
    * @param builder builds runners for classes in the suite
    */
-  @ReflectivelyReferenced
+  @SuppressWarnings({"unused"})
   public ScriptiveSuiteSet(Class<?> klass, RunnerBuilder builder) throws InitializationError {
     this(
         klass,

@@ -199,13 +199,13 @@ public interface Stage {
     SETUP_BEFORE_ALL {
       @Override
       public Func<Action> getSuiteLevelActionFactory(Session session) {
-        return session.getDescriptor().getSetUpBeforeAllActionFactory();
+        return session.loadTestSuiteDescriptor().getSetUpBeforeAllActionFactory();
       }
     },
     SETUP {
       @Override
       public Function<Stage, Action> getFixtureLevelActionFactory(Session session) {
-        return session.getDescriptor().getSetUpActionFactory();
+        return session.loadTestSuiteDescriptor().getSetUpActionFactory();
       }
     },
     BEFORE,
@@ -217,13 +217,13 @@ public interface Stage {
     TEARDOWN {
       @Override
       public Function<Stage, Action> getFixtureLevelActionFactory(Session session) {
-        return session.getDescriptor().getTearDownActionFactory();
+        return session.loadTestSuiteDescriptor().getTearDownActionFactory();
       }
     },
     TEARDOWN_AFTER_ALL {
       @Override
       public Function<Stage, Action> getSuiteLevelActionFactory(Session session) {
-        return session.getDescriptor().getTearDownAfterAllActionFactory();
+        return session.loadTestSuiteDescriptor().getTearDownAfterAllActionFactory();
       }
     },;
 

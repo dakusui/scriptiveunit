@@ -7,7 +7,6 @@ import com.github.dakusui.jcunit.runners.standard.JCUnit;
 import com.github.dakusui.jcunit.runners.standard.TestCaseUtils;
 import com.github.dakusui.jcunit.runners.standard.annotations.*;
 import com.github.dakusui.scriptiveunit.ScriptiveUnit;
-import com.github.dakusui.scriptiveunit.annotations.ReflectivelyReferenced;
 import com.github.dakusui.scriptiveunit.annotations.Scriptable;
 import com.github.dakusui.scriptiveunit.core.Config;
 import com.github.dakusui.scriptiveunit.testutils.Resource;
@@ -36,56 +35,56 @@ import static org.hamcrest.MatcherAssert.assertThat;
     })
 public class VariationTest {
 
-  @ReflectivelyReferenced
+  @SuppressWarnings("unused")
   @FactorField(
       levelsProvider = ResourceLevelsProvider.FromJson.class,
       args = { @Value("components/_extends"), @Value("json") }
   )
   public Resource<ObjectNode> _extends;
 
-  @ReflectivelyReferenced
+  @SuppressWarnings("unused")
   @FactorField(
       levelsProvider = ResourceLevelsProvider.FromJson.class,
       args = { @Value("components/description"), @Value("json") }
   )
   public Resource<ObjectNode> description;
 
-  @ReflectivelyReferenced
+  @SuppressWarnings("unused")
   @FactorField(
       levelsProvider = ResourceLevelsProvider.FromJson.class,
       args = { @Value("components/factorSpace/factors"), @Value("json") }
   )
   public Resource<ObjectNode> factors;
 
-  @ReflectivelyReferenced
+  @SuppressWarnings("unused")
   @FactorField(
       levelsProvider = ResourceLevelsProvider.FromJson.class,
       args = { @Value("components/factorSpace/constraints"), @Value("json") }
   )
   public Resource<ObjectNode> constraints;
 
-  @ReflectivelyReferenced
+  @SuppressWarnings("unused")
   @FactorField(
       levelsProvider = ResourceLevelsProvider.FromJson.class,
       args = { @Value("components/runnerType"), @Value("json") }
   )
   public Resource<ObjectNode> runnerType;
 
-  @ReflectivelyReferenced
+  @SuppressWarnings("unused")
   @FactorField(
       levelsProvider = ResourceLevelsProvider.FromJson.class,
       args = { @Value("components/setUp"), @Value("json") }
   )
   public Resource<ObjectNode> setUp;
 
-  @ReflectivelyReferenced
+  @SuppressWarnings("unused")
   @FactorField(
       levelsProvider = ResourceLevelsProvider.FromJson.class,
       args = { @Value("components/setUpBeforeAll"), @Value("json") }
   )
   public Resource<ObjectNode> setUpBeforeAll;
 
-  @ReflectivelyReferenced
+  @SuppressWarnings("unused")
   @FactorField(
       levelsProvider = ResourceLevelsProvider.FromJson.class,
       args = { @Value("components/testOracles"), @Value("json") }

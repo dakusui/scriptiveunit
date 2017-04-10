@@ -1,17 +1,16 @@
 package com.github.dakusui.scriptiveunit.tests.cli.compat.factors;
 
-import com.github.dakusui.scriptiveunit.annotations.ReflectivelyReferenced;
 import com.github.dakusui.scriptiveunit.tests.cli.SimpleDriver;
 import com.github.dakusui.scriptiveunit.tests.cli.SuiteSetDriver;
 
 public enum DriverLevel {
-  @ReflectivelyReferenced
+  @SuppressWarnings("unused")
   SUITESET(SuiteSetDriver.class),
-  @ReflectivelyReferenced
+  @SuppressWarnings("unused")
   SIMPLE(SimpleDriver.class),
-  @ReflectivelyReferenced
+  @SuppressWarnings("unused")
   NOT_FOUND(false, "not_found"),
-  @ReflectivelyReferenced
+  @SuppressWarnings("unused")
   INVALID_NAME(false, "!+-");
 
   final private String  driverClassName;

@@ -8,6 +8,7 @@ import com.github.dakusui.actionunit.connectors.Source;
 import com.github.dakusui.actionunit.visitors.ActionRunner;
 import com.github.dakusui.jcunit.core.factor.Factor;
 import com.github.dakusui.jcunit.core.tuples.Tuple;
+import com.github.dakusui.scriptiveunit.exceptions.ResourceException;
 import com.github.dakusui.scriptiveunit.exceptions.ScriptiveUnitException;
 import com.github.dakusui.scriptiveunit.exceptions.SyntaxException;
 import com.google.common.collect.ImmutableList;
@@ -16,12 +17,10 @@ import com.google.common.collect.Iterables;
 import org.codehaus.jackson.JsonNode;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.node.ObjectNode;
-import org.junit.Test;
-import org.junit.runner.RunWith;
 import org.reflections.Reflections;
 import org.reflections.scanners.ResourcesScanner;
-import org.reflections.util.ClasspathHelper;
-import org.reflections.util.ConfigurationBuilder;
+import org.reflections.scanners.SubTypesScanner;
+import org.reflections.scanners.TypeAnnotationsScanner;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -64,6 +63,20 @@ public enum Utils {
     };
   }
 
+  public static <T> Supplier<T> prettify(String prettyString, Supplier<T> supplier) {
+    return new Supplier<T>() {
+      @Override
+      public T get() {
+        return supplier.get();
+      }
+
+      @Override
+      public String toString() {
+        return prettyString;
+      }
+    };
+  }
+
   public static <T> Source<T> prettify(String prettyString, Source<T> source) {
     return new Source<T>() {
       @Override
@@ -85,6 +98,21 @@ public enum Utils {
       @Override
       public U apply(T t, Context context) {
         return pipe.apply(t, context);
+      }
+
+      @Override
+      public String toString() {
+        return prettyString;
+      }
+    };
+  }
+
+  public static <T> Predicate<T> prettify(String prettyString, Predicate<T> predicate) {
+    return new Predicate<T>() {
+
+      @Override
+      public boolean test(T t) {
+        return predicate.test(t);
       }
 
       @Override
@@ -313,6 +341,15 @@ public enum Utils {
     return convert(input, type);
   }
 
+  /**
+   * Returns an annotation element of a specified type ({@code annotationClass})
+   * attached to {@code annotatedElement}.
+   * If it is not present, {@code defaultInstance} will be returned.
+   *
+   * @param annotatedElement An element from which annotation object to be returned is retrieved.
+   * @param annotationClass  An annotation class of the instance to be returned.
+   * @param defaultInstance  An annotation object to be returned in the {@code annotatedElement} doesn't have it.
+   */
   public static <T extends Annotation> T getAnnotation(AnnotatedElement annotatedElement, Class<T> annotationClass, T defaultInstance) {
     return annotatedElement.isAnnotationPresent(annotationClass) ?
         annotatedElement.getAnnotation(annotationClass) :
@@ -357,7 +394,7 @@ public enum Utils {
   }
 
   public static InputStream openResourceAsStream(String resourceName) {
-    return requireNonNull(getSystemResourceAsStream(resourceName), format("Failed to open '%s'. Make sure it is available on your classpath.", resourceName));
+    return ResourceException.scriptExists(getSystemResourceAsStream(resourceName), resourceName);
   }
 
   public static JsonNode readJsonNodeFromStream(InputStream is) {
@@ -384,15 +421,24 @@ public enum Utils {
   }
 
   public static Stream<String> allScriptsUnder(String prefix) {
-    return new Reflections(prefix, new ResourcesScanner()).getResources(Pattern.compile(".*")).stream();
+    return allScriptsUnderMatching(prefix, Pattern.compile(".*"));
+  }
+
+  public static Stream<String> allScriptsUnderMatching(String prefix, Pattern pattern) {
+    return new Reflections(prefix, new ResourcesScanner()).getResources(pattern).stream();
   }
 
   public static Stream<Class<?>> allTypesAnnotatedWith(String prefix, Class<? extends Annotation> annotation) {
     return findEntitiesUnder(prefix, (Reflections reflections) -> reflections.getTypesAnnotatedWith(annotation));
   }
 
-  public static <T> Stream<T> findEntitiesUnder(String prefix, Function<Reflections, Set<T>> func) {
-    return func.apply(new Reflections(prefix, new ConfigurationBuilder().setUrls(ClasspathHelper.forPackage(prefix)))).stream();
+  public static Stream<Class<?>> findEntitiesUnder(String prefix, Function<Reflections, Set<Class<?>>> func) {
+    return func.apply(new Reflections(
+            prefix,
+            new TypeAnnotationsScanner(),
+            new SubTypesScanner()
+        )
+    ).stream();
   }
 
   private interface Converter<FROM, TO> extends Function<FROM, TO> {
@@ -418,13 +464,4 @@ public enum Utils {
       .add(Converter.create(Number.class, BigDecimal.class, (Number input) -> new BigDecimal(input.toString(), DECIMAL128)))
       .build();
 
-
-  public static class UtilsTest {
-    @Test
-    public void main() {
-      //      System.out.println(new Reflections("tests", new ResourcesScanner()).getResources(Pattern.compile(".json")));
-      System.out.println(allScriptsUnder("tests").collect(toList()));
-      System.out.println(allTypesAnnotatedWith("com", RunWith.class));
-    }
-  }
 }

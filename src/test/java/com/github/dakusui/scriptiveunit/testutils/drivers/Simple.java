@@ -5,7 +5,6 @@ import com.github.dakusui.scriptiveunit.ScriptiveUnit;
 import com.github.dakusui.scriptiveunit.annotations.Import;
 import com.github.dakusui.scriptiveunit.annotations.Import.Alias;
 import com.github.dakusui.scriptiveunit.annotations.Load;
-import com.github.dakusui.scriptiveunit.annotations.ReflectivelyReferenced;
 import com.github.dakusui.scriptiveunit.drivers.*;
 import com.github.dakusui.scriptiveunit.drivers.actions.Basic;
 import com.github.dakusui.scriptiveunit.loaders.json.JsonBasedLoader;
@@ -14,7 +13,7 @@ import org.junit.runner.RunWith;
 @Load(with = JsonBasedLoader.class)
 @RunWith(ScriptiveUnit.class)
 public class Simple {
-  @ReflectivelyReferenced
+  @SuppressWarnings("unused")
   @Import({
       @Alias(value = "*"),
       @Alias(value = "add", as = "+"),
@@ -24,7 +23,7 @@ public class Simple {
   })
   public Object arith = new Arith();
 
-  @ReflectivelyReferenced
+  @SuppressWarnings("unused")
   @Import({
       @Alias(value = "*"),
       @Alias(value = "gt", as = ">"),
@@ -36,23 +35,23 @@ public class Simple {
   })
   public Object predicates = new Predicates();
 
-  @ReflectivelyReferenced
+  @SuppressWarnings("unused")
   @Import
   public Object strings = new Strings();
 
-  @ReflectivelyReferenced
+  @SuppressWarnings("unused")
   @Import
   public Object collections = new Collections();
 
-  @ReflectivelyReferenced
+  @SuppressWarnings("unused")
   @Import
   public Object basicActions = new Basic();
 
-  @ReflectivelyReferenced
+  @SuppressWarnings("unused")
   @Import
   public Object core = new Core();
 
-  @ReflectivelyReferenced
+  @SuppressWarnings("unused")
   @Import
   public Object reporting = new Reporting();
 

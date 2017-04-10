@@ -5,11 +5,9 @@ import com.github.dakusui.scriptiveunit.ScriptiveUnit;
 import com.github.dakusui.scriptiveunit.annotations.Import;
 import com.github.dakusui.scriptiveunit.annotations.Import.Alias;
 import com.github.dakusui.scriptiveunit.annotations.Load;
-import com.github.dakusui.scriptiveunit.annotations.ReflectivelyReferenced;
 import com.github.dakusui.scriptiveunit.core.Config;
 import com.github.dakusui.scriptiveunit.core.JsonUtils;
 import com.github.dakusui.scriptiveunit.core.Preprocessor;
-import com.github.dakusui.scriptiveunit.doc.HelpWriter;
 import com.github.dakusui.scriptiveunit.drivers.*;
 import com.github.dakusui.scriptiveunit.drivers.actions.Basic;
 import com.github.dakusui.scriptiveunit.loaders.json.JsonBasedLoader;
@@ -59,7 +57,7 @@ public class Qapi {
     }
   }
 
-  @ReflectivelyReferenced
+  @SuppressWarnings("unused")
   @Import({
       @Alias(value = "*"),
       @Alias(value = "add", as = "+"),
@@ -69,7 +67,7 @@ public class Qapi {
   })
   public Object arith = new Arith();
 
-  @ReflectivelyReferenced
+  @SuppressWarnings("unused")
   @Import({
       @Alias(value = "*"),
       @Alias(value = "gt", as = ">"),
@@ -81,15 +79,15 @@ public class Qapi {
   })
   public Object predicates = new Predicates();
 
-  @ReflectivelyReferenced
+  @SuppressWarnings("unused")
   @Import
   public Object strings = new Strings();
 
-  @ReflectivelyReferenced
+  @SuppressWarnings("unused")
   @Import
   public Object collections = new Collections();
 
-  @ReflectivelyReferenced
+  @SuppressWarnings("unused")
   @Import({
       @Alias(value = "*"),
       @Alias(value = "configAttr", as = "config_attr"),
@@ -97,11 +95,11 @@ public class Qapi {
   })
   public Object core = new Core();
 
-  @ReflectivelyReferenced
+  @SuppressWarnings("unused")
   @Import
   public Object basicActions = new Basic();
 
-  @ReflectivelyReferenced
+  @SuppressWarnings("unused")
   @Import({
       @Alias(value = "*"),
       @Alias(value = "request", as = "query"),
@@ -186,34 +184,34 @@ public class Qapi {
       this.addAll(entries);
     }
 
-    @ReflectivelyReferenced
+    @SuppressWarnings("unused")
     public int statusCode() {
       return this.isEmpty() ? 404 : 200;
     }
 
   }
 
-  @ReflectivelyReferenced
+  @SuppressWarnings("unused")
   public enum Entry {
-    @ReflectivelyReferenced
+    @SuppressWarnings("unused")
     ITEM_01("ヒータ", 15_000),
-    @ReflectivelyReferenced
+    @SuppressWarnings("unused")
     ITEM_02("ヒーター", 14_800),
-    @ReflectivelyReferenced
+    @SuppressWarnings("unused")
     ITEM_03("ストーブ", 16_800),
-    @ReflectivelyReferenced
+    @SuppressWarnings("unused")
     ITEM_03a("ストーブ用ポンプ", 200),
-    @ReflectivelyReferenced
+    @SuppressWarnings("unused")
     ITEM_03b("ストーブ用替え扉", 480),
-    @ReflectivelyReferenced
+    @SuppressWarnings("unused")
     ITEM_04("ヒーター", 9_800),
-    @ReflectivelyReferenced
+    @SuppressWarnings("unused")
     ITEM_05("iPhone 7 ケース", 2_000),
-    @ReflectivelyReferenced
+    @SuppressWarnings("unused")
     ITEM_06("iPhone 7 シルバー", 48_000),
-    @ReflectivelyReferenced
+    @SuppressWarnings("unused")
     ITEM_07("iPhone 6 ケース", 1_980),
-    @ReflectivelyReferenced
+    @SuppressWarnings("unused")
     ITEM_08("iPhone 6Plus シルバー", 68_000),;
 
     private final String content;
@@ -232,10 +230,5 @@ public class Qapi {
     public String toString() {
       return format("%s:%s(%s)", this.name(), this.content, this.price);
     }
-  }
-
-
-  public static void main(String... args) {
-    HelpWriter.help(Qapi.class, args);
   }
 }

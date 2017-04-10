@@ -1,20 +1,18 @@
 package com.github.dakusui.scriptiveunit;
 
 import com.github.dakusui.scriptiveunit.core.Config;
+import com.github.dakusui.scriptiveunit.model.Report;
 import com.github.dakusui.scriptiveunit.model.Stage;
 import com.github.dakusui.scriptiveunit.model.TestItem;
 import com.github.dakusui.scriptiveunit.model.TestSuiteDescriptor;
-import com.github.dakusui.scriptiveunit.model.Report;
 import org.junit.runner.Runner;
-
-import static java.util.Objects.requireNonNull;
 
 public interface Session {
   Config getConfig();
 
   Report createReport(TestItem testItem);
 
-  TestSuiteDescriptor getDescriptor();
+  TestSuiteDescriptor loadTestSuiteDescriptor();
 
   Iterable<Runner> createTestItemRunners();
 
@@ -26,13 +24,13 @@ public interface Session {
 
   class Impl implements Session {
     private final Config                     config;
-    private final TestSuiteDescriptor.Loader loader;
+    private final TestSuiteDescriptor.Loader testSuiteDescriptorLoader;
     private       TestSuiteDescriptor        testSuiteDescriptor;
 
     @SuppressWarnings("WeakerAccess")
     protected Impl(TestSuiteDescriptor.Loader loader) {
-      this.loader = requireNonNull(loader);
       this.config = loader.getConfig();
+      this.testSuiteDescriptorLoader = loader;
     }
 
     @Override
@@ -46,16 +44,16 @@ public interface Session {
     }
 
     @Override
-    synchronized public TestSuiteDescriptor getDescriptor() {
+    synchronized public TestSuiteDescriptor loadTestSuiteDescriptor() {
       if (this.testSuiteDescriptor == null) {
-        this.testSuiteDescriptor = loader.loadTestSuiteDescriptor(this);
+        this.testSuiteDescriptor = testSuiteDescriptorLoader.loadTestSuiteDescriptor(this);
       }
       return this.testSuiteDescriptor;
     }
 
     @Override
     public Iterable<Runner> createTestItemRunners() {
-      return getDescriptor().getRunnerType().createRunners(this);
+      return loadTestSuiteDescriptor().getRunnerType().createRunners(this);
     }
 
     @Override

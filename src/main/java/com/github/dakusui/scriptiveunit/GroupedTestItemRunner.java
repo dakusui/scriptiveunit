@@ -39,7 +39,7 @@ import static java.util.stream.Collectors.toSet;
 
 public final class GroupedTestItemRunner extends ParentRunner<Action> {
   private static Iterable<Runner> createRunnersGroupingByTestOracle(final Session session) {
-    TestSuiteDescriptor testSuiteDescriptor = session.getDescriptor();
+    TestSuiteDescriptor testSuiteDescriptor = session.loadTestSuiteDescriptor();
     AtomicInteger id = new AtomicInteger(0);
     return testSuiteDescriptor.getTestOracles()
         .stream()
@@ -54,7 +54,7 @@ public final class GroupedTestItemRunner extends ParentRunner<Action> {
   }
 
   private static Iterable<Runner> createRunnersGroupingByTestCase(final Session session) {
-    TestSuiteDescriptor testSuiteDescriptor = session.getDescriptor();
+    TestSuiteDescriptor testSuiteDescriptor = session.loadTestSuiteDescriptor();
     return testSuiteDescriptor.getTestCases()
         .stream()
         .map(
@@ -66,7 +66,7 @@ public final class GroupedTestItemRunner extends ParentRunner<Action> {
   }
 
   private static Iterable<Runner> createRunnersGroupingByTestFixture(Session session) {
-    TestSuiteDescriptor testSuiteDescriptor = session.getDescriptor();
+    TestSuiteDescriptor testSuiteDescriptor = session.loadTestSuiteDescriptor();
     List<Factor> factors = testSuiteDescriptor.getFactorSpaceDescriptor().getFactors();
     List<String> singleLevelFactors = factors.stream()
         .filter((Factor each) -> each.levels.size() == 1)
@@ -157,7 +157,7 @@ public final class GroupedTestItemRunner extends ParentRunner<Action> {
     enum OrderBy {
       TEST_CASE {
         Stream<Action> buildSortedActionStreamOrderingBy(Session session, List<IndexedTestCase> testCases, AtomicInteger i) {
-          TestSuiteDescriptor testSuiteDescriptor = session.getDescriptor();
+          TestSuiteDescriptor testSuiteDescriptor = session.loadTestSuiteDescriptor();
           List<? extends TestOracle> testOracles = testSuiteDescriptor.getTestOracles();
           return testCases.stream()
               .flatMap(eachTestCase -> testOracles.stream()
@@ -173,7 +173,7 @@ public final class GroupedTestItemRunner extends ParentRunner<Action> {
       TEST_ORACLE {
         @Override
         Stream<Action> buildSortedActionStreamOrderingBy(Session session, List<IndexedTestCase> testCases, AtomicInteger i) {
-          TestSuiteDescriptor testSuiteDescriptor = session.getDescriptor();
+          TestSuiteDescriptor testSuiteDescriptor = session.loadTestSuiteDescriptor();
           List<? extends TestOracle> testOracles = testSuiteDescriptor.getTestOracles();
           return testOracles.stream()
               .flatMap(eachOracle -> testCases.stream()
@@ -285,7 +285,7 @@ public final class GroupedTestItemRunner extends ParentRunner<Action> {
   }
 
   private static GroupedTestItemRunner createRunnerForTestOracle(Class<?> testClass, int testOracleId, TestOracle testOracle, Session session) {
-    TestSuiteDescriptor testSuiteDescriptor = session.getDescriptor();
+    TestSuiteDescriptor testSuiteDescriptor = session.loadTestSuiteDescriptor();
     List<Factor> factors = testSuiteDescriptor.getFactorSpaceDescriptor().getFactors();
     String testSuiteDescription = testSuiteDescriptor.getDescription();
     List<IndexedTestCase> testCases = testSuiteDescriptor.getTestCases();
@@ -341,7 +341,7 @@ public final class GroupedTestItemRunner extends ParentRunner<Action> {
   }
 
   private static GroupedTestItemRunner createRunnerForTestCase(Class<?> testClass, IndexedTestCase testCase, Session session) {
-    TestSuiteDescriptor testSuiteDescriptor = session.getDescriptor();
+    TestSuiteDescriptor testSuiteDescriptor = session.loadTestSuiteDescriptor();
     int testCaseId = testCase.getIndex();
     List<Factor> factors = testSuiteDescriptor.getFactorSpaceDescriptor().getFactors();
     List<? extends TestOracle> testOracles = testSuiteDescriptor.getTestOracles();
@@ -378,7 +378,7 @@ public final class GroupedTestItemRunner extends ParentRunner<Action> {
   }
 
   private static GroupedTestItemRunner createRunnerForTestFixture(Class<?> testClass, int fixtureId, Tuple fixture, List<IndexedTestCase> testCasesFilteredByFixture, Session session) {
-    TestSuiteDescriptor testSuiteDescriptor = session.getDescriptor();
+    TestSuiteDescriptor testSuiteDescriptor = session.loadTestSuiteDescriptor();
     try {
       AtomicInteger i = new AtomicInteger(0);
       return new GroupedTestItemRunner(
