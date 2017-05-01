@@ -70,7 +70,7 @@ public final class GroupedTestItemRunner extends ParentRunner<Action> {
     List<Factor> factors = testSuiteDescriptor.getFactorSpaceDescriptor().getFactors();
     List<String> singleLevelFactors = factors.stream()
         .filter((Factor each) -> each.getLevels().size() == 1)
-        .map((Factor each) -> each.getName())
+        .map(Factor::getName)
         .collect(toList());
     List<String> involved = figureOutInvolvedParameters(testSuiteDescriptor, singleLevelFactors);
     List<IndexedTestCase> testCases = testSuiteDescriptor.getTestCases().stream()

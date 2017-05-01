@@ -5,6 +5,7 @@ import com.github.dakusui.jcunit8.runners.junit4.JCUnit8;
 import com.github.dakusui.jcunit8.runners.junit4.annotations.Condition;
 import com.github.dakusui.jcunit8.runners.junit4.annotations.From;
 import com.github.dakusui.jcunit8.runners.junit4.annotations.ParameterSource;
+import org.junit.Ignore;
 import org.junit.runner.RunWith;
 
 import java.util.List;
@@ -46,6 +47,7 @@ import static org.junit.Assume.assumeTrue;
  * <p>
  * cli list (
  */
+@Ignore
 @RunWith(JCUnit8.class)
 public class CliTest {
   @ParameterSource

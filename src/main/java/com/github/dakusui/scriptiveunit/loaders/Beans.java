@@ -35,6 +35,7 @@ import static com.github.dakusui.scriptiveunit.core.Utils.*;
 import static com.github.dakusui.scriptiveunit.exceptions.ScriptiveUnitException.wrap;
 import static com.github.dakusui.scriptiveunit.model.Stage.Type.*;
 import static java.lang.String.format;
+import static java.util.Collections.singletonList;
 import static java.util.Objects.requireNonNull;
 import static java.util.stream.Collectors.toList;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -173,11 +174,14 @@ public enum Beans {
           }
 
           private List<IndexedTestCase> createTestCases(TestSuiteDescriptor testSuiteDescriptor) {
+            ParameterSpace parameterSpace = createParameterSpaceFrom(testSuiteDescriptor);
+            if (parameterSpace.getParameterNames().isEmpty())
+              return singletonList(new IndexedTestCase(0, new Tuple.Builder().build(), TestCase.Category.REGULAR));
             return Pipeline.Standard.create().execute(
                 new com.github.dakusui.jcunit8.pipeline.Config.Builder(
                     new Requirement.Builder().withNegativeTestGeneration(false).withStrength(2).build()
                 ).build(),
-                createParameterSpaceFrom(testSuiteDescriptor)
+                parameterSpace
             ).stream()
                 .map(new Function<TestCase, IndexedTestCase>() {
                   int i = 0;
