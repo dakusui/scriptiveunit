@@ -21,8 +21,6 @@ public interface TestSuiteDescriptor {
 
   FactorSpaceDescriptor getFactorSpaceDescriptor();
 
-  CoveringArrayEngineConfig getCoveringArrayEngineConfig();
-
   Map<String, List<Object>> getUserDefinedFormClauses();
 
   List<? extends TestOracle> getTestOracles();

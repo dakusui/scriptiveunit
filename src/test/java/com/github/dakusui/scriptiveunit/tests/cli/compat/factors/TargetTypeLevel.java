@@ -1,6 +1,5 @@
 package com.github.dakusui.scriptiveunit.tests.cli.compat.factors;
 
-import com.github.dakusui.scriptiveunit.tests.cli.compat.CliTest;
 import com.github.dakusui.scriptiveunit.tests.cli.SimpleDriver;
 import com.github.dakusui.scriptiveunit.tests.cli.SuiteSetDriver;
 

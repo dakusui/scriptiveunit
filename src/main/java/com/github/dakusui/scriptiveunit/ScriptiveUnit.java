@@ -1,15 +1,15 @@
 package com.github.dakusui.scriptiveunit;
 
 import com.github.dakusui.actionunit.Action;
-import com.github.dakusui.jcunit.core.factor.Factor;
 import com.github.dakusui.jcunit.core.tuples.Tuple;
+import com.github.dakusui.jcunit8.factorspace.Factor;
 import com.github.dakusui.scriptiveunit.annotations.Import;
 import com.github.dakusui.scriptiveunit.annotations.Load;
 import com.github.dakusui.scriptiveunit.annotations.Scriptable;
 import com.github.dakusui.scriptiveunit.core.Config;
+import com.github.dakusui.scriptiveunit.core.Description;
 import com.github.dakusui.scriptiveunit.core.ObjectMethod;
 import com.github.dakusui.scriptiveunit.core.Utils;
-import com.github.dakusui.scriptiveunit.core.Description;
 import com.github.dakusui.scriptiveunit.model.Stage;
 import com.github.dakusui.scriptiveunit.model.TestSuiteDescriptor;
 import com.github.dakusui.scriptiveunit.model.statement.Form;
@@ -125,8 +125,8 @@ public class ScriptiveUnit extends Parameterized {
   private static Tuple createCommonFixture(List<Factor> factors) {
     Tuple.Builder b = new Tuple.Builder();
     factors.stream()
-        .filter((Factor in) -> in.levels.size() == 1)
-        .forEach((Factor in) -> b.put(in.name, in.levels.get(0)));
+        .filter((Factor in) -> in.getLevels().size() == 1)
+        .forEach((Factor in) -> b.put(in.getName(), in.getLevels().get(0)));
     return b.build();
   }
 

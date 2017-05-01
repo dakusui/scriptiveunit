@@ -1,9 +1,9 @@
 package com.github.dakusui.scriptiveunit;
 
 import com.github.dakusui.actionunit.Action;
-import com.github.dakusui.jcunit.core.factor.Factor;
 import com.github.dakusui.jcunit.core.tuples.Tuple;
-import com.github.dakusui.jcunit.framework.TestCase;
+import com.github.dakusui.jcunit8.factorspace.Factor;
+import com.github.dakusui.jcunit8.testsuite.TestCase;
 import com.github.dakusui.scriptiveunit.core.Utils;
 import com.github.dakusui.scriptiveunit.exceptions.ScriptiveUnitException;
 import com.github.dakusui.scriptiveunit.loaders.IndexedTestCase;
@@ -69,8 +69,8 @@ public final class GroupedTestItemRunner extends ParentRunner<Action> {
     TestSuiteDescriptor testSuiteDescriptor = session.loadTestSuiteDescriptor();
     List<Factor> factors = testSuiteDescriptor.getFactorSpaceDescriptor().getFactors();
     List<String> singleLevelFactors = factors.stream()
-        .filter((Factor each) -> each.levels.size() == 1)
-        .map((Factor each) -> each.name)
+        .filter((Factor each) -> each.getLevels().size() == 1)
+        .map((Factor each) -> each.getName())
         .collect(toList());
     List<String> involved = figureOutInvolvedParameters(testSuiteDescriptor, singleLevelFactors);
     List<IndexedTestCase> testCases = testSuiteDescriptor.getTestCases().stream()
@@ -81,7 +81,7 @@ public final class GroupedTestItemRunner extends ParentRunner<Action> {
         (Function<Tuple, Runner>) fixture -> createRunnerForTestFixture(
             session.getConfig().getDriverObject().getClass(),
             fixtures.indexOf(fixture), fixture,
-            testCases.stream().filter((IndexedTestCase indexedTestCase) -> project(indexedTestCase.getTuple(), involved).equals(fixture)).collect(toList()),
+            testCases.stream().filter((IndexedTestCase indexedTestCase) -> project(indexedTestCase.get(), involved).equals(fixture)).collect(toList()),
             session)
     ).collect(toList());
   }
@@ -93,7 +93,7 @@ public final class GroupedTestItemRunner extends ParentRunner<Action> {
   private static LinkedList<Tuple> buildFixtures(List<String> involved, List<IndexedTestCase> testCases) {
     return new LinkedList<>(
         testCases.stream()
-            .map((IndexedTestCase input) -> project(input.getTuple(), involved))
+            .map((IndexedTestCase input) -> project(input.get(), involved))
             .map((Map<String, Object> input) -> new Tuple.Builder().putAll(input).build())
             .collect(toSet()));
   }
@@ -110,7 +110,7 @@ public final class GroupedTestItemRunner extends ParentRunner<Action> {
   private static Comparator<? super TestCase> byParameters(List<String> parameters) {
     return (Comparator<TestCase>) (o1, o2) -> {
       for (String each : parameters) {
-        int ret = Objects.toString(o1.getTuple().get(each)).compareTo(Objects.toString(o2.getTuple().get(each)));
+        int ret = Objects.toString(o1.get().get(each)).compareTo(Objects.toString(o2.get().get(each)));
         if (ret != 0)
           return ret;
       }
@@ -165,7 +165,7 @@ public final class GroupedTestItemRunner extends ParentRunner<Action> {
                       eachOracle
                           .createTestActionFactory(
                               TestItem.create(testSuiteDescriptor.getDescription(), eachTestCase, eachOracle, i.getAndIncrement()),
-                              eachTestCase.getTuple()
+                              eachTestCase.get()
                           ).apply(session)
                   ));
         }
@@ -180,7 +180,7 @@ public final class GroupedTestItemRunner extends ParentRunner<Action> {
                   .map(eachTestCase ->
                       eachOracle.createTestActionFactory(
                           TestItem.create(testSuiteDescriptor.getDescription(), eachTestCase, eachOracle, i.getAndIncrement()),
-                          eachTestCase.getTuple()
+                          eachTestCase.get()
                       ).apply(session)));
         }
       };
@@ -300,14 +300,14 @@ public final class GroupedTestItemRunner extends ParentRunner<Action> {
                 @Override
                 public Action apply(IndexedTestCase input) {
                   try {
-                    Tuple prettifiedTestCaseTuple = filterSingleLevelFactorsOut(input.getTuple(), factors);
+                    Tuple prettifiedTestCaseTuple = filterSingleLevelFactorsOut(input.get(), factors);
                     return
                         sequential(
-                            format("%03d: %s", i, testOracle.templateDescription(input.getTuple(), testSuiteDescription)),
+                            format("%03d: %s", i, testOracle.templateDescription(input.get(), testSuiteDescription)),
                             named(
                                 format("%03d: Setup test fixture", i),
                                 named(format("fixture: %s", prettifiedTestCaseTuple),
-                                    requireNonNull(createFixtureLevelAction(SETUP, session, input.getTuple()))
+                                    requireNonNull(createFixtureLevelAction(SETUP, session, input.get()))
                                 )
                             ),
                             attempt(
@@ -317,13 +317,13 @@ public final class GroupedTestItemRunner extends ParentRunner<Action> {
                                         testOracle,
                                         input.getIndex()
                                     ),
-                                    input.getTuple()
+                                    input.get()
                                 ).apply(session)
                             ).ensure(
                                 named(
                                     format("%03d: Tear down fixture", i),
                                     named(format("fixture: %s", prettifiedTestCaseTuple),
-                                        requireNonNull(createFixtureLevelAction(TEARDOWN, session, input.getTuple()))
+                                        requireNonNull(createFixtureLevelAction(TEARDOWN, session, input.get()))
                                     )
                                 )
                             ).build()
@@ -347,8 +347,8 @@ public final class GroupedTestItemRunner extends ParentRunner<Action> {
     List<? extends TestOracle> testOracles = testSuiteDescriptor.getTestOracles();
     try {
       AtomicInteger i = new AtomicInteger(0);
-      Tuple testCaseTuple = testCase.getTuple();
-      Tuple prettifiedTestCaseTuple = filterSingleLevelFactorsOut(testCase.getTuple(), factors);
+      Tuple testCaseTuple = testCase.get();
+      Tuple prettifiedTestCaseTuple = filterSingleLevelFactorsOut(testCase.get(), factors);
       return new GroupedTestItemRunner(testClass,
           testCaseId,
           named(

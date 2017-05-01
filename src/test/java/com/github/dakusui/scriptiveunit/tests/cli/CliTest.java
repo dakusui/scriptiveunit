@@ -1,16 +1,13 @@
 package com.github.dakusui.scriptiveunit.tests.cli;
 
-import com.github.dakusui.jcunit.plugins.caengines.IpoGcCoveringArrayEngine;
-import com.github.dakusui.jcunit.plugins.constraints.SmartConstraintCheckerImpl;
-import com.github.dakusui.jcunit.runners.standard.JCUnit;
-import com.github.dakusui.jcunit.runners.standard.annotations.*;
-import com.github.dakusui.jcunit.runners.standard.rules.TestDescription;
-import org.junit.Rule;
-import org.junit.Test;
+import com.github.dakusui.jcunit8.factorspace.Parameter;
+import com.github.dakusui.jcunit8.runners.junit4.JCUnit8;
+import com.github.dakusui.jcunit8.runners.junit4.annotations.Condition;
+import com.github.dakusui.jcunit8.runners.junit4.annotations.From;
+import com.github.dakusui.jcunit8.runners.junit4.annotations.ParameterSource;
 import org.junit.runner.RunWith;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 import static com.github.dakusui.scriptiveunit.exceptions.ScriptiveUnitException.wrap;
 import static java.util.Arrays.asList;
@@ -49,140 +46,147 @@ import static org.junit.Assume.assumeTrue;
  * <p>
  * cli list (
  */
-@RunWith(JCUnit.class)
-@GenerateCoveringArrayWith(
-    engine = @Generator(value = IpoGcCoveringArrayEngine.class, args = @Value("2")),
-    checker = @Checker(SmartConstraintCheckerImpl.NoNegativeTests.class))
+@RunWith(JCUnit8.class)
 public class CliTest {
-  @Rule
-  public TestDescription testDescription = new TestDescription();
+  @ParameterSource
+  public Parameter.Simple.Factory<String> resourceType() {
+    return Parameter.Simple.Factory.of(asList("function", "driver", "suiteset", "runner", "script"));
+  }
 
-  @FactorField(stringLevels = { "function", "driver", "suiteset", "runner", "script" })
-  public String resourceType;
+  @ParameterSource
+  public Parameter.Simple.Factory<String> subcommand() {
+    return Parameter.Simple.Factory.of(asList("list", "describe", "run"));
+  }
 
-  @FactorField(stringLevels = { "list", "describe", "run" })
-  public String subcommand;
+  @ParameterSource
+  public Parameter.Simple.Factory<String> function() {
+    return Parameter.Simple.Factory.of(asList("print", "'*'", "notExistingFunction", "NOT_REQUIRED"));
+  }
 
-  @FactorField(stringLevels = { "print", "'*'", "notExistingFunction", "NOT_REQUIRED" })
-  public String function;
+  @ParameterSource
+  public Parameter.Simple.Factory<String> driver() {
+    return Parameter.Simple.Factory.of(asList("com.github.dakusui.scriptiveunit.testutils.drivers.Qapi", "'*'", "not.existing.Driver", "NOT_REQUIRED"));
+  }
 
-  @FactorField(stringLevels = {
-      "com.github.dakusui.scriptiveunit.testutils.drivers.Qapi",
-      "'*'", "not.existing.Driver", "NOT_REQUIRED"
-  })
-  public String driver;
+  @ParameterSource
+  public Parameter.Simple.Factory<String> suiteset() {
+    return Parameter.Simple.Factory.of(asList("com.github.dakusui.scriptiveunit.testutils.drivers.SuiteSetExample", "'*'", "not.existing.SuiteSet", "NOT_REQUIRED"));
+  }
 
-  @FactorField(stringLevels = {
-      "com.github.dakusui.scriptiveunit.testutils.drivers.SuiteSetExample",
-      "'*'", "not.existing.SuiteSet", "NOT_REQUIRED"
-  })
-  public String suiteset;
+  @ParameterSource
+  public Parameter.Simple.Factory<String> runner() {
+    return Parameter.Simple.Factory.of(asList("groupByTestFixture", "'*'", "notExistingRunner", "NOT_REQUIRED"));
+  }
 
-  @FactorField(stringLevels = { "groupByTestFixture", "'*'", "notExistingRunner", "NOT_REQUIRED" })
-  public String runner;
+  @ParameterSource
+  public Parameter.Simple.Factory<String> script() {
+    return Parameter.Simple.Factory.of(asList("tests/regular/qapi.json", "'*'", "not/existing/script.json", "NOT_REQUIRED"));
+  }
 
-  @FactorField(stringLevels = { "tests/regular/qapi.json", "'*'", "not/existing/script.json", "NOT_REQUIRED" })
-  public String script;
-
-  @Uses({ "subcommand", "resourceType" })
   @Condition(constraint = true)
-  public boolean isSupportedOperation() {
-    return subcommand().doesSupport(resourceType());
+  public boolean isSupportedOperation(
+      @From("subcommand") String subcommand,
+      @From("resourceType") String resourceType
+  ) {
+    return getSubcommand(subcommand).doesSupport(getResourceType(resourceType));
   }
 
-  @Uses({ "subcommand", "resourceType", "function" })
   @Condition(constraint = true)
-  public boolean functionShouldBeNOT_REQUIREDiffNotUsed() {
-    return attributeShouldBeNOT_REQUIREDiffNotUsed("function");
+  public boolean functionShouldBeNOT_REQUIREDiffNotUsed(
+      @From("subcommand") String subcommand,
+      @From("resourceType") String resourceType,
+      @From("function") String function
+  ) {
+    return attributeShouldBeNOT_REQUIREDiffNotUsed(
+        subcommand,
+        resourceType,
+        "function",
+        function
+    );
   }
 
-  @Uses({ "subcommand", "resourceType", "driver" })
   @Condition(constraint = true)
-  public boolean driverShouldBeNOT_REQUIREDiffNotUsed() {
-    return attributeShouldBeNOT_REQUIREDiffNotUsed("driver");
+  public boolean driverShouldBeNOT_REQUIREDiffNotUsed(
+      @From("subcommand") String subcommand,
+      @From("resourceType") String resourceType,
+      @From("driver") String driver
+  ) {
+    // @Uses({ "subcommand", "resourceType", "driver" })
+    return attributeShouldBeNOT_REQUIREDiffNotUsed(
+        subcommand,
+        resourceType,
+        "driver",
+        driver
+    );
   }
 
-  @Uses({ "subcommand", "resourceType", "suiteset" })
   @Condition(constraint = true)
-  public boolean suitesetShouldBeNOT_REQUIREDiffNotUsed() {
-    return attributeShouldBeNOT_REQUIREDiffNotUsed("suiteset");
+  public boolean suitesetShouldBeNOT_REQUIREDiffNotUsed(
+      @From("subcommand") String subcommand,
+      @From("resourceType") String resourceType,
+      @From("suiteset") String suiteset
+  ) {
+    //@Uses({ "subcommand", "resourceType", "suiteset" })
+    return attributeShouldBeNOT_REQUIREDiffNotUsed(
+        subcommand,
+        resourceType,
+        "suiteset",
+        suiteset
+    );
   }
 
-  @Uses({ "subcommand", "resourceType", "runner" })
   @Condition(constraint = true)
-  public boolean runnerShouldBeNOT_REQUIREDiffNotUsed() {
-    return attributeShouldBeNOT_REQUIREDiffNotUsed("runner");
+  public boolean runnerShouldBeNOT_REQUIREDiffNotUsed(
+      @From("subcommand") String subcommand,
+      @From("resourceType") String resourceType,
+      @From("runner") String runner
+  ) {
+    // @Uses({ "subcommand", "resourceType", "runner" })
+    return attributeShouldBeNOT_REQUIREDiffNotUsed(
+        subcommand,
+        resourceType,
+        "runner",
+        runner
+    );
   }
 
-  @Uses({ "subcommand", "resourceType", "script" })
   @Condition(constraint = true)
-  public boolean scriptShouldBeNOT_REQUIREDiffNotUsed() {
-    return attributeShouldBeNOT_REQUIREDiffNotUsed("script");
+  public boolean scriptShouldBeNOT_REQUIREDiffNotUsed(
+      @From("subcommand") String subcommand,
+      @From("resourceType") String resourceType,
+      @From("script") String script
+  ) {
+    //@Uses({ "subcommand", "resourceType", "script" })
+    return attributeShouldBeNOT_REQUIREDiffNotUsed(
+        subcommand,
+        resourceType,
+        "script",
+        script
+    );
   }
 
-  @Condition()
-  public boolean areAllArgumentsValid() {
-    for (String each : resourcesInUse()) {
-      if (levelsOf(each).indexOf(getFieldValueOf(each)) != 0)
-        return false;
-    }
-    return true;
-  }
-
-  @Test
-  public void printCommandLine() {
-    System.out.println(this.testDescription.getTestCase().getId() + ":" + formatCommand(subcommand(), resourceType()));
-  }
-
-  @Test
-  @Given("areAllArgumentsValid")
-  public void whenRunValid$thenSuccess() {
-    System.err.println(this.testDescription.getTestCase().getId() + ":" + formatCommand(subcommand(), resourceType()));
-  }
-
-  @Test
-  public void printTestCase() {
-    System.out.println(this.testDescription.getTestCase().getId() + ":" + this.testDescription.getTestCase().getTuple());
-  }
-
-  private List<String> resourcesInUse() {
-    return resourceTypes().stream().filter(this::isAttributeUsed).collect(Collectors.toList());
-  }
-
-  private List<String> levelsOf(String fieldName) {
-    try {
-      return asList(this.getClass().getField(fieldName).getAnnotation(FactorField.class).stringLevels());
-    } catch (NoSuchFieldException e) {
-      throw wrap(e);
-    }
-  }
-
-  private boolean attributeShouldBeNOT_REQUIREDiffNotUsed(String attributeName) {
+  private boolean attributeShouldBeNOT_REQUIREDiffNotUsed(String subcommand, String resourceType, String targetAttributeName, String targetAttributeValue) {
     //noinspection SimplifiableIfStatement
-    if (!isSupportedOperation()) {
+    if (!isSupportedOperation(subcommand, resourceType)) {
       return true;
     }
     //noinspection SimplifiableIfStatement
-    if (isAttributeUsed(attributeName)) {
-      return !"NOT_REQUIRED".equals(this.getFieldValueOf(attributeName));
+    if (isAttributeUsed(subcommand, resourceType, targetAttributeName)) {
+      return !"NOT_REQUIRED".equals(targetAttributeValue);
     }
-    return "NOT_REQUIRED".equals(this.getFieldValueOf(attributeName));
+    return "NOT_REQUIRED".equals(targetAttributeValue);
   }
 
-  private boolean isAttributeUsed(String attributeName) {
-    return getArgumentsFormat().contains(toTemplatingAttributeName(attributeName));
+  private boolean isAttributeUsed(String subcommand, String resourceType, String attributeName) {
+    return getArgumentsFormat(subcommand, resourceType).contains(toTemplatingAttributeName(attributeName));
   }
 
-  private ResourceType resourceType() {
+  private ResourceType getResourceType(String resourceType) {
     return ResourceType.fromString(resourceType);
   }
 
-  private Subcommand subcommand() {
+  private Subcommand getSubcommand(String subcommand) {
     return Subcommand.fromString(subcommand);
-  }
-
-  private String formatCommand(Subcommand subcommand, ResourceType resourceType) {
-    return "scriptiveunit " + formatCommandLine(subcommand, resourceType);
   }
 
   private String doTemplatingOnArguments(String argumentFormat) {
@@ -212,11 +216,11 @@ public class CliTest {
 
   private String formatCommandLine(Subcommand subcommand, ResourceType resourceType) {
     assumeTrue(subcommand.doesSupport(resourceType));
-    return String.format("%s %s %s", subcommand.asString(), resourceType.asString(), doTemplatingOnArguments(getArgumentsFormat()));
+    return String.format("%s %s %s", subcommand.asString(), resourceType.asString(), doTemplatingOnArguments(getArgumentsFormat(subcommand.asString(), resourceType.asString())));
   }
 
-  private String getArgumentsFormat() {
-    return subcommand().composeArgumentsFormat(resourceType());
+  private String getArgumentsFormat(String subcommand, String resourceType) {
+    return getSubcommand(subcommand).composeArgumentsFormat(getResourceType(resourceType));
   }
 
   @SuppressWarnings("unused")

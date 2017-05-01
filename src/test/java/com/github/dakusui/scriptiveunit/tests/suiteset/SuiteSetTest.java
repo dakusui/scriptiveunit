@@ -1,7 +1,9 @@
 package com.github.dakusui.scriptiveunit.tests.suiteset;
 
-import com.github.dakusui.jcunit.runners.standard.JCUnit;
-import com.github.dakusui.jcunit.runners.standard.annotations.FactorField;
+import com.github.dakusui.jcunit8.factorspace.Parameter.Simple;
+import com.github.dakusui.jcunit8.runners.junit4.JCUnit8;
+import com.github.dakusui.jcunit8.runners.junit4.annotations.From;
+import com.github.dakusui.jcunit8.runners.junit4.annotations.ParameterSource;
 import com.github.dakusui.scriptiveunit.testutils.FailuresMatcher;
 import com.github.dakusui.scriptiveunit.testutils.JUnitResultMatcher;
 import com.github.dakusui.scriptiveunit.testutils.TestBase;
@@ -15,9 +17,10 @@ import org.junit.runner.Result;
 import org.junit.runner.RunWith;
 import org.junit.runner.notification.Failure;
 
+import static java.util.Collections.singletonList;
 import static org.junit.Assert.assertThat;
 
-@RunWith(JCUnit.class)
+@RunWith(JCUnit8.class)
 public class SuiteSetTest extends TestBase {
   public enum TestItem implements TestDef<Class, SuiteSetTest, Result> {
     @SuppressWarnings("unused")
@@ -61,12 +64,15 @@ public class SuiteSetTest extends TestBase {
     }
   }
 
-  @SuppressWarnings({ "unused", "WeakerAccess" })
-  @FactorField
-  public TestItem testItem;
+  @ParameterSource
+  public Simple.Factory<TestItem> testItem() {
+    return Simple.Factory.of(singletonList(TestItem.SUITESET_NORMAL_TEST));
+  }
 
   @Test
-  public void simple() {
+  public void simple(
+      @From("testItem") TestItem testItem
+  ) {
     assertThat(JUnitCore.runClasses(testItem.getTestInput()), testItem.getOracle(this));
   }
 }

@@ -1,11 +1,12 @@
 package com.github.dakusui.scriptiveunit.model;
 
-import com.github.dakusui.jcunit.plugins.caengines.CoveringArrayEngine;
-
 import java.util.List;
 
+/**
+ * TODO remove this class
+ */
 public interface CoveringArrayEngineConfig {
-  Class<? extends CoveringArrayEngine> getEngineClass();
+  Class<?/* extends CoveringArrayEngine*/> getEngineClass();
 
   List<Object> getOptions();
 }

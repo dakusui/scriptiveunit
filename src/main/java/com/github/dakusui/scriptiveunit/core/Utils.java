@@ -6,8 +6,8 @@ import com.github.dakusui.actionunit.connectors.Pipe;
 import com.github.dakusui.actionunit.connectors.Sink;
 import com.github.dakusui.actionunit.connectors.Source;
 import com.github.dakusui.actionunit.visitors.ActionRunner;
-import com.github.dakusui.jcunit.core.factor.Factor;
 import com.github.dakusui.jcunit.core.tuples.Tuple;
+import com.github.dakusui.jcunit8.factorspace.Factor;
 import com.github.dakusui.scriptiveunit.exceptions.ResourceException;
 import com.github.dakusui.scriptiveunit.exceptions.ScriptiveUnitException;
 import com.github.dakusui.scriptiveunit.exceptions.SyntaxException;
@@ -30,7 +30,10 @@ import java.lang.reflect.AnnotatedElement;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.math.BigDecimal;
-import java.util.*;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
@@ -156,9 +159,9 @@ public enum Utils {
   public static Tuple filterSingleLevelFactorsOut(Tuple tuple, List<Factor> factors) {
     Tuple.Builder b = new Tuple.Builder();
     factors.stream()
-        .filter(each -> each.levels.size() > 1)
-        .filter(each -> tuple.containsKey(each.name))
-        .forEach(each -> b.put(each.name, tuple.get(each.name)));
+        .filter(each -> each.getLevels().size() > 1)
+        .filter(each -> tuple.containsKey(each.getName()))
+        .forEach(each -> b.put(each.getName(), tuple.get(each.getName())));
     return b.build();
   }
 
@@ -378,11 +381,6 @@ public enum Utils {
         .filter(each -> each.isAnnotationPresent(annotationClass))
         .map(each -> ObjectField.create(object, each))
         .collect(toList());
-  }
-
-  public static <T> List<T> sort(List<T> list, Comparator<T> comparator) {
-    list.sort(comparator);
-    return list;
   }
 
   public static String indent(int level) {

@@ -1,112 +1,143 @@
 package com.github.dakusui.scriptiveunit.tests.variation;
 
-import com.github.dakusui.jcunit.coverage.CombinatorialMetrics;
-import com.github.dakusui.jcunit.plugins.caengines.IpoGcCoveringArrayEngine;
-import com.github.dakusui.jcunit.plugins.constraints.SmartConstraintCheckerImpl;
-import com.github.dakusui.jcunit.runners.standard.JCUnit;
-import com.github.dakusui.jcunit.runners.standard.TestCaseUtils;
-import com.github.dakusui.jcunit.runners.standard.annotations.*;
+import com.github.dakusui.jcunit8.factorspace.Parameter;
+import com.github.dakusui.jcunit8.runners.junit4.JCUnit8;
+import com.github.dakusui.jcunit8.runners.junit4.annotations.Condition;
+import com.github.dakusui.jcunit8.runners.junit4.annotations.From;
+import com.github.dakusui.jcunit8.runners.junit4.annotations.Given;
+import com.github.dakusui.jcunit8.runners.junit4.annotations.ParameterSource;
 import com.github.dakusui.scriptiveunit.ScriptiveUnit;
 import com.github.dakusui.scriptiveunit.annotations.Scriptable;
 import com.github.dakusui.scriptiveunit.core.Config;
+import com.github.dakusui.scriptiveunit.core.Utils;
 import com.github.dakusui.scriptiveunit.testutils.Resource;
-import com.github.dakusui.scriptiveunit.testutils.ResourceLevelsProvider;
 import com.github.dakusui.scriptiveunit.testutils.drivers.Loader;
 import com.github.dakusui.scriptiveunit.testutils.drivers.Simple;
 import org.codehaus.jackson.node.ObjectNode;
-import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.JUnitCore;
 import org.junit.runner.RunWith;
 
+import java.io.InputStream;
+import java.util.List;
 import java.util.Properties;
+import java.util.function.Function;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
+import static com.github.dakusui.scriptiveunit.core.Utils.allScriptsUnderMatching;
 import static java.lang.String.format;
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.MatcherAssert.assertThat;
 
 
-@RunWith(JCUnit.class)
-@GenerateCoveringArrayWith(
-    engine = @Generator(value = IpoGcCoveringArrayEngine.class, args = { @Value("2") }),
-    checker = @Checker(value = SmartConstraintCheckerImpl.class),
-    reporters = {
-        @Reporter(value = CombinatorialMetrics.class, args = { @Value("2") })
-    })
+@RunWith(JCUnit8.class)
 public class VariationTest {
+  private Parameter.Factory<Resource<ObjectNode>> createResourceParameterFactory(String resourcePackagePrefix, String suffix) {
+    List<String> resourceNames = allScriptsUnderMatching(
+        resourcePackagePrefix,
+        Pattern.compile(".+\\." + suffix + "$")
+    ).collect(Collectors.toList());
 
-  @SuppressWarnings("unused")
-  @FactorField(
-      levelsProvider = ResourceLevelsProvider.FromJson.class,
-      args = { @Value("components/_extends"), @Value("json") }
-  )
-  public Resource<ObjectNode> _extends;
-
-  @SuppressWarnings("unused")
-  @FactorField(
-      levelsProvider = ResourceLevelsProvider.FromJson.class,
-      args = { @Value("components/description"), @Value("json") }
-  )
-  public Resource<ObjectNode> description;
-
-  @SuppressWarnings("unused")
-  @FactorField(
-      levelsProvider = ResourceLevelsProvider.FromJson.class,
-      args = { @Value("components/factorSpace/factors"), @Value("json") }
-  )
-  public Resource<ObjectNode> factors;
-
-  @SuppressWarnings("unused")
-  @FactorField(
-      levelsProvider = ResourceLevelsProvider.FromJson.class,
-      args = { @Value("components/factorSpace/constraints"), @Value("json") }
-  )
-  public Resource<ObjectNode> constraints;
-
-  @SuppressWarnings("unused")
-  @FactorField(
-      levelsProvider = ResourceLevelsProvider.FromJson.class,
-      args = { @Value("components/runnerType"), @Value("json") }
-  )
-  public Resource<ObjectNode> runnerType;
-
-  @SuppressWarnings("unused")
-  @FactorField(
-      levelsProvider = ResourceLevelsProvider.FromJson.class,
-      args = { @Value("components/setUp"), @Value("json") }
-  )
-  public Resource<ObjectNode> setUp;
-
-  @SuppressWarnings("unused")
-  @FactorField(
-      levelsProvider = ResourceLevelsProvider.FromJson.class,
-      args = { @Value("components/setUpBeforeAll"), @Value("json") }
-  )
-  public Resource<ObjectNode> setUpBeforeAll;
-
-  @SuppressWarnings("unused")
-  @FactorField(
-      levelsProvider = ResourceLevelsProvider.FromJson.class,
-      args = { @Value("components/testOracles"), @Value("json") }
-  )
-  public Resource<ObjectNode> testOracles;
-
-  @Before
-  public void before() {
-    System.out.println(TestCaseUtils.toTestCase(this));
+    return Parameter.Simple.Factory.of(
+        resourceNames.stream()
+            .map((Function<String, Resource<ObjectNode>>) s -> new Resource.Base<ObjectNode>(s) {
+              @Override
+              protected ObjectNode readObjectFromStream(InputStream is) {
+                return (ObjectNode) Utils.readJsonNodeFromStream(is);
+              }
+            })
+            .collect(Collectors.toList())
+    );
   }
 
-  @Given({"isFactorsAttributePresent", "!isConstraintsAttributePresent"})
+  @ParameterSource
+  public Parameter.Factory<Resource<ObjectNode>> _extends() {
+    return createResourceParameterFactory("components/_extends", "json");
+  }
+
+  @ParameterSource
+  public Parameter.Factory<Resource<ObjectNode>> description() {
+    return createResourceParameterFactory("components/description", "json");
+  }
+
+  @ParameterSource
+  public Parameter.Factory<Resource<ObjectNode>> factors() {
+    return createResourceParameterFactory("components/factorSpace/factors", "json");
+  }
+
+  @ParameterSource
+  public Parameter.Factory<Resource<ObjectNode>> constraints() {
+    return createResourceParameterFactory("components/factorSpace/constraints", "json");
+  }
+
+  @ParameterSource
+  public Parameter.Factory<Resource<ObjectNode>> runnerType() {
+    return createResourceParameterFactory("components/runnerType", "json");
+  }
+
+  @ParameterSource
+  public Parameter.Factory<Resource<ObjectNode>> setUp() {
+    return createResourceParameterFactory("components/setUp", "json");
+  }
+
+  @ParameterSource
+  public Parameter.Factory<Resource<ObjectNode>> setUpBeforeAll() {
+    return createResourceParameterFactory("components/setUpBeforeAll", "json");
+  }
+
+  @ParameterSource
+  public Parameter.Factory<Resource<ObjectNode>> testOracles() {
+    return createResourceParameterFactory("components/testOracles", "json");
+  }
+
+  @Given({ "isFactorsAttributePresent", "!isConstraintsAttributePresent" })
   @Test
-  public void whenRunTest$thenTerminatesNormally() throws Throwable {
-    runTest();
+  public void whenRunTest$thenTerminatesNormally(
+      Resource<ObjectNode> _extends,
+      Resource<ObjectNode> description,
+      Resource<ObjectNode> factors,
+      Resource<ObjectNode> constraints,
+      Resource<ObjectNode> runnerType,
+      Resource<ObjectNode> setUp,
+      Resource<ObjectNode> setUpBeforeAll,
+      Resource<ObjectNode> testOracles
+  ) throws Throwable {
+    runTest(
+        _extends,
+        description,
+        factors,
+        constraints,
+        runnerType,
+        setUp,
+        setUpBeforeAll,
+        testOracles
+    );
   }
 
   @Given("!isFactorsAttributePresent&&isConstraintsAttributePresent")
   @Test(expected = RuntimeException.class)
-  public void whenRunTest$thenTerminatesWithMessage() throws Throwable {
+  public void whenRunTest$thenTerminatesWithMessage(
+      Resource<ObjectNode> _extends,
+      Resource<ObjectNode> description,
+      Resource<ObjectNode> factors,
+      Resource<ObjectNode> constraints,
+      Resource<ObjectNode> runnerType,
+      Resource<ObjectNode> setUp,
+      Resource<ObjectNode> setUpBeforeAll,
+      Resource<ObjectNode> testOracles
+  ) throws Throwable {
     try {
-      runTest();
+      runTest(
+          _extends,
+          description,
+          factors,
+          constraints,
+          runnerType,
+          setUp,
+          setUpBeforeAll,
+          testOracles
+      );
     } catch (RuntimeException e) {
       assertThat(
           e.getMessage(),
@@ -120,16 +151,29 @@ public class VariationTest {
   }
 
   @Condition
-  public boolean isFactorsAttributePresent() {
-    return this.factors.getName().endsWith("/valid-present.json");
+  public boolean isFactorsAttributePresent(
+      @From("factors") Resource<ObjectNode> factors
+  ) {
+    return factors.getName().endsWith("/valid-present.json");
   }
 
   @Condition
-  public boolean isConstraintsAttributePresent() {
-    return this.constraints.getName().endsWith("/valid-present.json");
+  public boolean isConstraintsAttributePresent(
+      @From("constraints") Resource<ObjectNode> constraints
+  ) {
+    return constraints.getName().endsWith("/valid-present.json");
   }
 
-  private void runTest() throws Throwable {
+  private void runTest(
+      Resource<ObjectNode> _extends,
+      Resource<ObjectNode> description,
+      Resource<ObjectNode> factors,
+      Resource<ObjectNode> constraints,
+      Resource<ObjectNode> runnerType,
+      Resource<ObjectNode> setUp,
+      Resource<ObjectNode> setUpBeforeAll,
+      Resource<ObjectNode> testOracles
+  ) throws Throwable {
     //noinspection unchecked
     new JUnitCore().run(
         new ScriptiveUnit(
