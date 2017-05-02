@@ -1,9 +1,5 @@
 {
-  "coveringArrayEngine": {
-    "class": "com.github.dakusui.jcunit.plugins.caengines.IpoGcCoveringArrayEngine",
-    "options": [
-      2
-    ]
-  },
-  "runnerType": ["groupByTestOracle"]
+  "runnerType": [
+    "groupByTestOracle"
+  ]
 }

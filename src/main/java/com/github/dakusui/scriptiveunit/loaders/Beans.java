@@ -6,11 +6,14 @@ import com.github.dakusui.actionunit.Context;
 import com.github.dakusui.actionunit.connectors.Pipe;
 import com.github.dakusui.actionunit.connectors.Sink;
 import com.github.dakusui.actionunit.connectors.Source;
-import com.github.dakusui.jcunit.core.factor.Factor;
 import com.github.dakusui.jcunit.core.tuples.Tuple;
-import com.github.dakusui.jcunit.framework.TestCase;
-import com.github.dakusui.jcunit.framework.TestSuite;
-import com.github.dakusui.jcunit.plugins.caengines.CoveringArrayEngine;
+import com.github.dakusui.jcunit8.factorspace.Constraint;
+import com.github.dakusui.jcunit8.factorspace.Factor;
+import com.github.dakusui.jcunit8.factorspace.Parameter;
+import com.github.dakusui.jcunit8.factorspace.ParameterSpace;
+import com.github.dakusui.jcunit8.pipeline.Pipeline;
+import com.github.dakusui.jcunit8.pipeline.Requirement;
+import com.github.dakusui.jcunit8.testsuite.TestCase;
 import com.github.dakusui.scriptiveunit.GroupedTestItemRunner.Type;
 import com.github.dakusui.scriptiveunit.Session;
 import com.github.dakusui.scriptiveunit.core.Config;
@@ -22,9 +25,6 @@ import com.github.dakusui.scriptiveunit.model.statement.Statement;
 import org.hamcrest.BaseMatcher;
 import org.hamcrest.Description;
 
-import java.lang.reflect.Constructor;
-import java.lang.reflect.InvocationTargetException;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -34,8 +34,8 @@ import static com.github.dakusui.actionunit.Actions.*;
 import static com.github.dakusui.scriptiveunit.core.Utils.*;
 import static com.github.dakusui.scriptiveunit.exceptions.ScriptiveUnitException.wrap;
 import static com.github.dakusui.scriptiveunit.model.Stage.Type.*;
-import static com.google.common.base.Preconditions.checkArgument;
 import static java.lang.String.format;
+import static java.util.Collections.singletonList;
 import static java.util.Objects.requireNonNull;
 import static java.util.stream.Collectors.toList;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -46,7 +46,6 @@ public enum Beans {
   private static final Object NOP_CLAUSE = Actions.nop();
 
   public abstract static class BaseForTestSuiteDescriptor {
-    final         BaseForCoveringArrayEngineConfig  coveringArrayEngineConfigBean;
     final         BaseForFactorSpaceDescriptor      factorSpaceBean;
     final         List<? extends BaseForTestOracle> testOracleBeanList;
     final         String                            description;
@@ -58,7 +57,7 @@ public enum Beans {
     private final List<Object>                      tearDownAfterAllClause;
 
     public BaseForTestSuiteDescriptor(
-        String description, BaseForCoveringArrayEngineConfig coveringArrayEngineConfigBean,
+        String description,
         BaseForFactorSpaceDescriptor factorSpaceBean,
         String runnerType,
         Map<String, List<Object>> userDefinedFormClauses,
@@ -68,7 +67,6 @@ public enum Beans {
         List<Object> tearDownClause,
         List<Object> tearDownAfterAllClause) {
       this.description = description;
-      this.coveringArrayEngineConfigBean = coveringArrayEngineConfigBean;
       this.runnerType = Type.valueOf(Utils.toALL_CAPS(runnerType));
       this.factorSpaceBean = factorSpaceBean;
       this.userDefinedFormClauses = userDefinedFormClauses;
@@ -106,11 +104,6 @@ public enum Beans {
           @Override
           public FactorSpaceDescriptor getFactorSpaceDescriptor() {
             return factorSpaceBean.create(session.getConfig(), new Statement.Factory(session));
-          }
-
-          @Override
-          public CoveringArrayEngineConfig getCoveringArrayEngineConfig() {
-            return coveringArrayEngineConfigBean.create();
           }
 
           @Override
@@ -180,54 +173,38 @@ public enum Beans {
             return runnerType;
           }
 
-          List<IndexedTestCase> createTestCases(TestSuiteDescriptor testSuiteDescriptor) {
-            FactorSpaceDescriptor factorSpaceDescriptor = testSuiteDescriptor.getFactorSpaceDescriptor();
-            CoveringArrayEngineConfig coveringArrayEngineConfig = testSuiteDescriptor.getCoveringArrayEngineConfig();
-
-            TestSuite.Builder builder = new TestSuite.Builder(createEngine(coveringArrayEngineConfig));
-            builder.disableNegativeTests();
-            if (!factorSpaceDescriptor.getFactors().isEmpty()) {
-              factorSpaceDescriptor.getFactors().forEach(builder::addFactor);
-            } else {
-              builder.addFactor("*dummyFactor*", "*dummyLevel*");
-            }
-
-            for (TestSuite.Predicate each : factorSpaceDescriptor.getConstraints()) {
-              builder.addConstraint(each);
-            }
-            return builder.build().getTestCases().stream()
+          private List<IndexedTestCase> createTestCases(TestSuiteDescriptor testSuiteDescriptor) {
+            ParameterSpace parameterSpace = createParameterSpaceFrom(testSuiteDescriptor);
+            if (parameterSpace.getParameterNames().isEmpty())
+              return singletonList(new IndexedTestCase(0, new Tuple.Builder().build(), TestCase.Category.REGULAR));
+            return Pipeline.Standard.create().execute(
+                new com.github.dakusui.jcunit8.pipeline.Config.Builder(
+                    new Requirement.Builder().withNegativeTestGeneration(false).withStrength(2).build()
+                ).build(),
+                parameterSpace
+            ).stream()
                 .map(new Function<TestCase, IndexedTestCase>() {
                   int i = 0;
 
                   @Override
-                  public IndexedTestCase apply(TestCase input) {
-                    return new IndexedTestCase(i++, input);
+                  public IndexedTestCase apply(TestCase testCase) {
+                    return new IndexedTestCase(i++, testCase);
                   }
-                }).collect(toList());
+                })
+                .collect(toList());
           }
 
-          CoveringArrayEngine createEngine(CoveringArrayEngineConfig
-              coveringArrayEngineConfig) {
-            try {
-              Constructor<CoveringArrayEngine> constructor;
-              return (constructor = Utils.getConstructor(coveringArrayEngineConfig.getEngineClass()))
-                  .newInstance(coveringArrayEngineConfig.getOptions().stream()
-                      .map(new Function<Object, Object>() {
-                        int i = 0;
-
-                        @Override
-                        public Object apply(Object input) {
-                          try {
-                            return convertIfNecessary(input, constructor.getParameterTypes()[i]);
-                          } finally {
-                            i++;
-                          }
-                        }
-                      })
-                      .collect(toList()).toArray());
-            } catch (InstantiationException | IllegalAccessException | InvocationTargetException e) {
-              throw wrap(e);
-            }
+          private ParameterSpace createParameterSpaceFrom(TestSuiteDescriptor testSuiteDescriptor) {
+            return new ParameterSpace.Builder()
+                .addAllParameters(
+                    testSuiteDescriptor.getFactorSpaceDescriptor().getFactors().stream()
+                        .map((Function<Factor, Parameter>) factor -> new Parameter.Simple.Impl<>(factor.getName(), factor.getLevels()))
+                        .collect(toList())
+                )
+                .addAllConstraints(
+                    testSuiteDescriptor.getFactorSpaceDescriptor().getConstraints()
+                )
+                .build();
           }
         };
       } catch (RuntimeException e) {
@@ -237,37 +214,6 @@ public enum Beans {
       }
     }
 
-  }
-
-  public abstract static class BaseForCoveringArrayEngineConfig {
-    private final Class<? extends CoveringArrayEngine> coveringArrayEngineClass;
-    private final List<Object>                         options;
-
-    public BaseForCoveringArrayEngineConfig(String className, List<Object> options) {
-      try {
-        Class clazz = Class.class.cast(Class.forName(className));
-        checkArgument(CoveringArrayEngine.class.isAssignableFrom(clazz));
-        //noinspection unchecked
-        this.coveringArrayEngineClass = clazz;
-        this.options = options;
-      } catch (ClassNotFoundException e) {
-        throw wrap(e);
-      }
-    }
-
-    public CoveringArrayEngineConfig create() {
-      return new CoveringArrayEngineConfig() {
-        @Override
-        public Class<? extends CoveringArrayEngine> getEngineClass() {
-          return coveringArrayEngineClass;
-        }
-
-        @Override
-        public List<Object> getOptions() {
-          return options;
-        }
-      };
-    }
   }
 
   /**
@@ -290,19 +236,20 @@ public enum Beans {
         }
 
         @Override
-        public List<TestSuite.Predicate> getConstraints() {
+        public List<Constraint> getConstraints() {
           //noinspection unchecked
           return constraintList.stream()
               .map((List<Object> each) -> {
                 //noinspection unchecked
-                Statement statement;
-                Func<Boolean> func = toFunc(statement = statementFactory.create(each), new FuncInvoker.Impl(0));
-                return new TestSuite.Predicate("(constraint)", Statement.Utils.involvedParameters(statement).toArray(new String[0])) {
-                  @Override
-                  public boolean apply(Tuple in) {
-                    return requireNonNull(func.apply(Stage.Factory.createConstraintGenerationStage(config, statementFactory, in)));
-                  }
-                };
+                Statement statement = statementFactory.create(each);
+                Func<Boolean> func = toFunc(
+                    statement,
+                    new FuncInvoker.Impl(0)
+                );
+                return Constraint.create(
+                    in -> requireNonNull(func.apply(Stage.Factory.createConstraintGenerationStage(config, statementFactory, in))),
+                    Statement.Utils.involvedParameters(statement)
+                );
               })
               .collect(toList());
         }
@@ -310,15 +257,9 @@ public enum Beans {
     }
 
     private List<Factor> composeFactors(Map<String, List<Object>> factorMap) {
-      List<Factor> ret = new LinkedList<>();
-      for (String eachFactorName : requireNonNull(factorMap).keySet()) {
-        Factor.Builder b = new Factor.Builder(eachFactorName);
-        for (Object eachLevel : factorMap.get(eachFactorName)) {
-          b.addLevel(eachLevel);
-        }
-        ret.add(b.build());
-      }
-      return ret;
+      return requireNonNull(factorMap).keySet().stream()
+          .map(factorName -> Factor.create(factorName, factorMap.get(factorName).toArray()))
+          .collect(toList());
     }
 
   }

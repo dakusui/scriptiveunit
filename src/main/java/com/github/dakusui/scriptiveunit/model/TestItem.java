@@ -35,7 +35,7 @@ public interface TestItem {
 
     @Override
     public Tuple getTestCaseTuple() {
-      return testCase.getTuple();
+      return testCase.get();
     }
 
     @Override
@@ -45,7 +45,7 @@ public interface TestItem {
 
     @Override
     public String getTestOracleDescription() {
-      return testOracle.templateDescription(testCase.getTuple(), testSuiteDescription);
+      return testOracle.templateDescription(testCase.get(), testSuiteDescription);
     }
 
     @Override

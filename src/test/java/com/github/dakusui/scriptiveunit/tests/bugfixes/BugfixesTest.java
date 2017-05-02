@@ -1,7 +1,9 @@
 package com.github.dakusui.scriptiveunit.tests.bugfixes;
 
-import com.github.dakusui.jcunit.runners.standard.JCUnit;
-import com.github.dakusui.jcunit.runners.standard.annotations.FactorField;
+import com.github.dakusui.jcunit8.factorspace.Parameter;
+import com.github.dakusui.jcunit8.runners.junit4.JCUnit8;
+import com.github.dakusui.jcunit8.runners.junit4.annotations.From;
+import com.github.dakusui.jcunit8.runners.junit4.annotations.ParameterSource;
 import com.github.dakusui.scriptiveunit.testutils.JUnitResultMatcher;
 import com.github.dakusui.scriptiveunit.testutils.TestDef;
 import com.github.dakusui.scriptiveunit.testutils.drivers.Simple;
@@ -11,13 +13,14 @@ import org.junit.runner.Result;
 import org.junit.runner.RunWith;
 
 import static com.github.dakusui.scriptiveunit.testutils.TestUtils.configureScriptNameSystemProperty;
+import static java.util.Collections.singletonList;
 import static org.hamcrest.MatcherAssert.assertThat;
 
-@RunWith(JCUnit.class)
+@RunWith(JCUnit8.class)
 public class BugfixesTest {
 
   public enum TestItem implements TestDef<String, BugfixesTest, Result> {
-    @SuppressWarnings("unused") ISSUE_1_NONTERMINATING_NUMBER_HANDLING {
+    @SuppressWarnings("unused")ISSUE_1_NONTERMINATING_NUMBER_HANDLING {
       @Override
       public String getTestInput() {
         return "tests/bugfixes/issue-2.json";
@@ -35,12 +38,16 @@ public class BugfixesTest {
     }
   }
 
-  @SuppressWarnings("unused")
-  @FactorField
-  public TestItem testItem;
+  @ParameterSource
+  public Parameter.Simple.Factory<TestItem> testItem() {
+    return Parameter.Simple.Factory.of(singletonList(TestItem.ISSUE_1_NONTERMINATING_NUMBER_HANDLING));
+  }
+
 
   @Test
-  public void run() {
+  public void run(
+      @From("testItem") TestItem testItem
+  ) {
     configureScriptNameSystemProperty(testItem.getTestInput(), Simple.class);
     assertThat(JUnitCore.runClasses(Simple.class), testItem.getOracle(this));
   }

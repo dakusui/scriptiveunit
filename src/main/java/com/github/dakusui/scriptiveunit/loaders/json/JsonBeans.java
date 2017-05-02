@@ -13,7 +13,6 @@ public enum JsonBeans {
   public static class TestSuiteDescriptorBean extends Beans.BaseForTestSuiteDescriptor {
     public TestSuiteDescriptorBean(
         @JsonProperty("description") String description,
-        @JsonProperty("coveringArrayEngine") CoveringArrayEngineConfigBean coveringArrayEngineConfig,
         @JsonProperty("factorSpace") FactorSpaceDescriptorBean factorSpaceBean,
         @JsonProperty("runnerType") String runnerType,
         @JsonProperty("define") Map<String, List<Object>> userFormMap,
@@ -24,17 +23,9 @@ public enum JsonBeans {
         @JsonProperty("tearDownAfterAll") List<Object> tearDownAfterAllClause
     ) {
       super(
-          description, coveringArrayEngineConfig, factorSpaceBean, runnerType, userFormMap,
+          description, factorSpaceBean, runnerType, userFormMap,
           setUpBeforeAllClause, setUpClause,
           testOracleBeanList, tearDownClause, tearDownAfterAllClause);
-    }
-
-    public static class CoveringArrayEngineConfigBean extends Beans.BaseForCoveringArrayEngineConfig {
-      public CoveringArrayEngineConfigBean(
-          @JsonProperty("class") String className,
-          @JsonProperty("options") List<Object> options) {
-        super(className, options);
-      }
     }
 
     public static class FactorSpaceDescriptorBean extends Beans.BaseForFactorSpaceDescriptor {

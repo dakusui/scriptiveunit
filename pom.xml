@@ -1,4 +1,6 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.github.dakusui</groupId>
     <artifactId>scriptiveunit</artifactId>
@@ -46,7 +48,7 @@
         <dependency>
             <groupId>com.github.dakusui</groupId>
             <artifactId>jcunit</artifactId>
-            <version>0.7.6</version>
+            <version>0.8.1</version>
         </dependency>
         <dependency>
             <groupId>com.github.dakusui</groupId>
@@ -116,7 +118,7 @@
                         <format>html</format>
                         <format>xml</format>
                     </formats>
-                    <check />
+                    <check/>
                 </configuration>
             </plugin>
             <plugin>
@@ -126,7 +128,7 @@
                 <version>1.1.7</version>
                 <configuration>
                     <targetClasses>
-                        <param>com.github.dakusui.jcunit.*</param>
+                        <param>com.github.dakusui.scriptiveunit.*</param>
                     </targetClasses>
                     <targetTests>
                         <param>*Test</param>
