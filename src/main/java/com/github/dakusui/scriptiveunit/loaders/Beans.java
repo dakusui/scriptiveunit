@@ -156,7 +156,7 @@ public enum Beans {
               Object result =
                   statement == null ?
                       nop() :
-                      toFunc(statement, new FuncInvoker.Impl(0)).apply(input);
+                      toFunc(statement, new FuncInvoker.Impl(0, FuncInvoker.createMemo())).apply(input);
               //noinspection ConstantConditions
               return Actions.named(
                   actionName,
@@ -244,7 +244,7 @@ public enum Beans {
                 Statement statement = statementFactory.create(each);
                 Func<Boolean> func = toFunc(
                     statement,
-                    new FuncInvoker.Impl(0)
+                    new FuncInvoker.Impl(0, FuncInvoker.createMemo())
                 );
                 return Constraint.create(
                     in -> requireNonNull(func.apply(Stage.Factory.createConstraintGenerationStage(config, statementFactory, in))),
@@ -311,21 +311,22 @@ public enum Beans {
          */
         @Override
         public Function<Session, Action> createTestActionFactory(TestItem testItem, Tuple testCaseTuple) {
+          Map<List<Object>, Object> memo = FuncInvoker.createMemo();
           int itemId = testItem.getTestItemId();
           Report report = session.createReport(testItem);
           return (Session session) -> sequential(
               format("%03d: %s", itemId, composeDescription(testCaseTuple, session)),
-              named("Before", createBefore(testItem, report)),
+              named("Before", createBefore(testItem, report, memo)),
               attempt(
                   Actions.<Tuple, TestIO>test("Verify with: " + projectMultiLevelFactors(testCaseTuple, session))
-                      .given(createGiven(testItem, report, session))
-                      .when(createWhen(testItem, report, session))
-                      .then(createThen(testItem, report, session)).build()
+                      .given(createGiven(testItem, report, session, memo))
+                      .when(createWhen(testItem, report, session, memo))
+                      .then(createThen(testItem, report, session, memo)).build()
               ).recover(
                   AssertionError.class,
-                  onTestFailure(testItem, report, session)
+                  onTestFailure(testItem, report, session, memo)
               ).ensure(
-                  named("After", createAfter(testItem, report))
+                  named("After", createAfter(testItem, report, memo))
               ).build()
           );
         }
@@ -339,14 +340,14 @@ public enum Beans {
         }
 
 
-        private Action createBefore(TestItem testItem, Report report) {
-          return createActionFromClause(BEFORE, beforeClause, testItem, report);
+        private Action createBefore(TestItem testItem, Report report, Map<List<Object>, Object> memo) {
+          return createActionFromClause(BEFORE, beforeClause, testItem, report, memo);
         }
 
-        private Source<Tuple> createGiven(final TestItem testItem, final Report report, final Session session) {
+        private Source<Tuple> createGiven(final TestItem testItem, final Report report, final Session session, Map<List<Object>, Object> memo) {
           Tuple testCaseTuple = testItem.getTestCaseTuple();
           return new Source<Tuple>() {
-            FuncInvoker funcInvoker = new FuncInvoker.Impl(0);
+            FuncInvoker funcInvoker = new FuncInvoker.Impl(0, memo);
             Stage givenStage = Stage.Factory.createOracleLevelStage(GIVEN, session, testItem, report);
             Statement givenStatement = givenStage.getStatementFactory().create(givenClause);
 
@@ -377,9 +378,9 @@ public enum Beans {
           };
         }
 
-        private Pipe<Tuple, TestIO> createWhen(final TestItem testItem, final Report report, final Session session) {
+        private Pipe<Tuple, TestIO> createWhen(final TestItem testItem, final Report report, final Session session, Map<List<Object>, Object> memo) {
           return new Pipe<Tuple, TestIO>() {
-            FuncInvoker funcInvoker = new FuncInvoker.Impl(0);
+            FuncInvoker funcInvoker = new FuncInvoker.Impl(0, memo);
 
             @Override
             public TestIO apply(Tuple testCase, Context context) {
@@ -399,9 +400,9 @@ public enum Beans {
           };
         }
 
-        private Sink<TestIO> createThen(TestItem testItem, final Report report, final Session session) {
+        private Sink<TestIO> createThen(TestItem testItem, final Report report, final Session session, Map<List<Object>, Object> memo) {
           return new Sink<TestIO>() {
-            FuncInvoker funcInvoker = new FuncInvoker.Impl(0);
+            FuncInvoker funcInvoker = new FuncInvoker.Impl(0, memo);
 
             @Override
             public void apply(TestIO testIO, Context context) {
@@ -444,9 +445,9 @@ public enum Beans {
           };
         }
 
-        private <T extends AssertionError> Sink<T> onTestFailure(TestItem testItem, Report report, Session session) {
+        private <T extends AssertionError> Sink<T> onTestFailure(TestItem testItem, Report report, Session session, Map<List<Object>, Object> memo) {
           return new Sink<T>() {
-            FuncInvoker funcInvoker = new FuncInvoker.Impl(0);
+            FuncInvoker funcInvoker = new FuncInvoker.Impl(0, memo);
 
             @Override
             public void apply(T input, Context context) {
@@ -466,16 +467,16 @@ public enum Beans {
           };
         }
 
-        private Action createAfter(TestItem testItem, Report report) {
-          return createActionFromClause(AFTER, afterClause, testItem, report);
+        private Action createAfter(TestItem testItem, Report report, Map<List<Object>, Object> memo) {
+          return createActionFromClause(AFTER, afterClause, testItem, report, memo);
         }
 
-        private Action createActionFromClause(Stage.Type stageType, List<Object> clause, final TestItem testItem, Report report) {
+        private Action createActionFromClause(Stage.Type stageType, List<Object> clause, final TestItem testItem, Report report, Map<List<Object>, Object> memo) {
           if (clause == null)
             return (Action) NOP_CLAUSE;
           Stage stage = Stage.Factory.createOracleLevelStage(stageType, session, testItem, report);
           Statement statement = stage.getStatementFactory().create(clause);
-          FuncInvoker funcInvoker = new FuncInvoker.Impl(0);
+          FuncInvoker funcInvoker = new FuncInvoker.Impl(0, memo);
           return Beans.<Action>toFunc(statement, funcInvoker).apply(stage);
         }
       };

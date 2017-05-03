@@ -98,7 +98,7 @@ public interface Statement {
         if (((Nested) statement).getForm().isAccessor()) {
           for (Statement each : ((Nested) statement).getArguments()) {
             if (each instanceof Atom) {
-              work.add(Objects.toString(each.compile(new FuncInvoker.Impl(0))));
+              work.add(Objects.toString(each.compile(new FuncInvoker.Impl(0, FuncInvoker.createMemo()))));
             } else {
               throw SyntaxException.parameterNameShouldBeSpecifiedWithConstant((Nested) statement);
             }

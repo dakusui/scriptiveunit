@@ -3,7 +3,7 @@ package com.github.dakusui.scriptiveunit.model;
 import com.github.dakusui.jcunit.core.tuples.Tuple;
 
 /**
- * An interface that represents a test result of a certain test case..
+ * An interface that represents a test result of a certain test case.
  *
  * @param <T>
  */
