@@ -50,7 +50,7 @@ public interface Form {
       };
       return wrappedStage.getStatementFactory()
           .create(funcBody.apply(wrappedStage))
-          .compile(new FuncInvoker.Impl(0))
+          .compile(new FuncInvoker.Impl(0, FuncInvoker.createMemo()))
           .<Func<Object>>apply(wrappedStage);
     };
   }

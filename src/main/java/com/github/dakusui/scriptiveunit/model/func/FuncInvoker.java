@@ -22,31 +22,27 @@ public interface FuncInvoker {
 
   String asString();
 
-  class Impl implements FuncInvoker {
-    private final Writer writer;
-    private       int    indent;
-    final Map<List<Object>, Object> memo = new HashMap<List<Object>, Object>() {
+  static Map<List<Object>, Object> createMemo() {
+    return new HashMap<List<Object>, Object>() {
       @Override
       public Object computeIfAbsent(List<Object> key,
           Function<? super List<Object>, ?> mappingFunction) {
-        if (containsKey(key)) {
-          enter();
-          try {
-            writeLine("...");
-          } finally {
-            leave();
-          }
-          return get(key);
-        }
         Object ret = mappingFunction.apply(key);
         put(key, ret);
         return ret;
       }
     };
+  }
 
-    public Impl(int initialIndent) {
+  class Impl implements FuncInvoker {
+    private final Writer writer;
+    private       int    indent;
+    final Map<List<Object>, Object> memo;
+
+    public Impl(int initialIndent, Map<List<Object>, Object> memo) {
       this.indent = initialIndent;
       this.writer = new Writer();
+      this.memo = memo;
     }
 
     void enter() {
@@ -76,10 +72,7 @@ public interface FuncInvoker {
         this.writeLine("%s(", alias);
         if (targetIsMemoized) {
           //noinspection unchecked
-          ret = this.memo.computeIfAbsent(
-              key,
-              (List<Object> input) -> target.apply(stage)
-          );
+          ret = computeIfAbsent(target, stage, key);
         } else {
           //noinspection unchecked
           ret = target.apply(stage);
@@ -94,12 +87,12 @@ public interface FuncInvoker {
       }
     }
 
-    void leave() {
-      --this.indent;
-    }
-
     public String asString() {
       return this.writer.asString();
+    }
+
+    void leave() {
+      --this.indent;
     }
 
     void writeLine(String format, Object... args) {
@@ -123,11 +116,27 @@ public interface FuncInvoker {
       return "  ";
     }
 
+    private Object computeIfAbsent(Func target, Stage stage, List<Object> key) {
+      Object ret;
+      if (this.memo.containsKey(key)) {
+        enter();
+        try {
+          writeLine("...");
+        } finally {
+          leave();
+        }
+        return this.memo.get(key);
+      }
+      ret = this.memo.computeIfAbsent(
+          key,
+          (List<Object> input) -> target.apply(stage)
+      );
+      return ret;
+    }
+
     private static Object[] prettify(Object... args) {
       return Arrays.stream(args).map((Object in) -> in instanceof Iterable ? Utils.iterableToString(((Iterable) in)) : in).collect(toList()).toArray();
     }
-
-
   }
 
   class Writer implements ActionPrinter.Writer, Iterable<String> {
