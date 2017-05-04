@@ -346,16 +346,11 @@ public enum Utils {
   }
 
   public static List<ObjectField> getAnnotatedFields(Object object, Class<? extends Annotation> annotationClass) {
-    return Arrays.stream(object.getClass().getFields()).filter(each -> each.isAnnotationPresent(annotationClass))
-        .map(each -> ObjectField.create(object, each)).collect(toList());
-  }
-
-  public static String indent(int level) {
-    StringBuilder b = new StringBuilder();
-    for (int i = 0; i < level; i++) {
-      b.append("  ");
-    }
-    return b.toString();
+    return Arrays
+        .stream(object.getClass().getFields())
+        .filter(each -> each.isAnnotationPresent(annotationClass))
+        .map(each -> ObjectField.create(object, each))
+        .collect(toList());
   }
 
   public static InputStream openResourceAsStream(String resourceName) {

@@ -37,7 +37,7 @@ import static com.github.dakusui.actionunit.Actions.*;
 import static com.github.dakusui.scriptiveunit.core.Utils.*;
 import static com.github.dakusui.scriptiveunit.exceptions.ScriptiveUnitException.wrap;
 import static com.github.dakusui.scriptiveunit.model.Stage.Type.*;
-import static java.lang.Class.*;
+import static java.lang.Class.forName;
 import static java.lang.String.format;
 import static java.util.Collections.singletonList;
 import static java.util.Objects.requireNonNull;
@@ -50,15 +50,15 @@ public enum Beans {
   private static final Object NOP_CLAUSE = Actions.nop();
 
   public abstract static class BaseForTestSuiteDescriptor {
-    final         BaseForFactorSpaceDescriptor      factorSpaceBean;
+    final         BaseForFactorSpaceDescriptor                                   factorSpaceBean;
     final         List<? extends BaseForTestOracle> testOracleBeanList;
-    final         String                            description;
-    final         Type                              runnerType;
-    private final Map<String, List<Object>>         userDefinedFormClauses;
-    private final List<Object>                      setUpClause;
-    private final List<Object>                      setUpBeforeAllClause;
-    private final List<Object>                      tearDownClause;
-    private final List<Object>                      tearDownAfterAllClause;
+    final         String                                                         description;
+    final         Type                                                           runnerType;
+    private final Map<String, List<Object>>                                      userDefinedFormClauses;
+    private final List<Object>                                                   setUpClause;
+    private final List<Object>                                                   setUpBeforeAllClause;
+    private final List<Object>                                                   tearDownClause;
+    private final List<Object>                                                   tearDownAfterAllClause;
 
     public BaseForTestSuiteDescriptor(
         String description,
@@ -313,7 +313,6 @@ public enum Beans {
     private List<Object> validateParameterDefinitionArgsForFsm(List<Object> def) {
       return def;
     }
-
   }
 
   public abstract static class BaseForTestOracle {
