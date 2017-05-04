@@ -2,6 +2,7 @@ package com.github.dakusui.scriptiveunit.loaders.json;
 
 import com.github.dakusui.scriptiveunit.Session;
 import com.github.dakusui.scriptiveunit.core.Config;
+import com.github.dakusui.scriptiveunit.core.JsonUtils;
 import com.github.dakusui.scriptiveunit.core.Preprocessor;
 import com.github.dakusui.scriptiveunit.loaders.json.JsonBeans.TestSuiteDescriptorBean;
 import com.github.dakusui.scriptiveunit.model.TestSuiteDescriptor;
@@ -17,6 +18,9 @@ import java.util.AbstractList;
 import java.util.Collections;
 import java.util.List;
 
+import static com.github.dakusui.scriptiveunit.core.JsonUtils.array;
+import static com.github.dakusui.scriptiveunit.core.JsonUtils.object;
+import static com.github.dakusui.scriptiveunit.core.JsonUtils.pathMatcher;
 import static com.github.dakusui.scriptiveunit.core.Utils.*;
 import static com.github.dakusui.scriptiveunit.exceptions.ScriptiveUnitException.wrap;
 import static com.github.dakusui.scriptiveunit.exceptions.SyntaxException.*;
@@ -68,7 +72,25 @@ public class JsonBasedLoader extends TestSuiteDescriptor.Loader.Base {
   }
 
   protected List<Preprocessor> getPreprocessors() {
-    return Collections.emptyList();
+    return Collections.singletonList(
+        JsonUtils.preprocessor(
+            (JsonNode targetElement) ->
+                targetElement instanceof ObjectNode ?
+                    targetElement :
+                    object()
+                        .$(
+                            "type",
+                            "simple")
+                        .$(
+                            "args",
+                            targetElement instanceof ArrayNode ?
+                                targetElement :
+                                array().$(targetElement).build())
+                        .build(),
+            pathMatcher("factorSpace", "factors", ".*")
+        )
+
+    );
   }
 
   private ObjectNode readScript(String scriptResourceName) {

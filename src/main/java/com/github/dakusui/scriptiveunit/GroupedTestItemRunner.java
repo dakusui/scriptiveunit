@@ -2,7 +2,7 @@ package com.github.dakusui.scriptiveunit;
 
 import com.github.dakusui.actionunit.Action;
 import com.github.dakusui.jcunit.core.tuples.Tuple;
-import com.github.dakusui.jcunit8.factorspace.Factor;
+import com.github.dakusui.jcunit8.factorspace.Parameter;
 import com.github.dakusui.jcunit8.testsuite.TestCase;
 import com.github.dakusui.scriptiveunit.core.Utils;
 import com.github.dakusui.scriptiveunit.exceptions.ScriptiveUnitException;
@@ -29,7 +29,7 @@ import java.util.stream.Stream;
 import static com.github.dakusui.actionunit.Actions.*;
 import static com.github.dakusui.scriptiveunit.GroupedTestItemRunner.Type.OrderBy.TEST_CASE;
 import static com.github.dakusui.scriptiveunit.GroupedTestItemRunner.Type.OrderBy.TEST_ORACLE;
-import static com.github.dakusui.scriptiveunit.core.Utils.filterSingleLevelFactorsOut;
+import static com.github.dakusui.scriptiveunit.core.Utils.filterSimpleSingleLevelParametersOut;
 import static com.github.dakusui.scriptiveunit.model.Stage.Type.SETUP;
 import static com.github.dakusui.scriptiveunit.model.Stage.Type.TEARDOWN;
 import static java.lang.String.format;
@@ -67,30 +67,38 @@ public final class GroupedTestItemRunner extends ParentRunner<Action> {
 
   private static Iterable<Runner> createRunnersGroupingByTestFixture(Session session) {
     TestSuiteDescriptor testSuiteDescriptor = session.loadTestSuiteDescriptor();
-    List<Factor> factors = testSuiteDescriptor.getFactorSpaceDescriptor().getFactors();
-    List<String> singleLevelFactors = factors.stream()
-        .filter((Factor each) -> each.getLevels().size() == 1)
-        .map(Factor::getName)
+    List<Parameter> parameters = testSuiteDescriptor.getFactorSpaceDescriptor().getParameters();
+    List<String> singleLevelFactors = parameters.stream()
+        .filter((Parameter each) -> each instanceof Parameter.Simple)
+        .filter((Parameter each) -> each.getKnownValues().size() == 1)
+        .map(Parameter::getName)
         .collect(toList());
-    List<String> involved = figureOutInvolvedParameters(testSuiteDescriptor, singleLevelFactors);
+    List<String> usedInSetUp = figureOutParametersUsedInSetUp(
+        testSuiteDescriptor,
+        singleLevelFactors
+    );
     List<IndexedTestCase> testCases = testSuiteDescriptor.getTestCases().stream()
-        .sorted(byParameters(involved))
+        .sorted(byParameters(usedInSetUp))
         .collect(toList());
-    List<Tuple> fixtures = buildFixtures(involved, testCases);
+    List<Tuple> fixtures = buildFixtures(usedInSetUp, testCases);
     return fixtures.stream().map(
         (Function<Tuple, Runner>) fixture -> createRunnerForTestFixture(
             session.getConfig().getDriverObject().getClass(),
             fixtures.indexOf(fixture), fixture,
-            testCases.stream().filter((IndexedTestCase indexedTestCase) -> project(indexedTestCase.get(), involved).equals(fixture)).collect(toList()),
+            testCases.stream().filter((IndexedTestCase indexedTestCase) -> project(indexedTestCase.get(), usedInSetUp).equals(fixture)).collect(toList()),
             session)
     ).collect(toList());
   }
 
-  private static List<String> figureOutInvolvedParameters(TestSuiteDescriptor testSuiteDescriptor, List<String> singleLevelFactors) {
-    return Stream.concat(testSuiteDescriptor.getInvolvedParameterNamesInSetUpAction().stream(), singleLevelFactors.stream()).distinct().collect(toList());
+  private static List<String> figureOutParametersUsedInSetUp(TestSuiteDescriptor testSuiteDescriptor, List<String> singleLevelFactors) {
+    return Stream.concat(
+        testSuiteDescriptor.getInvolvedParameterNamesInSetUpAction().stream(),
+        singleLevelFactors.stream()
+    ).distinct(
+    ).collect(toList());
   }
 
-  private static LinkedList<Tuple> buildFixtures(List<String> involved, List<IndexedTestCase> testCases) {
+  private static List<Tuple> buildFixtures(List<String> involved, List<IndexedTestCase> testCases) {
     return new LinkedList<>(
         testCases.stream()
             .map((IndexedTestCase input) -> project(input.get(), involved))
@@ -286,7 +294,7 @@ public final class GroupedTestItemRunner extends ParentRunner<Action> {
 
   private static GroupedTestItemRunner createRunnerForTestOracle(Class<?> testClass, int testOracleId, TestOracle testOracle, Session session) {
     TestSuiteDescriptor testSuiteDescriptor = session.loadTestSuiteDescriptor();
-    List<Factor> factors = testSuiteDescriptor.getFactorSpaceDescriptor().getFactors();
+    List<Parameter> factors = testSuiteDescriptor.getFactorSpaceDescriptor().getParameters();
     String testSuiteDescription = testSuiteDescriptor.getDescription();
     List<IndexedTestCase> testCases = testSuiteDescriptor.getTestCases();
     try {
@@ -300,7 +308,7 @@ public final class GroupedTestItemRunner extends ParentRunner<Action> {
                 @Override
                 public Action apply(IndexedTestCase input) {
                   try {
-                    Tuple prettifiedTestCaseTuple = filterSingleLevelFactorsOut(input.get(), factors);
+                    Tuple prettifiedTestCaseTuple = filterSimpleSingleLevelParametersOut(input.get(), factors);
                     return
                         sequential(
                             format("%03d: %s", i, testOracle.templateDescription(input.get(), testSuiteDescription)),
@@ -343,12 +351,12 @@ public final class GroupedTestItemRunner extends ParentRunner<Action> {
   private static GroupedTestItemRunner createRunnerForTestCase(Class<?> testClass, IndexedTestCase testCase, Session session) {
     TestSuiteDescriptor testSuiteDescriptor = session.loadTestSuiteDescriptor();
     int testCaseId = testCase.getIndex();
-    List<Factor> factors = testSuiteDescriptor.getFactorSpaceDescriptor().getFactors();
+    List<Parameter> parameters = testSuiteDescriptor.getFactorSpaceDescriptor().getParameters();
     List<? extends TestOracle> testOracles = testSuiteDescriptor.getTestOracles();
     try {
       AtomicInteger i = new AtomicInteger(0);
       Tuple testCaseTuple = testCase.get();
-      Tuple prettifiedTestCaseTuple = filterSingleLevelFactorsOut(testCase.get(), factors);
+      Tuple prettifiedTestCaseTuple = filterSimpleSingleLevelParametersOut(testCase.get(), parameters);
       return new GroupedTestItemRunner(testClass,
           testCaseId,
           named(

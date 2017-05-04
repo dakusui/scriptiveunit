@@ -7,7 +7,7 @@ import com.github.dakusui.actionunit.connectors.Sink;
 import com.github.dakusui.actionunit.connectors.Source;
 import com.github.dakusui.actionunit.visitors.ActionRunner;
 import com.github.dakusui.jcunit.core.tuples.Tuple;
-import com.github.dakusui.jcunit8.factorspace.Factor;
+import com.github.dakusui.jcunit8.factorspace.Parameter;
 import com.github.dakusui.scriptiveunit.exceptions.ResourceException;
 import com.github.dakusui.scriptiveunit.exceptions.ScriptiveUnitException;
 import com.github.dakusui.scriptiveunit.exceptions.SyntaxException;
@@ -24,7 +24,6 @@ import org.reflections.scanners.TypeAnnotationsScanner;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.lang.Character;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.AnnotatedElement;
 import java.lang.reflect.Constructor;
@@ -54,13 +53,11 @@ public enum Utils {
 
   public static Runnable prettify(String prettyString, Runnable runnable) {
     return new Runnable() {
-      @Override
-      public void run() {
+      @Override public void run() {
         runnable.run();
       }
 
-      @Override
-      public String toString() {
+      @Override public String toString() {
         return prettyString;
       }
     };
@@ -68,13 +65,11 @@ public enum Utils {
 
   public static <T> Supplier<T> prettify(String prettyString, Supplier<T> supplier) {
     return new Supplier<T>() {
-      @Override
-      public T get() {
+      @Override public T get() {
         return supplier.get();
       }
 
-      @Override
-      public String toString() {
+      @Override public String toString() {
         return prettyString;
       }
     };
@@ -82,29 +77,24 @@ public enum Utils {
 
   public static <T> Source<T> prettify(String prettyString, Source<T> source) {
     return new Source<T>() {
-      @Override
-      public T apply(Context context) {
+      @Override public T apply(Context context) {
         return source.apply(context);
       }
 
-      @Override
-      public String toString() {
+      @Override public String toString() {
         return prettyString;
       }
     };
   }
 
-
   public static <T, U> Pipe<T, U> prettify(String prettyString, Pipe<T, U> pipe) {
     return new Pipe<T, U>() {
 
-      @Override
-      public U apply(T t, Context context) {
+      @Override public U apply(T t, Context context) {
         return pipe.apply(t, context);
       }
 
-      @Override
-      public String toString() {
+      @Override public String toString() {
         return prettyString;
       }
     };
@@ -113,13 +103,11 @@ public enum Utils {
   public static <T> Predicate<T> prettify(String prettyString, Predicate<T> predicate) {
     return new Predicate<T>() {
 
-      @Override
-      public boolean test(T t) {
+      @Override public boolean test(T t) {
         return predicate.test(t);
       }
 
-      @Override
-      public String toString() {
+      @Override public String toString() {
         return prettyString;
       }
     };
@@ -128,13 +116,11 @@ public enum Utils {
   public static <T> Sink<T> prettify(String prettyString, Sink<T> sink) {
     return new Sink<T>() {
 
-      @Override
-      public void apply(T t, Context context) {
+      @Override public void apply(T t, Context context) {
         sink.apply(t, context);
       }
 
-      @Override
-      public String toString() {
+      @Override public String toString() {
         return prettyString;
       }
     };
@@ -147,19 +133,17 @@ public enum Utils {
     int i = 0;
     while ((matcher = pattern.matcher(ret)).find()) {
       String keyword = matcher.group("keyword");
-      check(i++ < map.size(),
-          () -> cyclicTemplatingFound(format("template(%s)", s), map));
-      check(map.containsKey(keyword),
-          () -> undefinedFactor(keyword, format("template(%s)", s)));
+      check(i++ < map.size(), () -> cyclicTemplatingFound(format("template(%s)", s), map));
+      check(map.containsKey(keyword), () -> undefinedFactor(keyword, format("template(%s)", s)));
       ret = ret.replaceAll(format("\\{\\{%s\\}\\}", keyword), requireNonNull(map.get(keyword)).toString());
     }
     return ret;
   }
 
-  public static Tuple filterSingleLevelFactorsOut(Tuple tuple, List<Factor> factors) {
+  public static Tuple filterSimpleSingleLevelParametersOut(Tuple tuple, List<Parameter> factors) {
     Tuple.Builder b = new Tuple.Builder();
-    factors.stream()
-        .filter(each -> each.getLevels().size() > 1)
+    factors.stream().filter(each -> !(each instanceof Parameter.Simple))
+        .filter(each -> each.getKnownValues().size() > 1)
         .filter(each -> tuple.containsKey(each.getName()))
         .forEach(each -> b.put(each.getName(), tuple.get(each.getName())));
     return b.build();
@@ -240,13 +224,9 @@ public enum Utils {
 
   public static <T> Constructor<T> getConstructor(Class<? extends T> clazz) {
     Constructor[] constructors = clazz.getConstructors();
-    checkState(
-        constructors,
-        constructors1 -> constructors1.length == 1,
+    checkState(constructors, constructors1 -> constructors1.length == 1,
         "There must be 1 and only 1 public constructor in order to use '%s' as a JCUnit plug-in(%s found). Also please make sure the class is public and static.",
-        clazz,
-        constructors.length
-    );
+        clazz, constructors.length);
     //noinspection unchecked
     return (Constructor<T>) constructors[0];
   }
@@ -256,7 +236,8 @@ public enum Utils {
       throw thrower.get();
   }
 
-  public static <E extends ScriptiveUnitException, V> V check(V target, Predicate<? super V> predicate, Supplier<? extends E> thrower) {
+  public static <E extends ScriptiveUnitException, V> V check(V target, Predicate<? super V> predicate,
+      Supplier<? extends E> thrower) {
     if (!requireNonNull(predicate).test(target))
       throw thrower.get();
     return target;
@@ -294,24 +275,14 @@ public enum Utils {
   }
 
   // safe because both Long.class and long.class are of type Class<Long>
-  @SuppressWarnings("unchecked")
-  public static <T> Class<T> wrap(Class<T> c) {
+  @SuppressWarnings("unchecked") public static <T> Class<T> wrap(Class<T> c) {
     return c.isPrimitive() ? (Class<T>) PRIMITIVES_TO_WRAPPERS.get(c) : c;
   }
 
-  private static final Map<Class<?>, Class<?>> PRIMITIVES_TO_WRAPPERS
-      = new ImmutableMap.Builder<Class<?>, Class<?>>()
-      .put(boolean.class, Boolean.class)
-      .put(byte.class, Byte.class)
-      .put(char.class, Character.class)
-      .put(double.class, Double.class)
-      .put(float.class, Float.class)
-      .put(int.class, Integer.class)
-      .put(long.class, Long.class)
-      .put(short.class, Short.class)
-      .put(void.class, Void.class)
-      .build();
-
+  private static final Map<Class<?>, Class<?>> PRIMITIVES_TO_WRAPPERS = new ImmutableMap.Builder<Class<?>, Class<?>>()
+      .put(boolean.class, Boolean.class).put(byte.class, Byte.class).put(char.class, Character.class)
+      .put(double.class, Double.class).put(float.class, Float.class).put(int.class, Integer.class)
+      .put(long.class, Long.class).put(short.class, Short.class).put(void.class, Void.class).build();
 
   public static boolean isCompatible(Object input, Class<?> to) {
     requireNonNull(to);
@@ -353,18 +324,17 @@ public enum Utils {
    * @param annotationClass  An annotation class of the instance to be returned.
    * @param defaultInstance  An annotation object to be returned in the {@code annotatedElement} doesn't have it.
    */
-  public static <T extends Annotation> T getAnnotation(AnnotatedElement annotatedElement, Class<T> annotationClass, T defaultInstance) {
+  public static <T extends Annotation> T getAnnotation(AnnotatedElement annotatedElement, Class<T> annotationClass,
+      T defaultInstance) {
     return annotatedElement.isAnnotationPresent(annotationClass) ?
         annotatedElement.getAnnotation(annotationClass) :
         defaultInstance;
   }
 
-  public static List<ObjectMethod> getAnnotatedMethods(Object object, Class<? extends Annotation> annotationClass, Map<String, String> aliases) {
-    return Arrays
-        .stream(object.getClass().getMethods())
-        .filter(each -> each.isAnnotationPresent(annotationClass))
-        .map(each -> ObjectMethod.create(object, each, aliases))
-        .collect(toList());
+  public static List<ObjectMethod> getAnnotatedMethods(Object object, Class<? extends Annotation> annotationClass,
+      Map<String, String> aliases) {
+    return Arrays.stream(object.getClass().getMethods()).filter(each -> each.isAnnotationPresent(annotationClass))
+        .map(each -> ObjectMethod.create(object, each, aliases)).collect(toList());
   }
 
   public static Object getFieldValue(Object object, Field field) {
@@ -381,14 +351,6 @@ public enum Utils {
         .filter(each -> each.isAnnotationPresent(annotationClass))
         .map(each -> ObjectField.create(object, each))
         .collect(toList());
-  }
-
-  public static String indent(int level) {
-    StringBuilder b = new StringBuilder();
-    for (int i = 0; i < level; i++) {
-      b.append("  ");
-    }
-    return b.toString();
   }
 
   public static InputStream openResourceAsStream(String resourceName) {
@@ -431,26 +393,20 @@ public enum Utils {
   }
 
   public static Stream<Class<?>> findEntitiesUnder(String prefix, Function<Reflections, Set<Class<?>>> func) {
-    return func.apply(new Reflections(
-            prefix,
-            new TypeAnnotationsScanner(),
-            new SubTypesScanner()
-        )
-    ).stream();
+    return func.apply(new Reflections(prefix, new TypeAnnotationsScanner(), new SubTypesScanner())).stream();
   }
 
   private interface Converter<FROM, TO> extends Function<FROM, TO> {
     boolean supports(Object input, Class<?> to);
 
-    static <FROM, TO> Converter<FROM, TO> create(Class<FROM> fromClass, Class<TO> toClass, Function<FROM, TO> conveterBody) {
+    static <FROM, TO> Converter<FROM, TO> create(Class<FROM> fromClass, Class<TO> toClass,
+        Function<FROM, TO> conveterBody) {
       return new Converter<FROM, TO>() {
-        @Override
-        public boolean supports(Object input, Class<?> to) {
+        @Override public boolean supports(Object input, Class<?> to) {
           return fromClass.isAssignableFrom(input.getClass()) && toClass.isAssignableFrom(wrap(to));
         }
 
-        @Override
-        public TO apply(FROM from) {
+        @Override public TO apply(FROM from) {
           return conveterBody.apply(from);
         }
       };
@@ -458,8 +414,8 @@ public enum Utils {
   }
 
   private static final List<Converter<?, ?>> TYPE_CONVERTERS = new ImmutableList.Builder<Converter<?, ?>>()
-      .add(Converter.create(BigDecimal.class, Integer.class, BigDecimal::intValue))
-      .add(Converter.create(Number.class, BigDecimal.class, (Number input) -> new BigDecimal(input.toString(), DECIMAL128)))
+      .add(Converter.create(BigDecimal.class, Integer.class, BigDecimal::intValue)).add(Converter
+          .create(Number.class, BigDecimal.class, (Number input) -> new BigDecimal(input.toString(), DECIMAL128)))
       .build();
 
 }

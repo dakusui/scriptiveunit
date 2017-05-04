@@ -25,7 +25,6 @@ import java.util.stream.Collectors;
 import static com.github.dakusui.scriptiveunit.core.JsonUtils.*;
 import static com.github.dakusui.scriptiveunit.core.Utils.deepMerge;
 import static java.lang.String.format;
-import static java.util.Collections.singletonList;
 import static java.util.Collections.unmodifiableMap;
 import static java.util.Objects.requireNonNull;
 
@@ -42,18 +41,21 @@ public class Qapi {
 
     @Override
     protected List<Preprocessor> getPreprocessors() {
-      return singletonList(JsonUtils.preprocessor(
-          (JsonNode targetElement) ->
-              deepMerge(
-                  ((ObjectNode) targetElement),
-                  object()
-                      .$("after", array()
-                          .$("print")
-                          .$("overridden default for 'after'").build()
-                      ).build()
-              ),
-          pathMatcher("testOracles", ".*")
-      ));
+      return new LinkedList<Preprocessor>() {{
+        addAll(Loader.super.getPreprocessors());
+        add(JsonUtils.preprocessor(
+            (JsonNode targetElement) ->
+                deepMerge(
+                    ((ObjectNode) targetElement),
+                    object()
+                        .$("after", array()
+                            .$("print")
+                            .$("overridden default for 'after'").build()
+                        ).build()
+                ),
+            pathMatcher("testOracles", ".*")
+        ));
+      }};
     }
   }
 

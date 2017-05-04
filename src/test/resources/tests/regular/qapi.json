@@ -4,7 +4,10 @@
     "factorSpace": {
         "factors": {
             "service" : ["shoppingmall", "bookstore"],
-            "index" : ["item", "product"],
+            "index" : {
+              "type":"simple",
+              "args":["item", "product"]
+            },
             "host" : ["localhost"]
         }
     },
