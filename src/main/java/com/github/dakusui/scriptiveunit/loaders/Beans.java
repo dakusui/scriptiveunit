@@ -7,8 +7,8 @@ import com.github.dakusui.actionunit.connectors.Pipe;
 import com.github.dakusui.actionunit.connectors.Sink;
 import com.github.dakusui.actionunit.connectors.Source;
 import com.github.dakusui.jcunit.core.tuples.Tuple;
+import com.github.dakusui.jcunit.fsm.spec.FsmSpec;
 import com.github.dakusui.jcunit8.factorspace.Constraint;
-import com.github.dakusui.jcunit8.factorspace.Factor;
 import com.github.dakusui.jcunit8.factorspace.Parameter;
 import com.github.dakusui.jcunit8.factorspace.ParameterSpace;
 import com.github.dakusui.jcunit8.pipeline.Pipeline;
@@ -18,6 +18,7 @@ import com.github.dakusui.scriptiveunit.GroupedTestItemRunner.Type;
 import com.github.dakusui.scriptiveunit.Session;
 import com.github.dakusui.scriptiveunit.core.Config;
 import com.github.dakusui.scriptiveunit.core.Utils;
+import com.github.dakusui.scriptiveunit.exceptions.ScriptiveUnitException;
 import com.github.dakusui.scriptiveunit.model.*;
 import com.github.dakusui.scriptiveunit.model.func.Func;
 import com.github.dakusui.scriptiveunit.model.func.FuncInvoker;
@@ -27,13 +28,16 @@ import org.hamcrest.Description;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import static com.github.dakusui.actionunit.Actions.*;
 import static com.github.dakusui.scriptiveunit.core.Utils.*;
 import static com.github.dakusui.scriptiveunit.exceptions.ScriptiveUnitException.wrap;
 import static com.github.dakusui.scriptiveunit.model.Stage.Type.*;
+import static java.lang.Class.*;
 import static java.lang.String.format;
 import static java.util.Collections.singletonList;
 import static java.util.Objects.requireNonNull;
@@ -102,7 +106,7 @@ public enum Beans {
           }
 
           @Override
-          public FactorSpaceDescriptor getFactorSpaceDescriptor() {
+          public ParameterSpaceDescriptor getFactorSpaceDescriptor() {
             return factorSpaceBean.create(session.getConfig(), new Statement.Factory(session));
           }
 
@@ -197,9 +201,7 @@ public enum Beans {
           private ParameterSpace createParameterSpaceFrom(TestSuiteDescriptor testSuiteDescriptor) {
             return new ParameterSpace.Builder()
                 .addAllParameters(
-                    testSuiteDescriptor.getFactorSpaceDescriptor().getFactors().stream()
-                        .map((Function<Factor, Parameter>) factor -> new Parameter.Simple.Impl<>(factor.getName(), factor.getLevels()))
-                        .collect(toList())
+                    testSuiteDescriptor.getFactorSpaceDescriptor().getParameters()
                 )
                 .addAllConstraints(
                     testSuiteDescriptor.getFactorSpaceDescriptor().getConstraints()
@@ -220,19 +222,29 @@ public enum Beans {
    * A base class for factor space descriptors.
    */
   public abstract static class BaseForFactorSpaceDescriptor {
-    private final Map<String, List<Object>> factorMap;
-    private final List<List<Object>>        constraintList;
+    protected static class ParameterDefinition {
+      String       type;
+      List<Object> args;
 
-    public BaseForFactorSpaceDescriptor(Map<String, List<Object>> factorMap, List<List<Object>> constraintList) {
-      this.factorMap = factorMap;
+      public ParameterDefinition(String type, List<Object> args) {
+        this.type = type;
+        this.args = args;
+      }
+    }
+
+    private final Map<String, ParameterDefinition> parameterDefinitionMap;
+    private final List<List<Object>>               constraintList;
+
+    public BaseForFactorSpaceDescriptor(Map<String, ParameterDefinition> parameterDefinitionMap, List<List<Object>> constraintList) {
+      this.parameterDefinitionMap = parameterDefinitionMap;
       this.constraintList = constraintList;
     }
 
-    public FactorSpaceDescriptor create(Config config, Statement.Factory statementFactory) {
-      return new FactorSpaceDescriptor() {
+    public ParameterSpaceDescriptor create(Config config, Statement.Factory statementFactory) {
+      return new ParameterSpaceDescriptor() {
         @Override
-        public List<Factor> getFactors() {
-          return composeFactors(BaseForFactorSpaceDescriptor.this.factorMap);
+        public List<Parameter> getParameters() {
+          return composeParameters(BaseForFactorSpaceDescriptor.this.parameterDefinitionMap);
         }
 
         @Override
@@ -256,10 +268,50 @@ public enum Beans {
       };
     }
 
-    private List<Factor> composeFactors(Map<String, List<Object>> factorMap) {
+    private List<Parameter> composeParameters(Map<String, ParameterDefinition> factorMap) {
       return requireNonNull(factorMap).keySet().stream()
-          .map(factorName -> Factor.create(factorName, factorMap.get(factorName).toArray()))
-          .collect(toList());
+          .map(
+              (String parameterName) -> {
+                ParameterDefinition def = requireNonNull(factorMap.get(parameterName));
+                switch (def.type) {
+                case "simple":
+                  return Parameter.Simple.Factory.of(validateParameterDefinitionArgsForSimple(def.args)).create(parameterName);
+                case "regex":
+                  return Parameter.Regex.Factory.of(Objects.toString(validateParameterDefinitionArgsForRegex(def.args).get(0))).create(parameterName);
+                case "fsm":
+                  try {
+                    validateParameterDefinitionArgsForFsm(def.args);
+                    return Parameter.Fsm.Factory.<Object>of(
+                        (Class<? extends FsmSpec<Object>>) forName(Objects.toString(def.args.get(0))),
+                        Integer.valueOf(Objects.toString(def.args.get(1))).intValue()
+                    ).create(parameterName);
+                  } catch (ClassCastException | ClassNotFoundException e) {
+                    throw new RuntimeException(e);
+                  }
+                default:
+                  throw new RuntimeException(
+                      String.format(
+                          "unknown type '%s' was given to parameter '%s''s definition.",
+                          def.type,
+                          parameterName
+                      ));
+                }
+              })
+          .collect(Collectors.toList());
+    }
+
+    private List<Object> validateParameterDefinitionArgsForSimple(List<Object> def) {
+      return def;
+    }
+
+    private List<Object> validateParameterDefinitionArgsForRegex(List<Object> def) {
+      if (def.size() != 1)
+        throw ScriptiveUnitException.fail("").get();
+      return def;
+    }
+
+    private List<Object> validateParameterDefinitionArgsForFsm(List<Object> def) {
+      return def;
     }
 
   }
@@ -332,7 +384,10 @@ public enum Beans {
         }
 
         private Tuple projectMultiLevelFactors(Tuple testCaseTuple, Session session) {
-          return Utils.filterSingleLevelFactorsOut(testCaseTuple, session.loadTestSuiteDescriptor().getFactorSpaceDescriptor().getFactors());
+          return Utils.filterSimpleSingleLevelParametersOut(
+              testCaseTuple,
+              session.loadTestSuiteDescriptor().getFactorSpaceDescriptor().getParameters()
+          );
         }
 
         private String composeDescription(Tuple testCaseTuple, Session session) {

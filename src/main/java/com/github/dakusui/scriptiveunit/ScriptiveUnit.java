@@ -2,7 +2,6 @@ package com.github.dakusui.scriptiveunit;
 
 import com.github.dakusui.actionunit.Action;
 import com.github.dakusui.jcunit.core.tuples.Tuple;
-import com.github.dakusui.jcunit8.factorspace.Factor;
 import com.github.dakusui.scriptiveunit.annotations.Import;
 import com.github.dakusui.scriptiveunit.annotations.Load;
 import com.github.dakusui.scriptiveunit.annotations.Scriptable;
@@ -24,6 +23,7 @@ import java.util.*;
 import java.util.stream.Stream;
 
 import static com.github.dakusui.actionunit.Utils.createTestClassMock;
+import static com.github.dakusui.jcunit8.factorspace.Parameter.*;
 import static com.github.dakusui.scriptiveunit.core.Utils.performActionWithLogging;
 import static com.github.dakusui.scriptiveunit.exceptions.ResourceException.functionNotFound;
 import static com.github.dakusui.scriptiveunit.model.Stage.Type.SETUP_BEFORE_ALL;
@@ -98,7 +98,7 @@ public class ScriptiveUnit extends Parameterized {
                 SETUP_BEFORE_ALL,
                 session,
                 createCommonFixture(
-                    session.loadTestSuiteDescriptor().getFactorSpaceDescriptor().getFactors()
+                    session.loadTestSuiteDescriptor().getFactorSpaceDescriptor().getParameters()
                 )));
         super.evaluate();
       }
@@ -116,17 +116,18 @@ public class ScriptiveUnit extends Parameterized {
             createSuiteLevelAction(
                 TEARDOWN_AFTER_ALL,
                 session,
-                createCommonFixture(descriptor.getFactorSpaceDescriptor().getFactors()))
+                createCommonFixture(descriptor.getFactorSpaceDescriptor().getParameters()))
         );
       }
     };
   }
 
-  private static Tuple createCommonFixture(List<Factor> factors) {
+  private static Tuple createCommonFixture(List<com.github.dakusui.jcunit8.factorspace.Parameter> parameters) {
     Tuple.Builder b = new Tuple.Builder();
-    factors.stream()
-        .filter((Factor in) -> in.getLevels().size() == 1)
-        .forEach((Factor in) -> b.put(in.getName(), in.getLevels().get(0)));
+    parameters.stream()
+        .filter((com.github.dakusui.jcunit8.factorspace.Parameter in) -> in instanceof Simple)
+        .filter((com.github.dakusui.jcunit8.factorspace.Parameter in) -> in.getKnownValues().size() == 1)
+        .forEach((com.github.dakusui.jcunit8.factorspace.Parameter in) -> b.put(in.getName(), in.getKnownValues().get(0)));
     return b.build();
   }
 

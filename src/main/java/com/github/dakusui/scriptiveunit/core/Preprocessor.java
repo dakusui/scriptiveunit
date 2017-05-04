@@ -23,12 +23,13 @@ public interface Preprocessor {
 
   boolean matches(Path pathToTargetElement);
 
-  interface Utils {
-    static List<Path.Component> pathComponentList(Object... pathComponents) {
+  enum Utils {
+    ;
+    public static List<Path.Component> pathComponentList(Object... pathComponents) {
       return Lists.newArrayList(pathComponents).stream().map(Utils::pathComponent).collect(toList());
     }
 
-    static Path.Component pathComponent(Object value) {
+    public static Path.Component pathComponent(Object value) {
       if (value instanceof Integer)
         return Path.Component.num((Integer) value);
       if (value instanceof String)

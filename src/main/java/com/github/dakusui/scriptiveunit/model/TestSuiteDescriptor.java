@@ -19,7 +19,7 @@ public interface TestSuiteDescriptor {
 
   GroupedTestItemRunner.Type getRunnerType();
 
-  FactorSpaceDescriptor getFactorSpaceDescriptor();
+  ParameterSpaceDescriptor getFactorSpaceDescriptor();
 
   Map<String, List<Object>> getUserDefinedFormClauses();
 

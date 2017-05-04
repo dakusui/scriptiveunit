@@ -14,8 +14,6 @@ import static java.util.stream.Collectors.toList;
 
 public enum JsonUtils {
   ;
-  public static NullNode NULL = NullNode.instance;
-
   public interface Builder<T extends JsonNode> {
     T build();
   }

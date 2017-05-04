@@ -4,8 +4,11 @@ import com.github.dakusui.scriptiveunit.loaders.Beans;
 import org.codehaus.jackson.annotate.JsonCreator;
 import org.codehaus.jackson.annotate.JsonProperty;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+import java.util.function.Consumer;
 
 public enum JsonBeans {
   ;
@@ -30,10 +33,24 @@ public enum JsonBeans {
 
     public static class FactorSpaceDescriptorBean extends Beans.BaseForFactorSpaceDescriptor {
       public FactorSpaceDescriptorBean(
-          @JsonProperty("factors") Map<String, List<Object>> factorMap,
+          @JsonProperty("factors") Map<String, Map<String, Object>> parameterMap,
           @JsonProperty("constraints") List<List<Object>> constraintList
       ) {
-        super(factorMap, constraintList);
+        super(convertMapToParameterDefinitionMap(parameterMap), constraintList);
+      }
+
+      private static Map<String, Beans.BaseForFactorSpaceDescriptor.ParameterDefinition> convertMapToParameterDefinitionMap(Map<String, Map<String, Object>> parameterMap) {
+        return new HashMap<String, ParameterDefinition>() {{
+          parameterMap.keySet().forEach(new Consumer<String>() {
+            @Override
+            public void accept(String s) {
+              put(s, new ParameterDefinition(
+                  Objects.toString(parameterMap.get(s).get("type")),
+                  List.class.<Object>cast(parameterMap.get(s).get("args"))
+              ));
+            }
+          });
+        }};
       }
     }
 
