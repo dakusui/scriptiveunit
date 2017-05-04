@@ -1,34 +1,46 @@
 {
   "factorSpace": {
     "factors": {
-      "service": [
-        "shoppingmall",
-        "bookstore"
-      ],
-      "index": [
-        "item",
-        "product"
-      ],
-      "host": [
-        "localhost"
-      ],
-      "terms": [
-        [
-          "ヒーター"
-        ],
-        [
-          "iPhone"
+      "service": {
+        "type":"simple",
+        "args":[
+          "shoppingmall",
+          "bookstore"
         ]
-      ],
-      "sortBy": [
-        "price",
-        "lexical",
-        "relevance"
-      ],
-      "order": [
-        "asc",
-        "desc"
-      ]
+      },
+      "index":  {
+        "type":"simple",
+        "args":[
+          "item",
+          "product"
+        ]
+      },
+      "host": {
+        "type":"simple",
+        "args":["localhost"]
+      },
+      "terms":{
+        "type":"simple",
+        "args":[
+          [ "ヒーター" ],
+          [ "iPhone" ]
+        ]
+      },
+      "sortBy": {
+        "type": "simple",
+        "args": [
+          "price",
+          "lexical",
+          "relevance"
+        ]
+      },
+      "order": {
+        "type": "simple",
+        "args": [
+          "asc",
+          "desc"
+        ]
+      }
     }
   }
 }

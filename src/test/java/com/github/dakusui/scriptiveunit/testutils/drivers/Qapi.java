@@ -13,7 +13,6 @@ import com.github.dakusui.scriptiveunit.drivers.actions.Basic;
 import com.github.dakusui.scriptiveunit.loaders.json.JsonBasedLoader;
 import com.google.common.collect.Maps;
 import org.codehaus.jackson.JsonNode;
-import org.codehaus.jackson.node.ArrayNode;
 import org.codehaus.jackson.node.ObjectNode;
 import org.junit.runner.RunWith;
 
@@ -26,7 +25,6 @@ import java.util.stream.Collectors;
 import static com.github.dakusui.scriptiveunit.core.JsonUtils.*;
 import static com.github.dakusui.scriptiveunit.core.Utils.deepMerge;
 import static java.lang.String.format;
-import static java.util.Arrays.asList;
 import static java.util.Collections.unmodifiableMap;
 import static java.util.Objects.requireNonNull;
 
@@ -43,36 +41,21 @@ public class Qapi {
 
     @Override
     protected List<Preprocessor> getPreprocessors() {
-      return asList(
-          JsonUtils.preprocessor(
-              (JsonNode targetElement) ->
-                  deepMerge(
-                      ((ObjectNode) targetElement),
-                      object()
-                          .$("after", array()
-                              .$("print")
-                              .$("overridden default for 'after'").build()
-                          ).build()
-                  ),
-              pathMatcher("testOracles", ".*")
-          ),
-          JsonUtils.preprocessor(
-              (JsonNode targetElement) ->
-                  targetElement instanceof ObjectNode ?
-                      targetElement :
-                      object()
-                          .$(
-                              "type",
-                              "simple")
-                          .$(
-                              "args",
-                              targetElement instanceof ArrayNode ?
-                                  targetElement :
-                                  array().$(targetElement).build())
-                          .build(),
-              pathMatcher("factorSpace", "factors", ".*")
-          )
-      );
+      return new LinkedList<Preprocessor>() {{
+        addAll(Loader.super.getPreprocessors());
+        add(JsonUtils.preprocessor(
+            (JsonNode targetElement) ->
+                deepMerge(
+                    ((ObjectNode) targetElement),
+                    object()
+                        .$("after", array()
+                            .$("print")
+                            .$("overridden default for 'after'").build()
+                        ).build()
+                ),
+            pathMatcher("testOracles", ".*")
+        ));
+      }};
     }
   }
 
