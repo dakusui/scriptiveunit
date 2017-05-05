@@ -1,0 +1,22 @@
+{
+  "description":"regex model example",
+  "factorSpace":{
+    "factors":{
+      "sequence":{
+        "type":"regex",
+        "args":[
+          "open(withdraw|deposit|transfer){0,2}getBalance"
+        ]
+      },
+      "amount":[0, 100, 2000, 2001]
+    },
+    "constraints":[
+      ["not", ["overdraftHappens"]]
+    ]
+  },
+  "testOracles":[
+    {
+
+    }
+  ]
+}

@@ -4,6 +4,10 @@ import java.lang.annotation.Retention;
 
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
+/**
+ * An annotation that indicates methods in a target field can be used as
+ * functions in test scripts.
+ */
 @Retention(RUNTIME)
 public @interface Import {
   Alias[] value() default { @Alias(Alias.ALL) };
