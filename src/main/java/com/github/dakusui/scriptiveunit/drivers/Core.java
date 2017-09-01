@@ -9,10 +9,12 @@ import com.github.dakusui.scriptiveunit.exceptions.SyntaxException;
 import com.github.dakusui.scriptiveunit.model.Stage;
 import com.github.dakusui.scriptiveunit.model.TestItem;
 import com.github.dakusui.scriptiveunit.model.func.Func;
+import com.github.dakusui.scriptiveunit.model.func.FuncInvoker;
 
 import java.lang.reflect.InvocationTargetException;
 import java.util.Arrays;
 import java.util.List;
+import java.util.function.Function;
 
 import static com.github.dakusui.scriptiveunit.core.Utils.check;
 import static com.github.dakusui.scriptiveunit.exceptions.SyntaxException.attributeNotFound;
@@ -20,6 +22,22 @@ import static java.util.Objects.requireNonNull;
 import static java.util.stream.Collectors.toList;
 
 public class Core {
+  @SuppressWarnings("unused")
+  @Scriptable
+  public <E, V> Func<Function<E, V>> lambda(Func argValue) {
+    return new Func<Function<E, V>>() {
+      @Override
+      public Function<E, V> apply(Stage input) {
+        return new Function<E, V>() {
+          @Override
+          public V apply(E e) {
+            return null;
+          }
+        };
+      }
+    };
+  }
+
   /**
    * Returns a function to access an attribute value in a test case.
    * This can be used in {@code GENERATION}, {@code GIVEN}, {@code WHEN}, and {@code THEN}

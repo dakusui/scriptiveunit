@@ -13,6 +13,7 @@ import com.github.dakusui.scriptiveunit.model.func.FuncInvoker;
 
 import java.lang.reflect.Array;
 import java.util.*;
+import java.util.function.Function;
 import java.util.function.Supplier;
 
 import static com.github.dakusui.scriptiveunit.core.Utils.check;
@@ -55,56 +56,6 @@ public interface Form {
     };
   }
 
-  static Description describe(String name, List<Object> body) {
-    return new Description() {
-      @Override
-      public String name() {
-        return name;
-      }
-
-      @Override
-      public List<String> content() {
-        List<String> ret = new LinkedList<>();
-        format(0, ret, body);
-        return ret;
-      }
-
-      void format(int indentLevel, List<String> out, List<Object> body) {
-        if (body.isEmpty()) {
-          out.add(indent(indentLevel) + "()");
-          return;
-        }
-        if (body.size() == 1) {
-          out.add(indent(indentLevel) + String.format("(%s)", body.get(0)));
-          return;
-        }
-        out.add(indent(indentLevel) + "(" + body.get(0));
-        for (Object each : body.subList(1, body.size())) {
-          if (each instanceof List) {
-            //noinspection unchecked
-            format(indentLevel + 1, out, (List<Object>) each);
-          } else {
-            out.add(indent(indentLevel + 1) + each);
-          }
-        }
-        out.add(indent(indentLevel) + ")");
-      }
-
-      String indent(int indentLevel) {
-        String ret = "";
-        for (int i = 0; i < indentLevel; i++) {
-          ret += "  ";
-        }
-        return ret;
-      }
-
-      @Override
-      public String toString() {
-        return name;
-      }
-    };
-  }
-
   class Factory {
     private final Object            driver;
     private final Func.Factory      funcFactory;
@@ -120,10 +71,11 @@ public interface Form {
 
     @SuppressWarnings("WeakerAccess")
     public Form create(String name) {
-      ObjectMethod objectMethod = Factory.this.getObjectMethodFromDriver(name);
-      return requireNonNull(objectMethod != null ?
-          new Impl(objectMethod) :
-          createUserForm(name), format("A form '%s' was not found", name));
+      return Factory.this.getObjectMethodFromDriver(name).map(
+          (Function<ObjectMethod, Form>) Impl::new
+      ).orElseGet(
+          () -> createUserForm(name)
+      );
     }
 
     private Form createUserForm(String name) {
@@ -132,19 +84,25 @@ public interface Form {
               userFunc(),
               name
           ),
-          () -> requireNonNull(
-              session.loadTestSuiteDescriptor().getUserDefinedFormClauses().get(name),
-              format("Undefined form '%s' was referenced.", name)
+          getUserDefinedFormClauseFromSessionByName(name).orElseThrow(
+              () -> new NullPointerException(format("Undefined form '%s' was referenced.", name))
           )
       );
     }
 
-    private ObjectMethod getObjectMethodFromDriver(String methodName) {
+    private Optional<Supplier<List<Object>>> getUserDefinedFormClauseFromSessionByName(String name) {
+      Map<String, List<Object>> clauseMap = session.loadTestSuiteDescriptor().getUserDefinedFormClauses();
+      return clauseMap.containsKey(name) ?
+          Optional.of(() -> clauseMap.get(name)) :
+          Optional.empty();
+    }
+
+    private Optional<ObjectMethod> getObjectMethodFromDriver(String methodName) {
       for (ObjectMethod each : ScriptiveUnit.getObjectMethodsFromImportedFieldsInObject(this.driver)) {
         if (getMethodName(each).equals(methodName))
-          return each;
+          return Optional.of(each);
       }
-      return null;
+      return Optional.empty();
     }
 
     private ObjectMethod userFunc() {
@@ -255,6 +213,7 @@ public interface Form {
         return super.apply(funcInvoker, new Arguments() {
           Iterable<Statement> statements = concat(of(statementFactory.create(userDefinedFormClauseSupplier.get())), arguments);
 
+          @SuppressWarnings("NullableProblems")
           @Override
           public Iterator<Statement> iterator() {
             return statements.iterator();

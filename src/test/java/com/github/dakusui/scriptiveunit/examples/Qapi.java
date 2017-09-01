@@ -5,12 +5,14 @@ import com.github.dakusui.scriptiveunit.ScriptiveUnit;
 import com.github.dakusui.scriptiveunit.annotations.Import;
 import com.github.dakusui.scriptiveunit.annotations.Import.Alias;
 import com.github.dakusui.scriptiveunit.annotations.Load;
+import com.github.dakusui.scriptiveunit.annotations.Scriptable;
 import com.github.dakusui.scriptiveunit.core.Config;
 import com.github.dakusui.scriptiveunit.core.JsonUtils;
 import com.github.dakusui.scriptiveunit.core.Preprocessor;
 import com.github.dakusui.scriptiveunit.drivers.*;
 import com.github.dakusui.scriptiveunit.drivers.actions.Basic;
 import com.github.dakusui.scriptiveunit.loaders.json.JsonBasedLoader;
+import com.github.dakusui.scriptiveunit.model.func.Func;
 import com.google.common.collect.Maps;
 import org.codehaus.jackson.JsonNode;
 import org.codehaus.jackson.node.ObjectNode;
@@ -59,6 +61,14 @@ public class Qapi {
     }
   }
 
+  public static class Misc {
+    @SuppressWarnings("unused")
+    @Scriptable
+    public Func<String> content(Func<Entry> entry) {
+      return input -> entry.apply(input).content();
+    }
+  }
+
   @SuppressWarnings("unused")
   @Import({
       @Alias(value = "*"),
@@ -100,6 +110,10 @@ public class Qapi {
   @SuppressWarnings("unused")
   @Import
   public Object basicActions = new Basic();
+
+  @SuppressWarnings("unused")
+  @Import
+  public Object misc = new Misc();
 
   @SuppressWarnings("unused")
   @Import({
@@ -226,6 +240,10 @@ public class Qapi {
 
     public boolean matches(String word) {
       return this.content.contains(requireNonNull(word));
+    }
+
+    public String content() {
+      return this.content;
     }
 
     @Override

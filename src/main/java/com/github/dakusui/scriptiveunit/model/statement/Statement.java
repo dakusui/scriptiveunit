@@ -14,6 +14,9 @@ import java.util.Objects;
 import static com.github.dakusui.scriptiveunit.exceptions.TypeMismatch.headOfCallMustBeString;
 import static java.util.Objects.requireNonNull;
 
+/**
+ * An interface that represents a grammatical structure of a script element.
+ */
 public interface Statement {
   Func compile(FuncInvoker invoker);
 
@@ -60,7 +63,7 @@ public interface Statement {
 
           @Override
           public Func<?> compile(FuncInvoker invoker) {
-            return (Func<?>) form.apply(invoker, arguments);
+            return (Func<?>) getForm().apply(invoker, arguments);
           }
         };
       } else if (car instanceof Integer) {

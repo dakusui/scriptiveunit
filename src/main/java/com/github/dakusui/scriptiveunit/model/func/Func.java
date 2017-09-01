@@ -81,9 +81,9 @@ public interface Func<O> extends
         if (!"apply".equals(method.getName()))
           return method.invoke(target, args);
         check(args.length == 1 && args[0] instanceof Stage,
-            fail("The argument should be an array of length 1 and its first element should be '%s', but: %s",
-                Arrays.toString(args),
-                Stage.class.getCanonicalName()
+            fail("The argument should be an array of length 1 and its first element should be an instance of %s, but it was: %s",
+                Stage.class.getCanonicalName(),
+                Arrays.toString(args)
             ));
         return funcHandler.handle(invoker, target, (Stage) args[0], name);
       };

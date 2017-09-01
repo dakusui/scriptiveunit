@@ -4,10 +4,12 @@ import com.github.dakusui.scriptiveunit.annotations.AccessesTestParameter;
 import com.github.dakusui.scriptiveunit.annotations.Doc;
 import com.github.dakusui.scriptiveunit.annotations.Import;
 
-import java.lang.annotation.Annotation;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.util.*;
+import java.util.AbstractList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
 
 import static com.github.dakusui.scriptiveunit.exceptions.ScriptiveUnitException.wrap;
 import static java.lang.String.format;
@@ -41,12 +43,11 @@ public interface ObjectMethod {
       @Override
       public String getName() {
         String baseName = method.getName();
-        return
-            aliases.containsKey(baseName) ?
-                aliases.get(baseName) :
-                aliases.containsKey(Import.Alias.ALL) ?
-                    baseName :
-                    null;
+        return aliases.containsKey(baseName) ?
+            aliases.get(baseName) :
+            aliases.containsKey(Import.Alias.ALL) ?
+                baseName :
+                null;
       }
 
       @Override
@@ -61,10 +62,15 @@ public interface ObjectMethod {
 
       @Override
       public Doc getParameterDoc(int index) {
-        Optional<? extends Annotation> docAnn = stream(method.getParameterAnnotations()[index]).filter(input -> input instanceof Doc).findFirst();
-        return docAnn.isPresent() ?
-            (Doc) docAnn.get() :
-            Doc.NOT_AVAILABLE;
+        return stream(
+            method.getParameterAnnotations()[index]
+        ).filter(
+            input -> input instanceof Doc
+        ).findFirst().map(
+            annotation -> (Doc) annotation
+        ).orElse(
+            Doc.NOT_AVAILABLE
+        );
       }
 
       @Override
