@@ -26,6 +26,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.AnnotatedElement;
+import java.lang.reflect.Array;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.math.BigDecimal;
@@ -50,6 +51,12 @@ import static java.util.stream.Collectors.toList;
 
 public enum Utils {
   ;
+
+  public static <T, R> R[] castArray(T[] array, Class<R> klass) {
+    R[] ret = (R[]) Array.newInstance(klass, array.length);
+    System.arraycopy(array, 0, ret, 0, ret.length);
+    return ret;
+  }
 
   public static Runnable prettify(String prettyString, Runnable runnable) {
     return new Runnable() {

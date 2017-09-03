@@ -17,11 +17,12 @@
       "description": "{{@TESTSUITE}}: Searching {{terms}} should not return too many accessories",
       "given": ["equals", ["attr", "terms"], ["quote", "iPhone"]],
       "when": ["issue", ["query"] ],
-      "then": ["==",
+      "then": [">",
         ["size", ["filter", ["result"],
-          ["containedBy", ["issue", ["with", {"terms":["iPhone&&シルバー"]}, ["query"]]]]
+          ["lambda",
+            ["matches", ["content"], "iPhone"] ]
         ]],
-        2
+        3
       ]
     }
   ]

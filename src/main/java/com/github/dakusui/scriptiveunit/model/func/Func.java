@@ -19,7 +19,6 @@ import static com.github.dakusui.scriptiveunit.exceptions.TypeMismatch.valueRetu
 @FunctionalInterface
 public interface Func<O> extends
     java.util.function.Function<Stage, O>,
-    com.google.common.base.Function<Stage, O>,
     Formattable {
   @Override
   O apply(Stage input);
@@ -53,7 +52,12 @@ public interface Func<O> extends
       this.funcHandler = funcHandler;
     }
 
-    public Func create(FuncInvoker invoker, ObjectMethod objectMethod, /* TODO: Actually, this can be Func[] */ Object[] args) {
+    /*
+     * args is an array can only contain Func or Func[]. Only the last element in it
+     * can become Func[] it is because only the last argument of a method can become
+     * a varargs.
+     */
+    public Func create(FuncInvoker invoker, ObjectMethod objectMethod, Object[] args) {
       Object returnedValue;
       /*
        * By using dynamic proxy, we are making it possible to print structured pretty log.

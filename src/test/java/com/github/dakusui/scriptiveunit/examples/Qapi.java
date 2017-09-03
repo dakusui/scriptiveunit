@@ -22,6 +22,7 @@ import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import static com.github.dakusui.scriptiveunit.core.JsonUtils.*;
@@ -64,8 +65,14 @@ public class Qapi {
   public static class Misc {
     @SuppressWarnings("unused")
     @Scriptable
-    public Func<String> content(Func<Entry> entry) {
+    public Func<String> _content(Func<Entry> entry) {
       return input -> entry.apply(input).content();
+    }
+
+    @SuppressWarnings("unused")
+    @Scriptable
+    public Func<Function<Entry, String>> content() {
+      return input -> entry -> entry.content;
     }
   }
 
