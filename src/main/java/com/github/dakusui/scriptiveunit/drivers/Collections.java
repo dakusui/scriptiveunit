@@ -4,9 +4,7 @@ import com.github.dakusui.scriptiveunit.annotations.Scriptable;
 import com.github.dakusui.scriptiveunit.core.Exceptions;
 import com.github.dakusui.scriptiveunit.model.Stage;
 import com.github.dakusui.scriptiveunit.model.func.Func;
-import com.github.dakusui.scriptiveunit.model.func.FuncInvoker;
 import com.github.dakusui.scriptiveunit.model.statement.Form;
-import com.github.dakusui.scriptiveunit.model.statement.Statement;
 import com.google.common.collect.Iterables;
 
 import java.util.Map;
@@ -47,24 +45,31 @@ public class Collections {
   }
 
   @Scriptable
-  public <E> Func<Iterable<? extends E>> filter2(Func<Iterable<? extends E>> iterable, Func<Statement> predicate) {
+  public <E> Func<Iterable<? extends E>> filter2(Func<Iterable<? extends E>> iterable, Func<Func<Boolean>> predicate) {
     return (Stage i) -> {
       //noinspection unchecked
       return (Iterable<? extends E>) stream(
           requireNonNull(iterable.apply(i)).<E>spliterator(),
           false
+      ).peek(
+          s -> System.err.println("<<" + s + ">>")
       ).filter(
-          entry -> (boolean) predicate.apply(Form.Utils.createWrappedStage(i, new Func[] { new Func() {
-            @Override
-            public Object apply(Stage input) {
-              return entry;
-            }
+          entry -> {
+            Stage wrapped =Form.Utils.createWrappedStage(i, new Func[] { new Func() {
+              @Override
+              public Object apply(Stage input) {
+                return entry;
+              }
 
-            @Override
-            public Object apply(Object o) {
-              throw Exceptions.I.impossibleLineReached();
-            }
-          } })).compile(FuncInvoker.create()).apply(i)
+              @Override
+              public Object apply(Object o) {
+                throw Exceptions.I.impossibleLineReached();
+              }
+            }});
+            return predicate.apply(wrapped).apply(wrapped);
+          }
+      ).peek(
+          s -> System.err.println("[[" + s + "]]")
       ).collect(
           Collectors.<E>toList()
       );
