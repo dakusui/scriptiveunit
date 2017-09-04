@@ -65,14 +65,8 @@ public class Qapi {
   public static class Misc {
     @SuppressWarnings("unused")
     @Scriptable
-    public Func<String> _content(Func<Entry> entry) {
+    public Func<String> content(Func<Entry> entry) {
       return input -> entry.apply(input).content();
-    }
-
-    @SuppressWarnings("unused")
-    @Scriptable
-    public Func<Function<Entry, String>> content() {
-      return input -> entry -> entry.content;
     }
   }
 

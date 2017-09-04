@@ -18,9 +18,9 @@
       "given": ["equals", ["attr", "terms"], ["quote", "iPhone"]],
       "when": ["issue", ["query"] ],
       "then": [">",
-        ["size", ["filter", ["result"],
+        ["size", ["filter2", ["result"],
           ["lambda",
-            ["matches", ["content"], "iPhone"] ]
+            ["matches", ["content", [0]], "iPhone"] ]
         ]],
         3
       ]

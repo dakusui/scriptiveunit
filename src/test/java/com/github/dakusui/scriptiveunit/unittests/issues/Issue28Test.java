@@ -17,7 +17,6 @@ public class Issue28Test extends TestBase {
   @RunWith(ScriptiveSuiteSet.class)
   @ScriptiveSuiteSet.SuiteScripts(
       driverClass = Qapi.class,
-      prefix = "",
       includes = { ".*issue-28.json" }
   )
   public static class Issue28 {
@@ -26,7 +25,6 @@ public class Issue28Test extends TestBase {
   @RunWith(ScriptiveSuiteSet.class)
   @ScriptiveSuiteSet.SuiteScripts(
       driverClass = Qapi.class,
-      prefix = "",
       includes = { ".*issue-28a.json" }
   )
   public static class Issue28a {
@@ -35,7 +33,6 @@ public class Issue28Test extends TestBase {
   @RunWith(ScriptiveSuiteSet.class)
   @ScriptiveSuiteSet.SuiteScripts(
       driverClass = Qapi.class,
-      prefix = "",
       includes = { ".*issue-28-regression.json" }
   )
   public static class Issue28Regression {
@@ -44,14 +41,13 @@ public class Issue28Test extends TestBase {
   @RunWith(ScriptiveSuiteSet.class)
   @ScriptiveSuiteSet.SuiteScripts(
       driverClass = Qapi.class,
-      prefix = "",
       includes = { ".*print_twice.json" }
   )
   public static class Issue28RegressionPrintTwice {
   }
 
   @Test
-  public void testIssue28RegressionDeformExample() {
+  public void testIssue28RegressionPrintTwice() {
     Result result = runClasses(Issue28RegressionPrintTwice.class);
     for (int i = 0; i < result.getFailures().size(); i++) {
       printFailure(result.getFailures().get(i));

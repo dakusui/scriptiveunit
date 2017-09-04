@@ -34,12 +34,19 @@ public interface FuncInvoker {
     };
   }
 
+  static FuncInvoker create(Map<List<Object>, Object> memo) {
+    return new Impl(0, memo);
+  }
+  static FuncInvoker create() {
+    return create(FuncInvoker.createMemo());
+  }
+
   class Impl implements FuncInvoker {
     private final Writer writer;
     private       int    indent;
     final Map<List<Object>, Object> memo;
 
-    public Impl(int initialIndent, Map<List<Object>, Object> memo) {
+    private Impl(int initialIndent, Map<List<Object>, Object> memo) {
       this.indent = initialIndent;
       this.writer = new Writer();
       this.memo = memo;

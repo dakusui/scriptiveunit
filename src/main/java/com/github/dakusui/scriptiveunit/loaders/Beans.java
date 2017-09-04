@@ -160,7 +160,7 @@ public enum Beans {
               Object result =
                   statement == null ?
                       nop() :
-                      toFunc(statement, new FuncInvoker.Impl(0, FuncInvoker.createMemo())).apply(input);
+                      toFunc(statement, FuncInvoker.create()).apply(input);
               //noinspection ConstantConditions
               return Actions.named(
                   actionName,
@@ -256,7 +256,7 @@ public enum Beans {
                 Statement statement = statementFactory.create(each);
                 Func<Boolean> func = toFunc(
                     statement,
-                    new FuncInvoker.Impl(0, FuncInvoker.createMemo())
+                    FuncInvoker.create()
                 );
                 return Constraint.create(
                     in -> requireNonNull(func.apply(Stage.Factory.createConstraintGenerationStage(config, statementFactory, in))),
@@ -401,7 +401,7 @@ public enum Beans {
         private Source<Tuple> createGiven(final TestItem testItem, final Report report, final Session session, Map<List<Object>, Object> memo) {
           Tuple testCaseTuple = testItem.getTestCaseTuple();
           return new Source<Tuple>() {
-            FuncInvoker funcInvoker = new FuncInvoker.Impl(0, memo);
+            FuncInvoker funcInvoker = FuncInvoker.create(memo);
             Stage givenStage = Stage.Factory.createOracleLevelStage(GIVEN, session, testItem, report);
             Statement givenStatement = givenStage.getStatementFactory().create(givenClause);
 
@@ -434,7 +434,7 @@ public enum Beans {
 
         private Pipe<Tuple, TestIO> createWhen(final TestItem testItem, final Report report, final Session session, Map<List<Object>, Object> memo) {
           return new Pipe<Tuple, TestIO>() {
-            FuncInvoker funcInvoker = new FuncInvoker.Impl(0, memo);
+            FuncInvoker funcInvoker = FuncInvoker.create(memo);
 
             @Override
             public TestIO apply(Tuple testCase, Context context) {
@@ -456,7 +456,7 @@ public enum Beans {
 
         private Sink<TestIO> createThen(TestItem testItem, final Report report, final Session session, Map<List<Object>, Object> memo) {
           return new Sink<TestIO>() {
-            FuncInvoker funcInvoker = new FuncInvoker.Impl(0, memo);
+            FuncInvoker funcInvoker = FuncInvoker.create(memo);
 
             @Override
             public void apply(TestIO testIO, Context context) {
@@ -501,7 +501,7 @@ public enum Beans {
 
         private <T extends AssertionError> Sink<T> onTestFailure(TestItem testItem, Report report, Session session, Map<List<Object>, Object> memo) {
           return new Sink<T>() {
-            FuncInvoker funcInvoker = new FuncInvoker.Impl(0, memo);
+            FuncInvoker funcInvoker = FuncInvoker.create(memo);
 
             @Override
             public void apply(T input, Context context) {
@@ -530,7 +530,7 @@ public enum Beans {
             return (Action) NOP_CLAUSE;
           Stage stage = Stage.Factory.createOracleLevelStage(stageType, session, testItem, report);
           Statement statement = stage.getStatementFactory().create(clause);
-          FuncInvoker funcInvoker = new FuncInvoker.Impl(0, memo);
+          FuncInvoker funcInvoker = FuncInvoker.create(memo);
           return Beans.<Action>toFunc(statement, funcInvoker).apply(stage);
         }
       };

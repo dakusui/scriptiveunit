@@ -3,41 +3,22 @@ package com.github.dakusui.scriptiveunit.model.statement;
 import com.github.dakusui.scriptiveunit.model.func.Func;
 
 import java.util.Iterator;
-import java.util.LinkedList;
 
 public interface Arguments extends Iterable<Statement> {
   static Arguments create(Statement.Factory statementFactory, Iterable<Func> args) {
-    return new Arguments() {
+    return () -> new Iterator<Statement>() {
+      Iterator<Func> i = args.iterator();
+
       @Override
-      public Iterator<Statement> iterator() {
-        return new Iterator<Statement>() {
-          Iterator<Func> i = args.iterator();
-
-          @Override
-          public boolean hasNext() {
-            return i.hasNext();
-          }
-
-          @Override
-          public Statement next() {
-            return statementFactory.create(i.next());
-          }
-        };
+      public boolean hasNext() {
+        return i.hasNext();
       }
 
       @Override
-      public String toString() {
-        return format();
+      public Statement next() {
+        return statementFactory.create(i.next());
       }
     };
-  }
-
-  default String format() {
-    return new LinkedList<String>() {{
-      for (Statement each : Arguments.this) {
-        add(each.format());
-      }
-    }}.toString();
   }
 
   class Factory {

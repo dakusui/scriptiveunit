@@ -3,7 +3,6 @@ package com.github.dakusui.scriptiveunit.model.statement;
 import com.github.dakusui.scriptiveunit.Session;
 import com.github.dakusui.scriptiveunit.exceptions.SyntaxException;
 import com.github.dakusui.scriptiveunit.exceptions.TypeMismatch;
-import com.github.dakusui.scriptiveunit.model.Stage;
 import com.github.dakusui.scriptiveunit.model.func.Func;
 import com.github.dakusui.scriptiveunit.model.func.FuncHandler;
 import com.github.dakusui.scriptiveunit.model.func.FuncInvoker;
@@ -21,22 +20,13 @@ import static java.util.Objects.requireNonNull;
 public interface Statement {
   Func compile(FuncInvoker invoker);
 
-  String format();
-
   interface Atom extends Statement {
-    default String format() {
-      return "atom";
-    }
   }
 
   interface Nested extends Statement {
     Form getForm();
 
     Arguments getArguments();
-
-    default String format() {
-      return String.format("nested:%s,%s", getForm(), getArguments());
-    }
   }
 
   class Factory {
@@ -56,8 +46,8 @@ public interface Statement {
       @SuppressWarnings("unchecked") List<Func> raw = (List<Func>) object;
       Object car = Utils.car(raw);
       if (car instanceof String) {
-        Form form = this.formFactory.create(String.class.cast(car));
         Arguments arguments = Arguments.create(this, Utils.cdr(raw));
+        Form form = this.formFactory.create(String.class.cast(car), arguments);
         return new Nested() {
           @Override
           public Form getForm() {
@@ -75,12 +65,7 @@ public interface Statement {
           }
         };
       } else if (car instanceof Integer) {
-        return (Atom) invoker -> (Func<Object>) new Func<Object>() {
-          @Override
-          public Object apply(Stage input) {
-            return input.getArgument((Integer) car);
-          }
-        };
+        return (Atom) invoker -> (Func<Object>) input -> input.getArgument((Integer) car);
       }
       throw headOfCallMustBeString(car);
     }
@@ -103,7 +88,7 @@ public interface Statement {
         if (((Nested) statement).getForm().isAccessor()) {
           for (Statement each : ((Nested) statement).getArguments()) {
             if (each instanceof Atom) {
-              work.add(Objects.toString(each.compile(new FuncInvoker.Impl(0, FuncInvoker.createMemo()))));
+              work.add(Objects.toString(each.compile(FuncInvoker.create())));
             } else {
               throw SyntaxException.parameterNameShouldBeSpecifiedWithConstant((Nested) statement);
             }

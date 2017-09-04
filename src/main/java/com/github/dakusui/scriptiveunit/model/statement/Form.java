@@ -2,24 +2,21 @@ package com.github.dakusui.scriptiveunit.model.statement;
 
 import com.github.dakusui.scriptiveunit.ScriptiveUnit;
 import com.github.dakusui.scriptiveunit.Session;
-import com.github.dakusui.scriptiveunit.annotations.Doc;
-import com.github.dakusui.scriptiveunit.annotations.Scriptable;
 import com.github.dakusui.scriptiveunit.core.Exceptions;
 import com.github.dakusui.scriptiveunit.core.ObjectMethod;
-import com.github.dakusui.scriptiveunit.exceptions.ScriptiveUnitException;
 import com.github.dakusui.scriptiveunit.model.Stage;
 import com.github.dakusui.scriptiveunit.model.func.Func;
 import com.github.dakusui.scriptiveunit.model.func.FuncInvoker;
-import com.google.common.collect.ImmutableList;
 
 import java.lang.reflect.Array;
 import java.util.*;
 import java.util.function.Function;
 import java.util.function.Supplier;
+import java.util.stream.Stream;
 
 import static com.github.dakusui.scriptiveunit.core.Utils.check;
 import static com.github.dakusui.scriptiveunit.exceptions.ScriptiveUnitException.indexOutOfBounds;
-import static com.google.common.collect.Iterables.concat;
+import static com.google.common.collect.Iterables.getOnlyElement;
 import static com.google.common.collect.Iterables.toArray;
 import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
@@ -32,21 +29,46 @@ public interface Form {
   boolean isAccessor();
 
   abstract class Base implements Form {
-    final ObjectMethod objectMethod;
+    List<Func> toFuncs(FuncInvoker funcInvoker, Arguments arguments) {
+      return stream(
+          arguments.spliterator(), false
+      ).map(
+          statement -> statement.compile(funcInvoker)
+      ).collect(
+          toList()
+      );
+    }
+  }
 
-    Base(ObjectMethod objectMethod) {
-      this.objectMethod = objectMethod;
+  enum Utils {
+    ;
+
+    static <T> T car(T[] arr) {
+      return Exceptions.I.requireValue(v -> v.length > 0, Exceptions.I.requireNonNull(arr))[0];
     }
 
-
-    @Override
-    public boolean isAccessor() {
-      return this.objectMethod.isAccessor();
+    static <T> T[] cdr(T[] arr) {
+      return Arrays.copyOfRange(
+          Exceptions.I.requireValue(v -> v.length > 0, Exceptions.I.requireNonNull(arr)),
+          1,
+          arr.length
+      );
     }
 
-    @Override
-    public String toString() {
-      return String.format("form:%s", this.objectMethod);
+    public static Stage createWrappedStage(Stage input, Func<?>[] args) {
+      return new Stage.Delegating(input) {
+        @Override
+        public <U> U getArgument(int index) {
+          check(index < sizeOfArguments(), () -> indexOutOfBounds(index, sizeOfArguments()));
+          //noinspection unchecked
+          return (U) args[index].apply(input);
+        }
+
+        @Override
+        public int sizeOfArguments() {
+          return args.length;
+        }
+      };
     }
   }
 
@@ -64,11 +86,11 @@ public interface Form {
     }
 
     @SuppressWarnings("WeakerAccess")
-    public Form create(String name) {
+    public Form create(String name, Arguments arguments) {
       if ("lambda".equals(name))
-        return new Lambda();
+        return new UserForm(() -> getOnlyElement(arguments));
       return Factory.this.getObjectMethodFromDriver(name).map(
-          (Function<ObjectMethod, Form>) FormImpl::new
+          (Function<ObjectMethod, Form>) MethodBasedImpl::new
       ).orElseGet(
           () -> createUserForm(name)
       );
@@ -76,37 +98,16 @@ public interface Form {
 
     private Form createUserForm(String name) {
       return new UserForm(
-          rename(
-              userFunc(),
-              name
-          ),
-          getUserDefinedFormClauseFromSessionByName(name).orElseThrow(
-              () -> new NullPointerException(format("Undefined form '%s' was referenced.", name))
+          () -> statementFactory.create(
+              getUserDefinedFormClauseFromSessionByName(name).orElseThrow(
+                  () -> new NullPointerException(format("Undefined form '%s' was referenced.", name))
+              ).get()
           )
       );
     }
 
-    /*
-     * This method is referenced reflectively.
-     */
-    @SuppressWarnings({ "unused", "WeakerAccess" })
-    @Scriptable
-    public static Func<Object> userFunc(Func<List<Object>> funcBody, Func<?>... args) {
-
-      return (Stage input) -> {
-        Stage wrappedStage = createWrappedStage(input, args);
-        return toFunc(funcBody, wrappedStage)
-            .<Func<Object>>apply(wrappedStage);
-      };
-    }
-
-    public static Func toFunc(Func<List<Object>> funcBody, Stage wrappedStage) {
-      return toStatement(funcBody, wrappedStage)
-          .compile(new FuncInvoker.Impl(0, FuncInvoker.createMemo()));
-    }
-
-    private static Statement toStatement(Func<List<Object>> funcBody, Stage wrappedStage) {
-      return wrappedStage.getStatementFactory().create(funcBody.apply(wrappedStage));
+    private static Func toFunc(Statement statement) {
+      return statement.compile(FuncInvoker.create());
     }
 
     private Optional<Supplier<List<Object>>> getUserDefinedFormClauseFromSessionByName(String name) {
@@ -124,15 +125,6 @@ public interface Form {
       return Optional.empty();
     }
 
-    private ObjectMethod userFunc() {
-      try {
-        return ObjectMethod.create(null, Form.Factory.class.getMethod("userFunc", Func.class, Func[].class), Collections.emptyMap());
-      } catch (NoSuchMethodException e) {
-        throw ScriptiveUnitException.wrap(e);
-      }
-    }
-
-
     private Object[] shrinkTo(Class<?> componentType, int count, Object[] args) {
       Object[] ret = new Object[count];
       Object var = Array.newInstance(componentType, args.length - count + 1);
@@ -145,131 +137,65 @@ public interface Form {
       return ret;
     }
 
-    private ObjectMethod rename(ObjectMethod objectMethod, String newName) {
-      requireNonNull(objectMethod);
-      return new ObjectMethod() {
-        @Override
-        public String getName() {
-          return newName;
-        }
-
-        @Override
-        public int getParameterCount() {
-          return objectMethod.getParameterCount();
-        }
-
-        @Override
-        public Class<?>[] getParameterTypes() {
-          return objectMethod.getParameterTypes();
-        }
-
-        @Override
-        public Doc getParameterDoc(int index) {
-          return objectMethod.getParameterDoc(index);
-        }
-
-        @Override
-        public Doc doc() {
-          return objectMethod.doc();
-        }
-
-        @Override
-        public boolean isVarArgs() {
-          return objectMethod.isVarArgs();
-        }
-
-        @Override
-        public boolean isAccessor() {
-          return objectMethod.isAccessor();
-        }
-
-        @Override
-        public Object invoke(Object... args) {
-          return objectMethod.invoke(args);
-        }
-      };
-    }
-
     private String getMethodName(ObjectMethod method) {
       return method.getName();
     }
 
-    private class FormImpl extends Base {
-      private FormImpl(ObjectMethod objectMethod) {
-        super(objectMethod);
+    private class MethodBasedImpl extends Base {
+      final ObjectMethod objectMethod;
+
+      private MethodBasedImpl(ObjectMethod objectMethod) {
+        this.objectMethod = objectMethod;
+      }
+
+      @Override
+      public boolean isAccessor() {
+        return this.objectMethod.isAccessor();
+      }
+
+      @Override
+      public String toString() {
+        return String.format("form:%s", this.objectMethod);
       }
 
       @Override
       public Func apply(FuncInvoker funcInvoker, Arguments arguments) {
-        Object[] args = toArray(
-            stream(
-                arguments.spliterator(), false
-            ).map(
-                statement -> statement.compile(funcInvoker)
-            ).collect(
-                toList()
-            ),
+        Func[] args = toArray(
+            toFuncs(funcInvoker, arguments),
             Func.class
         );
+        return createFunc(funcInvoker, args);
+      }
+
+      Func createFunc(FuncInvoker funcInvoker, Func[] args) {
+        Object[] argValues;
         if (requireNonNull(objectMethod).isVarArgs()) {
           int parameterCount = objectMethod.getParameterCount();
-          args = Factory.this.shrinkTo(objectMethod.getParameterTypes()[parameterCount - 1].getComponentType(), parameterCount, args);
-        }
-        return funcFactory.create(funcInvoker, objectMethod, args);
+          argValues = Factory.this.shrinkTo(objectMethod.getParameterTypes()[parameterCount - 1].getComponentType(), parameterCount, args);
+        } else
+          argValues = args;
+        return funcFactory.create(funcInvoker, objectMethod, argValues);
       }
     }
 
-    private static Stage createWrappedStage(Stage input, Func<?>[] args) {
-      List<Object> argValues = Arrays.stream(args).map((Func each) -> each.apply(input)).collect(toList());
-      return new Stage.Delegating(input) {
-        @Override
-        public <U> U getArgument(int index) {
-          check(index < sizeOfArguments(), () -> indexOutOfBounds(index, sizeOfArguments()));
-          //noinspection unchecked
-          return (U) argValues.get(index);
-        }
+    private static class UserForm extends Base {
+      private final Supplier<Statement> userDefinedFormStatementSupplier;
 
-        @Override
-        public int sizeOfArguments() {
-          return argValues.size();
-        }
-      };
-    }
-
-    private class UserForm extends FormImpl {
-      private final Supplier<List<Object>> userDefinedFormClauseSupplier;
-
-      UserForm(ObjectMethod objectMethod, Supplier<List<Object>> userDefinedFormClauseSupplier) {
-        super(objectMethod);
-        this.userDefinedFormClauseSupplier = userDefinedFormClauseSupplier;
+      UserForm(Supplier<Statement> userDefinedFormStatementSupplier) {
+        this.userDefinedFormStatementSupplier = userDefinedFormStatementSupplier;
       }
 
       @Override
       public Func apply(FuncInvoker funcInvoker, Arguments arguments) {
-        return super.apply(funcInvoker, new Arguments() {
-          Iterable<Statement> statements = concat(
-              ImmutableList.of(statementFactory.create(userDefinedFormClauseSupplier.get())),
-              arguments
-          );
-
-          @SuppressWarnings("NullableProblems")
-          @Override
-          public Iterator<Statement> iterator() {
-            return statements.iterator();
-          }
-        });
-      }
-    }
-
-    private static class Lambda implements Form {
-      @Override
-      public Func apply(FuncInvoker funcInvoker, Arguments arguments) {
-        Func ret = getOnlyElement(arguments).compile(funcInvoker);
-        int i = 0;
-        for (Statement each : arguments) {
-          System.out.printf("args[%d]:%s%n", i++, each.format());
-        }
-        return ret;
+        return createFunc(
+            toArray(
+                Stream.concat(
+                    Stream.of((Func<Statement>) input -> userDefinedFormStatementSupplier.get()),
+                    toFuncs(funcInvoker, arguments).stream()
+                ).collect(toList()),
+                Func.class
+            )
+        );
       }
 
       @Override
@@ -277,12 +203,19 @@ public interface Form {
         return false;
       }
 
-      private static Statement getOnlyElement(Arguments arguments) {
-        Iterator<Statement> i = arguments.iterator();
-        Statement ret = Exceptions.I.requireValue(Iterator::hasNext, i).next();
-        Exceptions.I.requireValue(v -> !v.hasNext(), i);
-        return ret;
+      @SuppressWarnings("unchecked")
+      Func createFunc(Func[] args) {
+        return userFunc(Utils.car(args), Utils.cdr(args));
       }
+
+      private static Func<Object> userFunc(Func<Statement> funcBody, Func<?>... args) {
+        return (Stage input) -> {
+          Stage wrappedStage = Utils.createWrappedStage(input, args);
+          return toFunc(funcBody.apply(wrappedStage))
+              .<Func<Object>>apply(wrappedStage);
+        };
+      }
+
     }
   }
 }
