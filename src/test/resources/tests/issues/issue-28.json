@@ -18,7 +18,7 @@
       "given": ["equals", ["attr", "terms"], ["quote", "iPhone"]],
       "when": ["issue", ["query"] ],
       "then": ["==",
-        ["size", ["filter2", ["result"],
+        ["size", ["filter", ["result"],
           ["lambda", ["and",
             ["matches", ["content", [0]], ".*iPhone.*"],
             ["matches", ["content", [0]], ".*シルバー.*"] ] ]
