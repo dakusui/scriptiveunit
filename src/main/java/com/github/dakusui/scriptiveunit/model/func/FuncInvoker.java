@@ -77,6 +77,7 @@ public interface FuncInvoker {
       this.enter();
       try {
         this.writeLine("%s(", alias);
+        System.err.println(indent() + String.format("%s", target));
         if (targetIsMemoized) {
           //noinspection unchecked
           ret = computeIfAbsent(target, stage, key);

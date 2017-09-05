@@ -12,6 +12,7 @@ import com.github.dakusui.scriptiveunit.core.Preprocessor;
 import com.github.dakusui.scriptiveunit.drivers.*;
 import com.github.dakusui.scriptiveunit.drivers.actions.Basic;
 import com.github.dakusui.scriptiveunit.loaders.json.JsonBasedLoader;
+import com.github.dakusui.scriptiveunit.model.Stage;
 import com.github.dakusui.scriptiveunit.model.func.Func;
 import com.google.common.collect.Maps;
 import org.codehaus.jackson.JsonNode;
@@ -22,7 +23,6 @@ import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import static com.github.dakusui.scriptiveunit.core.JsonUtils.*;
@@ -66,7 +66,15 @@ public class Qapi {
     @SuppressWarnings("unused")
     @Scriptable
     public Func<String> content(Func<Entry> entry) {
-      return input -> entry.apply(input).content();
+      return input ->  {
+        Entry value = apply(entry, input);
+        System.err.println("content:<" + entry + "->" + value + ">");
+        return value.content();
+      };
+    }
+
+    Entry apply(Func<Entry> entry, Stage input) {
+      return entry.apply(input);
     }
   }
 

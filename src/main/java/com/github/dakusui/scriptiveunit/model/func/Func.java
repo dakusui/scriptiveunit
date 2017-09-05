@@ -26,7 +26,7 @@ public interface Func<O> extends
   @Override
   default void formatTo(Formatter formatter, int flags, int width, int precision) {
     try {
-      formatter.out().append("(unprintable)");
+      formatter.out().append(this.toString());
     } catch (IOException e) {
       throw wrap(e);
     }

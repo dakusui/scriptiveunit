@@ -1,7 +1,6 @@
 package com.github.dakusui.scriptiveunit.drivers;
 
 import com.github.dakusui.scriptiveunit.annotations.Scriptable;
-import com.github.dakusui.scriptiveunit.core.Exceptions;
 import com.github.dakusui.scriptiveunit.model.Stage;
 import com.github.dakusui.scriptiveunit.model.func.Func;
 import com.github.dakusui.scriptiveunit.model.statement.Form;
@@ -54,18 +53,8 @@ public class Collections {
       ).peek(
           s -> System.err.println("<<" + s + ">>")
       ).filter(
-          entry -> {
-            Stage wrapped =Form.Utils.createWrappedStage(i, new Func[] { new Func() {
-              @Override
-              public Object apply(Stage input) {
-                return entry;
-              }
-
-              @Override
-              public Object apply(Object o) {
-                throw Exceptions.I.impossibleLineReached();
-              }
-            }});
+          (E entry) -> {
+            Stage wrapped = wrapValueAsArgumentInStage(i, entry);
             return predicate.apply(wrapped).apply(wrapped);
           }
       ).peek(
@@ -74,6 +63,14 @@ public class Collections {
           Collectors.<E>toList()
       );
     };
+  }
+
+  private static <E> Stage wrapValueAsArgumentInStage(Stage i, E entry) {
+    return Form.Utils.createWrappedStage(i,  toFunc(entry));
+  }
+
+  private static <E> Func<E> toFunc(E entry) {
+    return input -> entry;
   }
 
   @SuppressWarnings("unused")

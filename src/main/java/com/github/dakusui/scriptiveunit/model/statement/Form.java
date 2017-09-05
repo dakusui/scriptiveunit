@@ -9,7 +9,10 @@ import com.github.dakusui.scriptiveunit.model.func.Func;
 import com.github.dakusui.scriptiveunit.model.func.FuncInvoker;
 
 import java.lang.reflect.Array;
-import java.util.*;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
@@ -211,8 +214,7 @@ public interface Form {
       private static Func<Object> userFunc(Func<Statement> funcBody, Func<?>... args) {
         return (Stage input) -> {
           Stage wrappedStage = Utils.createWrappedStage(input, args);
-          return toFunc(funcBody.apply(wrappedStage))
-              .<Func<Object>>apply(wrappedStage);
+          return toFunc(funcBody.apply(input)).<Func<Object>>apply(wrappedStage);
         };
       }
 

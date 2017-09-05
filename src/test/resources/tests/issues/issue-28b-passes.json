@@ -1,0 +1,17 @@
+{
+  "$extends":["examples/regularbase.json"],
+  "description":"Query-Result model example",
+  "factorSpace": {
+    "factors": {
+    }
+  },
+  "runnerType": "groupByTestCase",
+  "testOracles": [
+    {
+      "description": "lambda passes because condition is met",
+      "given":["always"],
+      "when": ["nop"],
+      "then": ["lambda",[">", 100, 3]]
+    }
+  ]
+}

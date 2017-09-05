@@ -33,6 +33,22 @@ public class Issue28Test extends TestBase {
   @RunWith(ScriptiveSuiteSet.class)
   @ScriptiveSuiteSet.SuiteScripts(
       driverClass = Qapi.class,
+      includes = { ".*issue-28b-fails.json" }
+  )
+  public static class Issue28bFails {
+  }
+
+  @RunWith(ScriptiveSuiteSet.class)
+  @ScriptiveSuiteSet.SuiteScripts(
+      driverClass = Qapi.class,
+      includes = { ".*issue-28b-passes.json" }
+  )
+  public static class Issue28bPasses {
+  }
+
+  @RunWith(ScriptiveSuiteSet.class)
+  @ScriptiveSuiteSet.SuiteScripts(
+      driverClass = Qapi.class,
       includes = { ".*issue-28-regression.json" }
   )
   public static class Issue28Regression {
@@ -44,6 +60,28 @@ public class Issue28Test extends TestBase {
       includes = { ".*print_twice.json" }
   )
   public static class Issue28RegressionPrintTwice {
+  }
+
+  @RunWith(ScriptiveSuiteSet.class)
+  @ScriptiveSuiteSet.SuiteScripts(
+      driverClass = Qapi.class,
+      includes = { ".*issue-28-regression-nested-call.json" }
+  )
+  public static class Issue28RegressionPrintTwiceNested {
+  }
+
+  @Test
+  public void testIssue28RegressionPrintTwiceNested() {
+    Result result = runClasses(Issue28RegressionPrintTwiceNested.class);
+    for (int i = 0; i < result.getFailures().size(); i++) {
+      printFailure(result.getFailures().get(i));
+    }
+    assertThat(
+        result,
+        asListOf(Failure.class, Result::getFailures)
+            .check(isEmpty())
+            .$()
+    );
   }
 
   @Test
@@ -90,7 +128,7 @@ public class Issue28Test extends TestBase {
 
   @Test
   public void testIssue28a() {
-    Result result = runClasses(Issue28.class);
+    Result result = runClasses(Issue28a.class);
     for (int i = 0; i < result.getFailures().size(); i++) {
       printFailure(result.getFailures().get(i));
     }
@@ -101,6 +139,36 @@ public class Issue28Test extends TestBase {
             .$()
     );
   }
+
+  @Test
+  public void testIssue28bPasses() {
+    Result result = runClasses(Issue28bPasses.class);
+    for (int i = 0; i < result.getFailures().size(); i++) {
+      printFailure(result.getFailures().get(i));
+    }
+    assertThat(
+        result,
+        asListOf(Failure.class, Result::getFailures)
+            .check(isEmpty())
+            .$()
+    );
+  }
+
+
+  @Test
+  public void testIssue28bFails() {
+    Result result = runClasses(Issue28bFails.class);
+    for (int i = 0; i < result.getFailures().size(); i++) {
+      printFailure(result.getFailures().get(i));
+    }
+    assertThat(
+        result,
+        asListOf(Failure.class, Result::getFailures)
+            .check(isEmpty())
+            .$()
+    );
+  }
+
 
   private void printFailure(Failure failure) {
     System.err.printf(
