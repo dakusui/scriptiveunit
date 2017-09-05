@@ -29,7 +29,7 @@ public class Collections {
 
   @SuppressWarnings("unused")
   @Scriptable
-  public <E> Func<Iterable<? extends E>> filter(Func<Iterable<? extends E>> iterable, Func<Function<E, Boolean>> predicate) {
+  public <E> Func<Iterable<? extends E>> compatFilter(Func<Iterable<? extends E>> iterable, Func<Function<E, Boolean>> predicate) {
     return (Stage i) -> {
       //noinspection unchecked
       return (Iterable<? extends E>) stream(
@@ -43,8 +43,9 @@ public class Collections {
     };
   }
 
+  @SuppressWarnings("unused")
   @Scriptable
-  public <E> Func<Iterable<? extends E>> filter2(Func<Iterable<? extends E>> iterable, Func<Func<Boolean>> predicate) {
+  public <E> Func<Iterable<? extends E>> filter(Func<Iterable<? extends E>> iterable, Func<Func<Boolean>> predicate) {
     return (Stage i) -> {
       //noinspection unchecked
       return (Iterable<? extends E>) stream(
