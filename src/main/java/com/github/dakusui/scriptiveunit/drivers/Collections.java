@@ -3,6 +3,7 @@ package com.github.dakusui.scriptiveunit.drivers;
 import com.github.dakusui.scriptiveunit.annotations.Scriptable;
 import com.github.dakusui.scriptiveunit.model.Stage;
 import com.github.dakusui.scriptiveunit.model.func.Func;
+import com.github.dakusui.scriptiveunit.model.statement.Form;
 import com.google.common.collect.Iterables;
 
 import java.util.Map;
@@ -31,11 +32,45 @@ public class Collections {
   public <E> Func<Iterable<? extends E>> filter(Func<Iterable<? extends E>> iterable, Func<Function<E, Boolean>> predicate) {
     return (Stage i) -> {
       //noinspection unchecked
-      return (Iterable<? extends E>) stream(requireNonNull(iterable.apply(i))
-          .<E>spliterator(), false)
-          .filter(input -> requireNonNull(requireNonNull(predicate.apply(i)).apply(input)))
-          .collect(Collectors.<E>toList());
+      return (Iterable<? extends E>) stream(
+          requireNonNull(iterable.apply(i)).<E>spliterator(),
+          false
+      ).filter(
+          input -> requireNonNull(requireNonNull(predicate.apply(i)).apply(input))
+      ).collect(
+          Collectors.<E>toList()
+      );
     };
+  }
+
+  @Scriptable
+  public <E> Func<Iterable<? extends E>> filter2(Func<Iterable<? extends E>> iterable, Func<Func<Boolean>> predicate) {
+    return (Stage i) -> {
+      //noinspection unchecked
+      return (Iterable<? extends E>) stream(
+          requireNonNull(iterable.apply(i)).<E>spliterator(),
+          false
+      ).peek(
+          s -> System.err.println("<<" + s + ">>")
+      ).filter(
+          (E entry) -> {
+            Stage wrapped = wrapValueAsArgumentInStage(i, toFunc(entry));
+            return predicate.apply(wrapped).apply(wrapped);
+          }
+      ).peek(
+          s -> System.err.println("[[" + s + "]]")
+      ).collect(
+          Collectors.<E>toList()
+      );
+    };
+  }
+
+  private static <F> Func<F> toFunc(F entry) {
+    return input -> entry;
+  }
+
+  public static <E> Stage wrapValueAsArgumentInStage(Stage i,Func<E> value) {
+    return Form.Utils.createWrappedStage(i,  value);
   }
 
   @SuppressWarnings("unused")

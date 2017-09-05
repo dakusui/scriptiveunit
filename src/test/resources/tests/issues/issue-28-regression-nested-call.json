@@ -1,0 +1,25 @@
+{
+  "description":"User defined form",
+  "factorSpace": {
+    "factors":{"f":[1,2]}
+  },
+  "define": {
+    "print_twice_nested": ["sequential", ["print", ["print", [0]]]],
+    "print_twice": ["sequential", ["print", [0]], ["print", [0]]],
+    "double": ["+", [0], [0]],
+    "print_double" : ["print", ["double", [0]]]
+  },
+  "setUpBeforeAll": ["tag", "Hello!"],
+  "setUp": ["sequential", ["print_twice_nested", "Hi"], ["print_double", 123]],
+  "testOracles": [
+    {
+      "description": "Print a message twice",
+      "given": ["always"],
+      "when": ["nop"],
+      "then": ["always"],
+      "after": ["print", "AFTER CLAUSE"]
+    }
+  ],
+  "tearDown": ["print", "Hello tearDown"],
+  "tearDownAfterAll": ["print", "Hello tearDownAfterAll"]
+}

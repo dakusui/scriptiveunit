@@ -19,7 +19,6 @@ import static com.github.dakusui.scriptiveunit.exceptions.TypeMismatch.valueRetu
 @FunctionalInterface
 public interface Func<O> extends
     java.util.function.Function<Stage, O>,
-    com.google.common.base.Function<Stage, O>,
     Formattable {
   @Override
   O apply(Stage input);
@@ -27,7 +26,7 @@ public interface Func<O> extends
   @Override
   default void formatTo(Formatter formatter, int flags, int width, int precision) {
     try {
-      formatter.out().append("(unprintable)");
+      formatter.out().append(this.toString());
     } catch (IOException e) {
       throw wrap(e);
     }
@@ -53,7 +52,12 @@ public interface Func<O> extends
       this.funcHandler = funcHandler;
     }
 
-    public Func create(FuncInvoker invoker, ObjectMethod objectMethod, /* TODO: Actually, this can be Func[] */ Object[] args) {
+    /*
+     * args is an array can only contain Func or Func[]. Only the last element in it
+     * can become Func[] it is because only the last argument of a method can become
+     * a varargs.
+     */
+    public Func create(FuncInvoker invoker, ObjectMethod objectMethod, Object[] args) {
       Object returnedValue;
       /*
        * By using dynamic proxy, we are making it possible to print structured pretty log.
@@ -81,9 +85,9 @@ public interface Func<O> extends
         if (!"apply".equals(method.getName()))
           return method.invoke(target, args);
         check(args.length == 1 && args[0] instanceof Stage,
-            fail("The argument should be an array of length 1 and its first element should be '%s', but: %s",
-                Arrays.toString(args),
-                Stage.class.getCanonicalName()
+            fail("The argument should be an array of length 1 and its first element should be an instance of %s, but it was: %s",
+                Stage.class.getCanonicalName(),
+                Arrays.toString(args)
             ));
         return funcHandler.handle(invoker, target, (Stage) args[0], name);
       };

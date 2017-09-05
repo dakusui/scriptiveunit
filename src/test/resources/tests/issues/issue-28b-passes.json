@@ -1,0 +1,16 @@
+{
+  "description":"Query-Result model example",
+  "factorSpace": {
+    "factors": {
+    }
+  },
+  "runnerType": "groupByTestCase",
+  "testOracles": [
+    {
+      "description": "lambda passes because condition is met",
+      "given":["always"],
+      "when": ["nop"],
+      "then": ["evalintp", 1, ["lambda",["and", ["always"], [">", 100, 3]]]]
+    }
+  ]
+}

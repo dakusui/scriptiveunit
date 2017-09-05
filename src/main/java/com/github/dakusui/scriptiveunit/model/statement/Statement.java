@@ -14,6 +14,9 @@ import java.util.Objects;
 import static com.github.dakusui.scriptiveunit.exceptions.TypeMismatch.headOfCallMustBeString;
 import static java.util.Objects.requireNonNull;
 
+/**
+ * An interface that represents a grammatical structure of a script element.
+ */
 public interface Statement {
   Func compile(FuncInvoker invoker);
 
@@ -27,26 +30,24 @@ public interface Statement {
   }
 
   class Factory {
-    private final Form.Factory      formFactory;
-    private final Arguments.Factory argumentsFactory;
-    private final Func.Factory      funcFactory;
-    private final FuncHandler       funcHandler;
+    private final Form.Factory formFactory;
+    private final Func.Factory funcFactory;
+    private final FuncHandler  funcHandler;
 
     public Factory(Session session) {
       this.funcHandler = new FuncHandler();
       this.funcFactory = new Func.Factory(funcHandler);
-      this.argumentsFactory = new Arguments.Factory(this);
       this.formFactory = new Form.Factory(session, funcFactory, this);
     }
 
     public Statement create(Object object) throws TypeMismatch {
-      if (isAtom(object))
+      if (Utils.isAtom(object))
         return (Atom) invoker -> (Func<Object>) funcFactory.createConst(invoker, object);
       @SuppressWarnings("unchecked") List<Func> raw = (List<Func>) object;
-      Object car = car(raw);
+      Object car = Utils.car(raw);
       if (car instanceof String) {
+        Arguments arguments = Arguments.create(this, Utils.cdr(raw));
         Form form = this.formFactory.create(String.class.cast(car));
-        Arguments arguments = this.argumentsFactory.create(cdr(raw));
         return new Nested() {
           @Override
           public Form getForm() {
@@ -60,26 +61,15 @@ public interface Statement {
 
           @Override
           public Func<?> compile(FuncInvoker invoker) {
-            return (Func<?>) form.apply(invoker, arguments);
+            return (Func<?>) getForm().apply(invoker, arguments);
           }
         };
       } else if (car instanceof Integer) {
-        return invoker -> (Func<Object>) input -> input.getArgument((Integer) car);
+        return (Atom) invoker -> (Func<Object>) input -> input.getArgument((Integer) car);
       }
       throw headOfCallMustBeString(car);
     }
 
-    static boolean isAtom(Object object) {
-      return !(object instanceof List) || ((List) object).isEmpty();
-    }
-
-    static Object car(List<Func> raw) {
-      return raw.get(0);
-    }
-
-    static List<Func> cdr(List<Func> raw) {
-      return raw.subList(1, raw.size());
-    }
   }
 
   enum Utils {
@@ -98,7 +88,7 @@ public interface Statement {
         if (((Nested) statement).getForm().isAccessor()) {
           for (Statement each : ((Nested) statement).getArguments()) {
             if (each instanceof Atom) {
-              work.add(Objects.toString(each.compile(new FuncInvoker.Impl(0, FuncInvoker.createMemo()))));
+              work.add(Objects.toString(each.compile(FuncInvoker.create())));
             } else {
               throw SyntaxException.parameterNameShouldBeSpecifiedWithConstant((Nested) statement);
             }
@@ -110,6 +100,18 @@ public interface Statement {
         }
       }
       return work;
+    }
+
+    static boolean isAtom(Object object) {
+      return !(object instanceof List) || ((List) object).isEmpty();
+    }
+
+    static Object car(List<Func> raw) {
+      return raw.get(0);
+    }
+
+    static List<Func> cdr(List<Func> raw) {
+      return raw.subList(1, raw.size());
     }
   }
 }

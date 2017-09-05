@@ -1,4 +1,4 @@
-package com.github.dakusui.scriptiveunit.unittests.bugfixes;
+package com.github.dakusui.scriptiveunit.unittests.issues;
 
 import com.github.dakusui.jcunit8.factorspace.Parameter;
 import com.github.dakusui.jcunit8.runners.junit4.JCUnit8;
@@ -29,7 +29,7 @@ public class BugfixesTest {
     @SuppressWarnings("unused")ISSUE_1_NONTERMINATING_NUMBER_HANDLING {
       @Override
       public String getTestInput() {
-        return "tests/bugfixes/issue-2.json";
+        return "tests/issues/issue-2.json";
       }
 
       @Override

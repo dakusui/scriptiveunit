@@ -2,7 +2,6 @@ package com.github.dakusui.scriptiveunit;
 
 import com.github.dakusui.actionunit.Action;
 import com.github.dakusui.jcunit.core.tuples.Tuple;
-import com.github.dakusui.jcunit8.factorspace.Factor;
 import com.github.dakusui.scriptiveunit.annotations.Import;
 import com.github.dakusui.scriptiveunit.annotations.Load;
 import com.github.dakusui.scriptiveunit.annotations.Scriptable;
@@ -12,7 +11,6 @@ import com.github.dakusui.scriptiveunit.core.ObjectMethod;
 import com.github.dakusui.scriptiveunit.core.Utils;
 import com.github.dakusui.scriptiveunit.model.Stage;
 import com.github.dakusui.scriptiveunit.model.TestSuiteDescriptor;
-import com.github.dakusui.scriptiveunit.model.statement.Form;
 import org.junit.internal.runners.statements.RunBefores;
 import org.junit.runner.Runner;
 import org.junit.runners.Parameterized;
@@ -151,7 +149,7 @@ public class ScriptiveUnit extends Parameterized {
     Optional<Description> value =
         Stream.concat(
             getObjectMethodsFromImportedFieldsInObject(driverObject).stream().map(ObjectMethod::describe),
-            getUserDefinedFormClauses().entrySet().stream().map((Map.Entry<String, List<Object>> entry) -> Form.describe(entry.getKey(), entry.getValue()))
+            getUserDefinedFormClauses().entrySet().stream().map((Map.Entry<String, List<Object>> entry) -> Description.describe(entry.getKey(), entry.getValue()))
         ).filter(t -> functionName.equals(t.name())).findFirst();
     if (value.isPresent())
       return value.get();

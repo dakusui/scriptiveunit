@@ -1,0 +1,30 @@
+{
+  "$extends":["tests/issues/issue-28base.json"],
+  "description":"Query-Result model example",
+  "factorSpace": {
+    "factors": {
+      "service" : ["shoppingmall"],
+      "index" : {
+        "type":"simple",
+        "args":["item"]
+      },
+      "host" : ["localhost"]
+    }
+  },
+  "runnerType": "groupByTestCase",
+  "testOracles": [
+    {
+      "description": "{{@TESTSUITE}}: Searching {{terms}} should not return too many accessories",
+      "given": ["equals", ["attr", "terms"], ["quote", "iPhone"]],
+      "when": ["issue", ["query"] ],
+      "then": ["==",
+        ["size", ["filter2", ["result"],
+          ["lambda", ["and",
+            ["matches", ["content", [0]], ".*iPhone.*"],
+            ["matches", ["content", [0]], ".*シルバー.*"] ] ]
+        ]],
+        2
+      ]
+    }
+  ]
+}
