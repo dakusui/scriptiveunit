@@ -1,5 +1,5 @@
 {
-  "$extends":["tests/issues/issue28base.json"],
+  "$extends":["tests/issues/issue-28base.json"],
   "description":"Query-Result model example",
   "factorSpace": {
     "factors": {

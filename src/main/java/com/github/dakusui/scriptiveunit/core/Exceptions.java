@@ -3,7 +3,7 @@ package com.github.dakusui.scriptiveunit.core;
 import com.github.dakusui.faultsource.FaultSource;
 
 public enum Exceptions implements FaultSource {
-  I {
+  SCRIPTIVEUNIT {
     @Override
     public RuntimeException exceptionForCaughtFailure(String message, Throwable t) {
       throw new RuntimeException(message, t);

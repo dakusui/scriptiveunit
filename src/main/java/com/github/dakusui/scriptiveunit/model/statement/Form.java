@@ -2,18 +2,21 @@ package com.github.dakusui.scriptiveunit.model.statement;
 
 import com.github.dakusui.scriptiveunit.ScriptiveUnit;
 import com.github.dakusui.scriptiveunit.Session;
-import com.github.dakusui.scriptiveunit.core.Exceptions;
 import com.github.dakusui.scriptiveunit.core.ObjectMethod;
 import com.github.dakusui.scriptiveunit.model.Stage;
 import com.github.dakusui.scriptiveunit.model.func.Func;
 import com.github.dakusui.scriptiveunit.model.func.FuncInvoker;
 
 import java.lang.reflect.Array;
-import java.util.*;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
 
+import static com.github.dakusui.scriptiveunit.core.Exceptions.SCRIPTIVEUNIT;
 import static com.github.dakusui.scriptiveunit.core.Utils.check;
 import static com.github.dakusui.scriptiveunit.exceptions.ScriptiveUnitException.indexOutOfBounds;
 import static com.google.common.collect.Iterables.getOnlyElement;
@@ -29,7 +32,7 @@ public interface Form {
   boolean isAccessor();
 
   abstract class Base implements Form {
-    List<Func> toFuncs(FuncInvoker funcInvoker, Arguments arguments) {
+    List<Func> toFuncs(FuncInvoker funcInvoker, Iterable<Statement> arguments) {
       return stream(
           arguments.spliterator(), false
       ).map(
@@ -44,12 +47,12 @@ public interface Form {
     ;
 
     static <T> T car(T[] arr) {
-      return Exceptions.I.requireValue(v -> v.length > 0, Exceptions.I.requireNonNull(arr))[0];
+      return SCRIPTIVEUNIT.requireValue(v -> v.length > 0, SCRIPTIVEUNIT.requireNonNull(arr))[0];
     }
 
     static <T> T[] cdr(T[] arr) {
       return Arrays.copyOfRange(
-          Exceptions.I.requireValue(v -> v.length > 0, Exceptions.I.requireNonNull(arr)),
+          SCRIPTIVEUNIT.requireValue(v -> v.length > 0, SCRIPTIVEUNIT.requireNonNull(arr)),
           1,
           arr.length
       );
@@ -106,7 +109,7 @@ public interface Form {
       );
     }
 
-    private static Func toFunc(Statement statement) {
+    private static Func compile(Statement statement) {
       return statement.compile(FuncInvoker.create());
     }
 
@@ -186,7 +189,7 @@ public interface Form {
       }
 
       @Override
-      public Func apply(FuncInvoker funcInvoker, Arguments arguments) {
+      public Func<Object> apply(FuncInvoker funcInvoker, Arguments arguments) {
         return createFunc(
             toArray(
                 Stream.concat(
@@ -204,12 +207,12 @@ public interface Form {
       }
 
       @SuppressWarnings("unchecked")
-      Func createFunc(Func[] args) {
+      Func<Object> createFunc(Func[] args) {
         return userFunc(Utils.car(args), Utils.cdr(args));
       }
 
       private static Func<Object> userFunc(Func<Statement> statementFunc, Func<?>... args) {
-        return (Stage input) -> toFunc(statementFunc.apply(input)).<Func<Object>>apply(Utils.createWrappedStage(input, args));
+        return (Stage input) -> compile(statementFunc.apply(input)).<Func<Object>>apply(Utils.createWrappedStage(input, args));
       }
     }
 
@@ -218,9 +221,10 @@ public interface Form {
       private Lambda() {
       }
 
+      @SuppressWarnings("unchecked")
       @Override
-      public Func apply(FuncInvoker funcInvoker, Arguments arguments) {
-        return (Func<Object>) input -> (Func<Object>) i -> getOnlyElement(toFuncs(funcInvoker, arguments)).apply(input);
+      public Func<Func<Object>> apply(FuncInvoker funcInvoker, Arguments arguments) {
+        return (Stage ii) -> getOnlyElement(toFuncs(funcInvoker, arguments));
       }
 
       @Override

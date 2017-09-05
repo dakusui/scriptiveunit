@@ -66,26 +66,15 @@ public class Qapi {
     @SuppressWarnings("unused")
     @Scriptable
     public Func<String> content(Func<Entry> entry) {
-      return input ->  {
-        Entry value = apply(entry, input);
-        System.err.println("content:<" + entry + "->" + value + ">");
-        return value.content();
-      };
+      return input -> entry.apply(input).content();
     }
-
-    Entry apply(Func<Entry> entry, Stage input) {
-      return entry.apply(input);
-    }
-
 
     @SuppressWarnings("unused")
     @Scriptable
     public Func<Boolean> evalintp(Func<Integer> value, Func<Func<Boolean>> predicate) {
-      return new Func<Boolean>() {
-        @Override
-        public Boolean apply(Stage input) {
-          return predicate.apply(Collections.wrapValueAsArgumentInStage(input, value)).apply(input);
-        }
+      return input -> {
+        Stage wrapped = Collections.wrapValueAsArgumentInStage(input, value);
+        return predicate.apply(wrapped).apply(wrapped);
       };
     }
   }

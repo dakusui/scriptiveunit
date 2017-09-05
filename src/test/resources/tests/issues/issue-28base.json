@@ -1,0 +1,10 @@
+{
+  "factorSpace": {
+    "factors": {
+      "terms": [["iPhone"]],
+      "sortBy": ["relevance"],
+      "order" : ["desc"]
+    }
+  }
+}
+
