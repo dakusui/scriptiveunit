@@ -58,7 +58,7 @@ public interface Form {
       );
     }
 
-    public static Stage createWrappedStage(Stage input, Func<?>[] args) {
+    public static Stage createWrappedStage(Stage input, Func<?>... args) {
       return new Stage.Delegating(input) {
         @Override
         public <U> U getArgument(int index) {

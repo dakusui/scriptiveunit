@@ -10,6 +10,8 @@ import org.junit.runner.notification.Failure;
 
 import static com.github.dakusui.crest.Crest.asListOf;
 import static com.github.dakusui.crest.Crest.assertThat;
+import static com.github.dakusui.faultsource.printable.Functions.size;
+import static com.github.dakusui.faultsource.printable.Predicates.equalTo;
 import static com.github.dakusui.faultsource.printable.Predicates.isEmpty;
 import static org.junit.runner.JUnitCore.runClasses;
 
@@ -44,6 +46,14 @@ public class Issue28Test extends TestBase {
       includes = { ".*issue-28b-passes.json" }
   )
   public static class Issue28bPasses {
+  }
+
+  @RunWith(ScriptiveSuiteSet.class)
+  @ScriptiveSuiteSet.SuiteScripts(
+      driverClass = Qapi.class,
+      includes = { ".*issue-28c-passes.json" }
+  )
+  public static class Issue28cPasses {
   }
 
   @RunWith(ScriptiveSuiteSet.class)
@@ -141,6 +151,21 @@ public class Issue28Test extends TestBase {
   }
 
   @Test
+  public void testIssue28cPasses() {
+    Result result = runClasses(Issue28cPasses.class);
+    for (int i = 0; i < result.getFailures().size(); i++) {
+      printFailure(result.getFailures().get(i));
+    }
+    assertThat(
+        result,
+        asListOf(Failure.class, Result::getFailures)
+            .check(isEmpty())
+            .$()
+    );
+  }
+
+
+  @Test
   public void testIssue28bPasses() {
     Result result = runClasses(Issue28bPasses.class);
     for (int i = 0; i < result.getFailures().size(); i++) {
@@ -164,7 +189,7 @@ public class Issue28Test extends TestBase {
     assertThat(
         result,
         asListOf(Failure.class, Result::getFailures)
-            .check(isEmpty())
+            .check(size(), equalTo(1))
             .$()
     );
   }

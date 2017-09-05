@@ -65,11 +65,11 @@ public class Collections {
     };
   }
 
-  private static <E> Stage wrapValueAsArgumentInStage(Stage i, E entry) {
-    return Form.Utils.createWrappedStage(i,  toFunc(entry));
+  public static <E> Stage wrapValueAsArgumentInStage(Stage i, E entry) {
+    return Form.Utils.createWrappedStage(i,  Collections.toFunc(entry));
   }
 
-  private static <E> Func<E> toFunc(E entry) {
+  private static <F> Func<F> toFunc(F entry) {
     return input -> entry;
   }
 

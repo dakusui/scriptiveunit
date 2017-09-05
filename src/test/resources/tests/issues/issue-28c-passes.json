@@ -1,0 +1,32 @@
+{
+  "description":"Query-Result model example",
+  "factorSpace": {
+    "factors": {
+    }
+  },
+  "runnerType": "groupByTestCase",
+  "define": {
+    "evalintp2": [">", [0], 3],
+    "evalintp3": ["lambda",[">", [0], 3]]
+  },
+  "testOracles": [
+    {
+      "description": "lambda passes because condition is met(1)",
+      "given":["always"],
+      "when": ["nop"],
+      "then": ["evalintp", 100, ["lambda",[">", [0], 3]]]
+    },
+    {
+      "description": "lambda passes because condition is met(2)",
+      "given":["always"],
+      "when": ["nop"],
+      "then": ["evalintp2", 100]
+    },
+    {
+      "description": "lambda passes because condition is met(3)",
+      "given":["always"],
+      "when": ["nop"],
+      "then": ["evalintp3", 100]
+    }
+  ]
+}

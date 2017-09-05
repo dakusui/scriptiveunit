@@ -1,5 +1,4 @@
 {
-  "$extends":["examples/regularbase.json"],
   "description":"Query-Result model example",
   "factorSpace": {
     "factors": {

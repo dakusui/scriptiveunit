@@ -1,5 +1,4 @@
 {
-  "$extends":["examples/regularbase.json"],
   "description":"Query-Result model example",
   "factorSpace": {
     "factors": {
@@ -12,6 +11,12 @@
       "given":["always"],
       "when": ["nop"],
       "then": ["lambda",[">", 100, 3]]
+    },
+    {
+      "description": "lambda passes because condition is met",
+      "given":["always"],
+      "when": ["nop"],
+      "then": ["lambda",["and", ["always"], [">", 100, 3]]]
     }
   ]
 }
