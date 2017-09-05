@@ -208,8 +208,8 @@ public interface Form {
         return userFunc(Utils.car(args), Utils.cdr(args));
       }
 
-      private static Func<Object> userFunc(Func<Statement> funcBody, Func<?>... args) {
-        return (Stage input) -> toFunc(funcBody.apply(input)).<Func<Object>>apply(Utils.createWrappedStage(input, args));
+      private static Func<Object> userFunc(Func<Statement> statementFunc, Func<?>... args) {
+        return (Stage input) -> toFunc(statementFunc.apply(input)).<Func<Object>>apply(Utils.createWrappedStage(input, args));
       }
     }
 
