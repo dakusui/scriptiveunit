@@ -1,5 +1,5 @@
 {
-  "$extends":["examples/regularbase.json"],
+  "$extends":["tests/issues/issue28base.json"],
   "description":"Query-Result model example",
   "factorSpace": {
     "factors": {
@@ -11,17 +11,16 @@
       "host" : ["localhost"]
     }
   },
-  "runnerType": "groupByTestCase",
   "testOracles": [
     {
       "description": "{{@TESTSUITE}}: Searching {{terms}} should not return too many accessories",
       "given": ["equals", ["attr", "terms"], ["quote", "iPhone"]],
       "when": ["issue", ["query"] ],
-      "then": [">",
+      "then": ["==",
         ["size", ["filter2", ["result"], ["lambda",
-            ["matches", ["content", [0]], "iPhone"] ]
+            ["matches", ["content", [0]], ".*iPhone.*"] ]
         ]],
-        3
+        4
       ]
     }
   ]

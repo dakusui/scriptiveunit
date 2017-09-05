@@ -47,7 +47,7 @@ public interface Statement {
       Object car = Utils.car(raw);
       if (car instanceof String) {
         Arguments arguments = Arguments.create(this, Utils.cdr(raw));
-        Form form = this.formFactory.create(String.class.cast(car), arguments);
+        Form form = this.formFactory.create(String.class.cast(car));
         return new Nested() {
           @Override
           public Form getForm() {

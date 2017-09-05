@@ -54,7 +54,7 @@ public class Collections {
           s -> System.err.println("<<" + s + ">>")
       ).filter(
           (E entry) -> {
-            Stage wrapped = wrapValueAsArgumentInStage(i, entry);
+            Stage wrapped = wrapValueAsArgumentInStage(i, toFunc(entry));
             return predicate.apply(wrapped).apply(wrapped);
           }
       ).peek(
@@ -65,12 +65,12 @@ public class Collections {
     };
   }
 
-  public static <E> Stage wrapValueAsArgumentInStage(Stage i, E entry) {
-    return Form.Utils.createWrappedStage(i,  Collections.toFunc(entry));
-  }
-
   private static <F> Func<F> toFunc(F entry) {
     return input -> entry;
+  }
+
+  public static <E> Stage wrapValueAsArgumentInStage(Stage i,Func<E> value) {
+    return Form.Utils.createWrappedStage(i,  value);
   }
 
   @SuppressWarnings("unused")

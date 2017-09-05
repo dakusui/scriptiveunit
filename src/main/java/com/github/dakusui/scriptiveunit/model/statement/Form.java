@@ -9,10 +9,7 @@ import com.github.dakusui.scriptiveunit.model.func.Func;
 import com.github.dakusui.scriptiveunit.model.func.FuncInvoker;
 
 import java.lang.reflect.Array;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
@@ -89,9 +86,9 @@ public interface Form {
     }
 
     @SuppressWarnings("WeakerAccess")
-    public Form create(String name, Arguments arguments) {
+    public Form create(String name) {
       if ("lambda".equals(name))
-        return new UserForm(() -> getOnlyElement(arguments));
+        return new Lambda();
       return Factory.this.getObjectMethodFromDriver(name).map(
           (Function<ObjectMethod, Form>) MethodBasedImpl::new
       ).orElseGet(
@@ -212,12 +209,24 @@ public interface Form {
       }
 
       private static Func<Object> userFunc(Func<Statement> funcBody, Func<?>... args) {
-        return (Stage input) -> {
-          Stage wrappedStage = Utils.createWrappedStage(input, args);
-          return toFunc(funcBody.apply(input)).<Func<Object>>apply(wrappedStage);
-        };
+        return (Stage input) -> toFunc(funcBody.apply(input)).<Func<Object>>apply(Utils.createWrappedStage(input, args));
+      }
+    }
+
+    private static class Lambda extends Base {
+
+      private Lambda() {
       }
 
+      @Override
+      public Func apply(FuncInvoker funcInvoker, Arguments arguments) {
+        return (Func<Object>) input -> (Func<Object>) i -> getOnlyElement(toFuncs(funcInvoker, arguments)).apply(input);
+      }
+
+      @Override
+      public boolean isAccessor() {
+        return false;
+      }
     }
   }
 }

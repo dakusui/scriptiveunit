@@ -84,7 +84,7 @@ public class Qapi {
       return new Func<Boolean>() {
         @Override
         public Boolean apply(Stage input) {
-          return predicate.apply(Collections.wrapValueAsArgumentInStage(input, value.apply(input))).apply(input);
+          return predicate.apply(Collections.wrapValueAsArgumentInStage(input, value)).apply(input);
         }
       };
     }

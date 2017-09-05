@@ -21,12 +21,6 @@
       "given":["always"],
       "when": ["nop"],
       "then": ["evalintp2", 100]
-    },
-    {
-      "description": "lambda passes because condition is met(3)",
-      "given":["always"],
-      "when": ["nop"],
-      "then": ["evalintp3", 100]
     }
   ]
 }
