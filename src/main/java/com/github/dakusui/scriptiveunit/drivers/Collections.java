@@ -51,15 +51,8 @@ public class Collections {
       return (Iterable<? extends E>) stream(
           requireNonNull(iterable.apply(i)).<E>spliterator(),
           false
-      ).peek(
-          s -> System.err.println("<<" + s + ">>")
       ).filter(
-          (E entry) -> {
-            Stage wrapped = wrapValueAsArgumentInStage(i, toFunc(entry));
-            return predicate.apply(wrapped).apply(wrapped);
-          }
-      ).peek(
-          s -> System.err.println("[[" + s + "]]")
+          (E entry) -> predicate.apply(i).apply(wrapValueAsArgumentInStage(i, toFunc(entry)))
       ).collect(
           Collectors.<E>toList()
       );
