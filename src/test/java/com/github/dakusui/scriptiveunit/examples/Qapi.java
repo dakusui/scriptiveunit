@@ -72,10 +72,7 @@ public class Qapi {
     @SuppressWarnings("unused")
     @Scriptable
     public Func<Boolean> evalintp(Func<Integer> value, Func<Func<Boolean>> predicate) {
-      return input -> {
-        Stage wrapped = Collections.wrapValueAsArgumentInStage(input, value);
-        return predicate.apply(wrapped).apply(wrapped);
-      };
+      return input -> predicate.apply(input).apply(Collections.wrapValueAsArgumentInStage(input, value));
     }
   }
 

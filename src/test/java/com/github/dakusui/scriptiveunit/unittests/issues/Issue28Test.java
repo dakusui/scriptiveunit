@@ -59,6 +59,14 @@ public class Issue28Test extends TestBase {
   @RunWith(ScriptiveSuiteSet.class)
   @ScriptiveSuiteSet.SuiteScripts(
       driverClass = Qapi.class,
+      includes = { ".*issue-28d.json" }
+  )
+  public static class Issue28d {
+  }
+
+  @RunWith(ScriptiveSuiteSet.class)
+  @ScriptiveSuiteSet.SuiteScripts(
+      driverClass = Qapi.class,
       includes = { ".*issue-28-regression.json" }
   )
   public static class Issue28Regression {
@@ -164,6 +172,19 @@ public class Issue28Test extends TestBase {
     );
   }
 
+  @Test
+  public void testIssue28d() {
+    Result result = runClasses(Issue28d.class);
+    for (int i = 0; i < result.getFailures().size(); i++) {
+      printFailure(result.getFailures().get(i));
+    }
+    assertThat(
+        result,
+        asListOf(Failure.class, Result::getFailures)
+            .check(isEmpty())
+            .$()
+    );
+  }
 
   @Test
   public void testIssue28bPasses() {
