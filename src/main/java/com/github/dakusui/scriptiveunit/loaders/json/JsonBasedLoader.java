@@ -27,11 +27,11 @@ import static com.github.dakusui.scriptiveunit.exceptions.SyntaxException.*;
 
 public class JsonBasedLoader extends TestSuiteDescriptor.Loader.Base {
 
-  private static final String EXTENDS_KEYWORD = "$extends";
+  protected static final String EXTENDS_KEYWORD = "$extends";
   /**
    * A resource that holds default values of ScriptiveUnit.
    */
-  private static final String DEFAULTS_JSON   = "defaults/values.json";
+  protected static final String DEFAULTS_JSON   = "defaults/values.json";
 
   @SuppressWarnings("unused")
   public JsonBasedLoader(Config config) {
@@ -63,7 +63,7 @@ public class JsonBasedLoader extends TestSuiteDescriptor.Loader.Base {
     return deepMerge(child, work);
   }
 
-  private JsonNode preprocess(JsonNode inputNode) {
+  protected JsonNode preprocess(JsonNode inputNode) {
     JsonNode ret = inputNode;
     for (Preprocessor each : getPreprocessors()) {
       ret = Preprocessor.translate(each, ret);
@@ -93,15 +93,11 @@ public class JsonBasedLoader extends TestSuiteDescriptor.Loader.Base {
     );
   }
 
-  private ObjectNode readScript(String scriptResourceName) {
-    ObjectNode work = readObjectNodeWithMerging(scriptResourceName);
-    ObjectNode ret = checkObjectNode(readJsonNodeFromStream(openResourceAsStream(DEFAULTS_JSON)));
-    ret = deepMerge(work, ret);
-    ret.remove(EXTENDS_KEYWORD);
-    return ret;
+  protected ObjectNode checkObjectNode(JsonNode curr) {
+    return (ObjectNode) check(curr, v -> curr.isObject(), () -> nonObject(curr));
   }
 
-  private AbstractList<String> getParentsOf(final ObjectNode child) {
+  protected AbstractList<String> getParentsOf(final ObjectNode child) {
     return new AbstractList<String>() {
       ArrayNode parents = checkArrayNode(child.get(EXTENDS_KEYWORD));
 
@@ -117,12 +113,16 @@ public class JsonBasedLoader extends TestSuiteDescriptor.Loader.Base {
     };
   }
 
-  private TextNode checkTextNode(JsonNode curr) {
-    return (TextNode) check(curr, v -> curr.isTextual(), () -> nonText(curr));
+  protected ObjectNode readScript(String scriptResourceName) {
+    ObjectNode work = readObjectNodeWithMerging(scriptResourceName);
+    ObjectNode ret = checkObjectNode(readJsonNodeFromStream(openResourceAsStream(DEFAULTS_JSON)));
+    ret = deepMerge(work, ret);
+    ret.remove(EXTENDS_KEYWORD);
+    return ret;
   }
 
-  private ObjectNode checkObjectNode(JsonNode curr) {
-    return (ObjectNode) check(curr, v -> curr.isObject(), () -> nonObject(curr));
+  private TextNode checkTextNode(JsonNode curr) {
+    return (TextNode) check(curr, v -> curr.isTextual(), () -> nonText(curr));
   }
 
   private ArrayNode checkArrayNode(JsonNode curr) {
