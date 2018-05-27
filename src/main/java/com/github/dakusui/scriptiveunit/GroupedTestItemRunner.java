@@ -32,10 +32,11 @@ import static com.github.dakusui.scriptiveunit.GroupedTestItemRunner.Type.OrderB
 import static com.github.dakusui.scriptiveunit.core.Utils.filterSimpleSingleLevelParametersOut;
 import static com.github.dakusui.scriptiveunit.model.Stage.Type.SETUP;
 import static com.github.dakusui.scriptiveunit.model.Stage.Type.TEARDOWN;
+import static com.github.dakusui.scriptiveunit.model.func.FuncInvoker.createMemo;
 import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
+import static java.util.stream.Collectors.toCollection;
 import static java.util.stream.Collectors.toList;
-import static java.util.stream.Collectors.toSet;
 
 public final class GroupedTestItemRunner extends ParentRunner<Action> {
   private static Iterable<Runner> createRunnersGroupingByTestOracle(final Session session) {
@@ -99,11 +100,15 @@ public final class GroupedTestItemRunner extends ParentRunner<Action> {
   }
 
   private static List<Tuple> buildFixtures(List<String> involved, List<IndexedTestCase> testCases) {
-    return new LinkedList<>(
-        testCases.stream()
-            .map((IndexedTestCase input) -> project(input.get(), involved))
-            .map((Map<String, Object> input) -> new Tuple.Builder().putAll(input).build())
-            .collect(toSet()));
+    return testCases.stream(
+    ).map(
+        (IndexedTestCase input) -> project(input.get(), involved)
+    ).map(
+        (Map<String, Object> input) -> new Tuple.Builder().putAll(input).build()
+    ).distinct(
+    ).collect(
+        toCollection(LinkedList::new)
+    );
   }
 
   private static <K, V> Map<K, V> project(Map<K, V> in, List<K> keys) {
@@ -168,14 +173,18 @@ public final class GroupedTestItemRunner extends ParentRunner<Action> {
           TestSuiteDescriptor testSuiteDescriptor = session.loadTestSuiteDescriptor();
           List<? extends TestOracle> testOracles = testSuiteDescriptor.getTestOracles();
           return testCases.stream()
-              .flatMap(eachTestCase -> testOracles.stream()
-                  .map(eachOracle ->
-                      eachOracle
-                          .createTestActionFactory(
-                              TestItem.create(testSuiteDescriptor.getDescription(), eachTestCase, eachOracle, i.getAndIncrement()),
-                              eachTestCase.get()
-                          ).apply(session)
-                  ));
+              .flatMap(eachTestCase -> {
+                Map<List<Object>, Object> memo = createMemo();
+                return testOracles.stream()
+                    .map(eachOracle ->
+                        eachOracle
+                            .createTestActionFactory(
+                                TestItem.create(testSuiteDescriptor.getDescription(), eachTestCase, eachOracle, i.getAndIncrement()),
+                                eachTestCase.get(),
+                                memo
+                            ).apply(session)
+                    );
+              });
         }
       },
       TEST_ORACLE {
@@ -188,7 +197,8 @@ public final class GroupedTestItemRunner extends ParentRunner<Action> {
                   .map(eachTestCase ->
                       eachOracle.createTestActionFactory(
                           TestItem.create(testSuiteDescriptor.getDescription(), eachTestCase, eachOracle, i.getAndIncrement()),
-                          eachTestCase.get()
+                          eachTestCase.get(),
+                          createMemo()
                       ).apply(session)));
         }
       };
@@ -286,7 +296,7 @@ public final class GroupedTestItemRunner extends ParentRunner<Action> {
   private Statement actionInvoker(Action action) {
     return new Statement() {
       @Override
-      public void evaluate() throws Throwable {
+      public void evaluate() {
         Utils.performActionWithLogging(action);
       }
     };
@@ -309,33 +319,33 @@ public final class GroupedTestItemRunner extends ParentRunner<Action> {
                 public Action apply(IndexedTestCase input) {
                   try {
                     Tuple prettifiedTestCaseTuple = filterSimpleSingleLevelParametersOut(input.get(), factors);
-                    return
-                        sequential(
-                            format("%03d: %s", i, testOracle.templateDescription(input.get(), testSuiteDescription)),
+                    return sequential(
+                        format("%03d: %s", i, testOracle.templateDescription(input.get(), testSuiteDescription)),
+                        named(
+                            format("%03d: Setup test fixture", i),
+                            named(format("fixture: %s", prettifiedTestCaseTuple),
+                                requireNonNull(createFixtureLevelAction(SETUP, session, input.get()))
+                            )
+                        ),
+                        attempt(
+                            testOracle.createTestActionFactory(
+                                TestItem.create(
+                                    testSuiteDescriptor.getDescription(), input,
+                                    testOracle,
+                                    input.getIndex()
+                                ),
+                                input.get(),
+                                createMemo()
+                            ).apply(session)
+                        ).ensure(
                             named(
-                                format("%03d: Setup test fixture", i),
+                                format("%03d: Tear down fixture", i),
                                 named(format("fixture: %s", prettifiedTestCaseTuple),
-                                    requireNonNull(createFixtureLevelAction(SETUP, session, input.get()))
+                                    requireNonNull(createFixtureLevelAction(TEARDOWN, session, input.get()))
                                 )
-                            ),
-                            attempt(
-                                testOracle.createTestActionFactory(
-                                    TestItem.create(
-                                        testSuiteDescriptor.getDescription(), input,
-                                        testOracle,
-                                        input.getIndex()
-                                    ),
-                                    input.get()
-                                ).apply(session)
-                            ).ensure(
-                                named(
-                                    format("%03d: Tear down fixture", i),
-                                    named(format("fixture: %s", prettifiedTestCaseTuple),
-                                        requireNonNull(createFixtureLevelAction(TEARDOWN, session, input.get()))
-                                    )
-                                )
-                            ).build()
-                        );
+                            )
+                        ).build()
+                    );
                   } finally {
                     i++;
                   }
@@ -357,6 +367,7 @@ public final class GroupedTestItemRunner extends ParentRunner<Action> {
       AtomicInteger i = new AtomicInteger(0);
       Tuple testCaseTuple = testCase.get();
       Tuple prettifiedTestCaseTuple = filterSimpleSingleLevelParametersOut(testCase.get(), parameters);
+      Map<List<Object>, Object> memo = createMemo();
       return new GroupedTestItemRunner(testClass,
           testCaseId,
           named(
@@ -370,7 +381,8 @@ public final class GroupedTestItemRunner extends ParentRunner<Action> {
                       input,
                       input.getIndex()
                   ),
-                  testCaseTuple
+                  testCaseTuple,
+                  memo
               ).apply(session))
               .collect(toList()),
           named(
