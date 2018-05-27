@@ -13,7 +13,6 @@ import static com.github.dakusui.scriptiveunit.core.Utils.toBigDecimalIfPossible
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
 import static java.util.Arrays.stream;
-import static java.util.stream.Collectors.toList;
 
 public interface FuncInvoker {
   <T> T invokeConst(Object value);
@@ -37,14 +36,15 @@ public interface FuncInvoker {
   static FuncInvoker create(Map<List<Object>, Object> memo) {
     return new Impl(0, memo);
   }
+
   static FuncInvoker create() {
     return create(FuncInvoker.createMemo());
   }
 
   class Impl implements FuncInvoker {
-    private final Writer writer;
-    private       int    indent;
-    final Map<List<Object>, Object> memo;
+    private final Writer                    writer;
+    private       int                       indent;
+    final         Map<List<Object>, Object> memo;
 
     private Impl(int initialIndent, Map<List<Object>, Object> memo) {
       this.indent = initialIndent;
@@ -142,7 +142,7 @@ public interface FuncInvoker {
     }
 
     private static Object[] prettify(Object... args) {
-      return Arrays.stream(args).map((Object in) -> in instanceof Iterable ? Utils.iterableToString(((Iterable) in)) : in).collect(toList()).toArray();
+      return Arrays.stream(args).map((Object in) -> in instanceof Iterable ? Utils.iterableToString(((Iterable) in)) : in).toArray();
     }
   }
 

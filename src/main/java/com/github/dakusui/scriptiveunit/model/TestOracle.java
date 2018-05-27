@@ -4,6 +4,8 @@ import com.github.dakusui.actionunit.Action;
 import com.github.dakusui.jcunit.core.tuples.Tuple;
 import com.github.dakusui.scriptiveunit.Session;
 
+import java.util.List;
+import java.util.Map;
 import java.util.function.Function;
 
 import static com.github.dakusui.scriptiveunit.core.Utils.append;
@@ -18,12 +20,16 @@ public interface TestOracle {
 
   /**
    * Returns a string that describes this test oracle.
-   *
+   * <p>
    * Note that this method always returns raw form (a string before being templated).
    */
   String getDescription();
 
   String templateDescription(Tuple testCaseTuple, String testSuiteDescription);
 
-  Function<Session, Action> createTestActionFactory(TestItem testItem, Tuple testCaseTuple);
+  Function<Session, Action> createTestActionFactory(
+      TestItem testItem,
+      Tuple testCaseTuple,
+      Map<List<Object>, Object> memo
+  );
 }

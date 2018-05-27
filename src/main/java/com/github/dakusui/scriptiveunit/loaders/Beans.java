@@ -361,8 +361,7 @@ public enum Beans {
          * Warning: Created action is not thread safe. Users should create 1 action for 1 thread.
          */
         @Override
-        public Function<Session, Action> createTestActionFactory(TestItem testItem, Tuple testCaseTuple) {
-          Map<List<Object>, Object> memo = FuncInvoker.createMemo();
+        public Function<Session, Action> createTestActionFactory(TestItem testItem, Tuple testCaseTuple, Map<List<Object>, Object> memo) {
           int itemId = testItem.getTestItemId();
           Report report = session.createReport(testItem);
           return (Session session) -> sequential(

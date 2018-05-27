@@ -33,6 +33,9 @@ public interface Func<O> extends
   }
 
   interface Memoized<O> extends Func<O> {
+    default boolean isStageAgnostic() {
+      return false;
+    }
   }
 
   /**
