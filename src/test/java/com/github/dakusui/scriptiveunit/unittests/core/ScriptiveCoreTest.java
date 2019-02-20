@@ -1,6 +1,7 @@
 package com.github.dakusui.scriptiveunit.unittests.core;
 
 import com.github.dakusui.scriptiveunit.ScriptiveCore;
+import com.github.dakusui.scriptiveunit.ScriptiveSuiteSet;
 import com.github.dakusui.scriptiveunit.core.Description;
 import com.github.dakusui.scriptiveunit.examples.Qapi;
 import com.github.dakusui.scriptiveunit.exceptions.FacadeException;
@@ -13,6 +14,7 @@ import com.github.dakusui.scriptiveunit.testassets.drivers.ExampleSuiteSet;
 import com.github.dakusui.scriptiveunit.testassets.drivers.Simple;
 import com.github.dakusui.scriptiveunit.testutils.JUnitResultMatcher;
 import com.github.dakusui.scriptiveunit.testutils.TestBase;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import static java.util.Arrays.asList;
@@ -127,6 +129,46 @@ public class ScriptiveCoreTest extends TestBase {
         ),
         new ScriptiveCore().listScripts(SuiteSet1.class).stream().sorted().collect(toList())
     );
+  }
+
+  /**
+   * This test can only work when it is run individually since ScriptiveUnit
+   * relies on a constant value created by referencing a system property.
+   *
+   * @see ScriptiveSuiteSet
+   */
+  @Ignore
+  @Test
+  public void given1outOf2partitionedExecutionDef_FirstOne$whenListScripts$thenListed() {
+    System.setProperty(ScriptiveSuiteSet.SCRIPTIVEUNIT_PARTITION, "1:2");
+    try {
+      assertEquals(
+          singletonList("tests/suiteset/suite2.json"),
+          new ScriptiveCore().listScripts(SuiteSet1.class).stream().sorted().collect(toList())
+      );
+    } finally {
+      System.getProperties().remove(ScriptiveSuiteSet.SCRIPTIVEUNIT_PARTITION);
+    }
+  }
+
+  /**
+   * This test can only work when it is run individually since ScriptiveUnit
+   * relies on a constant value created by referencing a system property value.
+   *
+   * @see ScriptiveSuiteSet
+   */
+  @Ignore
+  @Test
+  public void given1outOf2partitionedExecutionDef_SecondOne$whenListScripts$thenListed() {
+    System.setProperty(ScriptiveSuiteSet.SCRIPTIVEUNIT_PARTITION, "0:2");
+    try {
+      assertEquals(
+          singletonList("tests/suiteset/suite1.json"),
+          new ScriptiveCore().listScripts(SuiteSet1.class).stream().sorted().collect(toList())
+      );
+    } finally {
+      System.getProperties().remove(ScriptiveSuiteSet.SCRIPTIVEUNIT_PARTITION);
+    }
   }
 
   @Test(expected = FacadeException.class)
