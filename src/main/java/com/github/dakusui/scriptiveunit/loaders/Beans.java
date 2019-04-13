@@ -19,7 +19,13 @@ import com.github.dakusui.scriptiveunit.Session;
 import com.github.dakusui.scriptiveunit.core.Config;
 import com.github.dakusui.scriptiveunit.core.Utils;
 import com.github.dakusui.scriptiveunit.exceptions.ScriptiveUnitException;
-import com.github.dakusui.scriptiveunit.model.*;
+import com.github.dakusui.scriptiveunit.model.ParameterSpaceDescriptor;
+import com.github.dakusui.scriptiveunit.model.Report;
+import com.github.dakusui.scriptiveunit.model.Stage;
+import com.github.dakusui.scriptiveunit.model.TestIO;
+import com.github.dakusui.scriptiveunit.model.TestItem;
+import com.github.dakusui.scriptiveunit.model.TestOracle;
+import com.github.dakusui.scriptiveunit.model.TestSuiteDescriptor;
 import com.github.dakusui.scriptiveunit.model.func.Func;
 import com.github.dakusui.scriptiveunit.model.func.FuncInvoker;
 import com.github.dakusui.scriptiveunit.model.statement.Statement;
@@ -33,10 +39,18 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-import static com.github.dakusui.actionunit.Actions.*;
-import static com.github.dakusui.scriptiveunit.core.Utils.*;
+import static com.github.dakusui.actionunit.Actions.attempt;
+import static com.github.dakusui.actionunit.Actions.nop;
+import static com.github.dakusui.actionunit.Actions.sequential;
+import static com.github.dakusui.scriptiveunit.core.Utils.append;
+import static com.github.dakusui.scriptiveunit.core.Utils.iterableToString;
+import static com.github.dakusui.scriptiveunit.core.Utils.template;
 import static com.github.dakusui.scriptiveunit.exceptions.ScriptiveUnitException.wrap;
-import static com.github.dakusui.scriptiveunit.model.Stage.Type.*;
+import static com.github.dakusui.scriptiveunit.model.Stage.Type.AFTER;
+import static com.github.dakusui.scriptiveunit.model.Stage.Type.BEFORE;
+import static com.github.dakusui.scriptiveunit.model.Stage.Type.GIVEN;
+import static com.github.dakusui.scriptiveunit.model.Stage.Type.WHEN;
+import static com.github.dakusui.scriptiveunit.model.statement.Statement.createStatementFactory;
 import static java.lang.Class.forName;
 import static java.lang.String.format;
 import static java.util.Collections.singletonList;
@@ -50,15 +64,15 @@ public enum Beans {
   private static final Object NOP_CLAUSE = Actions.nop();
 
   public abstract static class BaseForTestSuiteDescriptor {
-    final         BaseForFactorSpaceDescriptor                                   factorSpaceBean;
+    final         BaseForFactorSpaceDescriptor      factorSpaceBean;
     final         List<? extends BaseForTestOracle> testOracleBeanList;
-    final         String                                                         description;
-    final         Type                                                           runnerType;
-    private final Map<String, List<Object>>                                      userDefinedFormClauses;
-    private final List<Object>                                                   setUpClause;
-    private final List<Object>                                                   setUpBeforeAllClause;
-    private final List<Object>                                                   tearDownClause;
-    private final List<Object>                                                   tearDownAfterAllClause;
+    final         String                            description;
+    final         Type                              runnerType;
+    private final Map<String, List<Object>>         userDefinedFormClauses;
+    private final List<Object>                      setUpClause;
+    private final List<Object>                      setUpBeforeAllClause;
+    private final List<Object>                      tearDownClause;
+    private final List<Object>                      tearDownAfterAllClause;
 
     public BaseForTestSuiteDescriptor(
         String description,
@@ -85,20 +99,19 @@ public enum Beans {
     public TestSuiteDescriptor create(Session session) {
       try {
         return new TestSuiteDescriptor() {
-          Stage topLevel = session.createTopLevelStage();
-          private Statement setUpBeforeAllStatement = topLevel.getStatementFactory().create(setUpBeforeAllClause != null ? setUpBeforeAllClause : NOP_CLAUSE);
-          private Statement setUpStatement = topLevel.getStatementFactory().create(setUpClause != null ? setUpClause : NOP_CLAUSE);
+          private final Statement.Factory statementFactory = createStatementFactory(session.getConfig(), this.getUserDefinedFormClauses());
+          private Statement setUpBeforeAllStatement = statementFactory.create(setUpBeforeAllClause != null ? setUpBeforeAllClause : NOP_CLAUSE);
+          private Statement setUpStatement = statementFactory.create(setUpClause != null ? setUpClause : NOP_CLAUSE);
           private List<? extends TestOracle> testOracles = createTestOracles();
-          private Statement tearDownStatement = topLevel.getStatementFactory().create(tearDownClause != null ? tearDownClause : NOP_CLAUSE);
-          private Statement tearDownAfterAllStatement = topLevel.getStatementFactory().create(tearDownAfterAllClause != null ? tearDownAfterAllClause : NOP_CLAUSE);
+          private Statement tearDownStatement = statementFactory.create(tearDownClause != null ? tearDownClause : NOP_CLAUSE);
+          private Statement tearDownAfterAllStatement = statementFactory.create(tearDownAfterAllClause != null ? tearDownAfterAllClause : NOP_CLAUSE);
 
           List<IndexedTestCase> testCases = createTestCases(this);
 
           private List<TestOracle> createTestOracles() {
             AtomicInteger i = new AtomicInteger(0);
-            return testOracleBeanList.stream().map((BaseForTestOracle each) -> each.create(i.getAndIncrement(), session)).collect(toList());
+            return testOracleBeanList.stream().map((BaseForTestOracle each) -> each.create(i.getAndIncrement(), session, this)).collect(toList());
           }
-
 
           @Override
           public String getDescription() {
@@ -107,7 +120,7 @@ public enum Beans {
 
           @Override
           public ParameterSpaceDescriptor getFactorSpaceDescriptor() {
-            return factorSpaceBean.create(session.getConfig(), new Statement.Factory(session));
+            return factorSpaceBean.create(session, statementFactory);
           }
 
           @Override
@@ -155,20 +168,21 @@ public enum Beans {
             return session.getConfig();
           }
 
+          @Override
+          public Statement.Factory statementFactory() {
+            return statementFactory;
+          }
+
           private Func<Action> createActionFactory(String actionName, Statement statement) {
             return (Stage input) -> {
               Object result =
                   statement == null ?
                       nop() :
                       toFunc(statement, FuncInvoker.create()).apply(input);
-              //noinspection ConstantConditions
-              return Actions.named(
-                  actionName,
-                  Action.class.cast(
-                      requireNonNull(
-                          result,
-                          String.format("statement for '%s' was not valid '%s'", actionName, statement)
-                      )));
+              return (Action) requireNonNull(
+                  result,
+                  String.format("statement for '%s' was not valid '%s'", actionName, statement)
+              );
             };
           }
 
@@ -240,7 +254,7 @@ public enum Beans {
       this.constraintList = constraintList;
     }
 
-    public ParameterSpaceDescriptor create(Config config, Statement.Factory statementFactory) {
+    public ParameterSpaceDescriptor create(Session session, Statement.Factory statementFactory) {
       return new ParameterSpaceDescriptor() {
         @Override
         public List<Parameter> getParameters() {
@@ -249,17 +263,15 @@ public enum Beans {
 
         @Override
         public List<Constraint> getConstraints() {
-          //noinspection unchecked
           return constraintList.stream()
               .map((List<Object> each) -> {
-                //noinspection unchecked
                 Statement statement = statementFactory.create(each);
                 Func<Boolean> func = toFunc(
                     statement,
                     FuncInvoker.create()
                 );
                 return Constraint.create(
-                    in -> requireNonNull(func.apply(Stage.Factory.createConstraintGenerationStage(config, statementFactory, in))),
+                    (Tuple in) -> requireNonNull(func.apply(session.createConstraintConstraintGenerationStage(statementFactory, in))),
                     Statement.Utils.involvedParameters(statement)
                 );
               })
@@ -268,6 +280,7 @@ public enum Beans {
       };
     }
 
+    @SuppressWarnings("unchecked")
     private List<Parameter> composeParameters(Map<String, ParameterDefinition> factorMap) {
       return requireNonNull(factorMap).keySet().stream()
           .map(
@@ -280,10 +293,9 @@ public enum Beans {
                   return Parameter.Regex.Factory.of(Objects.toString(validateParameterDefinitionArgsForRegex(def.args).get(0))).create(parameterName);
                 case "fsm":
                   try {
-                    validateParameterDefinitionArgsForFsm(def.args);
-                    return Parameter.Fsm.Factory.<Object>of(
+                    return Parameter.Fsm.Factory.of(
                         (Class<? extends FsmSpec<Object>>) forName(Objects.toString(def.args.get(0))),
-                        Integer.valueOf(Objects.toString(def.args.get(1))).intValue()
+                        Integer.valueOf(Objects.toString(def.args.get(1)))
                     ).create(parameterName);
                   } catch (ClassCastException | ClassNotFoundException e) {
                     throw new RuntimeException(e);
@@ -307,10 +319,6 @@ public enum Beans {
     private List<Object> validateParameterDefinitionArgsForRegex(List<Object> def) {
       if (def.size() != 1)
         throw ScriptiveUnitException.fail("").get();
-      return def;
-    }
-
-    private List<Object> validateParameterDefinitionArgsForFsm(List<Object> def) {
       return def;
     }
   }
@@ -339,8 +347,8 @@ public enum Beans {
      * objects) have their internal states and not created every time the oracles
      * are performed.
      */
-    public TestOracle create(int index, Session session) {
-      //noinspection unchecked,Guava
+    public TestOracle create(int index, Session session, TestSuiteDescriptor testSuiteDescriptor) {
+      Statement.Factory statementFactory = testSuiteDescriptor.statementFactory();
       return new TestOracle() {
         @Override
         public int getIndex() {
@@ -361,35 +369,35 @@ public enum Beans {
          * Warning: Created action is not thread safe. Users should create 1 action for 1 thread.
          */
         @Override
-        public Function<Session, Action> createTestActionFactory(TestItem testItem, Tuple testCaseTuple, Map<List<Object>, Object> memo) {
-          int itemId = testItem.getTestItemId();
+        public Function<Session, Action>
+        createTestActionFactory(TestItem testItem, Map<List<Object>, Object> memo) {
+          Tuple testCaseTuple = testItem.getTestCaseTuple();
           Report report = session.createReport(testItem);
           return (Session session) -> sequential(
-              format("%03d: %s", itemId, composeDescription(testCaseTuple, session)),
-              named("Before", createBefore(testItem, report, memo)),
+              composeDescription(testCaseTuple),
+              createBefore(testItem, report, memo),
               attempt(
-                  Actions.<Tuple, TestIO>test("Verify with: " + projectMultiLevelFactors(testCaseTuple, session))
+                  Actions.<Tuple, TestIO>test("Verify with: " + projectMultiLevelFactors(testCaseTuple))
                       .given(createGiven(testItem, report, session, memo))
                       .when(createWhen(testItem, report, session, memo))
-                      .then(createThen(testItem, report, session, memo)).build()
-              ).recover(
-                  AssertionError.class,
-                  onTestFailure(testItem, report, session, memo)
-              ).ensure(
-                  named("After", createAfter(testItem, report, memo))
-              ).build()
+                      .then(createThen(testItem, report, session, memo)).build())
+                  .recover(
+                      AssertionError.class,
+                      onTestFailure(testItem, report, session, memo))
+                  .ensure(createAfter(testItem, report, memo))
+                  .build()
           );
         }
 
-        private Tuple projectMultiLevelFactors(Tuple testCaseTuple, Session session) {
+        private Tuple projectMultiLevelFactors(Tuple testCaseTuple) {
           return Utils.filterSimpleSingleLevelParametersOut(
               testCaseTuple,
-              session.loadTestSuiteDescriptor().getFactorSpaceDescriptor().getParameters()
+              testSuiteDescriptor.getFactorSpaceDescriptor().getParameters()
           );
         }
 
-        private String composeDescription(Tuple testCaseTuple, Session session) {
-          return template(description, append(testCaseTuple, "@TESTSUITE", session.loadTestSuiteDescriptor().getDescription()));
+        private String composeDescription(Tuple testCaseTuple) {
+          return template(description, append(testCaseTuple, "@TESTSUITE", testSuiteDescriptor.getDescription()));
         }
 
 
@@ -401,7 +409,7 @@ public enum Beans {
           Tuple testCaseTuple = testItem.getTestCaseTuple();
           return new Source<Tuple>() {
             FuncInvoker funcInvoker = FuncInvoker.create(memo);
-            Stage givenStage = Stage.Factory.createOracleLevelStage(GIVEN, session, testItem, report);
+            Stage givenStage = session.createOracleLevelStage(GIVEN, testItem, report, statementFactory);
             Statement givenStatement = givenStage.getStatementFactory().create(givenClause);
 
             @Override
@@ -437,7 +445,7 @@ public enum Beans {
 
             @Override
             public TestIO apply(Tuple testCase, Context context) {
-              Stage whenStage = Stage.Factory.createOracleLevelStage(WHEN, session, testItem, report);
+              Stage whenStage = session.createOracleLevelStage(WHEN, testItem, report, statementFactory);
               return TestIO.create(
                   testCase,
                   Beans.<Boolean>toFunc(
@@ -459,7 +467,7 @@ public enum Beans {
 
             @Override
             public void apply(TestIO testIO, Context context) {
-              Stage thenStage = Stage.Factory.createOracleVerificationStage(session, testItem, testIO.getOutput(), report);
+              Stage thenStage = session.createOracleVerificationStage(statementFactory, testItem, testIO.getOutput(), report);
               assertThat(
                   thenStage,
                   new BaseMatcher<Stage>() {
@@ -504,7 +512,7 @@ public enum Beans {
 
             @Override
             public void apply(T input, Context context) {
-              Stage onFailureStage = Stage.Factory.createOracleFailureHandlingStage(session, testItem, input, report);
+              Stage onFailureStage = session.createOracleFailureHandlingStage(testItem, input, report, statementFactory);
               Statement onFailureStatement = onFailureStage.getStatementFactory().create(onFailureClause);
               Utils.performActionWithLogging(requireNonNull(
                   onFailureClause != null ?
@@ -527,7 +535,7 @@ public enum Beans {
         private Action createActionFromClause(Stage.Type stageType, List<Object> clause, final TestItem testItem, Report report, Map<List<Object>, Object> memo) {
           if (clause == null)
             return (Action) NOP_CLAUSE;
-          Stage stage = Stage.Factory.createOracleLevelStage(stageType, session, testItem, report);
+          Stage stage = session.createOracleLevelStage(stageType, testItem, report, statementFactory);
           Statement statement = stage.getStatementFactory().create(clause);
           FuncInvoker funcInvoker = FuncInvoker.create(memo);
           return Beans.<Action>toFunc(statement, funcInvoker).apply(stage);
@@ -538,6 +546,6 @@ public enum Beans {
 
   private static <U> Func<U> toFunc(Statement statement, FuncInvoker funcInvoker) {
     //noinspection unchecked
-    return Func.class.<U>cast(statement.compile(funcInvoker));
+    return (Func) statement.compile(funcInvoker);
   }
 }

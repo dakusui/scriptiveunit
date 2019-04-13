@@ -1,19 +1,20 @@
 package com.github.dakusui.scriptiveunit.model;
 
-import com.github.dakusui.actionunit.Action;
 import com.github.dakusui.jcunit.core.tuples.Tuple;
 import com.github.dakusui.scriptiveunit.Session;
 import com.github.dakusui.scriptiveunit.core.Config;
-import com.github.dakusui.scriptiveunit.model.func.Func;
 import com.github.dakusui.scriptiveunit.model.statement.Statement;
 
 import java.util.Objects;
-import java.util.function.Function;
 
 import static com.github.dakusui.scriptiveunit.core.Utils.checkState;
 import static com.github.dakusui.scriptiveunit.model.Stage.Type.CONSTRAINT_GENERATION;
 import static java.util.Objects.requireNonNull;
 
+/**
+ * A stage is a part of session, where various activities defined as Funcs are
+ * executed.
+ */
 public interface Stage {
   Statement.Factory getStatementFactory();
 
@@ -21,6 +22,10 @@ public interface Stage {
 
   <RESPONSE> RESPONSE response();
 
+  /**
+   * Reurns a type of this stage.
+   * @return Type of this stage.
+   */
   Type getType();
 
   <T> T getArgument(int index);
@@ -42,7 +47,7 @@ public interface Stage {
 
   TestItem getTestItem();
 
-    abstract class Delegating implements Stage {
+  abstract class Delegating implements Stage {
     private final Stage target;
 
     protected Delegating(Stage stage) {
@@ -104,31 +109,70 @@ public interface Stage {
     ;
 
     public static Stage createConstraintGenerationStage(Config config, Statement.Factory statementFactory, Tuple tuple) {
-      return _create(CONSTRAINT_GENERATION, config, statementFactory, tuple, null, null, null, null);
+      return createFixtureLevelStage(CONSTRAINT_GENERATION, tuple, statementFactory, config);
     }
 
-    public static Stage createTopLevel(Session session) {
-      return _create(Type.TOPLEVEL, session.getConfig(), new Statement.Factory(session), new Tuple.Builder().build(), null, null, null, null);
+    /**
+     * Creates a suite level stage, which corresponds to {@code @}{@code BeforeClass} or {@code @}{@code AfterClass}.
+     *
+     * @param type          should be either SETUP_BEFORE_ALL or TEARDOWN_AFTER_ALL.
+     * @param commonFixture A suite level settings.
+     * @return Created stage.
+     */
+    public static Stage createSuiteLevelStage(
+        Type type,
+        Tuple commonFixture,
+        Statement.Factory statementFactory,
+        Config config) {
+      return _create(
+          type,
+          config,
+          statementFactory,
+          commonFixture,
+          null,
+          null,
+          null,
+          null);
     }
 
-    public static Stage createSuiteLevelStage(Type type /* should be either SETUP_BEFORE_ALL or TEARDOWN_AFTER_ALL */, Session session, Tuple commonFixture) {
-      return _create(type, session.getConfig(), new Statement.Factory(session), commonFixture, null, null, null, null);
+    /**
+     * Creates a fixture level stage, which shares the same fixture specified by
+     * {@code fixture} parameter.
+     *
+     * @param config
+     * @param type    should be either SETUP or TEARDOWN
+     * @param fixture A fixture level settings.
+     * @return Created stage.
+     */
+    public static Stage createFixtureLevelStage(Type type, Tuple fixture, Statement.Factory statementFactory, Config config) {
+      return createSuiteLevelStage(type, fixture, statementFactory, config);
     }
 
-    public static Stage createFixtureLevelStage(Type type /* should be either SETUP or TEARDOWN */, Session session, Tuple fixture) {
-      return _create(type, session.getConfig(), new Statement.Factory(session), fixture, null, null, null, null);
+    /**
+     * Creates an oracle level stage.
+     *
+     * @param type             should be either GIVEN, WHEN, BEFORE, or AFTER
+     * @param testItem         An item to be executed as a test.
+     * @param report           A report object to which tesing activities are written.
+     * @param statementFactory
+     * @param config
+     * @return Created stage
+     */
+    public static Stage createOracleLevelStage(Type type, TestItem testItem, Report report, Statement.Factory statementFactory, Config config) {
+      return _create(type,
+          config, statementFactory, testItem.getTestCaseTuple(), testItem, null, null, report);
     }
 
-    public static Stage createOracleLevelStage(Type type /* should be either GIVEN, WHEN, BEFORE, or AFTER */, Session session, TestItem testItem, Report report) {
-      return _create(type, session.getConfig(), new Statement.Factory(session), testItem.getTestCaseTuple(), testItem, null, null, report);
+    public static <RESPONSE> Stage createOracleVerificationStage(Session session, Statement.Factory statementFactory, TestItem testItem, RESPONSE response, Report report) {
+      return _create(Type.THEN,
+          session.getConfig(), statementFactory, testItem.getTestCaseTuple(), testItem,
+          requireNonNull(response),
+          null,
+          report);
     }
 
-    public static <RESPONSE> Stage createOracleVerificationStage(Session session, TestItem testItem, RESPONSE response, Report report) {
-      return _create(Type.THEN, session.getConfig(), new Statement.Factory(session), testItem.getTestCaseTuple(), testItem, requireNonNull(response), null, report);
-    }
-
-    public static Stage createOracleFailureHandlingStage(Session session, TestItem testItem, Throwable throwable, Report report) {
-      return _create(Type.FAILURE_HANDLING, session.getConfig(), new Statement.Factory(session), testItem.getTestCaseTuple(), testItem, null, throwable, report);
+    public static Stage createOracleFailureHandlingStage(Session session, TestItem testItem, Throwable throwable, Report report, Statement.Factory statementFactory) {
+      return _create(Type.FAILURE_HANDLING, session.getConfig(), statementFactory, testItem.getTestCaseTuple(), testItem, null, throwable, report);
     }
 
     private static <RESPONSE> Stage _create(Type type, Config config, Statement.Factory statementFactory, Tuple testCase, TestItem testItem, RESPONSE response, Throwable throwable, Report report) {
@@ -195,18 +239,9 @@ public interface Stage {
 
   enum Type {
     CONSTRAINT_GENERATION,
-    TOPLEVEL,
     SETUP_BEFORE_ALL {
-      @Override
-      public Func<Action> getSuiteLevelActionFactory(Session session) {
-        return session.loadTestSuiteDescriptor().getSetUpBeforeAllActionFactory();
-      }
     },
     SETUP {
-      @Override
-      public Function<Stage, Action> getFixtureLevelActionFactory(Session session) {
-        return session.loadTestSuiteDescriptor().getSetUpActionFactory();
-      }
     },
     BEFORE,
     GIVEN,
@@ -215,24 +250,9 @@ public interface Stage {
     FAILURE_HANDLING,
     AFTER,
     TEARDOWN {
-      @Override
-      public Function<Stage, Action> getFixtureLevelActionFactory(Session session) {
-        return session.loadTestSuiteDescriptor().getTearDownActionFactory();
-      }
     },
     TEARDOWN_AFTER_ALL {
-      @Override
-      public Function<Stage, Action> getSuiteLevelActionFactory(Session session) {
-        return session.loadTestSuiteDescriptor().getTearDownAfterAllActionFactory();
-      }
-    },;
-
-    public Function<Stage, Action> getSuiteLevelActionFactory(Session session) {
-      throw new UnsupportedOperationException();
-    }
-
-    public Function<Stage, Action> getFixtureLevelActionFactory(Session session) {
-      throw new UnsupportedOperationException();
-    }
+    },
+    ;
   }
 }

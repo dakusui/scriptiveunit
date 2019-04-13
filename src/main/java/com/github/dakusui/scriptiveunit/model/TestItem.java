@@ -13,29 +13,25 @@ public interface TestItem {
   @SuppressWarnings("unused")
   String getTestOracleDescription();
 
-  int getTestItemId();
-
   class Impl implements TestItem {
-    private final IndexedTestCase testCase;
+    private final IndexedTestCase indexedTestCase;
     private final TestOracle      testOracle;
-    private final int             testItemId;
     private final String          testSuiteDescription;
 
-    Impl(String testSuiteDescription, IndexedTestCase testCase, TestOracle testOracle, int testItemId) {
-      this.testCase = testCase;
+    Impl(String testSuiteDescription, IndexedTestCase indexedTestCase, TestOracle testOracle) {
+      this.indexedTestCase = indexedTestCase;
       this.testOracle = testOracle;
-      this.testItemId = testItemId;
       this.testSuiteDescription = testSuiteDescription;
     }
 
     @Override
     public int getTestCaseId() {
-      return testCase.getIndex();
+      return indexedTestCase.getIndex();
     }
 
     @Override
     public Tuple getTestCaseTuple() {
-      return testCase.get();
+      return indexedTestCase.get();
     }
 
     @Override
@@ -45,16 +41,11 @@ public interface TestItem {
 
     @Override
     public String getTestOracleDescription() {
-      return testOracle.templateDescription(testCase.get(), testSuiteDescription);
-    }
-
-    @Override
-    public int getTestItemId() {
-      return testItemId;
+      return testOracle.templateDescription(indexedTestCase.get(), testSuiteDescription);
     }
   }
 
-  static TestItem create(String testSuiteDescription, IndexedTestCase testCase, TestOracle testOracle, int testItemId) {
-    return new Impl(testSuiteDescription, testCase, testOracle, testItemId);
+  static TestItem create(String testSuiteDescription, IndexedTestCase testCase, TestOracle testOracle) {
+    return new Impl(testSuiteDescription, testCase, testOracle);
   }
 }

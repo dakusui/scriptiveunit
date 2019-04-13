@@ -1,6 +1,5 @@
 package com.github.dakusui.scriptiveunit.model;
 
-import com.github.dakusui.scriptiveunit.core.Config;
 import com.github.dakusui.scriptiveunit.core.Utils;
 import com.github.dakusui.scriptiveunit.exceptions.ScriptiveUnitException;
 import org.codehaus.jackson.map.ObjectMapper;
@@ -15,14 +14,13 @@ import static java.lang.String.format;
 public interface Report extends Map<String, Object> {
   void submit();
 
-  static Report create(Config config, TestItem testItem) {
-    String testSuiteName = config.getScriptResourceName();
+  static Report create(TestItem testItem, final String testSuiteName, final File baseDirectory, final String reportFileName) {
     int testCaseId = testItem.getTestCaseId();
     int oracleId = testItem.getTestOracleId();
     return new Base() {
       @Override
       public void submit() {
-        File reportFile = new File(ensureDirectoryExists(reportingDirectory()), config.getReportFileName());
+        File reportFile = new File(ensureDirectoryExists(reportingDirectory()), reportFileName);
         try {
           new ObjectMapper().writeValue(reportFile, this);
         } catch (IOException e) {
@@ -47,7 +45,7 @@ public interface Report extends Map<String, Object> {
       }
 
       private File baseDirectory() {
-        return config.getBaseDirectory();
+        return baseDirectory;
       }
 
       private File ensureDirectoryExists(File dir) {

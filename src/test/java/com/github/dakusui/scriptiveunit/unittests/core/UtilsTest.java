@@ -1,14 +1,33 @@
 package com.github.dakusui.scriptiveunit.unittests.core;
 
 import com.github.dakusui.scriptiveunit.core.Utils;
+import org.codehaus.jackson.node.JsonNodeFactory;
+import org.codehaus.jackson.node.ObjectNode;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
+import static com.github.dakusui.crest.Crest.*;
+import static com.github.dakusui.scriptiveunit.core.Utils.mergeObjectNodes;
 import static org.junit.Assert.assertTrue;
 
 @RunWith(JUnit4.class)
 public class UtilsTest {
+  @Test
+  public void mergeTest() {
+    ObjectNode a = JsonNodeFactory.instance.objectNode();
+    a.put("a", "A");
+    ObjectNode b = JsonNodeFactory.instance.objectNode();
+    b.put("b", "B");
+
+    assertThat(
+        mergeObjectNodes(a, b),
+        allOf(
+            asString(call("get", "a").andThen("asText").$()).equalTo("A").$(),
+            asString(call("get", "b").andThen("asText").$()).equalTo("B").$()
+        ));
+  }
+
   @Test
   public void whenAllTypesAnnotatedWith$thenThisClassIsFound() {
     assertTrue(

@@ -7,17 +7,29 @@ import com.github.dakusui.scriptiveunit.annotations.Scriptable;
 import com.github.dakusui.scriptiveunit.core.Utils;
 import com.github.dakusui.scriptiveunit.model.Stage;
 import com.github.dakusui.scriptiveunit.model.func.Func;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Arrays;
 import java.util.Objects;
+import java.util.function.Consumer;
 
 import static com.github.dakusui.actionunit.Actions.simple;
 import static com.github.dakusui.scriptiveunit.core.Utils.prettify;
 import static java.util.Arrays.stream;
+import static java.util.Objects.requireNonNull;
 import static java.util.stream.Collectors.toList;
 
 @SuppressWarnings("unused")
 public class Basic {
+  private static final Logger LOGGER = LoggerFactory.getLogger(Basic.class);
+
+  private static Consumer<String> out = System.err::println;//LOGGER::debug;
+
+  public static void setOut(Consumer<String> out) {
+    Basic.out = requireNonNull(out);
+  }
+
   @SuppressWarnings("unused")
   @Scriptable
   public Func<Action> nop() {
@@ -59,8 +71,23 @@ public class Basic {
   public Func<Action> print(Func<?> in) {
     return input -> simple(prettify(
         "print",
-        () -> System.out.println(in.apply(input)))
+        () -> {
+          String s = in.apply(input).toString();
+          System.out.println(s);
+        })
     );
+  }
+
+  @Doc("Consumes a string composed from a given string 'msg' and given an input value " +
+      "using the static field 'out' and returns the value.")
+  @SuppressWarnings("unused")
+  @Scriptable
+  public <T> Func<T> debug(Func<String> msg, Func<T> in) {
+    return input -> {
+      T ret = in.apply(input);
+      out.accept(msg.apply(input) + ":" + ret);
+      return ret;
+    };
   }
 
   @Doc("Prints to a given value to a 'dumb' output, which doesn't do anything.")

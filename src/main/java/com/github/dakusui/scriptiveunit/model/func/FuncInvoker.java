@@ -78,10 +78,8 @@ public interface FuncInvoker {
       try {
         this.writeLine("%s(", alias);
         if (targetIsMemoized) {
-          //noinspection unchecked
           ret = computeIfAbsent(target, stage, key);
         } else {
-          //noinspection unchecked
           ret = target.apply(stage);
         }
         return toBigDecimalIfPossible(ret);
@@ -112,11 +110,11 @@ public interface FuncInvoker {
     }
 
     private String indent(int indent) {
-      String ret = "";
+      StringBuilder ret = new StringBuilder();
       for (int i = 0; i < indent; i++) {
-        ret += indent();
+        ret.append(indent());
       }
-      return ret;
+      return ret.toString();
     }
 
     private String indent() {

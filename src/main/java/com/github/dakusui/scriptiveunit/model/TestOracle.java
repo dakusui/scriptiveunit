@@ -29,7 +29,6 @@ public interface TestOracle {
 
   Function<Session, Action> createTestActionFactory(
       TestItem testItem,
-      Tuple testCaseTuple,
       Map<List<Object>, Object> memo
   );
 }

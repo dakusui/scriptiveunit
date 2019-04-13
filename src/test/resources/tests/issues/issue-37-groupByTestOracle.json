@@ -1,0 +1,4 @@
+{
+  "$extends": ["tests/issues/issue-37.json"],
+  "runnerType": "groupByTestOracle"
+}

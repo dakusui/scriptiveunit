@@ -9,8 +9,6 @@ import static com.github.dakusui.scriptiveunit.exceptions.ConfigurationException
 import static com.github.dakusui.scriptiveunit.exceptions.ScriptiveUnitException.wrap;
 
 public interface Config {
-  Class<?> getDriverClass();
-
   Object getDriverObject();
 
   String getScriptResourceNameKey();
@@ -42,11 +40,6 @@ public interface Config {
       try {
         return new Config() {
           Object driverObject = Builder.this.driverClass.newInstance();
-
-          @Override
-          public Class<?> getDriverClass() {
-            return Builder.this.driverClass;
-          }
 
           @Override
           public Object getDriverObject() {

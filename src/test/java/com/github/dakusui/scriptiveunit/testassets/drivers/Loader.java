@@ -20,7 +20,7 @@ public abstract class Loader extends JsonBasedLoader {
   protected ObjectNode readObjectNodeWithMerging(String resourceName) {
     ObjectNode work = super.readObjectNodeWithMerging(resourceName);
     for (ObjectNode each : objectNodes()) {
-      work = Utils.deepMerge(each, work);
+      Utils.deepMerge(each, work);
     }
     return work;
   }

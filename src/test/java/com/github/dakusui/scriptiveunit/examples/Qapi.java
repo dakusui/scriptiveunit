@@ -9,10 +9,14 @@ import com.github.dakusui.scriptiveunit.annotations.Scriptable;
 import com.github.dakusui.scriptiveunit.core.Config;
 import com.github.dakusui.scriptiveunit.core.JsonUtils;
 import com.github.dakusui.scriptiveunit.core.Preprocessor;
-import com.github.dakusui.scriptiveunit.drivers.*;
+import com.github.dakusui.scriptiveunit.drivers.Arith;
+import com.github.dakusui.scriptiveunit.drivers.Collections;
+import com.github.dakusui.scriptiveunit.drivers.Core;
+import com.github.dakusui.scriptiveunit.drivers.Predicates;
+import com.github.dakusui.scriptiveunit.drivers.QueryApi;
+import com.github.dakusui.scriptiveunit.drivers.Strings;
 import com.github.dakusui.scriptiveunit.drivers.actions.Basic;
 import com.github.dakusui.scriptiveunit.loaders.json.JsonBasedLoader;
-import com.github.dakusui.scriptiveunit.model.Stage;
 import com.github.dakusui.scriptiveunit.model.func.Func;
 import com.google.common.collect.Maps;
 import org.codehaus.jackson.JsonNode;
@@ -25,7 +29,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import static com.github.dakusui.scriptiveunit.core.JsonUtils.*;
+import static com.github.dakusui.scriptiveunit.core.JsonUtils.array;
+import static com.github.dakusui.scriptiveunit.core.JsonUtils.object;
+import static com.github.dakusui.scriptiveunit.core.JsonUtils.pathMatcher;
 import static com.github.dakusui.scriptiveunit.core.Utils.deepMerge;
 import static java.lang.String.format;
 import static java.util.Collections.unmodifiableMap;
@@ -50,12 +56,9 @@ public class Qapi {
             (JsonNode targetElement) ->
                 deepMerge(
                     ((ObjectNode) targetElement),
-                    object()
-                        .$("after", array()
-                            .$("print")
-                            .$("overridden default for 'after'").build()
-                        ).build()
-                ),
+                    object().$(
+                        "after",
+                        array().$("nop").build()).build()),
             pathMatcher("testOracles", ".*")
         ));
       }};
@@ -235,7 +238,8 @@ public class Qapi {
     @SuppressWarnings("unused")
     ITEM_07("iPhone 6 ケース", 1_980),
     @SuppressWarnings("unused")
-    ITEM_08("iPhone 6Plus シルバー", 68_000),;
+    ITEM_08("iPhone 6Plus シルバー", 68_000),
+    ;
 
     private final String content;
     private final int    price;
