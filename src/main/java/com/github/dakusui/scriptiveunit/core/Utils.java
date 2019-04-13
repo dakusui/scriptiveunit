@@ -41,8 +41,12 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
-import static com.github.dakusui.scriptiveunit.exceptions.SyntaxException.*;
-import static java.lang.Character.*;
+import static com.github.dakusui.scriptiveunit.exceptions.SyntaxException.cyclicTemplatingFound;
+import static com.github.dakusui.scriptiveunit.exceptions.SyntaxException.mergeFailed;
+import static com.github.dakusui.scriptiveunit.exceptions.SyntaxException.undefinedFactor;
+import static java.lang.Character.isUpperCase;
+import static java.lang.Character.toLowerCase;
+import static java.lang.Character.toUpperCase;
 import static java.lang.ClassLoader.getSystemResourceAsStream;
 import static java.lang.String.format;
 import static java.math.MathContext.DECIMAL128;
@@ -60,11 +64,13 @@ public enum Utils {
 
   public static Runnable prettify(String prettyString, Runnable runnable) {
     return new Runnable() {
-      @Override public void run() {
+      @Override
+      public void run() {
         runnable.run();
       }
 
-      @Override public String toString() {
+      @Override
+      public String toString() {
         return prettyString;
       }
     };
@@ -72,11 +78,13 @@ public enum Utils {
 
   public static <T> Supplier<T> prettify(String prettyString, Supplier<T> supplier) {
     return new Supplier<T>() {
-      @Override public T get() {
+      @Override
+      public T get() {
         return supplier.get();
       }
 
-      @Override public String toString() {
+      @Override
+      public String toString() {
         return prettyString;
       }
     };
@@ -84,11 +92,13 @@ public enum Utils {
 
   public static <T> Source<T> prettify(String prettyString, Source<T> source) {
     return new Source<T>() {
-      @Override public T apply(Context context) {
+      @Override
+      public T apply(Context context) {
         return source.apply(context);
       }
 
-      @Override public String toString() {
+      @Override
+      public String toString() {
         return prettyString;
       }
     };
@@ -97,11 +107,13 @@ public enum Utils {
   public static <T, U> Pipe<T, U> prettify(String prettyString, Pipe<T, U> pipe) {
     return new Pipe<T, U>() {
 
-      @Override public U apply(T t, Context context) {
+      @Override
+      public U apply(T t, Context context) {
         return pipe.apply(t, context);
       }
 
-      @Override public String toString() {
+      @Override
+      public String toString() {
         return prettyString;
       }
     };
@@ -110,11 +122,13 @@ public enum Utils {
   public static <T> Predicate<T> prettify(String prettyString, Predicate<T> predicate) {
     return new Predicate<T>() {
 
-      @Override public boolean test(T t) {
+      @Override
+      public boolean test(T t) {
         return predicate.test(t);
       }
 
-      @Override public String toString() {
+      @Override
+      public String toString() {
         return prettyString;
       }
     };
@@ -123,11 +137,13 @@ public enum Utils {
   public static <T> Sink<T> prettify(String prettyString, Sink<T> sink) {
     return new Sink<T>() {
 
-      @Override public void apply(T t, Context context) {
+      @Override
+      public void apply(T t, Context context) {
         sink.apply(t, context);
       }
 
-      @Override public String toString() {
+      @Override
+      public String toString() {
         return prettyString;
       }
     };
@@ -282,7 +298,8 @@ public enum Utils {
   }
 
   // safe because both Long.class and long.class are of type Class<Long>
-  @SuppressWarnings("unchecked") public static <T> Class<T> wrap(Class<T> c) {
+  @SuppressWarnings("unchecked")
+  public static <T> Class<T> wrap(Class<T> c) {
     return c.isPrimitive() ? (Class<T>) PRIMITIVES_TO_WRAPPERS.get(c) : c;
   }
 
@@ -409,11 +426,13 @@ public enum Utils {
     static <FROM, TO> Converter<FROM, TO> create(Class<FROM> fromClass, Class<TO> toClass,
         Function<FROM, TO> conveterBody) {
       return new Converter<FROM, TO>() {
-        @Override public boolean supports(Object input, Class<?> to) {
+        @Override
+        public boolean supports(Object input, Class<?> to) {
           return fromClass.isAssignableFrom(input.getClass()) && toClass.isAssignableFrom(wrap(to));
         }
 
-        @Override public TO apply(FROM from) {
+        @Override
+        public TO apply(FROM from) {
           return conveterBody.apply(from);
         }
       };
