@@ -120,7 +120,7 @@ public class ScriptiveSuiteSet extends ParentRunner<Runner> {
           "'%s' was given as partition id, but it was not less than the number of partitions: '%s'",
           partitionId,
           numPartitions));
-    return s -> s.hashCode() % numPartitions == partitionId;
+    return s -> Math.abs(s.hashCode()) % numPartitions == partitionId;
   }
 
   private static Class<?> figureOutDriverClass(Class<?> klass) {
