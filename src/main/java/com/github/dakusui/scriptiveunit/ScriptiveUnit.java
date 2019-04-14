@@ -138,7 +138,7 @@ public class ScriptiveUnit extends Parameterized {
   public static TestSuiteDescriptor.Loader createTestSuiteDescriptorLoader(Config config) {
     return TestSuiteDescriptor.Loader.createInstance(
         getAnnotationWithDefault(
-            config.getDriverClass(),
+            config.getDriverObject().getClass(),
             Load.DEFAULT_INSTANCE
         ).with(),
         config

@@ -47,7 +47,7 @@ public final class GroupedTestItemRunner extends ParentRunner<Action> {
         .map(
             (Function<TestOracle, Runner>) input
                 -> createRunnerForTestOracle(
-                session.getConfig().getDriverClass(),
+                session.getConfig().getDriverObject().getClass(),
                 id.getAndIncrement(),
                 input,
                 session)
