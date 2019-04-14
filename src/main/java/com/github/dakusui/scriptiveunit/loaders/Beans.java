@@ -384,12 +384,12 @@ public enum Beans {
         private Tuple projectMultiLevelFactors(Tuple testCaseTuple, Session session) {
           return Utils.filterSimpleSingleLevelParametersOut(
               testCaseTuple,
-              session.loadTestSuiteDescriptor().getFactorSpaceDescriptor().getParameters()
+              session.getTestSuiteDescriptor().getFactorSpaceDescriptor().getParameters()
           );
         }
 
         private String composeDescription(Tuple testCaseTuple, Session session) {
-          return template(description, append(testCaseTuple, "@TESTSUITE", session.loadTestSuiteDescriptor().getDescription()));
+          return template(description, append(testCaseTuple, "@TESTSUITE", session.getTestSuiteDescriptor().getDescription()));
         }
 
 

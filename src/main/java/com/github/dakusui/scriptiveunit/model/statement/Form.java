@@ -114,7 +114,7 @@ public interface Form {
     }
 
     private Optional<Supplier<List<Object>>> getUserDefinedFormClauseFromSessionByName(String name) {
-      Map<String, List<Object>> clauseMap = session.loadTestSuiteDescriptor().getUserDefinedFormClauses();
+      Map<String, List<Object>> clauseMap = session.getTestSuiteDescriptor().getUserDefinedFormClauses();
       return clauseMap.containsKey(name) ?
           Optional.of(() -> clauseMap.get(name)) :
           Optional.empty();

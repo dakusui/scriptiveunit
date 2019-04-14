@@ -70,10 +70,10 @@ public class ScriptiveUnit extends Parameterized {
 
   @Override
   public String getName() {
-    return this.session.loadTestSuiteDescriptor().getConfig().getScriptResourceName()
+    return this.session.getConfig().getScriptResourceName()
         .replaceAll(".+/", "")
         .replaceAll("\\.[^.]*$", "")
-        + ":" + this.session.loadTestSuiteDescriptor().getDescription();
+        + ":" + this.session.getTestSuiteDescriptor().getDescription();
   }
 
 
@@ -97,7 +97,7 @@ public class ScriptiveUnit extends Parameterized {
                 SETUP_BEFORE_ALL,
                 session,
                 createCommonFixture(
-                    session.loadTestSuiteDescriptor().getFactorSpaceDescriptor().getParameters()
+                    session.getTestSuiteDescriptor().getFactorSpaceDescriptor().getParameters()
                 )));
         super.evaluate();
       }
@@ -109,7 +109,7 @@ public class ScriptiveUnit extends Parameterized {
     return new RunBefores(statement, Collections.emptyList(), null) {
       @Override
       public void evaluate() throws Throwable {
-        TestSuiteDescriptor descriptor = session.loadTestSuiteDescriptor();
+        TestSuiteDescriptor descriptor = session.getTestSuiteDescriptor();
         super.evaluate();
         performActionWithLogging(
             createSuiteLevelAction(
@@ -170,7 +170,7 @@ public class ScriptiveUnit extends Parameterized {
   }
 
   private Map<String, List<Object>> getUserDefinedFormClauses() {
-    return this.session.loadTestSuiteDescriptor().getUserDefinedFormClauses();
+    return this.session.getTestSuiteDescriptor().getUserDefinedFormClauses();
   }
 
   public static List<ObjectMethod> getObjectMethodsFromImportedFieldsInObject(Object object) {

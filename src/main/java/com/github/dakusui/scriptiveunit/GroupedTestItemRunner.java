@@ -4,7 +4,6 @@ import com.github.dakusui.actionunit.Action;
 import com.github.dakusui.jcunit.core.tuples.Tuple;
 import com.github.dakusui.jcunit8.factorspace.Parameter;
 import com.github.dakusui.jcunit8.testsuite.TestCase;
-import com.github.dakusui.scriptiveunit.core.Utils;
 import com.github.dakusui.scriptiveunit.exceptions.ScriptiveUnitException;
 import com.github.dakusui.scriptiveunit.loaders.IndexedTestCase;
 import com.github.dakusui.scriptiveunit.model.Stage;
@@ -21,15 +20,25 @@ import org.junit.runners.model.InitializationError;
 import org.junit.runners.model.Statement;
 
 import java.lang.annotation.Annotation;
-import java.util.*;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
-import static com.github.dakusui.actionunit.Actions.*;
+import static com.github.dakusui.actionunit.Actions.attempt;
+import static com.github.dakusui.actionunit.Actions.named;
+import static com.github.dakusui.actionunit.Actions.nop;
+import static com.github.dakusui.actionunit.Actions.sequential;
 import static com.github.dakusui.scriptiveunit.GroupedTestItemRunner.Type.OrderBy.TEST_CASE;
 import static com.github.dakusui.scriptiveunit.GroupedTestItemRunner.Type.OrderBy.TEST_ORACLE;
 import static com.github.dakusui.scriptiveunit.core.Utils.filterSimpleSingleLevelParametersOut;
+import static com.github.dakusui.scriptiveunit.core.Utils.performActionWithLogging;
 import static com.github.dakusui.scriptiveunit.model.Stage.Type.SETUP;
 import static com.github.dakusui.scriptiveunit.model.Stage.Type.TEARDOWN;
 import static com.github.dakusui.scriptiveunit.model.func.FuncInvoker.createMemo;
@@ -40,7 +49,7 @@ import static java.util.stream.Collectors.toList;
 
 public final class GroupedTestItemRunner extends ParentRunner<Action> {
   private static Iterable<Runner> createRunnersGroupingByTestOracle(final Session session) {
-    TestSuiteDescriptor testSuiteDescriptor = session.loadTestSuiteDescriptor();
+    TestSuiteDescriptor testSuiteDescriptor = session.getTestSuiteDescriptor();
     AtomicInteger id = new AtomicInteger(0);
     return testSuiteDescriptor.getTestOracles()
         .stream()
@@ -55,7 +64,7 @@ public final class GroupedTestItemRunner extends ParentRunner<Action> {
   }
 
   private static Iterable<Runner> createRunnersGroupingByTestCase(final Session session) {
-    TestSuiteDescriptor testSuiteDescriptor = session.loadTestSuiteDescriptor();
+    TestSuiteDescriptor testSuiteDescriptor = session.getTestSuiteDescriptor();
     return testSuiteDescriptor.getTestCases()
         .stream()
         .map(
@@ -67,7 +76,7 @@ public final class GroupedTestItemRunner extends ParentRunner<Action> {
   }
 
   private static Iterable<Runner> createRunnersGroupingByTestFixture(Session session) {
-    TestSuiteDescriptor testSuiteDescriptor = session.loadTestSuiteDescriptor();
+    TestSuiteDescriptor testSuiteDescriptor = session.getTestSuiteDescriptor();
     List<Parameter> parameters = testSuiteDescriptor.getFactorSpaceDescriptor().getParameters();
     List<String> singleLevelFactors = parameters.stream()
         .filter((Parameter each) -> each instanceof Parameter.Simple)
@@ -165,12 +174,13 @@ public final class GroupedTestItemRunner extends ParentRunner<Action> {
       OrderBy orderBy() {
         return TEST_ORACLE;
       }
-    },;
+    },
+    ;
 
     enum OrderBy {
       TEST_CASE {
         Stream<Action> buildSortedActionStreamOrderingBy(Session session, List<IndexedTestCase> testCases, AtomicInteger i) {
-          TestSuiteDescriptor testSuiteDescriptor = session.loadTestSuiteDescriptor();
+          TestSuiteDescriptor testSuiteDescriptor = session.getTestSuiteDescriptor();
           List<? extends TestOracle> testOracles = testSuiteDescriptor.getTestOracles();
           return testCases.stream()
               .flatMap(eachTestCase -> {
@@ -190,7 +200,7 @@ public final class GroupedTestItemRunner extends ParentRunner<Action> {
       TEST_ORACLE {
         @Override
         Stream<Action> buildSortedActionStreamOrderingBy(Session session, List<IndexedTestCase> testCases, AtomicInteger i) {
-          TestSuiteDescriptor testSuiteDescriptor = session.loadTestSuiteDescriptor();
+          TestSuiteDescriptor testSuiteDescriptor = session.getTestSuiteDescriptor();
           List<? extends TestOracle> testOracles = testSuiteDescriptor.getTestOracles();
           return testOracles.stream()
               .flatMap(eachOracle -> testCases.stream()
@@ -236,7 +246,7 @@ public final class GroupedTestItemRunner extends ParentRunner<Action> {
       @Override
       public void evaluate() throws Throwable {
         super.evaluate();
-        Utils.performActionWithLogging(beforeAction);
+        performActionWithLogging(beforeAction);
       }
     };
   }
@@ -247,7 +257,7 @@ public final class GroupedTestItemRunner extends ParentRunner<Action> {
       @Override
       public void evaluate() throws Throwable {
         super.evaluate();
-        Utils.performActionWithLogging(afterAction);
+        performActionWithLogging(afterAction);
       }
     };
   }
@@ -285,7 +295,7 @@ public final class GroupedTestItemRunner extends ParentRunner<Action> {
     return format("[%d]", this.groupId);
   }
 
-  private Statement actionBlock(Action action) {
+  private static Statement actionBlock(Action action) {
     return actionInvoker(action);
   }
 
@@ -293,17 +303,17 @@ public final class GroupedTestItemRunner extends ParentRunner<Action> {
     return format("%s[%d]", action.toString(), this.groupId);
   }
 
-  private Statement actionInvoker(Action action) {
+  private static Statement actionInvoker(Action action) {
     return new Statement() {
       @Override
       public void evaluate() {
-        Utils.performActionWithLogging(action);
+        performActionWithLogging(action);
       }
     };
   }
 
   private static GroupedTestItemRunner createRunnerForTestOracle(Class<?> testClass, int testOracleId, TestOracle testOracle, Session session) {
-    TestSuiteDescriptor testSuiteDescriptor = session.loadTestSuiteDescriptor();
+    TestSuiteDescriptor testSuiteDescriptor = session.getTestSuiteDescriptor();
     List<Parameter> factors = testSuiteDescriptor.getFactorSpaceDescriptor().getParameters();
     String testSuiteDescription = testSuiteDescriptor.getDescription();
     List<IndexedTestCase> testCases = testSuiteDescriptor.getTestCases();
@@ -311,46 +321,7 @@ public final class GroupedTestItemRunner extends ParentRunner<Action> {
       return new GroupedTestItemRunner(testClass,
           testOracleId,
           nop(),
-          testCases.stream()
-              .map(new Function<IndexedTestCase, Action>() {
-                int i = 0;
-
-                @Override
-                public Action apply(IndexedTestCase input) {
-                  try {
-                    Tuple prettifiedTestCaseTuple = filterSimpleSingleLevelParametersOut(input.get(), factors);
-                    return sequential(
-                        format("%03d: %s", i, testOracle.templateDescription(input.get(), testSuiteDescription)),
-                        named(
-                            format("%03d: Setup test fixture", i),
-                            named(format("fixture: %s", prettifiedTestCaseTuple),
-                                requireNonNull(createFixtureLevelAction(SETUP, session, input.get()))
-                            )
-                        ),
-                        attempt(
-                            testOracle.createTestActionFactory(
-                                TestItem.create(
-                                    testSuiteDescriptor.getDescription(), input,
-                                    testOracle,
-                                    input.getIndex()
-                                ),
-                                input.get(),
-                                createMemo()
-                            ).apply(session)
-                        ).ensure(
-                            named(
-                                format("%03d: Tear down fixture", i),
-                                named(format("fixture: %s", prettifiedTestCaseTuple),
-                                    requireNonNull(createFixtureLevelAction(TEARDOWN, session, input.get()))
-                                )
-                            )
-                        ).build()
-                    );
-                  } finally {
-                    i++;
-                  }
-                }
-              }).collect(toList()),
+          ActionFactory.createMainActionsTestOracles(testOracle, session, testSuiteDescriptor, factors, testSuiteDescription, testCases),
           nop()
       );
     } catch (InitializationError initializationError) {
@@ -359,7 +330,7 @@ public final class GroupedTestItemRunner extends ParentRunner<Action> {
   }
 
   private static GroupedTestItemRunner createRunnerForTestCase(Class<?> testClass, IndexedTestCase testCase, Session session) {
-    TestSuiteDescriptor testSuiteDescriptor = session.loadTestSuiteDescriptor();
+    TestSuiteDescriptor testSuiteDescriptor = session.getTestSuiteDescriptor();
     int testCaseId = testCase.getIndex();
     List<Parameter> parameters = testSuiteDescriptor.getFactorSpaceDescriptor().getParameters();
     List<? extends TestOracle> testOracles = testSuiteDescriptor.getTestOracles();
@@ -368,29 +339,12 @@ public final class GroupedTestItemRunner extends ParentRunner<Action> {
       Tuple testCaseTuple = testCase.get();
       Tuple prettifiedTestCaseTuple = filterSimpleSingleLevelParametersOut(testCase.get(), parameters);
       Map<List<Object>, Object> memo = createMemo();
-      return new GroupedTestItemRunner(testClass,
+      return new GroupedTestItemRunner(
+          testClass,
           testCaseId,
-          named(
-              format("%03d: Setup test fixture", i.getAndIncrement()),
-              named(format("fixture: %s", prettifiedTestCaseTuple),
-                  requireNonNull(createFixtureLevelAction(SETUP, session, testCaseTuple)))),
-          testOracles.stream()
-              .map((TestOracle input) -> input.createTestActionFactory(
-                  TestItem.create(
-                      testSuiteDescriptor.getDescription(), testCase,
-                      input,
-                      input.getIndex()
-                  ),
-                  testCaseTuple,
-                  memo
-              ).apply(session))
-              .collect(toList()),
-          named(
-              format("%03d: Tear down fixture", testOracles.size()),
-              named(format("fixture: %s", prettifiedTestCaseTuple),
-                  requireNonNull(createFixtureLevelAction(TEARDOWN, session, testCaseTuple))
-              )
-          )
+          ActionFactory.createSetUpActionForTestCase(session, i, testCaseTuple, prettifiedTestCaseTuple),
+          ActionFactory.createMainActionsForTestCase(testCase, session, testSuiteDescriptor, testOracles, testCaseTuple, memo),
+          ActionFactory.createTearDownActionForTestCase(session, testOracles, testCaseTuple, prettifiedTestCaseTuple)
       );
     } catch (InitializationError initializationError) {
       throw ScriptiveUnitException.wrap(initializationError);
@@ -398,33 +352,124 @@ public final class GroupedTestItemRunner extends ParentRunner<Action> {
   }
 
   private static GroupedTestItemRunner createRunnerForTestFixture(Class<?> testClass, int fixtureId, Tuple fixture, List<IndexedTestCase> testCasesFilteredByFixture, Session session) {
-    TestSuiteDescriptor testSuiteDescriptor = session.loadTestSuiteDescriptor();
+    TestSuiteDescriptor testSuiteDescriptor = session.getTestSuiteDescriptor();
     try {
       AtomicInteger i = new AtomicInteger(0);
       return new GroupedTestItemRunner(
           testClass,
           fixtureId,
-          named(
-              "Setup test fixture",
-              named(format("fixture: %s", fixture),
-                  requireNonNull(createFixtureLevelAction(SETUP, session, fixture)))),
-          testSuiteDescriptor.getRunnerType()
-              .orderBy()
-              .buildSortedActionStreamOrderingBy(session, testCasesFilteredByFixture, i)
-              .collect(toList()),
-          named(
-              "Tear down fixture",
-              named(format("fixture: %s", fixture),
-                  requireNonNull(createFixtureLevelAction(TEARDOWN, session, fixture))
-              )
-          )
+          ActionFactory.createSetUpActionForTestFixture(fixture, session),
+          ActionFactory.createMainActionsForTestFixture(testCasesFilteredByFixture, session, testSuiteDescriptor, i),
+          ActionFactory.createTearDownActionForTestFixture(fixture, session)
       );
     } catch (InitializationError initializationError) {
       throw ScriptiveUnitException.wrap(initializationError);
     }
   }
 
-  private static Action createFixtureLevelAction(Stage.Type stageType, Session session, Tuple input) {
-    return stageType.getFixtureLevelActionFactory(session).apply(Stage.Factory.createFixtureLevelStage(stageType, session, input));
+  private enum ActionFactory {
+    ;
+
+    private static Action createTearDownActionForTestFixture(Tuple fixture, Session session) {
+      return named("Tear down fixture", named(format("fixture: %s", fixture), requireNonNull(createFixtureLevelAction(TEARDOWN, session, fixture))));
+    }
+
+    private static Action createSetUpActionForTestFixture(Tuple fixture, Session session) {
+      return named("Setup test fixture", named(format("fixture: %s", fixture), requireNonNull(createFixtureLevelAction(SETUP, session, fixture))));
+    }
+
+    private static Action createFixtureLevelAction(Stage.Type stageType, Session session, Tuple input) {
+      return stageType.getFixtureLevelActionFactory(session).apply(Stage.Factory.createFixtureLevelStage(stageType, session, input));
+    }
+
+    private static List<Action> createMainActionsTestOracles(TestOracle testOracle, Session session, TestSuiteDescriptor testSuiteDescriptor, List<Parameter> factors, String testSuiteDescription, List<IndexedTestCase> testCases) {
+      return testCases.stream()
+          .map(new Function<IndexedTestCase, Action>() {
+            int i = 0;
+
+            @Override
+            public Action apply(IndexedTestCase input) {
+              try {
+                Tuple prettifiedTestCaseTuple = filterSimpleSingleLevelParametersOut(input.get(), factors);
+                return sequential(
+                    format("%03d: %s", i, testOracle.templateDescription(input.get(), testSuiteDescription)),
+                    named(
+                        format("%03d: Setup test fixture", i),
+                        named(format("fixture: %s", prettifiedTestCaseTuple),
+                            requireNonNull(createFixtureLevelAction(SETUP, session, input.get()))
+                        )
+                    ),
+                    attempt(
+                        testOracle.createTestActionFactory(
+                            TestItem.create(
+                                testSuiteDescriptor.getDescription(), input,
+                                testOracle,
+                                input.getIndex()
+                            ),
+                            input.get(),
+                            createMemo()
+                        ).apply(session)
+                    ).ensure(
+                        named(
+                            format("%03d: Tear down fixture", i),
+                            named(format("fixture: %s", prettifiedTestCaseTuple),
+                                requireNonNull(createFixtureLevelAction(TEARDOWN, session, input.get()))
+                            )
+                        )
+                    ).build()
+                );
+              } finally {
+                i++;
+              }
+            }
+          }).collect(toList());
+    }
+
+    private static List<Action> createMainActionsForTestCase(IndexedTestCase testCase, Session session, TestSuiteDescriptor testSuiteDescriptor, List<? extends TestOracle> testOracles, Tuple testCaseTuple, Map<List<Object>, Object> memo) {
+      return testOracles.stream()
+          .map((TestOracle input) -> input.createTestActionFactory(
+              TestItem.create(
+                  testSuiteDescriptor.getDescription(),
+                  testCase,
+                  input,
+                  input.getIndex()
+              ),
+              testCaseTuple,
+              memo
+          ).apply(session))
+          .collect(toList());
+    }
+
+    private static List<Action> createMainActionsForTestFixture
+        (List<IndexedTestCase> testCasesFilteredByFixture,
+            Session session,
+            TestSuiteDescriptor testSuiteDescriptor,
+            AtomicInteger i) {
+      return testSuiteDescriptor.getRunnerType()
+          .orderBy()
+          .buildSortedActionStreamOrderingBy(session, testCasesFilteredByFixture, i)
+          .collect(toList());
+    }
+
+    private static Action createTearDownActionForTestCase(Session session, List<? extends TestOracle> testOracles, Tuple testCaseTuple, Tuple prettifiedTestCaseTuple) {
+      return named(
+          format("%03d: Tear down fixture", testOracles.size()),
+          named(format("fixture: %s", prettifiedTestCaseTuple),
+              requireNonNull(createFixtureLevelAction(TEARDOWN, session, testCaseTuple))
+          )
+      );
+    }
+
+    private static Action createSetUpActionForTestCase(Session session, AtomicInteger i, Tuple testCaseTuple, Tuple prettifiedTestCaseTuple) {
+      return named(
+          format("%03d: Setup test fixture", i.getAndIncrement()),
+          named(format("fixture: %s", prettifiedTestCaseTuple),
+              requireNonNull(createFixtureLevelAction(SETUP, session, testCaseTuple))));
+    }
+  }
+
+  enum JunitUtils {
+    ;
+
   }
 }
