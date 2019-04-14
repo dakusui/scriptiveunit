@@ -15,14 +15,13 @@ import static java.lang.String.format;
 public interface Report extends Map<String, Object> {
   void submit();
 
-  static Report create(Config config, TestItem testItem) {
-    String testSuiteName = config.getScriptResourceName();
+  static Report create(TestItem testItem, final Config.Reporting reportingConfig, String testSuiteName) {
     int testCaseId = testItem.getTestCaseId();
     int oracleId = testItem.getTestOracleId();
     return new Base() {
       @Override
       public void submit() {
-        File reportFile = new File(ensureDirectoryExists(reportingDirectory()), config.getReportFileName());
+        File reportFile = new File(ensureDirectoryExists(reportingDirectory()), reportingConfig.reportFileName);
         try {
           new ObjectMapper().writeValue(reportFile, this);
         } catch (IOException e) {
@@ -47,7 +46,7 @@ public interface Report extends Map<String, Object> {
       }
 
       private File baseDirectory() {
-        return config.getBaseDirectory();
+        return reportingConfig.reportBaseDirectory;
       }
 
       private File ensureDirectoryExists(File dir) {

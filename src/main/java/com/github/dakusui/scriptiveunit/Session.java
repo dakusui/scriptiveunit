@@ -40,7 +40,7 @@ public interface Session {
 
     @Override
     public Report createReport(TestItem testItem) {
-      return Report.create(testSuiteDescriptor.getConfig(), testItem);
+      return Report.create(testItem, testSuiteDescriptor.getConfig().getReportingConfig(), testSuiteDescriptor.getConfig().getScriptResourceName());
     }
 
     @Override

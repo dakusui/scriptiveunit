@@ -9,17 +9,23 @@ import static com.github.dakusui.scriptiveunit.exceptions.ConfigurationException
 import static com.github.dakusui.scriptiveunit.exceptions.ScriptiveUnitException.wrap;
 
 public interface Config {
-  Class<?> getDriverClass();
-
   Object getDriverObject();
 
   String getScriptResourceNameKey();
 
   String getScriptResourceName();
 
-  File getBaseDirectory();
+  Reporting getReportingConfig();
 
-  String getReportFileName();
+  class Reporting {
+    public final String reportFileName;
+    public final File   reportBaseDirectory;
+
+    Reporting(String reportFileName, File reportBaseDirectory) {
+      this.reportFileName = reportFileName;
+      this.reportBaseDirectory = reportBaseDirectory;
+    }
+  }
 
   class Builder {
     private final Properties properties;
@@ -41,12 +47,8 @@ public interface Config {
     public Config build() {
       try {
         return new Config() {
+          private Reporting reporting = new Reporting("report.json", new File("."));
           Object driverObject = Builder.this.driverClass.newInstance();
-
-          @Override
-          public Class<?> getDriverClass() {
-            return Builder.this.driverClass;
-          }
 
           @Override
           public Object getDriverObject() {
@@ -68,13 +70,8 @@ public interface Config {
           }
 
           @Override
-          public File getBaseDirectory() {
-            return new File(".");
-          }
-
-          @Override
-          public String getReportFileName() {
-            return "report.json";
+          public Reporting getReportingConfig() {
+            return reporting;
           }
         };
       } catch (InstantiationException | IllegalAccessException e) {
