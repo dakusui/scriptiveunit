@@ -3,7 +3,7 @@
     <groupId>com.github.dakusui</groupId>
     <artifactId>scriptiveunit</artifactId>
     <packaging>jar</packaging>
-    <version>0.3.6-SNAPSHOT</version>
+    <version>0.4.0-SNAPSHOT</version>
     <description>Action based junit test runner library</description>
     <name>scriptiveunit</name>
     <url>https://github.com/dakusui/scriptunit</url>
