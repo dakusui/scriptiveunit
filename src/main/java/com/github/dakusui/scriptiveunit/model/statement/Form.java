@@ -1,7 +1,7 @@
 package com.github.dakusui.scriptiveunit.model.statement;
 
 import com.github.dakusui.scriptiveunit.ScriptiveUnit;
-import com.github.dakusui.scriptiveunit.Session;
+import com.github.dakusui.scriptiveunit.core.Config;
 import com.github.dakusui.scriptiveunit.core.ObjectMethod;
 import com.github.dakusui.scriptiveunit.model.Stage;
 import com.github.dakusui.scriptiveunit.model.func.Func;
@@ -76,16 +76,16 @@ public interface Form {
   }
 
   class Factory {
-    private final Object            driver;
-    private final Func.Factory      funcFactory;
-    private final Statement.Factory statementFactory;
-    private final Session           session;
+    private final Object                    driver;
+    private final Func.Factory              funcFactory;
+    private final Statement.Factory         statementFactory;
+    private final Map<String, List<Object>> clauseMap;
 
-    public Factory(Session session, Func.Factory funcFactory, Statement.Factory statementFactory) {
-      this.driver = requireNonNull(session.getConfig().getDriverObject());
+    public Factory(Func.Factory funcFactory, Statement.Factory statementFactory, Config config, Map<String, List<Object>> userDefinedFormClauses) {
+      this.driver = requireNonNull(config.getDriverObject());
       this.funcFactory = funcFactory;
       this.statementFactory = statementFactory;
-      this.session = session;
+      this.clauseMap = requireNonNull(userDefinedFormClauses);
     }
 
     @SuppressWarnings("WeakerAccess")
@@ -114,7 +114,6 @@ public interface Form {
     }
 
     private Optional<Supplier<List<Object>>> getUserDefinedFormClauseFromSessionByName(String name) {
-      Map<String, List<Object>> clauseMap = session.getTestSuiteDescriptor().getUserDefinedFormClauses();
       return clauseMap.containsKey(name) ?
           Optional.of(() -> clauseMap.get(name)) :
           Optional.empty();

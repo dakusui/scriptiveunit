@@ -22,7 +22,7 @@ import java.util.*;
 import java.util.stream.Stream;
 
 import static com.github.dakusui.actionunit.Utils.createTestClassMock;
-import static com.github.dakusui.jcunit8.factorspace.Parameter.*;
+import static com.github.dakusui.jcunit8.factorspace.Parameter.Simple;
 import static com.github.dakusui.scriptiveunit.core.Utils.performActionWithLogging;
 import static com.github.dakusui.scriptiveunit.exceptions.ResourceException.functionNotFound;
 import static com.github.dakusui.scriptiveunit.model.Stage.Type.SETUP_BEFORE_ALL;
@@ -39,8 +39,9 @@ public class ScriptiveUnit extends Parameterized {
   /**
    * Test runners each of which runs a test case represented by an action.
    */
-  private final List<Runner> runners;
-  private final Session      session;
+  private final List<Runner>        runners;
+  private final Session             session;
+  private final TestSuiteDescriptor testSuiteDescriptor;
 
   /**
    * Only called reflectively. Do not use programmatically.
@@ -64,8 +65,9 @@ public class ScriptiveUnit extends Parameterized {
 
   public ScriptiveUnit(Class<?> klass, TestSuiteDescriptor.Loader loader) throws Throwable {
     super(klass);
-    this.session = Session.create(loader);
-    this.runners = newLinkedList(session.createTestItemRunners());
+    this.session = Session.create(loader.getConfig());
+    this.testSuiteDescriptor = requireNonNull(loader.loadTestSuiteDescriptor(session));
+    this.runners = newLinkedList(this.testSuiteDescriptor.createRunners(this.session));
   }
 
   @Override
@@ -73,7 +75,7 @@ public class ScriptiveUnit extends Parameterized {
     return this.session.getConfig().getScriptResourceName()
         .replaceAll(".+/", "")
         .replaceAll("\\.[^.]*$", "")
-        + ":" + this.session.getTestSuiteDescriptor().getDescription();
+        + ":" + this.testSuiteDescriptor.getDescription();
   }
 
 
@@ -96,9 +98,8 @@ public class ScriptiveUnit extends Parameterized {
             createSuiteLevelAction(
                 SETUP_BEFORE_ALL,
                 session,
-                createCommonFixture(
-                    session.getTestSuiteDescriptor().getFactorSpaceDescriptor().getParameters()
-                )));
+                createCommonFixture(testSuiteDescriptor.getFactorSpaceDescriptor().getParameters()),
+                testSuiteDescriptor));
         super.evaluate();
       }
     };
@@ -109,13 +110,14 @@ public class ScriptiveUnit extends Parameterized {
     return new RunBefores(statement, Collections.emptyList(), null) {
       @Override
       public void evaluate() throws Throwable {
-        TestSuiteDescriptor descriptor = session.getTestSuiteDescriptor();
+        TestSuiteDescriptor descriptor = testSuiteDescriptor;
         super.evaluate();
         performActionWithLogging(
             createSuiteLevelAction(
                 TEARDOWN_AFTER_ALL,
                 session,
-                createCommonFixture(descriptor.getFactorSpaceDescriptor().getParameters()))
+                createCommonFixture(descriptor.getFactorSpaceDescriptor().getParameters()),
+                descriptor)
         );
       }
     };
@@ -130,8 +132,9 @@ public class ScriptiveUnit extends Parameterized {
     return b.build();
   }
 
-  private static Action createSuiteLevelAction(Stage.Type stageType, Session session, Tuple commonFixture) {
-    return stageType.getSuiteLevelActionFactory(session).apply(Stage.Factory.createSuiteLevelStage(stageType, session, commonFixture));
+  private static Action createSuiteLevelAction(Stage.Type stageType, Session session, Tuple commonFixture, TestSuiteDescriptor testSuiteDescriptor) {
+    return stageType.getSuiteLevelActionFactory(testSuiteDescriptor)
+        .apply(Stage.Factory.createSuiteLevelStage(stageType, commonFixture, testSuiteDescriptor.statementFactory(), session.getConfig()));
   }
 
 
@@ -166,11 +169,11 @@ public class ScriptiveUnit extends Parameterized {
 
 
   private List<String> getUserDefinedFormClauseNamesFromScript() {
-    return getUserDefinedFormClauses().keySet().stream().collect(toList());
+    return new ArrayList<>(getUserDefinedFormClauses().keySet());
   }
 
   private Map<String, List<Object>> getUserDefinedFormClauses() {
-    return this.session.getTestSuiteDescriptor().getUserDefinedFormClauses();
+    return this.testSuiteDescriptor.getUserDefinedFormClauses();
   }
 
   public static List<ObjectMethod> getObjectMethodsFromImportedFieldsInObject(Object object) {

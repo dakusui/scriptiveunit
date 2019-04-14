@@ -13,10 +13,10 @@ import org.codehaus.jackson.node.ObjectNode;
 import java.io.IOException;
 import java.util.List;
 
-import static com.github.dakusui.scriptiveunit.core.Utils.deepMerge;
-import static com.github.dakusui.scriptiveunit.core.Utils.openResourceAsStream;
-import static com.github.dakusui.scriptiveunit.core.Utils.readJsonNodeFromStream;
+import static com.github.dakusui.scriptiveunit.core.Utils.*;
 import static com.github.dakusui.scriptiveunit.exceptions.ScriptiveUnitException.wrap;
+import static com.github.dakusui.scriptiveunit.loaders.json.JsonPreprocessorUtils.checkObjectNode;
+import static com.github.dakusui.scriptiveunit.loaders.json.JsonPreprocessorUtils.getParentsOf;
 
 public class JsonBasedLoader extends TestSuiteDescriptor.Loader.Base {
 
@@ -34,23 +34,24 @@ public class JsonBasedLoader extends TestSuiteDescriptor.Loader.Base {
   @Override
   public TestSuiteDescriptor loadTestSuiteDescriptor(Session session) {
     try {
-      return new ObjectMapper()
-          .readValue(
-              readScript(session.getConfig().getScriptResourceName()),
-              TestSuiteDescriptorBean.class
-          ).create(session);
+      return new ObjectMapper().readValue(
+          readScript(session.getConfig().getScriptResourceName()),
+          TestSuiteDescriptorBean.class)
+          .create(session);
     } catch (IOException e) {
       throw wrap(e);
     }
   }
 
   protected ObjectNode readObjectNodeWithMerging(String resourceName) {
-    ObjectNode child = JsonPreprocessorUtils.checkObjectNode(preprocess(readJsonNodeFromStream(openResourceAsStream(resourceName))));
+    ObjectNode child = checkObjectNode(preprocess(readJsonNodeFromStream(openResourceAsStream(resourceName))));
     ObjectNode work = JsonNodeFactory.instance.objectNode();
     if (child.has(EXTENDS_KEYWORD)) {
-      JsonPreprocessorUtils.getParentsOf(child, EXTENDS_KEYWORD).forEach(s -> deepMerge(JsonPreprocessorUtils.checkObjectNode(readObjectNodeWithMerging(s)), work));
+      getParentsOf(child, EXTENDS_KEYWORD)
+          .forEach(s -> deepMerge(checkObjectNode(readObjectNodeWithMerging(s)), work));
     }
-    return deepMerge(child, work);
+    deepMerge(child, work);
+    return work;
   }
 
   protected List<Preprocessor> getPreprocessors() {
@@ -59,8 +60,8 @@ public class JsonBasedLoader extends TestSuiteDescriptor.Loader.Base {
 
   protected ObjectNode readScript(String scriptResourceName) {
     ObjectNode work = readObjectNodeWithMerging(scriptResourceName);
-    ObjectNode ret = JsonPreprocessorUtils.checkObjectNode(readJsonNodeFromStream(openResourceAsStream(DEFAULTS_JSON)));
-    ret = deepMerge(work, ret);
+    ObjectNode ret = checkObjectNode(readJsonNodeFromStream(openResourceAsStream(DEFAULTS_JSON)));
+    deepMerge(work, ret);
     ret.remove(EXTENDS_KEYWORD);
     return ret;
   }

@@ -6,6 +6,8 @@ import com.github.dakusui.scriptiveunit.Session;
 import com.github.dakusui.scriptiveunit.core.Config;
 import com.github.dakusui.scriptiveunit.loaders.IndexedTestCase;
 import com.github.dakusui.scriptiveunit.model.func.Func;
+import com.github.dakusui.scriptiveunit.model.statement.Statement;
+import org.junit.runner.Runner;
 
 import java.lang.reflect.InvocationTargetException;
 import java.util.List;
@@ -39,6 +41,11 @@ public interface TestSuiteDescriptor {
 
   Config getConfig();
 
+  default Iterable<Runner> createRunners(Session session) {
+    return this.getRunnerType().createRunners(session, this);
+  }
+
+  Statement.Factory statementFactory();
 
   interface Loader {
     Config getConfig();

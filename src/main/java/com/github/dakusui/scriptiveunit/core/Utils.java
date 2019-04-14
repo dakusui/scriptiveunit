@@ -16,6 +16,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
 import org.codehaus.jackson.JsonNode;
 import org.codehaus.jackson.map.ObjectMapper;
+import org.codehaus.jackson.node.JsonNodeFactory;
 import org.codehaus.jackson.node.ObjectNode;
 import org.reflections.Reflections;
 import org.reflections.scanners.ResourcesScanner;
@@ -41,12 +42,8 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
-import static com.github.dakusui.scriptiveunit.exceptions.SyntaxException.cyclicTemplatingFound;
-import static com.github.dakusui.scriptiveunit.exceptions.SyntaxException.mergeFailed;
-import static com.github.dakusui.scriptiveunit.exceptions.SyntaxException.undefinedFactor;
-import static java.lang.Character.isUpperCase;
-import static java.lang.Character.toLowerCase;
-import static java.lang.Character.toUpperCase;
+import static com.github.dakusui.scriptiveunit.exceptions.SyntaxException.*;
+import static java.lang.Character.*;
 import static java.lang.ClassLoader.getSystemResourceAsStream;
 import static java.lang.String.format;
 import static java.math.MathContext.DECIMAL128;
@@ -188,6 +185,28 @@ public enum Utils {
     }
   }
 
+  /**
+   * Merges two object nodes and merged object node will be returned.
+   * If {@code a} and {@code b} has the same attributes the value comes from
+   * {@code a} will override the other's.
+   * Values in both {@code a} and {@code b} will not be changed and new object node
+   * will be returned
+   *
+   * @param a An object node.
+   * @param b An object node.
+   * @return A merged object node that is newly created.
+   */
+  public static Object mergeObjectNodes(ObjectNode a, ObjectNode b) {
+    return deepMerge(a, (ObjectNode) JsonNodeFactory.instance.objectNode().putAll(b));
+  }
+
+  /**
+   * Merges {@code source} object node into {@code target} and returns {@code target}.
+   *
+   * @param source An object node to be merged into {@code target}.
+   * @param target An object node to be put attributes in {@code source}
+   * @return {@code target} object node
+   */
   public static ObjectNode deepMerge(ObjectNode source, ObjectNode target) {
     requireNonNull(source);
     requireNonNull(target);

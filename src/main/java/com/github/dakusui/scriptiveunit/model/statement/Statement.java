@@ -1,6 +1,6 @@
 package com.github.dakusui.scriptiveunit.model.statement;
 
-import com.github.dakusui.scriptiveunit.Session;
+import com.github.dakusui.scriptiveunit.core.Config;
 import com.github.dakusui.scriptiveunit.exceptions.SyntaxException;
 import com.github.dakusui.scriptiveunit.exceptions.TypeMismatch;
 import com.github.dakusui.scriptiveunit.model.func.Func;
@@ -9,6 +9,7 @@ import com.github.dakusui.scriptiveunit.model.func.FuncInvoker;
 import com.google.common.collect.Lists;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 
 import static com.github.dakusui.scriptiveunit.exceptions.TypeMismatch.headOfCallMustBeString;
@@ -18,6 +19,10 @@ import static java.util.Objects.requireNonNull;
  * An interface that represents a grammatical structure of a script element.
  */
 public interface Statement {
+  static Factory createStatementFactory(Config config, Map<String, List<Object>> userDefinedFormClauses) {
+    return new Factory(config, userDefinedFormClauses);
+  }
+
   Func compile(FuncInvoker invoker);
 
   interface Atom extends Statement {
@@ -32,12 +37,11 @@ public interface Statement {
   class Factory {
     private final Form.Factory formFactory;
     private final Func.Factory funcFactory;
-    private final FuncHandler  funcHandler;
 
-    public Factory(Session session) {
-      this.funcHandler = new FuncHandler();
+    public Factory(Config config, Map<String, List<Object>> userDefinedFormClauses) {
+      FuncHandler funcHandler = new FuncHandler();
       this.funcFactory = new Func.Factory(funcHandler);
-      this.formFactory = new Form.Factory(session, funcFactory, this);
+      this.formFactory = new Form.Factory(funcFactory, this, config, userDefinedFormClauses);
     }
 
     public Statement create(Object object) throws TypeMismatch {
@@ -47,7 +51,7 @@ public interface Statement {
       Object car = Utils.car(raw);
       if (car instanceof String) {
         Arguments arguments = Arguments.create(this, Utils.cdr(raw));
-        Form form = this.formFactory.create(String.class.cast(car));
+        Form form = this.formFactory.create((String) car);
         return new Nested() {
           @Override
           public Form getForm() {

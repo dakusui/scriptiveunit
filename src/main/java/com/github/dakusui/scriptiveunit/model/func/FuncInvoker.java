@@ -78,10 +78,8 @@ public interface FuncInvoker {
       try {
         this.writeLine("%s(", alias);
         if (targetIsMemoized) {
-          //noinspection unchecked
           ret = computeIfAbsent(target, stage, key);
         } else {
-          //noinspection unchecked
           ret = target.apply(stage);
         }
         return toBigDecimalIfPossible(ret);
