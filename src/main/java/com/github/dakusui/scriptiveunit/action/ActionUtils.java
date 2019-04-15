@@ -4,7 +4,6 @@ import com.github.dakusui.actionunit.Action;
 import com.github.dakusui.jcunit.core.tuples.Tuple;
 import com.github.dakusui.jcunit8.factorspace.Parameter;
 import com.github.dakusui.scriptiveunit.Session;
-import com.github.dakusui.scriptiveunit.core.Config;
 import com.github.dakusui.scriptiveunit.loaders.IndexedTestCase;
 import com.github.dakusui.scriptiveunit.model.Stage;
 import com.github.dakusui.scriptiveunit.model.TestItem;
@@ -28,46 +27,26 @@ import static java.util.stream.Collectors.toList;
 public enum ActionUtils {
   ;
 
-  public static Action createSetUpActionForTestCase(AtomicInteger i, Tuple testCaseTuple, Tuple prettifiedTestCaseTuple, TestSuiteDescriptor testSuiteDescriptor, Config config) {
-    return named(
-        format("%03d: Setup test fixture", i.getAndIncrement()),
-        named(format("fixture: %s", prettifiedTestCaseTuple),
-            requireNonNull(createFixtureLevelAction(SETUP, testCaseTuple, testSuiteDescriptor, config))));
-  }
-
-  public static Action createSetUpActionForTestFixture(Tuple fixture, TestSuiteDescriptor testSuiteDescriptor, Config config) {
+  public static Action createSetUpActionForTestFixture(Tuple fixture, TestSuiteDescriptor testSuiteDescriptor, Session session) {
     return named(
         "Setup test fixture",
         named(format("fixture: %s", fixture),
-            requireNonNull(createFixtureLevelAction(SETUP, fixture, testSuiteDescriptor, config))));
+            requireNonNull(session.createFixtureLevelAction(SETUP, fixture, testSuiteDescriptor))));
   }
 
-  public static Action createTearDownActionForTestCase(List<? extends TestOracle> testOracles, Tuple testCaseTuple, Tuple prettifiedTestCaseTuple, TestSuiteDescriptor testSuiteDescriptor, Config config) {
-    return named(
-        format("%03d: Tear down fixture", testOracles.size()),
-        named(format("fixture: %s", prettifiedTestCaseTuple),
-            requireNonNull(createFixtureLevelAction(TEARDOWN, testCaseTuple, testSuiteDescriptor, config))
-        )
-    );
-  }
-
-  public static Action createTearDownActionForTestFixture(Tuple fixture, TestSuiteDescriptor testSuiteDescriptor, Config config) {
+  public static Action createTearDownActionForTestFixture(
+      Tuple fixture,
+      TestSuiteDescriptor testSuiteDescriptor,
+      Session session) {
     return named("Tear down fixture",
         named(format("fixture: %s", fixture),
-            requireNonNull(createFixtureLevelAction(TEARDOWN, fixture, testSuiteDescriptor, config))));
-  }
-
-  private static Action createFixtureLevelAction(Stage.Type stageType, Tuple input, TestSuiteDescriptor testSuiteDescriptor, Config config) {
-    return stageType
-        .getFixtureLevelActionFactory(testSuiteDescriptor)
-        .apply(Stage.Factory.createFixtureLevelStage(stageType, input, testSuiteDescriptor.statementFactory(), config));
+            requireNonNull(session.createFixtureLevelAction(TEARDOWN, fixture, testSuiteDescriptor))));
   }
 
   public static List<Action> createMainActionsForTestOracles(
       TestOracle testOracle,
       Session session,
-      TestSuiteDescriptor testSuiteDescriptor,
-      final Config config) {
+      TestSuiteDescriptor testSuiteDescriptor) {
     List<Parameter> factors = testSuiteDescriptor.getFactorSpaceDescriptor().getParameters();
     String testSuiteDescription = testSuiteDescriptor.getDescription();
     List<IndexedTestCase> testCases = testSuiteDescriptor.getTestCases();
@@ -84,7 +63,7 @@ public enum ActionUtils {
                   named(
                       format("%03d: Setup test fixture", i),
                       named(format("fixture: %s", prettifiedTestCaseTuple),
-                          requireNonNull(createFixtureLevelAction(SETUP, input.get(), testSuiteDescriptor, config))
+                          requireNonNull(session.createFixtureLevelAction(SETUP, input.get(), testSuiteDescriptor))
                       )
                   ),
                   attempt(
@@ -100,7 +79,7 @@ public enum ActionUtils {
                           named(
                               format("%03d: Tear down fixture", i),
                               named(format("fixture: %s", prettifiedTestCaseTuple),
-                                  requireNonNull(createFixtureLevelAction(TEARDOWN, input.get(), testSuiteDescriptor, config))
+                                  requireNonNull(session.createFixtureLevelAction(TEARDOWN, input.get(), testSuiteDescriptor))
                               )))
                       .build()
               );

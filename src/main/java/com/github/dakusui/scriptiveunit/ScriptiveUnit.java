@@ -134,21 +134,20 @@ public class ScriptiveUnit extends Parameterized {
 
   private static Action createSuiteLevelAction(Stage.Type stageType, Session session, Tuple commonFixture, TestSuiteDescriptor testSuiteDescriptor) {
     return stageType.getSuiteLevelActionFactory(testSuiteDescriptor)
-        .apply(Stage.Factory.createSuiteLevelStage(stageType, commonFixture, testSuiteDescriptor.statementFactory(), session.getConfig()));
+        .apply(session.createSuiteLevelStage(stageType, commonFixture, testSuiteDescriptor.statementFactory()));
   }
 
-
-  public static TestSuiteDescriptor.Loader createTestSuiteDescriptorLoader(Config config) {
+  private static TestSuiteDescriptor.Loader createTestSuiteDescriptorLoader(Config config) {
     return TestSuiteDescriptor.Loader.createInstance(
         getAnnotationWithDefault(
-            config.getDriverClass(),
+            config.getDriverObject().getClass(),
             Load.DEFAULT_INSTANCE
         ).with(),
         config
     );
   }
 
-  public Description describeFunction(Object driverObject, String functionName) {
+  Description describeFunction(Object driverObject, String functionName) {
     Optional<Description> value =
         Stream.concat(
             getObjectMethodsFromImportedFieldsInObject(driverObject).stream().map(ObjectMethod::describe),
@@ -159,7 +158,7 @@ public class ScriptiveUnit extends Parameterized {
     throw functionNotFound(functionName);
   }
 
-  public List<String> getFormNames(Object driverObject) {
+  List<String> getFormNames(Object driverObject) {
     return Stream.concat(
         getObjectMethodsFromImportedFieldsInObject(driverObject)
             .stream()
@@ -179,11 +178,11 @@ public class ScriptiveUnit extends Parameterized {
   public static List<ObjectMethod> getObjectMethodsFromImportedFieldsInObject(Object object) {
     return Utils.getAnnotatedFields(object, Import.class)
         .stream()
-        .map(each -> Utils.getAnnotatedMethods(
-            each.get(),
-            Scriptable.class,
-            createAliasMap(each.getField().getAnnotation(Import.class).value()))
-        )
+        .map(
+            each -> Utils.getAnnotatedMethods(
+                each.get(),
+                Scriptable.class,
+                createAliasMap(each.getField().getAnnotation(Import.class).value())))
         .flatMap(List::stream)
         .filter(objectMethod -> objectMethod.getName() != null)
         .collect(toList());

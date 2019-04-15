@@ -114,13 +114,24 @@ public interface Stage {
     /**
      * Creates a suite level stage, which corresponds to {@code @}{@code BeforeClass} or {@code @}{@code AfterClass}.
      *
-     * @param config
-     * @param type             should be either SETUP_BEFORE_ALL or TEARDOWN_AFTER_ALL.
-     * @param commonFixture    A suite level settings.
+     * @param type          should be either SETUP_BEFORE_ALL or TEARDOWN_AFTER_ALL.
+     * @param commonFixture A suite level settings.
      * @return Created stage.
      */
-    public static Stage createSuiteLevelStage(Type type, Tuple commonFixture, Statement.Factory statementFactory, Config config) {
-      return _create(type, config, statementFactory, commonFixture, null, null, null, null);
+    public static Stage createSuiteLevelStage(
+        Type type,
+        Tuple commonFixture,
+        Statement.Factory statementFactory,
+        Config config) {
+      return _create(
+          type,
+          config,
+          statementFactory,
+          commonFixture,
+          null,
+          null,
+          null,
+          null);
     }
 
     /**
@@ -128,8 +139,8 @@ public interface Stage {
      * {@code fixture} parameter.
      *
      * @param config
-     * @param type             should be either SETUP or TEARDOWN
-     * @param fixture          A fixture level settings.
+     * @param type    should be either SETUP or TEARDOWN
+     * @param fixture A fixture level settings.
      * @return Created stage.
      */
     public static Stage createFixtureLevelStage(Type type, Tuple fixture, Statement.Factory statementFactory, Config config) {
@@ -147,11 +158,16 @@ public interface Stage {
      * @return Created stage
      */
     public static Stage createOracleLevelStage(Type type, TestItem testItem, Report report, Statement.Factory statementFactory, Config config) {
-      return _create(type, config, statementFactory, testItem.getTestCaseTuple(), testItem, null, null, report);
+      return _create(type,
+          config, statementFactory, testItem.getTestCaseTuple(), testItem, null, null, report);
     }
 
     public static <RESPONSE> Stage createOracleVerificationStage(Session session, Statement.Factory statementFactory, TestItem testItem, RESPONSE response, Report report) {
-      return _create(Type.THEN, session.getConfig(), statementFactory, testItem.getTestCaseTuple(), testItem, requireNonNull(response), null, report);
+      return _create(Type.THEN,
+          session.getConfig(), statementFactory, testItem.getTestCaseTuple(), testItem,
+          requireNonNull(response),
+          null,
+          report);
     }
 
     public static Stage createOracleFailureHandlingStage(Session session, TestItem testItem, Throwable throwable, Report report, Statement.Factory statementFactory) {

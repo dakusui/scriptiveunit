@@ -48,7 +48,7 @@ public final class GroupedTestItemRunner extends ParentRunner<Action> {
         .map(
             (Function<TestOracle, Runner>) input
                 -> createRunnerForTestOracle(
-                session.getConfig().getDriverClass(),
+                session.getConfig().getDriverObject().getClass(),
                 id.getAndIncrement(),
                 input,
                 session,
@@ -319,8 +319,8 @@ public final class GroupedTestItemRunner extends ParentRunner<Action> {
           ActionUtils.createMainActionsForTestOracles(
               testOracle,
               session,
-              testSuiteDescriptor,
-              config),
+              testSuiteDescriptor
+          ),
           nop()
       );
     } catch (InitializationError initializationError) {
@@ -344,9 +344,9 @@ public final class GroupedTestItemRunner extends ParentRunner<Action> {
       return new GroupedTestItemRunner(
           testClass,
           testCaseId,
-          createSetUpActionForTestCase(i, testCaseTuple, prettifiedTestCaseTuple, testSuiteDescriptor, session.getConfig()),
+          session.createSetUpActionForTestCase(i, testCaseTuple, prettifiedTestCaseTuple, testSuiteDescriptor),
           createMainActionsForTestCase(testCase, session, testSuiteDescriptor, testOracles, testCaseTuple, memo),
-          createTearDownActionForTestCase(testOracles, testCaseTuple, prettifiedTestCaseTuple, testSuiteDescriptor, session.getConfig())
+          session.createTearDownActionForTestCase(testOracles, testCaseTuple, prettifiedTestCaseTuple, testSuiteDescriptor)
       );
     } catch (InitializationError initializationError) {
       throw ScriptiveUnitException.wrap(initializationError);
@@ -365,9 +365,9 @@ public final class GroupedTestItemRunner extends ParentRunner<Action> {
       return new GroupedTestItemRunner(
           testClass,
           fixtureId,
-          createSetUpActionForTestFixture(fixture, testSuiteDescriptor, session.getConfig()),
+          createSetUpActionForTestFixture(fixture, testSuiteDescriptor, session),
           createMainActionsForTestFixture(testCasesFilteredByFixture, session, testSuiteDescriptor, i),
-          createTearDownActionForTestFixture(fixture, testSuiteDescriptor, session.getConfig())
+          createTearDownActionForTestFixture(fixture, testSuiteDescriptor, session)
       );
     } catch (InitializationError initializationError) {
       throw ScriptiveUnitException.wrap(initializationError);

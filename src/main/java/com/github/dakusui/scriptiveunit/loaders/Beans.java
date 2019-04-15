@@ -358,7 +358,8 @@ public enum Beans {
          * Warning: Created action is not thread safe. Users should create 1 action for 1 thread.
          */
         @Override
-        public Function<Session, Action> createTestActionFactory(TestItem testItem, Tuple testCaseTuple, Map<List<Object>, Object> memo) {
+        public Function<Session, Action>
+        createTestActionFactory(TestItem testItem, Tuple testCaseTuple, Map<List<Object>, Object> memo) {
           int itemId = testItem.getTestItemId();
           Report report = session.createReport(testItem);
           return (Session session) -> sequential(
@@ -397,7 +398,7 @@ public enum Beans {
           Tuple testCaseTuple = testItem.getTestCaseTuple();
           return new Source<Tuple>() {
             FuncInvoker funcInvoker = FuncInvoker.create(memo);
-            Stage givenStage = Stage.Factory.createOracleLevelStage(GIVEN, testItem, report, statementFactory, session.getConfig());
+            Stage givenStage = session.createOracleLevelStage(GIVEN, testItem, report, statementFactory);
             Statement givenStatement = givenStage.getStatementFactory().create(givenClause);
 
             @Override
@@ -433,7 +434,7 @@ public enum Beans {
 
             @Override
             public TestIO apply(Tuple testCase, Context context) {
-              Stage whenStage = Stage.Factory.createOracleLevelStage(WHEN, testItem, report, statementFactory, session.getConfig());
+              Stage whenStage = session.createOracleLevelStage(WHEN, testItem, report, statementFactory);
               return TestIO.create(
                   testCase,
                   Beans.<Boolean>toFunc(
@@ -455,7 +456,7 @@ public enum Beans {
 
             @Override
             public void apply(TestIO testIO, Context context) {
-              Stage thenStage = Stage.Factory.createOracleVerificationStage(session, statementFactory, testItem, testIO.getOutput(), report);
+              Stage thenStage = session.createOracleVerificationStage(statementFactory, testItem, testIO.getOutput(), report);
               assertThat(
                   thenStage,
                   new BaseMatcher<Stage>() {
@@ -500,7 +501,7 @@ public enum Beans {
 
             @Override
             public void apply(T input, Context context) {
-              Stage onFailureStage = Stage.Factory.createOracleFailureHandlingStage(session, testItem, input, report, statementFactory);
+              Stage onFailureStage = session.createOracleFailureHandlingStage(testItem, input, report, statementFactory);
               Statement onFailureStatement = onFailureStage.getStatementFactory().create(onFailureClause);
               Utils.performActionWithLogging(requireNonNull(
                   onFailureClause != null ?
@@ -523,7 +524,7 @@ public enum Beans {
         private Action createActionFromClause(Stage.Type stageType, List<Object> clause, final TestItem testItem, Report report, Map<List<Object>, Object> memo) {
           if (clause == null)
             return (Action) NOP_CLAUSE;
-          Stage stage = Stage.Factory.createOracleLevelStage(stageType, testItem, report, statementFactory, session.getConfig());
+          Stage stage = session.createOracleLevelStage(stageType, testItem, report, statementFactory);
           Statement statement = stage.getStatementFactory().create(clause);
           FuncInvoker funcInvoker = FuncInvoker.create(memo);
           return Beans.<Action>toFunc(statement, funcInvoker).apply(stage);
