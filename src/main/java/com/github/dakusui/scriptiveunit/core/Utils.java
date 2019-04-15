@@ -5,6 +5,7 @@ import com.github.dakusui.actionunit.Context;
 import com.github.dakusui.actionunit.connectors.Pipe;
 import com.github.dakusui.actionunit.connectors.Sink;
 import com.github.dakusui.actionunit.connectors.Source;
+import com.github.dakusui.actionunit.visitors.ActionPrinter;
 import com.github.dakusui.actionunit.visitors.ActionRunner;
 import com.github.dakusui.jcunit.core.tuples.Tuple;
 import com.github.dakusui.jcunit8.factorspace.Parameter;
@@ -42,8 +43,12 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
-import static com.github.dakusui.scriptiveunit.exceptions.SyntaxException.*;
-import static java.lang.Character.*;
+import static com.github.dakusui.scriptiveunit.exceptions.SyntaxException.cyclicTemplatingFound;
+import static com.github.dakusui.scriptiveunit.exceptions.SyntaxException.mergeFailed;
+import static com.github.dakusui.scriptiveunit.exceptions.SyntaxException.undefinedFactor;
+import static java.lang.Character.isUpperCase;
+import static java.lang.Character.toLowerCase;
+import static java.lang.Character.toUpperCase;
 import static java.lang.ClassLoader.getSystemResourceAsStream;
 import static java.lang.String.format;
 import static java.math.MathContext.DECIMAL128;
@@ -181,7 +186,7 @@ public enum Utils {
     try {
       action.accept(runner);
     } finally {
-      action.accept(runner.createPrinter());
+      action.accept(runner.createPrinter(ActionPrinter.Writer.Slf4J.TRACE));
     }
   }
 

@@ -58,8 +58,7 @@ public class Qapi {
                     ((ObjectNode) targetElement),
                     object().$(
                         "after",
-                        array().$("print").$("overridden default for 'after'").build()).build()
-                ),
+                        array().$("nop").build()).build()),
             pathMatcher("testOracles", ".*")
         ));
       }};

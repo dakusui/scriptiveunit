@@ -3,25 +3,19 @@ package com.github.dakusui.scriptiveunit.unittests.issues;
 import com.github.dakusui.scriptiveunit.examples.Qapi;
 import com.github.dakusui.scriptiveunit.testutils.TestUtils;
 import org.junit.Test;
-import org.junit.runner.*;
+import org.junit.runner.Computer;
+import org.junit.runner.Description;
+import org.junit.runner.Request;
+import org.junit.runner.Result;
+import org.junit.runner.Runner;
 import org.junit.runner.notification.RunListener;
 import org.junit.runner.notification.RunNotifier;
-
-import java.io.OutputStream;
-import java.io.PrintStream;
 
 public class Issue37Test {
   public abstract static class Base {
 
     @Test
     public void test() {
-      /*
-      System.setOut(new PrintStream(new OutputStream() {
-        @Override
-        public void write(int b) {
-        }
-      }));
-       */
       TestUtils.configureScriptNameSystemProperty(getScriptName(), Qapi.class);
       runTests();
     }
@@ -32,6 +26,7 @@ public class Issue37Test {
           super.fireTestStarted(description);
           System.err.println("fireTestStarted :" + description);
         }
+
         public void fireTestFinished(final Description description) {
           super.fireTestFinished(description);
           System.err.println("fireTestFinished:" + description);
@@ -40,11 +35,11 @@ public class Issue37Test {
       runNotifier.addListener(new RunListener() {
         @Override
         public void testRunStarted(Description description) {
-//          System.err.println("  testRunStarted:" + description.getDisplayName());
+          //          System.err.println("  testRunStarted:" + description.getDisplayName());
         }
 
         public void testRunFinished(Result result) {
-//          System.err.println("  testRunFinished:" + result);
+          //          System.err.println("  testRunFinished:" + result);
         }
 
         /**
@@ -54,7 +49,7 @@ public class Issue37Test {
          * (generally a class and method name)
          */
         public void testStarted(Description description) throws Exception {
-//          System.err.println("  testStarted:" + description.getDisplayName());
+          //          System.err.println("  testStarted:" + description.getDisplayName());
         }
 
         /**
@@ -63,7 +58,7 @@ public class Issue37Test {
          * @param description the description of the test that just ran
          */
         public void testFinished(Description description) throws Exception {
-//          System.err.println("  testFinished:" + description.getDisplayName());
+          //          System.err.println("  testFinished:" + description.getDisplayName());
         }
       });
       Runner runner = Request.classes(new Computer(), Qapi.class).getRunner();

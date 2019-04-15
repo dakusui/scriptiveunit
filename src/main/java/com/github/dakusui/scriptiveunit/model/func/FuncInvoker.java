@@ -110,11 +110,11 @@ public interface FuncInvoker {
     }
 
     private String indent(int indent) {
-      String ret = "";
+      StringBuilder ret = new StringBuilder();
       for (int i = 0; i < indent; i++) {
-        ret += indent();
+        ret.append(indent());
       }
-      return ret;
+      return ret.toString();
     }
 
     private String indent() {
