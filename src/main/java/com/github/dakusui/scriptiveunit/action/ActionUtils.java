@@ -13,6 +13,7 @@ import com.github.dakusui.scriptiveunit.model.TestSuiteDescriptor;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.BiFunction;
 import java.util.function.Function;
 
 import static com.github.dakusui.actionunit.Actions.*;
@@ -21,26 +22,37 @@ import static com.github.dakusui.scriptiveunit.model.Stage.Type.SETUP;
 import static com.github.dakusui.scriptiveunit.model.Stage.Type.TEARDOWN;
 import static com.github.dakusui.scriptiveunit.model.func.FuncInvoker.createMemo;
 import static java.lang.String.format;
-import static java.util.Objects.requireNonNull;
 import static java.util.stream.Collectors.toList;
 
 public enum ActionUtils {
   ;
 
   public static Action createSetUpActionForTestFixture(Tuple fixture, TestSuiteDescriptor testSuiteDescriptor, Session session) {
+    Stage.Type setup = SETUP;
+    Action fixtureLevelAction = session.createFixtureLevelAction(
+        setup,
+        Session.StageFactory.fixtureLevel(fixture, testSuiteDescriptor.statementFactory(), session.getConfig()),
+        setup.getFixtureLevelActionFactory(testSuiteDescriptor));
     return named(
         "Setup test fixture",
         named(format("fixture: %s", fixture),
-            requireNonNull(session.createFixtureLevelAction(SETUP, fixture, testSuiteDescriptor))));
+            fixtureLevelAction));
   }
 
   public static Action createTearDownActionForTestFixture(
       Tuple fixture,
       TestSuiteDescriptor testSuiteDescriptor,
       Session session) {
-    return named("Tear down fixture",
-        named(format("fixture: %s", fixture),
-            requireNonNull(session.createFixtureLevelAction(TEARDOWN, fixture, testSuiteDescriptor))));
+    Stage.Type teardown = TEARDOWN;
+    Action fixtureLevelAction = session.createFixtureLevelAction(
+        teardown,
+        Session.StageFactory.fixtureLevel(fixture, testSuiteDescriptor.statementFactory(), session.getConfig()),
+        teardown.getFixtureLevelActionFactory(testSuiteDescriptor));
+    BiFunction<Tuple, Action, Action> tear_down_fixture = (fixture1, fixtureLevelAction1) ->
+        named("Tear down fixture",
+        named(format("fixture: %s", fixture1),
+            fixtureLevelAction1));
+    return tear_down_fixture.apply(fixture, fixtureLevelAction);
   }
 
   public static List<Action> createMainActionsForTestOracles(
@@ -58,13 +70,21 @@ public enum ActionUtils {
           public Action apply(IndexedTestCase input) {
             try {
               Tuple prettifiedTestCaseTuple = filterSimpleSingleLevelParametersOut(input.get(), factors);
+              Stage.Type setup = SETUP;
+              Stage.Type teardown = TEARDOWN;
               return sequential(
                   format("%03d: %s", i, testOracle.templateDescription(input.get(), testSuiteDescription)),
                   named(
                       format("%03d: Setup test fixture", i),
                       named(format("fixture: %s", prettifiedTestCaseTuple),
-                          requireNonNull(session.createFixtureLevelAction(SETUP, input.get(), testSuiteDescriptor))
-                      )
+                          session.createFixtureLevelAction(
+                              setup,
+                              Session.StageFactory.fixtureLevel(
+                                  input.get(),
+                                  testSuiteDescriptor.statementFactory(),
+                                  session.getConfig()),
+                              setup.getFixtureLevelActionFactory(testSuiteDescriptor)))
+
                   ),
                   attempt(
                       testOracle.createTestActionFactory(
@@ -79,8 +99,14 @@ public enum ActionUtils {
                           named(
                               format("%03d: Tear down fixture", i),
                               named(format("fixture: %s", prettifiedTestCaseTuple),
-                                  requireNonNull(session.createFixtureLevelAction(TEARDOWN, input.get(), testSuiteDescriptor))
-                              )))
+                                  session.createFixtureLevelAction(
+                                      teardown,
+                                      Session.StageFactory.fixtureLevel(
+                                          input.get(),
+                                          testSuiteDescriptor.statementFactory(),
+                                          session.getConfig()),
+                                      teardown.getFixtureLevelActionFactory(testSuiteDescriptor)))
+                          ))
                       .build()
               );
             } finally {

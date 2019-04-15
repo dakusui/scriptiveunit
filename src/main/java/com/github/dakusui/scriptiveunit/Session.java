@@ -3,19 +3,37 @@ package com.github.dakusui.scriptiveunit;
 import com.github.dakusui.actionunit.Action;
 import com.github.dakusui.jcunit.core.tuples.Tuple;
 import com.github.dakusui.scriptiveunit.core.Config;
-import com.github.dakusui.scriptiveunit.model.*;
+import com.github.dakusui.scriptiveunit.model.Report;
+import com.github.dakusui.scriptiveunit.model.Stage;
+import com.github.dakusui.scriptiveunit.model.TestItem;
+import com.github.dakusui.scriptiveunit.model.TestSuiteDescriptor;
 import com.github.dakusui.scriptiveunit.model.statement.Statement;
 
-import java.util.List;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
+import java.util.function.Supplier;
 
 import static com.github.dakusui.actionunit.Actions.named;
-import static com.github.dakusui.scriptiveunit.model.Stage.Type.SETUP;
-import static com.github.dakusui.scriptiveunit.model.Stage.Type.TEARDOWN;
-import static java.lang.String.format;
-import static java.util.Objects.requireNonNull;
 
+/**
+ * <pre>
+ *   * Fixture
+ *   * Test case
+ *   * Test oracle
+ *   GROUP_BY_TEST_ORACLE:
+ *       beforeAll
+ *       afterAll
+ *   GROUP_BY_TEST_CASE:
+ *       beforeAll
+ *       afterAll
+ *   GROUP_BY_TEST_FIXTURE:
+ *       beforeAll
+ *       afterAll
+ *   GROUP_BY_TEST_FIXTURE_ORDER_BY_TEST_ORACLE:
+ *       beforeAll
+ *       afterAll
+ *
+ * </pre>
+ */
 public interface Session {
   Config getConfig();
 
@@ -41,37 +59,44 @@ public interface Session {
     return Stage.Factory.createOracleFailureHandlingStage(this, testItem, throwable, report, statementFactory);
   }
 
-  default Action createSetUpActionForTestCase(
-      AtomicInteger i,
+  default Action createFixtureLevelActionForTestCase(
       Tuple testCaseTuple,
-      Tuple prettifiedTestCaseTuple,
-      TestSuiteDescriptor testSuiteDescriptor) {
-    return named(
-        format("%03d: Setup test fixture", i.getAndIncrement()),
-        named(format("fixture: %s", prettifiedTestCaseTuple),
-            requireNonNull(createFixtureLevelAction(SETUP, testCaseTuple, testSuiteDescriptor))));
-  }
-
-  default Action createTearDownActionForTestCase(List<? extends TestOracle> testOracles, Tuple testCaseTuple, Tuple prettifiedTestCaseTuple, TestSuiteDescriptor testSuiteDescriptor) {
-    return named(
-        format("%03d: Tear down fixture", testOracles.size()),
-        named(format("fixture: %s", prettifiedTestCaseTuple),
-            requireNonNull(createFixtureLevelAction(TEARDOWN, testCaseTuple, testSuiteDescriptor))
-        )
+      TestSuiteDescriptor testSuiteDescriptor,
+      String actionName,
+      Stage.Type stageType,
+      Supplier<String> tupleFormatter) {
+    Action fixtureLevelAction = createFixtureLevelAction(
+        stageType,
+        StageFactory.fixtureLevel(testCaseTuple, testSuiteDescriptor.statementFactory(), this.getConfig()),
+        stageType.getFixtureLevelActionFactory(testSuiteDescriptor));
+    return decorateFixtureLevelAction(
+        actionName,
+        fixtureLevelAction,
+        tupleFormatter
     );
   }
 
-  default Action createFixtureLevelAction(Stage.Type stageType, Tuple input, TestSuiteDescriptor testSuiteDescriptor) {
-    return stageType
-        .getFixtureLevelActionFactory(testSuiteDescriptor)
-        .apply(
-            Stage.Factory.createFixtureLevelStage(
-                stageType,
-                input,
-                testSuiteDescriptor.statementFactory(),
-                this.getConfig()));
+  static Action decorateFixtureLevelAction(String actionName, Action fixtureLevelAction, Supplier<String> tupleFormatter) {
+    return named(
+        actionName,
+        named(tupleFormatter.get(),
+            fixtureLevelAction));
   }
 
+  default Action createFixtureLevelAction(
+      Stage.Type stageType,
+      StageFactory stageFactory,
+      Function<Stage, Action> actionFactory) {
+    return actionFactory.apply(stageFactory.createStage(stageType));
+  }
+
+  interface StageFactory {
+    Stage createStage(Stage.Type stageTyp);
+
+    static StageFactory fixtureLevel(Tuple fixture, Statement.Factory statementFactory, Config config) {
+      return stageType -> Stage.Factory.createFixtureLevelStage(stageType, fixture, statementFactory, config);
+    }
+  }
 
   static Session create(Config config) {
     return new Impl(config);

@@ -1,0 +1,31 @@
+{
+  "$extends": [],
+  "description": "Non-terminating number handling",
+  "factorSpace": {
+    "factors": {
+      "num": [2, 10, 1024]
+    }
+  },
+  "setUpBeforeAll": ["print", "setUpBeforeAll"],
+  "setUp": ["print", "setUp"],
+  "testOracles": [
+    {
+      "description": "Oracle A",
+      "given": ["always"],
+      "when": ["nop"],
+      "then": [
+        "and",
+        [">", 0.34, ["/", 1, 3]],
+        ["<", 0.33, ["/", 1, ["attr", "num"]]]
+      ]
+    },
+    {
+      "description": "Oracle B",
+      "given": ["always"],
+      "when": ["nop"],
+      "then": ["==", 0.5, ["/", 1, 2]]
+    }
+  ],
+  "tearDown": ["print", "tearDown"],
+  "tearDownAfterAll": ["print", "tearDownAfterAll"]
+}
