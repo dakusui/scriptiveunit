@@ -7,26 +7,26 @@
       "base":["a", "b"]
     }
   },
-  "setUpBeforeAll": ["print","setUpBeforeAll"],
-  "setUp": ["print", ["format", "setUp:base=%s", ["attr", "base"]]],
+  "setUpBeforeAll": ["dumb", ["debug", "setUpBeforeAll", null]],
+  "setUp": ["dumb", ["debug", "setUp",["format", "base=%s", ["attr", "base"]]]],
   "testOracles": [
     {
       "description": "Oracle A",
-      "before": ["print",  ["format", "before:Oracle A:num=%s,base=%s", ["attr", "num"], ["attr", "base"]]],
+      "before": ["dumb",  ["debug", "beforeOracleA", ["format", "num=%s,base=%s", ["attr", "num"], ["attr", "base"]]]],
       "given": ["not", ["always"]],
       "when": ["nop"],
       "then": ["always"],
-      "after": ["print",  ["format", "after:Oracle A:num=%s,base=%s", ["attr", "num"], ["attr", "base"]]]
+      "after": ["dumb",  ["debug", "afterOracleA", ["format", "num=%s,base=%s", ["attr", "num"], ["attr", "base"]]]]
     },
     {
       "description": "Oracle B",
-      "before": ["print",  ["format", "before:Oracle B:num=%s,base=%s", ["attr", "num"], ["attr", "base"]]],
+      "before": ["dumb",  ["debug", "beforeOracleB", ["format", "num=%s,base=%s", ["attr", "num"], ["attr", "base"]]]],
       "given": ["always"],
       "when": ["nop"],
       "then": ["always"],
-      "after": ["print",  ["format", "after:Oracle B:num=%s,base=%s", ["attr", "num"], ["attr", "base"]]]
+      "after": ["dumb",  ["debug", "afterOracleB", ["format", "num=%s,base=%s", ["attr", "num"], ["attr", "base"]]]]
     }
   ],
-  "tearDown": ["print", ["format", "tearDown:base=%s", ["attr", "base"]]],
-  "tearDownAfterAll": ["print", "tearDownAfterAll"]
+  "tearDown": ["dumb", ["debug", "tearDown", ["format", "base=%s", ["attr", "base"]]]],
+  "tearDownAfterAll": ["dumb", ["debug", "tearDownAfterAll", null]]
 }
