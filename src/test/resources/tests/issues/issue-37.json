@@ -12,24 +12,19 @@
   "testOracles": [
     {
       "description": "Oracle A",
+      "before": ["print",  ["format", "before:Oracle A:num=%s,base=%s", ["attr", "num"], ["attr", "base"]]],
       "given": ["not", ["always"]],
-      "when": ["print",  ["format", "Oracle A:%s", ["attr", "num"]]],
-      "then": ["always"]
+      "when": ["nop"],
+      "then": ["always"],
+      "after": ["print",  ["format", "after:Oracle A:num=%s,base=%s", ["attr", "num"], ["attr", "base"]]]
     },
     {
       "description": "Oracle B",
+      "before": ["print",  ["format", "before:Oracle B:num=%s,base=%s", ["attr", "num"], ["attr", "base"]]],
       "given": ["always"],
-      "when": ["print",  ["format", "Oracle B:%s", ["attr", "num"]]],
-      "then": ["always"]
-    },
-    {
-      "description": "Non-terminating floating number created by division can be handled",
-      "given": ["always"],
-      "when": ["print",  ["format", "Oracle A:%s", ["attr", "num"]]],
-      "then": ["and",
-        [">", 0.34, ["/", 1, 4]],
-        ["<", 0.33, ["/", 1, 3]]
-      ]
+      "when": ["nop"],
+      "then": ["always"],
+      "after": ["print",  ["format", "after:Oracle B:num=%s,base=%s", ["attr", "num"], ["attr", "base"]]]
     }
   ],
   "tearDown": ["print", ["format", "tearDown:base=%s", ["attr", "base"]]],

@@ -24,12 +24,12 @@ public class Issue37Test {
       RunNotifier runNotifier = new RunNotifier() {
         public void fireTestStarted(final Description description) {
           super.fireTestStarted(description);
-          System.err.println("fireTestStarted :" + description);
+//          System.err.println("fireTestStarted :" + description);
         }
 
         public void fireTestFinished(final Description description) {
           super.fireTestFinished(description);
-          System.err.println("fireTestFinished:" + description);
+//          System.err.println("fireTestFinished:" + description);
         }
       };
       runNotifier.addListener(new RunListener() {

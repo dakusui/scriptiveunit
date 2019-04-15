@@ -59,7 +59,10 @@ public class Basic {
   public Func<Action> print(Func<?> in) {
     return input -> simple(prettify(
         "print",
-        () -> System.out.println(in.apply(input)))
+        () ->  {
+          String s = in.apply(input).toString();
+          System.out.println(s);
+        })
     );
   }
 

@@ -251,8 +251,8 @@ public final class GroupedTestItemRunner extends ParentRunner<Action> {
     return new RunBefores(statement, Collections.emptyList(), null) {
       @Override
       public void evaluate() throws Throwable {
-        super.evaluate();
         performActionWithLogging(beforeAction);
+        super.evaluate();
       }
     };
   }
