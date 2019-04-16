@@ -33,7 +33,7 @@ import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
 
 /**
- * A main test runner class of ScriptiveUnit.
+ * A createAction test runner class of ScriptiveUnit.
  */
 public class ScriptiveUnit extends Parameterized {
   /**

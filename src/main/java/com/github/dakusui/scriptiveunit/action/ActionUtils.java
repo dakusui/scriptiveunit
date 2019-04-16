@@ -16,11 +16,10 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 
-import static com.github.dakusui.actionunit.Actions.*;
+import static com.github.dakusui.actionunit.Actions.named;
 import static com.github.dakusui.scriptiveunit.core.Utils.filterSimpleSingleLevelParametersOut;
 import static com.github.dakusui.scriptiveunit.model.Stage.Type.SETUP;
 import static com.github.dakusui.scriptiveunit.model.Stage.Type.TEARDOWN;
-import static com.github.dakusui.scriptiveunit.model.func.FuncInvoker.createMemo;
 import static java.lang.String.format;
 import static java.util.stream.Collectors.toList;
 
@@ -50,8 +49,8 @@ public enum ActionUtils {
         teardown.getFixtureLevelActionFactory(testSuiteDescriptor));
     BiFunction<Tuple, Action, Action> tear_down_fixture = (fixture1, fixtureLevelAction1) ->
         named("Tear down fixture",
-        named(format("fixture: %s", fixture1),
-            fixtureLevelAction1));
+            named(format("fixture: %s", fixture1),
+                fixtureLevelAction1));
     return tear_down_fixture.apply(fixture, fixtureLevelAction);
   }
 
@@ -70,44 +69,11 @@ public enum ActionUtils {
           public Action apply(IndexedTestCase input) {
             try {
               Tuple prettifiedTestCaseTuple = filterSimpleSingleLevelParametersOut(input.get(), factors);
-              Stage.Type setup = SETUP;
-              Stage.Type teardown = TEARDOWN;
-              return sequential(
-                  format("%03d: %s", i, testOracle.templateDescription(input.get(), testSuiteDescription)),
-                  named(
-                      format("%03d: Setup test fixture", i),
-                      named(format("fixture: %s", prettifiedTestCaseTuple),
-                          session.createFixtureLevelAction(
-                              setup,
-                              Session.StageFactory.fixtureLevel(
-                                  input.get(),
-                                  testSuiteDescriptor.statementFactory(),
-                                  session.getConfig()),
-                              setup.getFixtureLevelActionFactory(testSuiteDescriptor)))
-
-                  ),
-                  attempt(
-                      testOracle.createTestActionFactory(
-                          TestItem.create(
-                              testSuiteDescription,
-                              input,
-                              testOracle,
-                              input.getIndex()),
-                          input.get(),
-                          createMemo()).apply(session))
-                      .ensure(
-                          named(
-                              format("%03d: Tear down fixture", i),
-                              named(format("fixture: %s", prettifiedTestCaseTuple),
-                                  session.createFixtureLevelAction(
-                                      teardown,
-                                      Session.StageFactory.fixtureLevel(
-                                          input.get(),
-                                          testSuiteDescriptor.statementFactory(),
-                                          session.getConfig()),
-                                      teardown.getFixtureLevelActionFactory(testSuiteDescriptor)))
-                          ))
-                      .build()
+              return session.createActionForTestOracle(
+                  testOracle,
+                  testSuiteDescription,
+                  input,
+                  testSuiteDescriptor, format("%03d: %s", i, testOracle.templateDescription(input.get(), testSuiteDescription)), format("%03d: Setup test fixture", i), format("fixture: %s", prettifiedTestCaseTuple), format("%03d: Tear down fixture", i), format("fixture: %s", prettifiedTestCaseTuple)
               );
             } finally {
               i++;
@@ -132,9 +98,9 @@ public enum ActionUtils {
 
   public static List<Action> createMainActionsForTestFixture
       (List<IndexedTestCase> testCasesFilteredByFixture,
-          Session session,
-          TestSuiteDescriptor testSuiteDescriptor,
-          AtomicInteger i) {
+       Session session,
+       TestSuiteDescriptor testSuiteDescriptor,
+       AtomicInteger i) {
     return testSuiteDescriptor.getRunnerType()
         .orderBy()
         .buildSortedActionStreamOrderingBy(session, testCasesFilteredByFixture, i, testSuiteDescriptor)
