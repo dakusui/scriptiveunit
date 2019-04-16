@@ -13,17 +13,17 @@
     {
       "description": "Oracle A",
       "before": ["dumb",  ["debug", "beforeOracleA", ["format", "num=%s,base=%s", ["attr", "num"], ["attr", "base"]]]],
-      "given": ["not", ["always"]],
-      "when": ["nop"],
-      "then": ["always"],
+      "given": ["debug", "givenOracleA", ["not", ["always"]]],
+      "when": ["debug", "whenOracleA", "HELLO"],
+      "then": ["debug", "thenOracleA",["always"]],
       "after": ["dumb",  ["debug", "afterOracleA", ["format", "num=%s,base=%s", ["attr", "num"], ["attr", "base"]]]]
     },
     {
       "description": "Oracle B",
       "before": ["dumb",  ["debug", "beforeOracleB", ["format", "num=%s,base=%s", ["attr", "num"], ["attr", "base"]]]],
-      "given": ["always"],
-      "when": ["nop"],
-      "then": ["always"],
+      "given": ["debug", "givenOracleB", ["always"]],
+      "when": ["debug", "whenOracleB", "HELLO"],
+      "then": ["debug", "thenOracleB",["always"]],
       "after": ["dumb",  ["debug", "afterOracleB", ["format", "num=%s,base=%s", ["attr", "num"], ["attr", "base"]]]]
     }
   ],
