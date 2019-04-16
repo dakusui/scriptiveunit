@@ -5,6 +5,7 @@ import com.github.dakusui.crest.matcherbuilders.AsList;
 import com.github.dakusui.crest.matcherbuilders.AsObject;
 import com.github.dakusui.scriptiveunit.drivers.actions.Basic;
 import com.github.dakusui.scriptiveunit.examples.Qapi;
+import com.github.dakusui.scriptiveunit.testutils.TestBase;
 import com.github.dakusui.scriptiveunit.testutils.TestUtils;
 import org.junit.Test;
 import org.junit.experimental.runners.Enclosed;
@@ -29,7 +30,7 @@ import static java.util.Arrays.asList;
 
 @RunWith(Enclosed.class)
 public class Issue37Test {
-  public abstract static class Base {
+  public abstract static class Base extends TestBase {
     public static class TestResult {
       final Result       junitResult;
       final List<String> output;

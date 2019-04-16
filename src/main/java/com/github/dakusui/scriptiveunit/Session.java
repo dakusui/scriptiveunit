@@ -35,9 +35,16 @@ import static com.github.dakusui.actionunit.Actions.named;
  * </pre>
  */
 public interface Session {
+  interface ActionFactory {
+    Action setUp();
+    Action tearDown();
+  }
+
   Config getConfig();
 
   Report createReport(TestItem testItem);
+
+  ActionFactory createActionFactory();
 
   default Stage createConstraintConstraintGenerationStage(Statement.Factory statementFactory, Tuple tuple) {
     return Stage.Factory.createConstraintGenerationStage(this.getConfig(), statementFactory, tuple);
@@ -125,6 +132,11 @@ public interface Session {
     @Override
     public Report createReport(TestItem testItem) {
       return reportCreator.apply(testItem);
+    }
+
+    @Override
+    public ActionFactory createActionFactory() {
+      return null;
     }
   }
 }
