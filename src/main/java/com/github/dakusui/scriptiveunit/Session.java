@@ -60,19 +60,14 @@ public interface Session {
       String testSuiteDescription,
       IndexedTestCase input,
       TestSuiteDescriptor testSuiteDescriptor,
-      String actionName,
-      String actionNameForFixtureSetup,
-      String actionDescriptionForFixtureSetUp,
-      String actionNameForFixtureTearDown,
-      String actionDescriptionForFixtureDescription
-  ) {
+      ActionDescriptionComposer actionDescriptionComposer) {
     Stage.Type setup = SETUP;
     Stage.Type teardown = TEARDOWN;
     return sequential(
-        actionName,
+        actionDescriptionComposer.getActionName(),
         named(
-            actionNameForFixtureSetup,
-            named(actionDescriptionForFixtureSetUp,
+            actionDescriptionComposer.getActionNameForFixtureSetup(),
+            named(actionDescriptionComposer.getActionDescriptionForFixtureSetUp(),
                 this.createFixtureLevelAction(
                     setup,
                     Session.StageFactory.fixtureLevel(
@@ -93,8 +88,8 @@ public interface Session {
                 createMemo()).apply(this))
             .ensure(
                 named(
-                    actionNameForFixtureTearDown,
-                    named(actionDescriptionForFixtureDescription,
+                    actionDescriptionComposer.getActionNameForFixtureTearDown(),
+                    named(actionDescriptionComposer.getActionDescriptionForFixtureDescription(),
                         this.createFixtureLevelAction(
                             teardown,
                             Session.StageFactory.fixtureLevel(

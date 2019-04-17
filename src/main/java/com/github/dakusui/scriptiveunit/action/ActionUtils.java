@@ -3,6 +3,7 @@ package com.github.dakusui.scriptiveunit.action;
 import com.github.dakusui.actionunit.Action;
 import com.github.dakusui.jcunit.core.tuples.Tuple;
 import com.github.dakusui.jcunit8.factorspace.Parameter;
+import com.github.dakusui.scriptiveunit.ActionDescriptionComposer;
 import com.github.dakusui.scriptiveunit.Session;
 import com.github.dakusui.scriptiveunit.loaders.IndexedTestCase;
 import com.github.dakusui.scriptiveunit.model.Stage;
@@ -73,8 +74,13 @@ public enum ActionUtils {
                   testOracle,
                   testSuiteDescription,
                   input,
-                  testSuiteDescriptor, format("%03d: %s", i, testOracle.templateDescription(input.get(), testSuiteDescription)), format("%03d: Setup test fixture", i), format("fixture: %s", prettifiedTestCaseTuple), format("%03d: Tear down fixture", i), format("fixture: %s", prettifiedTestCaseTuple)
-              );
+                  testSuiteDescriptor,
+                  new ActionDescriptionComposer(
+                      format("%03d: %s", i, testOracle.templateDescription(input.get(), testSuiteDescription)),
+                      format("%03d: Setup test fixture", i),
+                      format("fixture: %s", prettifiedTestCaseTuple),
+                      format("%03d: Tear down fixture", i),
+                      format("fixture: %s", prettifiedTestCaseTuple)));
             } finally {
               i++;
             }
