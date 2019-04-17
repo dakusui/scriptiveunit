@@ -81,13 +81,18 @@ public interface Session {
                 input.get(),
                 createMemo()).apply(this))
             .ensure(
-                createTearDownActionForFixture(input, testSuiteDescriptor, TEARDOWN, actionDescriptionComposer.getActionNameForFixtureTearDown(), actionDescriptionComposer.getActionDescriptionForFixtureDescription()))
-            .build()
-    );
+                createTearDownActionForFixture(input, testSuiteDescriptor, actionDescriptionComposer))
+            .build());
   }
 
-  default Action createTearDownActionForFixture(IndexedTestCase input, TestSuiteDescriptor testSuiteDescriptor, Stage.Type teardown, String actionNameForFixtureTearDown, String actionDescriptionForFixtureDescription) {
-    return createActionForFixture(input, teardown, actionNameForFixtureTearDown, actionDescriptionForFixtureDescription, teardown.getFixtureLevelActionFactory(testSuiteDescriptor), testSuiteDescriptor.statementFactory());
+  default Action createTearDownActionForFixture(IndexedTestCase input, TestSuiteDescriptor testSuiteDescriptor, ActionDescriptionComposer actionDescriptionComposer) {
+    return createActionForFixture(
+        input,
+        TEARDOWN,
+        actionDescriptionComposer.getActionDescriptionForFixtureDescription(),
+        actionDescriptionComposer.getActionDescriptionForFixtureDescription(),
+        TEARDOWN.getFixtureLevelActionFactory(testSuiteDescriptor),
+        testSuiteDescriptor.statementFactory());
   }
 
   default Action createSetUpActionForFixture(IndexedTestCase input, TestSuiteDescriptor testSuiteDescriptor, ActionDescriptionComposer actionDescriptionComposer) {
@@ -102,7 +107,7 @@ public interface Session {
 
   default Action createActionForFixture(
       IndexedTestCase input,
-      Stage.Type setup,
+      Stage.Type fixtureLevelStageType,
       String actionNameForFixtureLevel,
       String actionDescriptionForFixtureLevel,
       Function<Stage, Action> fixtureLevelActionFactory,
@@ -113,7 +118,7 @@ public interface Session {
             fixtureLevelActionFactory.apply(StageFactory.fixtureLevel(
                 input.get(),
                 statementFactory,
-                this.getConfig()).createStage(setup))));
+                this.getConfig()).createStage(fixtureLevelStageType))));
   }
 
   default Stage createConstraintConstraintGenerationStage(Statement.Factory statementFactory, Tuple tuple) {
@@ -142,10 +147,14 @@ public interface Session {
       String actionName,
       Stage.Type stageType,
       Supplier<String> tupleFormatter) {
-    Action fixtureLevelAction = stageType.getFixtureLevelActionFactory(testSuiteDescriptor).apply(StageFactory.fixtureLevel(testCaseTuple, testSuiteDescriptor.statementFactory(), this.getConfig()).createStage(stageType));
     return decorateFixtureLevelAction(
         actionName,
-        fixtureLevelAction,
+        stageType.getFixtureLevelActionFactory(testSuiteDescriptor)
+            .apply(StageFactory.fixtureLevel(
+                testCaseTuple,
+                testSuiteDescriptor.statementFactory(),
+                this.getConfig())
+                .createStage(stageType)),
         tupleFormatter
     );
   }

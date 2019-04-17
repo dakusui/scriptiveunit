@@ -44,6 +44,7 @@ import static java.util.Collections.singletonList;
 import static java.util.Objects.requireNonNull;
 import static java.util.stream.Collectors.toList;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assume.assumeThat;
 
 public enum Beans {
@@ -359,8 +360,9 @@ public enum Beans {
          */
         @Override
         public Function<Session, Action>
-        createTestActionFactory(TestItem testItem, Tuple testCaseTuple, Map<List<Object>, Object> memo) {
+        createTestActionFactory(TestItem testItem, Tuple testCaseTuple_, Map<List<Object>, Object> memo) {
           int itemId = testItem.getTestItemId();
+          Tuple testCaseTuple = testItem.getTestCaseTuple();
           Report report = session.createReport(testItem);
           return (Session session) -> sequential(
               format("%03d: %s", itemId, composeDescription(testCaseTuple)),

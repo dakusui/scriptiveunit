@@ -205,7 +205,7 @@ public final class GroupedTestItemRunner extends ParentRunner<Action> {
           List<? extends TestOracle> testOracles = testSuiteDescriptor.getTestOracles();
           return testOracles.stream()
               .flatMap(eachOracle -> testCases.stream()
-                  .map(eachTestCase ->
+                  .map((IndexedTestCase eachTestCase) ->
                       eachOracle.createTestActionFactory(
                           TestItem.create(testSuiteDescriptor.getDescription(), eachTestCase, eachOracle, i.getAndIncrement()),
                           eachTestCase.get(),
