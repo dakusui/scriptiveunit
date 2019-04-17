@@ -56,29 +56,29 @@ public interface Session {
   default Action createSetUpActionForFixture(TestSuiteDescriptor testSuiteDescriptor, Tuple fixtureTuple) {
     return createActionForFixture(
         SETUP,
-        testSuiteDescriptor,
         fixtureTuple,
-        testSuiteDescriptor.getSetUpActionFactory());
+        testSuiteDescriptor.getSetUpActionFactory(),
+        testSuiteDescriptor.statementFactory());
   }
 
   default Action createTearDownActionForFixture(TestSuiteDescriptor testSuiteDescriptor, Tuple fixtureTuple) {
     return createActionForFixture(
         TEARDOWN,
-        testSuiteDescriptor,
         fixtureTuple,
-        testSuiteDescriptor.getTearDownActionFactory());
+        testSuiteDescriptor.getTearDownActionFactory(),
+        testSuiteDescriptor.statementFactory());
   }
 
   default Action createActionForFixture(
       Stage.Type fixtureLevelStageType,
-      TestSuiteDescriptor testSuiteDescriptor,
       Tuple fixtureTuple,
-      Function<Stage, Action> fixtureLevelActionFactory) {
+      Function<Stage, Action> fixtureLevelActionFactory,
+      Statement.Factory statementFactory) {
     return createFixtureLevelActionForTestCase(
         fixtureTuple,
         fixtureLevelStageType,
         fixtureLevelActionFactory,
-        testSuiteDescriptor.statementFactory());
+        statementFactory);
   }
 
   default Stage createConstraintConstraintGenerationStage(Statement.Factory statementFactory, Tuple tuple) {
