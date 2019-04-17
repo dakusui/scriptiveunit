@@ -14,7 +14,6 @@ import static com.github.dakusui.actionunit.Actions.*;
 import static com.github.dakusui.scriptiveunit.model.Stage.Type.SETUP;
 import static com.github.dakusui.scriptiveunit.model.Stage.Type.TEARDOWN;
 import static com.github.dakusui.scriptiveunit.model.func.FuncInvoker.createMemo;
-import static java.lang.String.format;
 
 /**
  * <pre>
@@ -47,13 +46,21 @@ public interface Session {
 
   Report createReport(TestItem testItem);
 
-  ActionFactory actionFactoryForTestSuite();
+  default ActionFactory actionFactoryForTestSuite() {
+    return null;
+  }
 
-  ActionFactory actionFactoryForFixture();
+  default ActionFactory actionFactoryForFixture() {
+    return null;
+  }
 
-  ActionFactory actionFactoryForTestCase();
+  default ActionFactory actionFactoryForTestCase() {
+    return null;
+  }
 
-  ActionFactory actionFactoryForTestOracle();
+  default ActionFactory actionFactoryForTestOracle() {
+    return null;
+  }
 
   default Action createActionForTestOracle(
       TestOracle testOracle,
@@ -61,22 +68,9 @@ public interface Session {
       IndexedTestCase input,
       TestSuiteDescriptor testSuiteDescriptor,
       ActionDescriptionComposer actionDescriptionComposer) {
-    Stage.Type setup = SETUP;
-    Stage.Type teardown = TEARDOWN;
     return sequential(
         actionDescriptionComposer.getActionName(),
-        named(
-            actionDescriptionComposer.getActionNameForFixtureSetup(),
-            named(actionDescriptionComposer.getActionDescriptionForFixtureSetUp(),
-                this.createFixtureLevelAction(
-                    setup,
-                    Session.StageFactory.fixtureLevel(
-                        input.get(),
-                        testSuiteDescriptor.statementFactory(),
-                        this.getConfig()),
-                    setup.getFixtureLevelActionFactory(testSuiteDescriptor)))
-
-        ),
+        createSetUpActionForFixture(input, testSuiteDescriptor, actionDescriptionComposer),
         attempt(
             testOracle.createTestActionFactory(
                 TestItem.create(
@@ -87,19 +81,42 @@ public interface Session {
                 input.get(),
                 createMemo()).apply(this))
             .ensure(
-                named(
-                    actionDescriptionComposer.getActionNameForFixtureTearDown(),
-                    named(actionDescriptionComposer.getActionDescriptionForFixtureDescription(),
-                        this.createFixtureLevelAction(
-                            teardown,
-                            Session.StageFactory.fixtureLevel(
-                                input.get(),
-                                testSuiteDescriptor.statementFactory(),
-                                this.getConfig()),
-                            teardown.getFixtureLevelActionFactory(testSuiteDescriptor)))
-                ))
+                createTearDownActionForFixture(input, testSuiteDescriptor, TEARDOWN, actionDescriptionComposer.getActionNameForFixtureTearDown(), actionDescriptionComposer.getActionDescriptionForFixtureDescription()))
             .build()
     );
+  }
+
+  default Action createTearDownActionForFixture(IndexedTestCase input, TestSuiteDescriptor testSuiteDescriptor, Stage.Type teardown, String actionNameForFixtureTearDown, String actionDescriptionForFixtureDescription) {
+    return createActionForFixture(input, teardown, actionNameForFixtureTearDown, actionDescriptionForFixtureDescription, teardown.getFixtureLevelActionFactory(testSuiteDescriptor), testSuiteDescriptor.statementFactory());
+  }
+
+  default Action createSetUpActionForFixture(IndexedTestCase input, TestSuiteDescriptor testSuiteDescriptor, ActionDescriptionComposer actionDescriptionComposer) {
+    return createActionForFixture(
+        input,
+        SETUP,
+        actionDescriptionComposer.getActionNameForFixtureSetup(),
+        actionDescriptionComposer.getActionDescriptionForFixtureSetUp(),
+        SETUP.getFixtureLevelActionFactory(testSuiteDescriptor),
+        testSuiteDescriptor.statementFactory());
+  }
+
+  default Action createActionForFixture(
+      IndexedTestCase input,
+      Stage.Type setup,
+      String actionNameForFixtureLevel,
+      String actionDescriptionForFixtureLevel,
+      Function<Stage, Action> fixtureLevelActionFactory,
+      Statement.Factory statementFactory) {
+    return named(
+        actionNameForFixtureLevel,
+        named(actionDescriptionForFixtureLevel,
+            createFixtureLevelAction(
+                setup,
+                StageFactory.fixtureLevel(
+                    input.get(),
+                    statementFactory,
+                    this.getConfig()),
+                fixtureLevelActionFactory)));
   }
 
   default Stage createConstraintConstraintGenerationStage(Statement.Factory statementFactory, Tuple tuple) {
@@ -146,7 +163,7 @@ public interface Session {
             fixtureLevelAction));
   }
 
-  default Action createFixtureLevelAction(
+  static Action createFixtureLevelAction(
       Stage.Type stageType,
       StageFactory stageFactory,
       Function<Stage, Action> actionFactory) {
@@ -188,26 +205,6 @@ public interface Session {
     @Override
     public Report createReport(TestItem testItem) {
       return reportCreator.apply(testItem);
-    }
-
-    @Override
-    public ActionFactory actionFactoryForTestSuite() {
-      return null;
-    }
-
-    @Override
-    public ActionFactory actionFactoryForFixture() {
-      return null;
-    }
-
-    @Override
-    public ActionFactory actionFactoryForTestCase() {
-      return null;
-    }
-
-    @Override
-    public ActionFactory actionFactoryForTestOracle() {
-      return null;
     }
   }
 }

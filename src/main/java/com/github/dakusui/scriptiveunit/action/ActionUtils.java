@@ -29,7 +29,7 @@ public enum ActionUtils {
 
   public static Action createSetUpActionForTestFixture(Tuple fixture, TestSuiteDescriptor testSuiteDescriptor, Session session) {
     Stage.Type setup = SETUP;
-    Action fixtureLevelAction = session.createFixtureLevelAction(
+    Action fixtureLevelAction = Session.createFixtureLevelAction(
         setup,
         Session.StageFactory.fixtureLevel(fixture, testSuiteDescriptor.statementFactory(), session.getConfig()),
         setup.getFixtureLevelActionFactory(testSuiteDescriptor));
@@ -44,7 +44,7 @@ public enum ActionUtils {
       TestSuiteDescriptor testSuiteDescriptor,
       Session session) {
     Stage.Type teardown = TEARDOWN;
-    Action fixtureLevelAction = session.createFixtureLevelAction(
+    Action fixtureLevelAction = Session.createFixtureLevelAction(
         teardown,
         Session.StageFactory.fixtureLevel(fixture, testSuiteDescriptor.statementFactory(), session.getConfig()),
         teardown.getFixtureLevelActionFactory(testSuiteDescriptor));
