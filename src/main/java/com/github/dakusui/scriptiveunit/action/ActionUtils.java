@@ -1,6 +1,7 @@
 package com.github.dakusui.scriptiveunit.action;
 
 import com.github.dakusui.actionunit.Action;
+import com.github.dakusui.actionunit.Actions;
 import com.github.dakusui.scriptiveunit.Session;
 import com.github.dakusui.scriptiveunit.loaders.IndexedTestCase;
 import com.github.dakusui.scriptiveunit.model.TestItem;
@@ -12,6 +13,7 @@ import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
 
+import static com.github.dakusui.actionunit.Actions.attempt;
 import static com.github.dakusui.scriptiveunit.model.func.FuncInvoker.createMemo;
 import static java.lang.String.format;
 import static java.util.stream.Collectors.toList;
@@ -31,11 +33,18 @@ public enum ActionUtils {
           @Override
           public Action apply(IndexedTestCase input) {
             try {
-              return session.createActionForTestOracle(
-                  testOracle,
-                  input,
-                  testSuiteDescriptor,
-                  format("%03d: %s", i, testOracle.templateDescription(input.get(), testSuiteDescription)), createMemo());
+              return Actions.sequential(
+                  format("%03d: %s", i, testOracle.templateDescription(input.get(), testSuiteDescription)),
+                  session.createSetUpActionForFixture(testSuiteDescriptor, input.get()),
+                  attempt(
+                      session.createMainActionForTestOracle(
+                          testOracle,
+                          input,
+                          createMemo()
+                      ))
+                      .ensure(
+                          session.createTearDownActionForFixture(testSuiteDescriptor, input.get()))
+                      .build());
             } finally {
               i++;
             }
@@ -51,7 +60,6 @@ public enum ActionUtils {
     return testSuiteDescriptor.getTestOracles().stream()
         .map((TestOracle input) -> input.createTestActionFactory(
             TestItem.create(
-                testSuiteDescriptor.getDescription(),
                 indexedTestCase,
                 input),
             memo

@@ -10,18 +10,14 @@ public interface TestItem {
 
   int getTestOracleId();
 
-  @SuppressWarnings("unused")
-  String getTestOracleDescription();
-
   class Impl implements TestItem {
     private final IndexedTestCase indexedTestCase;
     private final TestOracle      testOracle;
-    private final String          testSuiteDescription;
+    private String          testSuiteDescription;
 
-    Impl(String testSuiteDescription, IndexedTestCase indexedTestCase, TestOracle testOracle) {
+    Impl(IndexedTestCase indexedTestCase, TestOracle testOracle) {
       this.indexedTestCase = indexedTestCase;
       this.testOracle = testOracle;
-      this.testSuiteDescription = testSuiteDescription;
     }
 
     @Override
@@ -38,14 +34,9 @@ public interface TestItem {
     public int getTestOracleId() {
       return testOracle.getIndex();
     }
-
-    @Override
-    public String getTestOracleDescription() {
-      return testOracle.templateDescription(indexedTestCase.get(), testSuiteDescription);
-    }
   }
 
-  static TestItem create(String testSuiteDescription, IndexedTestCase testCase, TestOracle testOracle) {
-    return new Impl(testSuiteDescription, testCase, testOracle);
+  static TestItem create(IndexedTestCase testCase, TestOracle testOracle) {
+    return new Impl(testCase, testOracle);
   }
 }

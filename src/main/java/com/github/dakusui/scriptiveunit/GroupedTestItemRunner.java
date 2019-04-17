@@ -194,7 +194,6 @@ public final class GroupedTestItemRunner extends ParentRunner<Action> {
                         eachOracle
                             .createTestActionFactory(
                                 TestItem.create(
-                                    testSuiteDescriptor.getDescription(),
                                     eachTestCase,
                                     eachOracle),
                                 memo)
@@ -211,7 +210,7 @@ public final class GroupedTestItemRunner extends ParentRunner<Action> {
                   .stream()
                   .map((IndexedTestCase eachTestCase) ->
                       eachOracle.createTestActionFactory(
-                          TestItem.create(testSuiteDescriptor.getDescription(), eachTestCase, eachOracle),
+                          TestItem.create(eachTestCase, eachOracle),
                           createMemo()
                       ).apply(session)));
         }

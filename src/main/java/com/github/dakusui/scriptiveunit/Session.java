@@ -15,8 +15,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 
-import static com.github.dakusui.actionunit.Actions.attempt;
-import static com.github.dakusui.actionunit.Actions.sequential;
 import static com.github.dakusui.scriptiveunit.model.Stage.Type.SETUP;
 import static com.github.dakusui.scriptiveunit.model.Stage.Type.TEARDOWN;
 
@@ -45,25 +43,14 @@ public interface Session {
 
   Report createReport(TestItem testItem);
 
-  default Action createActionForTestOracle(
+  default Action createMainActionForTestOracle(
       TestOracle testOracle,
       IndexedTestCase indexedTestCase,
-      TestSuiteDescriptor testSuiteDescriptor,
-      String actionName,
-      Map<List<Object>, Object> memo) {
-    return sequential(
-        actionName,
-        createSetUpActionForFixture(testSuiteDescriptor, indexedTestCase.get()),
-        attempt(
-            testOracle.createTestActionFactory(
-                TestItem.create(
-                    testSuiteDescriptor.getDescription(),
-                    indexedTestCase,
-                    testOracle),
-                memo).apply(this))
-            .ensure(
-                createTearDownActionForFixture(testSuiteDescriptor, indexedTestCase.get()))
-            .build());
+      Map<List<Object>, Object> memo
+  ) {
+    return testOracle
+        .createTestActionFactory(TestItem.create(indexedTestCase, testOracle), memo)
+        .apply(this);
   }
 
   default Action createSetUpActionForFixture(TestSuiteDescriptor testSuiteDescriptor, Tuple fixtureTuple) {
