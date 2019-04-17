@@ -7,7 +7,6 @@ import com.github.dakusui.jcunit8.testsuite.TestCase;
 import com.github.dakusui.scriptiveunit.action.ActionUtils;
 import com.github.dakusui.scriptiveunit.exceptions.ScriptiveUnitException;
 import com.github.dakusui.scriptiveunit.loaders.IndexedTestCase;
-import com.github.dakusui.scriptiveunit.model.TestItem;
 import com.github.dakusui.scriptiveunit.model.TestOracle;
 import com.github.dakusui.scriptiveunit.model.TestSuiteDescriptor;
 import org.junit.internal.runners.statements.RunAfters;
@@ -183,7 +182,7 @@ public final class GroupedTestItemRunner extends ParentRunner<Action> {
 
     public enum OrderBy {
       TEST_CASE {
-        public Stream<Action> buildSortedActionStreamOrderingBy(Session session, List<IndexedTestCase> testCases, AtomicInteger i, TestSuiteDescriptor testSuiteDescriptor) {
+        public Stream<Action> buildSortedActionStreamOrderingBy(Session session, List<IndexedTestCase> testCases, TestSuiteDescriptor testSuiteDescriptor) {
           List<? extends TestOracle> testOracles = testSuiteDescriptor.getTestOracles();
           return testCases.stream()
               .flatMap(eachTestCase -> {
@@ -191,35 +190,33 @@ public final class GroupedTestItemRunner extends ParentRunner<Action> {
                 return testOracles
                     .stream()
                     .map((TestOracle eachOracle) ->
-                        eachOracle
-                            .createTestActionFactory(
-                                TestItem.create(
-                                    eachTestCase,
-                                    eachOracle),
-                                memo)
-                            .apply(session));
+                        session.createMainActionForTestOracle(
+                            eachOracle,
+                            eachTestCase,
+                            memo
+                        ));
               });
         }
       },
       TEST_ORACLE {
         @Override
-        public Stream<Action> buildSortedActionStreamOrderingBy(Session session, List<IndexedTestCase> testCases, AtomicInteger i, TestSuiteDescriptor testSuiteDescriptor) {
+        public Stream<Action> buildSortedActionStreamOrderingBy(Session session, List<IndexedTestCase> testCases,  TestSuiteDescriptor testSuiteDescriptor) {
           List<? extends TestOracle> testOracles = testSuiteDescriptor.getTestOracles();
           return testOracles.stream()
               .flatMap(eachOracle -> testCases
                   .stream()
                   .map((IndexedTestCase eachTestCase) ->
-                      eachOracle.createTestActionFactory(
-                          TestItem.create(eachTestCase, eachOracle),
+                      session.createMainActionForTestOracle(
+                          eachOracle,
+                          eachTestCase,
                           createMemo()
-                      ).apply(session)));
+                      )));
         }
       };
 
       public abstract Stream<Action> buildSortedActionStreamOrderingBy(
           Session session,
           List<IndexedTestCase> testCases,
-          AtomicInteger i,
           TestSuiteDescriptor testSuiteDescriptor);
     }
 
@@ -388,12 +385,11 @@ public final class GroupedTestItemRunner extends ParentRunner<Action> {
       Session session,
       TestSuiteDescriptor testSuiteDescriptor) {
     try {
-      AtomicInteger i = new AtomicInteger(0);
       return new GroupedTestItemRunner(
           testClass,
           fixtureId,
           session.createSetUpActionForFixture(testSuiteDescriptor, fixture),
-          createMainActionsForTestFixture(testCasesFilteredByFixture, session, testSuiteDescriptor, i),
+          createMainActionsForTestFixture(testCasesFilteredByFixture, session, testSuiteDescriptor),
           session.createTearDownActionForFixture(testSuiteDescriptor, fixture)
       );
     } catch (InitializationError initializationError) {
