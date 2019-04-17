@@ -29,10 +29,7 @@ public enum ActionUtils {
 
   public static Action createSetUpActionForTestFixture(Tuple fixture, TestSuiteDescriptor testSuiteDescriptor, Session session) {
     Stage.Type setup = SETUP;
-    Action fixtureLevelAction = Session.createFixtureLevelAction(
-        setup,
-        Session.StageFactory.fixtureLevel(fixture, testSuiteDescriptor.statementFactory(), session.getConfig()),
-        setup.getFixtureLevelActionFactory(testSuiteDescriptor));
+    Action fixtureLevelAction = setup.getFixtureLevelActionFactory(testSuiteDescriptor).apply(Session.StageFactory.fixtureLevel(fixture, testSuiteDescriptor.statementFactory(), session.getConfig()).createStage(setup));
     return named(
         "Setup test fixture",
         named(format("fixture: %s", fixture),
@@ -44,10 +41,7 @@ public enum ActionUtils {
       TestSuiteDescriptor testSuiteDescriptor,
       Session session) {
     Stage.Type teardown = TEARDOWN;
-    Action fixtureLevelAction = Session.createFixtureLevelAction(
-        teardown,
-        Session.StageFactory.fixtureLevel(fixture, testSuiteDescriptor.statementFactory(), session.getConfig()),
-        teardown.getFixtureLevelActionFactory(testSuiteDescriptor));
+    Action fixtureLevelAction = teardown.getFixtureLevelActionFactory(testSuiteDescriptor).apply(Session.StageFactory.fixtureLevel(fixture, testSuiteDescriptor.statementFactory(), session.getConfig()).createStage(teardown));
     BiFunction<Tuple, Action, Action> tear_down_fixture = (fixture1, fixtureLevelAction1) ->
         named("Tear down fixture",
             named(format("fixture: %s", fixture1),

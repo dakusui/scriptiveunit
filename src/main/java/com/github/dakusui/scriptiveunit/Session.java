@@ -110,13 +110,10 @@ public interface Session {
     return named(
         actionNameForFixtureLevel,
         named(actionDescriptionForFixtureLevel,
-            createFixtureLevelAction(
-                setup,
-                StageFactory.fixtureLevel(
-                    input.get(),
-                    statementFactory,
-                    this.getConfig()),
-                fixtureLevelActionFactory)));
+            fixtureLevelActionFactory.apply(StageFactory.fixtureLevel(
+                input.get(),
+                statementFactory,
+                this.getConfig()).createStage(setup))));
   }
 
   default Stage createConstraintConstraintGenerationStage(Statement.Factory statementFactory, Tuple tuple) {
@@ -145,10 +142,7 @@ public interface Session {
       String actionName,
       Stage.Type stageType,
       Supplier<String> tupleFormatter) {
-    Action fixtureLevelAction = createFixtureLevelAction(
-        stageType,
-        StageFactory.fixtureLevel(testCaseTuple, testSuiteDescriptor.statementFactory(), this.getConfig()),
-        stageType.getFixtureLevelActionFactory(testSuiteDescriptor));
+    Action fixtureLevelAction = stageType.getFixtureLevelActionFactory(testSuiteDescriptor).apply(StageFactory.fixtureLevel(testCaseTuple, testSuiteDescriptor.statementFactory(), this.getConfig()).createStage(stageType));
     return decorateFixtureLevelAction(
         actionName,
         fixtureLevelAction,
@@ -161,13 +155,6 @@ public interface Session {
         actionName,
         named(tupleFormatter.get(),
             fixtureLevelAction));
-  }
-
-  static Action createFixtureLevelAction(
-      Stage.Type stageType,
-      StageFactory stageFactory,
-      Function<Stage, Action> actionFactory) {
-    return actionFactory.apply(stageFactory.createStage(stageType));
   }
 
   interface StageFactory {
