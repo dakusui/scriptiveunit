@@ -35,7 +35,6 @@ import static com.github.dakusui.scriptiveunit.GroupedTestItemRunner.Type.OrderB
 import static com.github.dakusui.scriptiveunit.GroupedTestItemRunner.Type.OrderBy.TEST_ORACLE;
 import static com.github.dakusui.scriptiveunit.action.ActionUtils.createMainActionsForTestCase;
 import static com.github.dakusui.scriptiveunit.action.ActionUtils.createMainActionsForTestFixture;
-import static com.github.dakusui.scriptiveunit.core.Utils.filterSimpleSingleLevelParametersOut;
 import static com.github.dakusui.scriptiveunit.core.Utils.performActionWithLogging;
 import static com.github.dakusui.scriptiveunit.model.func.FuncInvoker.createMemo;
 import static java.lang.String.format;
@@ -182,8 +181,7 @@ public final class GroupedTestItemRunner extends ParentRunner<Action> {
 
     public enum OrderBy {
       TEST_CASE {
-        public Stream<Action> buildSortedActionStreamOrderingBy(Session session, List<IndexedTestCase> testCases, TestSuiteDescriptor testSuiteDescriptor) {
-          List<? extends TestOracle> testOracles = testSuiteDescriptor.getTestOracles();
+        public Stream<Action> buildSortedActionStreamOrderingBy(Session session, List<IndexedTestCase> testCases, List<? extends TestOracle> testOracles) {
           return testCases.stream()
               .flatMap(eachTestCase -> {
                 Map<List<Object>, Object> memo = createMemo();
@@ -200,8 +198,7 @@ public final class GroupedTestItemRunner extends ParentRunner<Action> {
       },
       TEST_ORACLE {
         @Override
-        public Stream<Action> buildSortedActionStreamOrderingBy(Session session, List<IndexedTestCase> testCases,  TestSuiteDescriptor testSuiteDescriptor) {
-          List<? extends TestOracle> testOracles = testSuiteDescriptor.getTestOracles();
+        public Stream<Action> buildSortedActionStreamOrderingBy(Session session, List<IndexedTestCase> testCases, List<? extends TestOracle> testOracles) {
           return testOracles.stream()
               .flatMap(eachOracle -> testCases
                   .stream()
@@ -217,7 +214,7 @@ public final class GroupedTestItemRunner extends ParentRunner<Action> {
       public abstract Stream<Action> buildSortedActionStreamOrderingBy(
           Session session,
           List<IndexedTestCase> testCases,
-          TestSuiteDescriptor testSuiteDescriptor);
+          List<? extends TestOracle> testOracles);
     }
 
     public abstract Iterable<Runner> createRunners(Session session, TestSuiteDescriptor testSuiteDescriptor);
@@ -330,9 +327,8 @@ public final class GroupedTestItemRunner extends ParentRunner<Action> {
       return new GroupedTestItemRunner(testClass,
           testOracleId,
           nop(),
-          ActionUtils.createMainActionsForTestOracles(
-              testOracle,
-              session,
+          ActionUtils.createMainActionsForTestOracle(
+              session, testOracle,
               testSuiteDescriptor
           ),
           nop()
@@ -348,13 +344,9 @@ public final class GroupedTestItemRunner extends ParentRunner<Action> {
       Session session,
       TestSuiteDescriptor testSuiteDescriptor) {
     int testCaseId = indexedTestCase.getIndex();
-    List<Parameter> parameters = testSuiteDescriptor.getFactorSpaceDescriptor().getParameters();
-    List<? extends TestOracle> testOracles = testSuiteDescriptor.getTestOracles();
     try {
-      AtomicInteger i = new AtomicInteger(0);
       Tuple testCaseTuple = indexedTestCase.get();
       Map<List<Object>, Object> memo = createMemo();
-      String formattedTuple = format("fixture: %s", filterSimpleSingleLevelParametersOut(indexedTestCase.get(), parameters));
       return new GroupedTestItemRunner(
           testClass,
           testCaseId,
@@ -363,10 +355,8 @@ public final class GroupedTestItemRunner extends ParentRunner<Action> {
               testCaseTuple
           ),
           createMainActionsForTestCase(
-              indexedTestCase,
-              session,
-              testSuiteDescriptor,
-              memo),
+              session, indexedTestCase,
+              testSuiteDescriptor.getTestOracles(), memo),
           session.createTearDownActionForFixture(
               testSuiteDescriptor,
               testCaseTuple

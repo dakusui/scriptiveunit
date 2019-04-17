@@ -18,9 +18,9 @@ import static java.util.stream.Collectors.toList;
 public enum ActionUtils {
   ;
 
-  public static List<Action> createMainActionsForTestOracles(
-      TestOracle testOracle,
+  public static List<Action> createMainActionsForTestOracle(
       Session session,
+      TestOracle testOracle,
       TestSuiteDescriptor testSuiteDescriptor) {
     return testSuiteDescriptor.getTestCases().stream()
         .map(new Function<IndexedTestCase, Action>() {
@@ -50,11 +50,10 @@ public enum ActionUtils {
   }
 
   public static List<Action> createMainActionsForTestCase(
-      IndexedTestCase indexedTestCase,
       Session session,
-      TestSuiteDescriptor testSuiteDescriptor,
-      Map<List<Object>, Object> memo) {
-    return testSuiteDescriptor.getTestOracles().stream()
+      IndexedTestCase indexedTestCase,
+      List<? extends TestOracle> testOracles, Map<List<Object>, Object> memo) {
+    return testOracles.stream()
         .map((TestOracle input) ->
             session.createMainActionForTestOracle(input, indexedTestCase, memo))
         .collect(toList());
@@ -67,7 +66,7 @@ public enum ActionUtils {
     return testSuiteDescriptor
         .getRunnerType()
         .orderBy()
-        .buildSortedActionStreamOrderingBy(session, testCasesFilteredByFixture, testSuiteDescriptor)
+        .buildSortedActionStreamOrderingBy(session, testCasesFilteredByFixture, testSuiteDescriptor.getTestOracles())
         .collect(toList());
   }
 }

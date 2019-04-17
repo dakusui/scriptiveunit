@@ -74,7 +74,11 @@ public interface Session {
       TestSuiteDescriptor testSuiteDescriptor,
       Tuple fixtureTuple,
       Function<Stage, Action> fixtureLevelActionFactory) {
-    return createFixtureLevelActionForTestCase(fixtureTuple, fixtureLevelStageType, fixtureLevelActionFactory, testSuiteDescriptor.statementFactory());
+    return createFixtureLevelActionForTestCase(
+        fixtureTuple,
+        fixtureLevelStageType,
+        fixtureLevelActionFactory,
+        testSuiteDescriptor.statementFactory());
   }
 
   default Stage createConstraintConstraintGenerationStage(Statement.Factory statementFactory, Tuple tuple) {
