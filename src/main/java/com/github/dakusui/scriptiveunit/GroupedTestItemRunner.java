@@ -324,7 +324,8 @@ public final class GroupedTestItemRunner extends ParentRunner<Action> {
       Session session,
       TestSuiteDescriptor testSuiteDescriptor) {
     try {
-      return new GroupedTestItemRunner(testClass,
+      return new GroupedTestItemRunner(
+          testClass,
           testOracleId,
           nop(),
           ActionUtils.createMainActionsForTestOracle(
