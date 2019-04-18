@@ -1,6 +1,7 @@
 {
   "$extends": [],
   "description": "Memoization",
+  "runnerType": "groupByTestCase",
   "factorSpace": {
     "factors": {
       "num": [2, 10],
@@ -8,20 +9,20 @@
     }
   },
   "setUpBeforeAll": ["dumb", ["debug", ["format", "setUpBeforeAll:%s", ["increment"]], ["nop"]]],
-  "setUp": ["dumb", ["debug", ["format", "  setUp:%s", ["increment"]], ["nop"]]],
+  "setUp": ["dumb", ["debug", ["format", "  setUp:%s:%s", ["increment"], ["attr", "base"]], ["nop"]]],
   "testOracles": [
     {
       "description": "Oracle A",
       "before": ["dumb",  ["debug", ["format", "    beforeOracleA:%s", ["increment"]], ["nop"]]],
-      "given": ["debug", ["format", "      givenOracleA:%s", ["increment"]], ["not", ["always"]]],
+      "given": ["debug", ["format", "      givenOracleA:%s:%s", ["increment"], ["increment"]], ["always"]],
       "when": ["debug", ["format", "      whenOracleA:%s", ["increment"]], "HELLO"],
-      "then": ["debug", ["format", "      thenOracleB:%s",["increment"]], ["always"]],
-      "after": ["dumb",  ["debug", ["format", "    afterOracleB:%s", ["increment"]], ["always"]]]
+      "then": ["debug", ["format", "      thenOracleA:%s",["increment"]], ["always"]],
+      "after": ["dumb",  ["debug", ["format", "    afterOracleA:%s", ["increment"]], ["always"]]]
     },
     {
       "description": "Oracle B",
       "before": ["dumb",  ["debug", ["format", "    beforeOracleB:%s", ["increment"]], ["nop"]]],
-      "given": ["debug", ["format", "      givenOracleB:%s", ["increment"]], ["always"]],
+      "given": ["debug", ["format", "      givenOracleB:%s:%s", ["increment"], ["increment"]], ["always"]],
       "when": ["debug", ["format", "      whenOracleB:%s", ["increment"]], "HELLO"],
       "then": ["debug", ["format", "      thenOracleB:%s",["increment"]], ["always"]],
       "after": ["dumb",  ["debug", ["format", "    afterOracleB:%s", ["increment"]], ["always"]]]

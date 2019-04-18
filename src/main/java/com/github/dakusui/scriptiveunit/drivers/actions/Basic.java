@@ -127,12 +127,6 @@ public class Basic {
   int i = 0;
   @Scriptable
   public final Func.Memoized<Integer> increment() {
-    return new Func.Memoized<Integer>() {
-
-      @Override
-      public Integer apply(Stage input) {
-        return i++;
-      }
-    };
+    return input -> i++;
   }
 }
