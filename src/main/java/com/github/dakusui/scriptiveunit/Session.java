@@ -106,8 +106,8 @@ public interface Session {
       Stage.Type stageType,
       Function<Stage, Action> fixtureLevelActionFactory,
       Statement.Factory statementFactory) {
-    return fixtureLevelActionFactory
-        .apply(StageFactory.fixtureLevel(
+    return fixtureLevelActionFactory.apply(
+        StageFactory.fixtureLevel(
             testCaseTuple,
             statementFactory,
             this.getConfig())

@@ -50,6 +50,7 @@ import static com.github.dakusui.scriptiveunit.model.Stage.Type.AFTER;
 import static com.github.dakusui.scriptiveunit.model.Stage.Type.BEFORE;
 import static com.github.dakusui.scriptiveunit.model.Stage.Type.GIVEN;
 import static com.github.dakusui.scriptiveunit.model.Stage.Type.WHEN;
+import static com.github.dakusui.scriptiveunit.model.func.FuncInvoker.createMemo;
 import static com.github.dakusui.scriptiveunit.model.statement.Statement.createStatementFactory;
 import static java.lang.Class.forName;
 import static java.lang.String.format;
@@ -143,22 +144,29 @@ public enum Beans {
 
           @Override
           public Func<Action> getSetUpBeforeAllActionFactory() {
-            return createActionFactory(format("Suite level set up: %s", description), setUpBeforeAllStatement);
+            return createActionFactory(
+                format("Suite level set up: %s", description),
+                setUpBeforeAllStatement,
+                createMemo());
           }
 
           @Override
           public Func<Action> getSetUpActionFactory() {
-            return createActionFactory("Fixture set up", setUpStatement);
+            return createActionFactory("Fixture set up", setUpStatement, createMemo());
           }
 
           @Override
           public Func<Action> getTearDownActionFactory() {
-            return createActionFactory("Fixture tear down", tearDownStatement);
+            return createActionFactory("Fixture tear down", tearDownStatement, createMemo());
           }
 
           @Override
           public Func<Action> getTearDownAfterAllActionFactory() {
-            return createActionFactory(format("Suite level tear down: %s", description), tearDownAfterAllStatement);
+            return createActionFactory(
+                format("Suite level tear down: %s", description),
+                tearDownAfterAllStatement,
+                createMemo()
+            );
           }
 
           @Override
@@ -176,12 +184,12 @@ public enum Beans {
             return statementFactory;
           }
 
-          private Func<Action> createActionFactory(String actionName, Statement statement) {
+          private Func<Action> createActionFactory(String actionName, Statement statement, Map<List<Object>, Object> memo) {
             return (Stage input) -> {
               Object result =
                   statement == null ?
                       nop() :
-                      toFunc(statement, FuncInvoker.create(FuncInvoker.createMemo())).apply(input);
+                      toFunc(statement, FuncInvoker.create(createMemo())).apply(input);
               return (Action) requireNonNull(
                   result,
                   String.format("statement for '%s' was not valid '%s'", actionName, statement)
@@ -271,7 +279,7 @@ public enum Beans {
                 Statement statement = statementFactory.create(each);
                 Func<Boolean> func = toFunc(
                     statement,
-                    FuncInvoker.create(FuncInvoker.createMemo())
+                    FuncInvoker.create(createMemo())
                 );
                 return Constraint.create(
                     (Tuple in) -> requireNonNull(func.apply(session.createConstraintConstraintGenerationStage(statementFactory, in))),
