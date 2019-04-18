@@ -110,7 +110,7 @@ public interface Form {
     }
 
     private static Func compile(Statement statement) {
-      return statement.compile(FuncInvoker.create());
+      return statement.compile(FuncInvoker.create(FuncInvoker.createMemo()));
     }
 
     private Optional<Supplier<List<Object>>> getUserDefinedFormClauseFromSessionByName(String name) {

@@ -37,10 +37,6 @@ public interface FuncInvoker {
     return new Impl(0, memo);
   }
 
-  static FuncInvoker create() {
-    return create(FuncInvoker.createMemo());
-  }
-
   class Impl implements FuncInvoker {
     private final Writer                    writer;
     private       int                       indent;

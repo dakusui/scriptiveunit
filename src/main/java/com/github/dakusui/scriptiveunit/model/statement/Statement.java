@@ -79,6 +79,14 @@ public interface Statement {
   enum Utils {
     ;
 
+    /**
+     * This method returns a list of parameter names used inside a given by looking
+     * into inside the statement.
+     * Parameter names are names of factors defined in the test suite descriptor.
+     *
+     * @param statement Statement to be looked into
+     * @return A list of factor names.
+     */
     public static List<String> involvedParameters(Statement statement) {
       requireNonNull(statement);
       List<String> ret = Lists.newLinkedList();
@@ -92,7 +100,12 @@ public interface Statement {
         if (((Nested) statement).getForm().isAccessor()) {
           for (Statement each : ((Nested) statement).getArguments()) {
             if (each instanceof Atom) {
-              work.add(Objects.toString(each.compile(FuncInvoker.create())));
+              /*
+               * Since this method needs to look into the internal structure of
+               * the statement by evaluating it, it is valid to pass a fresh
+               * memo object to an invoker.
+               */
+              work.add(Objects.toString(each.compile(FuncInvoker.create(FuncInvoker.createMemo()))));
             } else {
               throw SyntaxException.parameterNameShouldBeSpecifiedWithConstant((Nested) statement);
             }

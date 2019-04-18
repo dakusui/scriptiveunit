@@ -49,13 +49,13 @@ public final class GroupedTestItemRunner extends ParentRunner<Action> {
     AtomicInteger id = new AtomicInteger(0);
     return testSuiteDescriptor.getTestOracles()
         .stream()
-        .map((Function<TestOracle, Runner>) input
-            -> createRunnerForTestOracle(
-            session.getConfig().getDriverObject().getClass(),
-            id.getAndIncrement(),
-            input,
-            session,
-            testSuiteDescriptor))
+        .map((Function<TestOracle, Runner>) input ->
+            createRunnerForTestOracle(
+                session.getConfig().getDriverObject().getClass(),
+                id.getAndIncrement(),
+                input,
+                session,
+                testSuiteDescriptor))
         .collect(toList());
   }
 

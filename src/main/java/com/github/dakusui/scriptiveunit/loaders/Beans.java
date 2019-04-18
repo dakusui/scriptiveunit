@@ -99,9 +99,12 @@ public enum Beans {
     public TestSuiteDescriptor create(Session session) {
       try {
         return new TestSuiteDescriptor() {
-          private final Statement.Factory statementFactory = createStatementFactory(session.getConfig(), this.getUserDefinedFormClauses());
-          private Statement setUpBeforeAllStatement = statementFactory.create(setUpBeforeAllClause != null ? setUpBeforeAllClause : NOP_CLAUSE);
-          private Statement setUpStatement = statementFactory.create(setUpClause != null ? setUpClause : NOP_CLAUSE);
+          private final Statement.Factory statementFactory =
+              createStatementFactory(session.getConfig(), this.getUserDefinedFormClauses());
+          private Statement setUpBeforeAllStatement =
+              statementFactory.create(setUpBeforeAllClause != null ? setUpBeforeAllClause : NOP_CLAUSE);
+          private Statement setUpStatement =
+              statementFactory.create(setUpClause != null ? setUpClause : NOP_CLAUSE);
           private List<? extends TestOracle> testOracles = createTestOracles();
           private Statement tearDownStatement = statementFactory.create(tearDownClause != null ? tearDownClause : NOP_CLAUSE);
           private Statement tearDownAfterAllStatement = statementFactory.create(tearDownAfterAllClause != null ? tearDownAfterAllClause : NOP_CLAUSE);
@@ -178,7 +181,7 @@ public enum Beans {
               Object result =
                   statement == null ?
                       nop() :
-                      toFunc(statement, FuncInvoker.create()).apply(input);
+                      toFunc(statement, FuncInvoker.create(FuncInvoker.createMemo())).apply(input);
               return (Action) requireNonNull(
                   result,
                   String.format("statement for '%s' was not valid '%s'", actionName, statement)
@@ -268,7 +271,7 @@ public enum Beans {
                 Statement statement = statementFactory.create(each);
                 Func<Boolean> func = toFunc(
                     statement,
-                    FuncInvoker.create()
+                    FuncInvoker.create(FuncInvoker.createMemo())
                 );
                 return Constraint.create(
                     (Tuple in) -> requireNonNull(func.apply(session.createConstraintConstraintGenerationStage(statementFactory, in))),
