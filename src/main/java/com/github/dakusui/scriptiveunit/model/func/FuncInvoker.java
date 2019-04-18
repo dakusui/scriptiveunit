@@ -15,7 +15,6 @@ import java.util.function.Function;
 
 import static com.github.dakusui.scriptiveunit.core.Utils.toBigDecimalIfPossible;
 import static java.lang.String.format;
-import static java.util.Arrays.asList;
 import static java.util.Arrays.stream;
 
 public interface FuncInvoker {
@@ -68,14 +67,13 @@ public interface FuncInvoker {
 
     @Override
     public Object invokeFunc(Func target, Stage stage, String alias) {
-      List<Object> key = asList(target, stage);
       boolean targetIsMemoized = target instanceof Func.Memoized;
       Object ret = "(N/A)";
       this.enter();
       try {
         this.writeLine("%s(", alias);
         if (targetIsMemoized) {
-          ret = computeIfAbsent(target, stage, key);
+          ret = computeIfAbsent(target, stage);
         } else {
           ret = target.apply(stage);
         }
@@ -115,7 +113,7 @@ public interface FuncInvoker {
       return "  ";
     }
 
-    private Object computeIfAbsent(Func target, Stage stage, List<Object> key) {
+    private Object computeIfAbsent(Func target, Stage stage) {
       return target.apply(stage);
     }
 

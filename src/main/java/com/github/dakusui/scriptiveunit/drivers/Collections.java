@@ -33,7 +33,7 @@ public class Collections {
     return (Stage i) -> {
       //noinspection unchecked
       return (Iterable<? extends E>) stream(
-          requireNonNull(iterable.apply(i)).<E>spliterator(),
+          requireNonNull(iterable.apply(i)).spliterator(),
           false
       ).filter(
           input -> requireNonNull(requireNonNull(predicate.apply(i)).apply(input))
