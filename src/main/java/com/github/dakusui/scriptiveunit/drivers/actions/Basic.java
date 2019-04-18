@@ -115,11 +115,24 @@ public class Basic {
   public final Func<Boolean> perform(Func<Action>... actions) {
     return input -> {
       Utils.performActionWithLogging(
-          Actions.sequential(Arrays.stream(actions).map(
-              actionFunc -> actionFunc.apply(input)
-          ).collect(toList()))
+          Actions.sequential(Arrays
+              .stream(actions)
+              .map(actionFunc -> actionFunc.apply(input))
+              .collect(toList()))
       );
       return true;
+    };
+  }
+
+  int i = 0;
+  @Scriptable
+  public final Func.Memoized<Integer> increment() {
+    return new Func.Memoized<Integer>() {
+
+      @Override
+      public Integer apply(Stage input) {
+        return i++;
+      }
     };
   }
 }

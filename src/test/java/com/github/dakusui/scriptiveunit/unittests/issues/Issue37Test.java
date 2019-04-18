@@ -356,4 +356,23 @@ public class Issue37Test {
       return "tests/issues/issue-37-groupByTestFixtureOrderingByTestOracle.json";
     }
   }
+
+  public static class Memoization extends Base {
+    @Override
+    Matcher<? super Object> junitResultMatcher(AsObject<Object, Object> junitResultMatcherBuilder) {
+      return junitResultMatcherBuilder
+          .check(call("wasSuccessful").$(), isTrue())
+          .check(call("getFailureCount").$(), equalTo(0))
+          .$();    }
+
+    @Override
+    Matcher<? super Object> outputMatcher(AsList<Object, String> outputMatcherBuilder) {
+      return asObject().any();
+    }
+
+    @Override
+    public String getScriptName() {
+      return "tests/issues/issue-37-memoization.json";
+    }
+  }
 }
