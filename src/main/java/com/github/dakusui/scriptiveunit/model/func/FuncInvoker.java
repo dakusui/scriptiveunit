@@ -6,7 +6,11 @@ import com.github.dakusui.scriptiveunit.core.Utils;
 import com.github.dakusui.scriptiveunit.model.Stage;
 import com.google.common.collect.Lists;
 
-import java.util.*;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
 import java.util.function.Function;
 
 import static com.github.dakusui.scriptiveunit.core.Utils.toBigDecimalIfPossible;
@@ -38,14 +42,12 @@ public interface FuncInvoker {
   }
 
   class Impl implements FuncInvoker {
-    private final Writer                    writer;
-    private       int                       indent;
-    final         Map<List<Object>, Object> memo;
+    private final Writer writer;
+    private       int    indent;
 
     private Impl(int initialIndent, Map<List<Object>, Object> memo) {
       this.indent = initialIndent;
       this.writer = new Writer();
-      this.memo = memo;
     }
 
     void enter() {
@@ -67,7 +69,6 @@ public interface FuncInvoker {
     @Override
     public Object invokeFunc(Func target, Stage stage, String alias) {
       List<Object> key = asList(target, stage);
-      boolean wasAbsent = !this.memo.containsKey(key);
       boolean targetIsMemoized = target instanceof Func.Memoized;
       Object ret = "(N/A)";
       this.enter();
@@ -80,10 +81,7 @@ public interface FuncInvoker {
         }
         return toBigDecimalIfPossible(ret);
       } finally {
-        if (!targetIsMemoized || wasAbsent)
-          this.writeLine(") -> %s", ret);
-        else
-          this.writeLine(") -> (memoized)");
+        this.writeLine(") -> %s", ret);
         this.leave();
       }
     }
@@ -118,21 +116,7 @@ public interface FuncInvoker {
     }
 
     private Object computeIfAbsent(Func target, Stage stage, List<Object> key) {
-      Object ret;
-      if (this.memo.containsKey(key)) {
-        enter();
-        try {
-          writeLine("...");
-        } finally {
-          leave();
-        }
-        return this.memo.get(key);
-      }
-      ret = this.memo.computeIfAbsent(
-          key,
-          (List<Object> input) -> target.apply(stage)
-      );
-      return ret;
+      return target.apply(stage);
     }
 
     private static Object[] prettify(Object... args) {
