@@ -1,7 +1,7 @@
 package com.github.dakusui.scriptiveunit.drivers;
 
 import com.github.dakusui.scriptiveunit.annotations.Scriptable;
-import com.github.dakusui.scriptiveunit.model.func.Func;
+import com.github.dakusui.scriptiveunit.model.func.Form;
 import com.github.dakusui.scriptiveunit.model.Stage;
 
 import java.util.Map;
@@ -9,25 +9,25 @@ import java.util.Map;
 public abstract class Service<REQUEST, RESPONSE> extends Core {
   @SuppressWarnings("unused")
   @Scriptable
-  public Func.Memoized<RESPONSE> service(Func<REQUEST> request) {
+  public Form.Memoized<RESPONSE> service(Form<REQUEST> request) {
     return (Stage input) -> Service.this.service(request.apply(input));
   }
 
   @SuppressWarnings("unused")
   @Scriptable
-  public Func<REQUEST> with(Func<Map<String, Object>> values, Func<REQUEST> request) {
+  public Form<REQUEST> with(Form<Map<String, Object>> values, Form<REQUEST> request) {
     return (Stage input) -> override(values.apply(input), request.apply(input));
   }
 
   @SuppressWarnings("unused")
   @Scriptable
-  public Func<REQUEST> request() {
+  public Form<REQUEST> request() {
     return (Stage input) -> buildRequest(input.getTestCaseTuple());
   }
 
   @SuppressWarnings("unused")
   @Scriptable
-  public Func<RESPONSE> response() {
+  public Form<RESPONSE> response() {
     //noinspection unchecked
     return (Stage input) -> (RESPONSE) input.response();
   }

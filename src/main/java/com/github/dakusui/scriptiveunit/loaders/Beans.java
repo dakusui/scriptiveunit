@@ -26,7 +26,7 @@ import com.github.dakusui.scriptiveunit.model.TestIO;
 import com.github.dakusui.scriptiveunit.model.TestItem;
 import com.github.dakusui.scriptiveunit.model.TestOracle;
 import com.github.dakusui.scriptiveunit.model.TestSuiteDescriptor;
-import com.github.dakusui.scriptiveunit.model.func.Func;
+import com.github.dakusui.scriptiveunit.model.func.Form;
 import com.github.dakusui.scriptiveunit.model.func.FuncInvoker;
 import com.github.dakusui.scriptiveunit.model.statement.Statement;
 import org.hamcrest.BaseMatcher;
@@ -143,7 +143,7 @@ public enum Beans {
           }
 
           @Override
-          public Func<Action> getSetUpBeforeAllActionFactory() {
+          public Form<Action> getSetUpBeforeAllActionFactory() {
             return createActionFactory(
                 format("Suite level set up: %s", description),
                 setUpBeforeAllStatement,
@@ -151,17 +151,17 @@ public enum Beans {
           }
 
           @Override
-          public Func<Action> getSetUpActionFactory() {
+          public Form<Action> getSetUpActionFactory() {
             return createActionFactory("Fixture set up", setUpStatement, createMemo());
           }
 
           @Override
-          public Func<Action> getTearDownActionFactory() {
+          public Form<Action> getTearDownActionFactory() {
             return createActionFactory("Fixture tear down", tearDownStatement, createMemo());
           }
 
           @Override
-          public Func<Action> getTearDownAfterAllActionFactory() {
+          public Form<Action> getTearDownAfterAllActionFactory() {
             return createActionFactory(
                 format("Suite level tear down: %s", description),
                 tearDownAfterAllStatement,
@@ -184,7 +184,7 @@ public enum Beans {
             return statementFactory;
           }
 
-          private Func<Action> createActionFactory(String actionName, Statement statement, Map<List<Object>, Object> memo) {
+          private Form<Action> createActionFactory(String actionName, Statement statement, Map<List<Object>, Object> memo) {
             return (Stage input) -> {
               Object result =
                   statement == null ?
@@ -277,12 +277,12 @@ public enum Beans {
           return constraintList.stream()
               .map((List<Object> each) -> {
                 Statement statement = statementFactory.create(each);
-                Func<Boolean> func = toFunc(
+                Form<Boolean> form = toFunc(
                     statement,
                     FuncInvoker.create(createMemo())
                 );
                 return Constraint.create(
-                    (Tuple in) -> requireNonNull(func.apply(session.createConstraintConstraintGenerationStage(statementFactory, in))),
+                    (Tuple in) -> requireNonNull(form.apply(session.createConstraintConstraintGenerationStage(statementFactory, in))),
                     Statement.Utils.involvedParameters(statement)
                 );
               })
@@ -528,7 +528,7 @@ public enum Beans {
               Utils.performActionWithLogging(requireNonNull(
                   onFailureClause != null ?
                       Beans.<Action>toFunc(onFailureStatement, funcInvoker) :
-                      (Func<Action>) input1 -> Actions.nop()).apply(onFailureStage));
+                      (Form<Action>) input1 -> Actions.nop()).apply(onFailureStage));
               throw requireNonNull(input);
             }
 
@@ -555,8 +555,8 @@ public enum Beans {
     }
   }
 
-  private static <U> Func<U> toFunc(Statement statement, FuncInvoker funcInvoker) {
+  private static <U> Form<U> toFunc(Statement statement, FuncInvoker funcInvoker) {
     //noinspection unchecked
-    return (Func) statement.compile(funcInvoker);
+    return (Form) statement.compile(funcInvoker);
   }
 }

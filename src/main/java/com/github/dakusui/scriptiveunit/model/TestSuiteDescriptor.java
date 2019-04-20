@@ -5,7 +5,7 @@ import com.github.dakusui.scriptiveunit.GroupedTestItemRunner;
 import com.github.dakusui.scriptiveunit.Session;
 import com.github.dakusui.scriptiveunit.core.Config;
 import com.github.dakusui.scriptiveunit.loaders.IndexedTestCase;
-import com.github.dakusui.scriptiveunit.model.func.Func;
+import com.github.dakusui.scriptiveunit.model.func.Form;
 import com.github.dakusui.scriptiveunit.model.statement.Statement;
 import org.junit.runner.Runner;
 
@@ -29,13 +29,13 @@ public interface TestSuiteDescriptor {
 
   List<IndexedTestCase> getTestCases();
 
-  Func<Action> getSetUpBeforeAllActionFactory();
+  Form<Action> getSetUpBeforeAllActionFactory();
 
-  Func<Action> getSetUpActionFactory();
+  Form<Action> getSetUpActionFactory();
 
-  Func<Action> getTearDownActionFactory();
+  Form<Action> getTearDownActionFactory();
 
-  Func<Action> getTearDownAfterAllActionFactory();
+  Form<Action> getTearDownAfterAllActionFactory();
 
   List<String> getInvolvedParameterNamesInSetUpAction();
 

@@ -17,7 +17,7 @@ import static com.github.dakusui.scriptiveunit.exceptions.ScriptiveUnitException
 import static com.github.dakusui.scriptiveunit.exceptions.TypeMismatch.valueReturnedByScriptableMethodMustBeFunc;
 
 @FunctionalInterface
-public interface Func<O> extends
+public interface Form<O> extends
     java.util.function.Function<Stage, O>,
     Formattable {
   @Override
@@ -33,7 +33,7 @@ public interface Func<O> extends
   }
 
 
-  interface Memoized<O> extends Func<O> {
+  interface Memoized<O> extends Form<O> {
   }
 
   /**
@@ -43,7 +43,7 @@ public interface Func<O> extends
    *
    * @param <O> Type of output constant.
    */
-  interface Const<O> extends Func<O> {
+  interface Const<O> extends Form<O> {
   }
 
   class Factory {
@@ -54,11 +54,11 @@ public interface Func<O> extends
     }
 
     /*
-     * args is an array can only contain Func or Func[]. Only the last element in it
-     * can become Func[] it is because only the last argument of a method can become
+     * args is an array can only contain Form or Form[]. Only the last element in it
+     * can become Form[] it is because only the last argument of a method can become
      * a varargs.
      */
-    public Func create(FuncInvoker invoker, ObjectMethod objectMethod, Object[] args) {
+    public Form create(FuncInvoker invoker, ObjectMethod objectMethod, Object[] args) {
       Object returnedValue;
       /*
        * By using dynamic proxy, we are making it possible to print structured pretty log.
@@ -66,22 +66,22 @@ public interface Func<O> extends
       return createFunc(
           invoker,
           objectMethod.getName(),
-          (Func) check(
+          (Form) check(
               returnedValue = objectMethod.invoke(args),
-              (Object o) -> o instanceof Func,
+              (Object o) -> o instanceof Form,
               () -> valueReturnedByScriptableMethodMustBeFunc(objectMethod.getName(), returnedValue)
           ));
     }
 
-    public <T> Func<T> createConst(FuncInvoker invoker, T value) {
+    public <T> Form<T> createConst(FuncInvoker invoker, T value) {
       return createProxy((proxy, method, args) -> funcHandler.handleConst(invoker, value), Const.class);
     }
 
-    private Func createFunc(FuncInvoker invoker, String name, Func target) {
-      return createProxy(createInvocationHandler(invoker, name, target), Func.class);
+    private Form createFunc(FuncInvoker invoker, String name, Form target) {
+      return createProxy(createInvocationHandler(invoker, name, target), Form.class);
     }
 
-    private InvocationHandler createInvocationHandler(FuncInvoker invoker, String name, Func target) {
+    private InvocationHandler createInvocationHandler(FuncInvoker invoker, String name, Form target) {
       return (Object proxy, Method method, Object[] args) -> {
         if (!"apply".equals(method.getName()))
           return method.invoke(target, args);
@@ -94,10 +94,10 @@ public interface Func<O> extends
       };
     }
 
-    private static <O> Func<O> createProxy(InvocationHandler handler, Class<? extends Func> interfaceClass) {
+    private static <O> Form<O> createProxy(InvocationHandler handler, Class<? extends Form> interfaceClass) {
       //noinspection unchecked
-      return (Func<O>) Proxy.newProxyInstance(
-          Func.class.getClassLoader(),
+      return (Form<O>) Proxy.newProxyInstance(
+          Form.class.getClassLoader(),
           new Class[] { interfaceClass },
           handler
       );

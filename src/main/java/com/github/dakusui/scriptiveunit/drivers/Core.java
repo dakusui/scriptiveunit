@@ -8,7 +8,7 @@ import com.github.dakusui.scriptiveunit.exceptions.ScriptiveUnitException;
 import com.github.dakusui.scriptiveunit.exceptions.SyntaxException;
 import com.github.dakusui.scriptiveunit.model.Stage;
 import com.github.dakusui.scriptiveunit.model.TestItem;
-import com.github.dakusui.scriptiveunit.model.func.Func;
+import com.github.dakusui.scriptiveunit.model.func.Form;
 
 import java.lang.reflect.InvocationTargetException;
 import java.util.Arrays;
@@ -31,7 +31,7 @@ public class Core {
   @SuppressWarnings("unused")
   @Scriptable
   @AccessesTestParameter
-  public <E> Func<E> attr(Func<String> attr) {
+  public <E> Form<E> attr(Form<String> attr) {
     return (Stage input) -> {
       Tuple testCase = input.getTestCaseTuple();
       String attrName = attr.apply(input);
@@ -53,7 +53,7 @@ public class Core {
    */
   @SuppressWarnings("unused")
   @Scriptable
-  public <E> Func<E> value(Func<String> entryName, Func<?> target) {
+  public <E> Form<E> value(Form<String> entryName, Form<?> target) {
     return (Stage input) -> {
       Object object = requireNonNull(target.apply(input));
       String methodName = requireNonNull(entryName.apply(input));
@@ -68,28 +68,28 @@ public class Core {
 
   @SuppressWarnings("unused")
   @Scriptable
-  public Func<Throwable> exception() {
+  public Form<Throwable> exception() {
     return Stage::getThrowable;
   }
 
   @SuppressWarnings("unused")
   @Scriptable
-  public Func<TestItem> testItem() {
+  public Form<TestItem> testItem() {
     return Stage::getTestItem;
   }
 
   @SuppressWarnings("unused")
   @Scriptable
-  public final Func<List<?>> quote(Func<?>... values) {
+  public final Form<List<?>> quote(Form<?>... values) {
     return (Stage input) -> Arrays
         .stream(values)
-        .map((Func<?> each) -> each instanceof Func.Const ? each.apply(input) : each)
+        .map((Form<?> each) -> each instanceof Form.Const ? each.apply(input) : each)
         .collect(toList());
   }
 
   @SuppressWarnings("unused")
   @Scriptable
-  public Func<Object> configAttr(Func<String> attrName) {
+  public Form<Object> configAttr(Form<String> attrName) {
     return input -> {
       String attr = requireNonNull(attrName.apply(input));
       Config config = input.getConfig();
@@ -113,7 +113,7 @@ public class Core {
 
   @SuppressWarnings("unused")
   @Scriptable
-  public Func<Object> systemProperty(Func<String> attrName) {
+  public Form<Object> systemProperty(Form<String> attrName) {
     return input -> System.getProperties().getProperty(requireNonNull(attrName.apply(input)));
   }
 }

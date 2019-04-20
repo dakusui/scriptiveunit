@@ -20,7 +20,7 @@ import static java.util.Arrays.stream;
 public interface FuncInvoker {
   <T> T invokeConst(Object value);
 
-  Object invokeFunc(Func target, Stage stage, String alias);
+  Object invokeFunc(Form target, Stage stage, String alias);
 
   String asString();
 
@@ -66,8 +66,8 @@ public interface FuncInvoker {
     }
 
     @Override
-    public Object invokeFunc(Func target, Stage stage, String alias) {
-      boolean targetIsMemoized = target instanceof Func.Memoized;
+    public Object invokeFunc(Form target, Stage stage, String alias) {
+      boolean targetIsMemoized = target instanceof Form.Memoized;
       Object ret = "(N/A)";
       this.enter();
       try {
@@ -113,7 +113,7 @@ public interface FuncInvoker {
       return "  ";
     }
 
-    private Object computeIfAbsent(Func target, Stage stage) {
+    private Object computeIfAbsent(Form target, Stage stage) {
       return target.apply(stage);
     }
 

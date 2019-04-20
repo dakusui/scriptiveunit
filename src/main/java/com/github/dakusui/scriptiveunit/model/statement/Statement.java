@@ -3,7 +3,7 @@ package com.github.dakusui.scriptiveunit.model.statement;
 import com.github.dakusui.scriptiveunit.core.Config;
 import com.github.dakusui.scriptiveunit.exceptions.SyntaxException;
 import com.github.dakusui.scriptiveunit.exceptions.TypeMismatch;
-import com.github.dakusui.scriptiveunit.model.func.Func;
+import com.github.dakusui.scriptiveunit.model.func.Form;
 import com.github.dakusui.scriptiveunit.model.func.FuncHandler;
 import com.github.dakusui.scriptiveunit.model.func.FuncInvoker;
 import com.google.common.collect.Lists;
@@ -23,39 +23,39 @@ public interface Statement {
     return new Factory(config, userDefinedFormClauses);
   }
 
-  Func compile(FuncInvoker invoker);
+  Form compile(FuncInvoker invoker);
 
   interface Atom extends Statement {
   }
 
   interface Nested extends Statement {
-    Form getForm();
+    FormCall getForm();
 
     Arguments getArguments();
   }
 
   class Factory {
-    private final Form.Factory formFactory;
-    private final Func.Factory funcFactory;
+    private final FormCall.Factory formFactory;
+    private final Form.Factory funcFactory;
 
     public Factory(Config config, Map<String, List<Object>> userDefinedFormClauses) {
       FuncHandler funcHandler = new FuncHandler();
-      this.funcFactory = new Func.Factory(funcHandler);
-      this.formFactory = new Form.Factory(funcFactory, this, config, userDefinedFormClauses);
+      this.funcFactory = new Form.Factory(funcHandler);
+      this.formFactory = new FormCall.Factory(funcFactory, this, config, userDefinedFormClauses);
     }
 
     public Statement create(Object object) throws TypeMismatch {
       if (Utils.isAtom(object))
-        return (Atom) invoker -> (Func<Object>) funcFactory.createConst(invoker, object);
-      @SuppressWarnings("unchecked") List<Func> raw = (List<Func>) object;
+        return (Atom) invoker -> (Form<Object>) funcFactory.createConst(invoker, object);
+      @SuppressWarnings("unchecked") List<Form> raw = (List<Form>) object;
       Object car = Utils.car(raw);
       if (car instanceof String) {
         Arguments arguments = Arguments.create(this, Utils.cdr(raw));
-        Form form = this.formFactory.create((String) car);
+        FormCall formCall = this.formFactory.create((String) car);
         return new Nested() {
           @Override
-          public Form getForm() {
-            return form;
+          public FormCall getForm() {
+            return formCall;
           }
 
           @Override
@@ -64,12 +64,12 @@ public interface Statement {
           }
 
           @Override
-          public Func<?> compile(FuncInvoker invoker) {
-            return (Func<?>) getForm().apply(invoker, arguments);
+          public Form<?> compile(FuncInvoker invoker) {
+            return (Form<?>) getForm().apply(invoker, arguments);
           }
         };
       } else if (car instanceof Integer) {
-        return (Atom) invoker -> (Func<Object>) input -> input.getArgument((Integer) car);
+        return (Atom) invoker -> (Form<Object>) input -> input.getArgument((Integer) car);
       }
       throw headOfCallMustBeString(car);
     }
@@ -123,11 +123,11 @@ public interface Statement {
       return !(object instanceof List) || ((List) object).isEmpty();
     }
 
-    static Object car(List<Func> raw) {
+    static Object car(List<Form> raw) {
       return raw.get(0);
     }
 
-    static List<Func> cdr(List<Func> raw) {
+    static List<Form> cdr(List<Form> raw) {
       return raw.subList(1, raw.size());
     }
   }

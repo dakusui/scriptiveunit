@@ -6,7 +6,7 @@ public class FuncHandler {
   public FuncHandler() {
   }
 
-  public Object handle(FuncInvoker invoker, Func target, Stage stage, String alias) {
+  public Object handle(FuncInvoker invoker, Form target, Stage stage, String alias) {
     return invoker.invokeFunc(target, stage, alias);
   }
 

@@ -17,7 +17,7 @@ import com.github.dakusui.scriptiveunit.drivers.QueryApi;
 import com.github.dakusui.scriptiveunit.drivers.Strings;
 import com.github.dakusui.scriptiveunit.drivers.actions.Basic;
 import com.github.dakusui.scriptiveunit.loaders.json.JsonBasedLoader;
-import com.github.dakusui.scriptiveunit.model.func.Func;
+import com.github.dakusui.scriptiveunit.model.func.Form;
 import com.google.common.collect.Maps;
 import org.codehaus.jackson.JsonNode;
 import org.codehaus.jackson.node.ObjectNode;
@@ -68,13 +68,13 @@ public class Qapi {
   public static class Misc {
     @SuppressWarnings("unused")
     @Scriptable
-    public Func<String> content(Func<Entry> entry) {
+    public Form<String> content(Form<Entry> entry) {
       return input -> entry.apply(input).content();
     }
 
     @SuppressWarnings("unused")
     @Scriptable
-    public Func<Boolean> evalintp(Func<Integer> value, Func<Func<Boolean>> predicate) {
+    public Form<Boolean> evalintp(Form<Integer> value, Form<Form<Boolean>> predicate) {
       return input -> predicate.apply(input).apply(Collections.wrapValueAsArgumentInStage(input, value));
     }
   }

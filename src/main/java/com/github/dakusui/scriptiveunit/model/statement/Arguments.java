@@ -1,13 +1,13 @@
 package com.github.dakusui.scriptiveunit.model.statement;
 
-import com.github.dakusui.scriptiveunit.model.func.Func;
+import com.github.dakusui.scriptiveunit.model.func.Form;
 
 import java.util.Iterator;
 
 public interface Arguments extends Iterable<Statement> {
-  static Arguments create(Statement.Factory statementFactory, Iterable<Func> args) {
+  static Arguments create(Statement.Factory statementFactory, Iterable<Form> args) {
     return () -> new Iterator<Statement>() {
-      Iterator<Func> i = args.iterator();
+      Iterator<Form> i = args.iterator();
 
       @Override
       public boolean hasNext() {
@@ -28,7 +28,7 @@ public interface Arguments extends Iterable<Statement> {
       this.statementFactory = statementFactory;
     }
 
-    public Arguments create(Iterable<Func> args) {
+    public Arguments create(Iterable<Form> args) {
       return Arguments.create(statementFactory, args);
     }
   }

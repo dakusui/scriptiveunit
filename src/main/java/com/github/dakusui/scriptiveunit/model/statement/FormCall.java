@@ -4,7 +4,7 @@ import com.github.dakusui.scriptiveunit.ScriptiveUnit;
 import com.github.dakusui.scriptiveunit.core.Config;
 import com.github.dakusui.scriptiveunit.core.ObjectMethod;
 import com.github.dakusui.scriptiveunit.model.Stage;
-import com.github.dakusui.scriptiveunit.model.func.Func;
+import com.github.dakusui.scriptiveunit.model.func.Form;
 import com.github.dakusui.scriptiveunit.model.func.FuncInvoker;
 
 import java.lang.reflect.Array;
@@ -26,13 +26,13 @@ import static java.util.Objects.requireNonNull;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.StreamSupport.stream;
 
-public interface Form {
-  Func apply(FuncInvoker funcInvoker, Arguments arguments);
+public interface FormCall {
+  Form apply(FuncInvoker funcInvoker, Arguments arguments);
 
   boolean isAccessor();
 
-  abstract class Base implements Form {
-    List<Func> toFuncs(FuncInvoker funcInvoker, Iterable<Statement> arguments) {
+  abstract class Base implements FormCall {
+    List<Form> toFuncs(FuncInvoker funcInvoker, Iterable<Statement> arguments) {
       return stream(
           arguments.spliterator(), false
       ).map(
@@ -58,7 +58,7 @@ public interface Form {
       );
     }
 
-    public static Stage createWrappedStage(Stage input, Func<?>... args) {
+    public static Stage createWrappedStage(Stage input, Form<?>... args) {
       return new Stage.Delegating(input) {
         @Override
         public <U> U getArgument(int index) {
@@ -77,11 +77,11 @@ public interface Form {
 
   class Factory {
     private final Object                    driver;
-    private final Func.Factory              funcFactory;
+    private final Form.Factory              funcFactory;
     private final Statement.Factory         statementFactory;
     private final Map<String, List<Object>> clauseMap;
 
-    public Factory(Func.Factory funcFactory, Statement.Factory statementFactory, Config config, Map<String, List<Object>> userDefinedFormClauses) {
+    public Factory(Form.Factory funcFactory, Statement.Factory statementFactory, Config config, Map<String, List<Object>> userDefinedFormClauses) {
       this.driver = requireNonNull(config.getDriverObject());
       this.funcFactory = funcFactory;
       this.statementFactory = statementFactory;
@@ -89,18 +89,18 @@ public interface Form {
     }
 
     @SuppressWarnings("WeakerAccess")
-    public Form create(String name) {
+    public FormCall create(String name) {
       if ("lambda".equals(name))
         return new Lambda();
       return Factory.this.getObjectMethodFromDriver(name).map(
-          (Function<ObjectMethod, Form>) MethodBasedImpl::new
+          (Function<ObjectMethod, FormCall>) MethodBasedImpl::new
       ).orElseGet(
           () -> createUserForm(name)
       );
     }
 
-    private Form createUserForm(String name) {
-      return new UserForm(
+    private FormCall createUserForm(String name) {
+      return new UserFormCall(
           () -> statementFactory.create(
               getUserDefinedFormClauseFromSessionByName(name).orElseThrow(
                   () -> new NullPointerException(format("Undefined form '%s' was referenced.", name))
@@ -109,7 +109,7 @@ public interface Form {
       );
     }
 
-    private static Func compile(Statement statement) {
+    private static Form compile(Statement statement) {
       return statement.compile(FuncInvoker.create(FuncInvoker.createMemo()));
     }
 
@@ -161,15 +161,15 @@ public interface Form {
       }
 
       @Override
-      public Func apply(FuncInvoker funcInvoker, Arguments arguments) {
-        Func[] args = toArray(
+      public Form apply(FuncInvoker funcInvoker, Arguments arguments) {
+        Form[] args = toArray(
             toFuncs(funcInvoker, arguments),
-            Func.class
+            Form.class
         );
         return createFunc(funcInvoker, args);
       }
 
-      Func createFunc(FuncInvoker funcInvoker, Func[] args) {
+      Form createFunc(FuncInvoker funcInvoker, Form[] args) {
         Object[] argValues;
         if (requireNonNull(objectMethod).isVarArgs()) {
           int parameterCount = objectMethod.getParameterCount();
@@ -180,22 +180,22 @@ public interface Form {
       }
     }
 
-    private static class UserForm extends Base {
+    private static class UserFormCall extends Base {
       private final Supplier<Statement> userDefinedFormStatementSupplier;
 
-      UserForm(Supplier<Statement> userDefinedFormStatementSupplier) {
+      UserFormCall(Supplier<Statement> userDefinedFormStatementSupplier) {
         this.userDefinedFormStatementSupplier = userDefinedFormStatementSupplier;
       }
 
       @Override
-      public Func<Object> apply(FuncInvoker funcInvoker, Arguments arguments) {
+      public Form<Object> apply(FuncInvoker funcInvoker, Arguments arguments) {
         return createFunc(
             toArray(
                 Stream.concat(
-                    Stream.of((Func<Statement>) input -> userDefinedFormStatementSupplier.get()),
+                    Stream.of((Form<Statement>) input -> userDefinedFormStatementSupplier.get()),
                     toFuncs(funcInvoker, arguments).stream()
                 ).collect(toList()),
-                Func.class
+                Form.class
             )
         );
       }
@@ -206,12 +206,12 @@ public interface Form {
       }
 
       @SuppressWarnings("unchecked")
-      Func<Object> createFunc(Func[] args) {
+      Form<Object> createFunc(Form[] args) {
         return userFunc(Utils.car(args), Utils.cdr(args));
       }
 
-      private static Func<Object> userFunc(Func<Statement> statementFunc, Func<?>... args) {
-        return (Stage input) -> compile(statementFunc.apply(input)).<Func<Object>>apply(Utils.createWrappedStage(input, args));
+      private static Form<Object> userFunc(Form<Statement> statementForm, Form<?>... args) {
+        return (Stage input) -> compile(statementForm.apply(input)).<Form<Object>>apply(Utils.createWrappedStage(input, args));
       }
     }
 
@@ -222,7 +222,7 @@ public interface Form {
 
       @SuppressWarnings("unchecked")
       @Override
-      public Func<Func<Object>> apply(FuncInvoker funcInvoker, Arguments arguments) {
+      public Form<Form<Object>> apply(FuncInvoker funcInvoker, Arguments arguments) {
         return (Stage ii) -> getOnlyElement(toFuncs(funcInvoker, arguments));
       }
 

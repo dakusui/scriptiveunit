@@ -3,7 +3,7 @@ package com.github.dakusui.scriptiveunit.drivers;
 import com.github.dakusui.actionunit.Action;
 import com.github.dakusui.scriptiveunit.annotations.Scriptable;
 import com.github.dakusui.scriptiveunit.model.Stage;
-import com.github.dakusui.scriptiveunit.model.func.Func;
+import com.github.dakusui.scriptiveunit.model.func.Form;
 
 import static com.github.dakusui.actionunit.Actions.simple;
 import static com.github.dakusui.scriptiveunit.core.Utils.prettify;
@@ -11,7 +11,7 @@ import static com.github.dakusui.scriptiveunit.core.Utils.prettify;
 public class Reporting {
   @SuppressWarnings("unused")
   @Scriptable
-  public Func<Object> write_report(Func<String> name, Func<Object> value) {
+  public Form<Object> write_report(Form<String> name, Form<Object> value) {
     return input -> {
       Object ret;
       input.getReport().put(name.apply(input), ret = value.apply(input));
@@ -21,7 +21,7 @@ public class Reporting {
 
   @SuppressWarnings("unused")
   @Scriptable
-  public Func<Action> submit() {
+  public Form<Action> submit() {
     return (Stage input) -> simple(prettify("submit", () -> input.getReport().submit()));
   }
 }

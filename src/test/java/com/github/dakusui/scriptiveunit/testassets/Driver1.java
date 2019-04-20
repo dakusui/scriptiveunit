@@ -5,7 +5,7 @@ import com.github.dakusui.scriptiveunit.annotations.Doc;
 import com.github.dakusui.scriptiveunit.annotations.Import;
 import com.github.dakusui.scriptiveunit.annotations.Scriptable;
 import com.github.dakusui.scriptiveunit.model.Stage;
-import com.github.dakusui.scriptiveunit.model.func.Func;
+import com.github.dakusui.scriptiveunit.model.func.Form;
 import org.junit.runner.RunWith;
 
 @RunWith(ScriptiveUnit.class)
@@ -18,13 +18,13 @@ public class Driver1 {
     @Doc({"Hello, world", "everyone"})
     @SuppressWarnings("unused")
     @Scriptable
-    public Func<String> helloWorld() {
+    public Form<String> helloWorld() {
       return (Stage input) -> "Hello world";
     }
 
     @SuppressWarnings("unused")
     @Scriptable
-    public Func<String> print(Func<String> s) {
+    public Form<String> print(Form<String> s) {
       return (Stage input) -> {
         System.out.println(s.apply(input));
         return s.apply(input);
