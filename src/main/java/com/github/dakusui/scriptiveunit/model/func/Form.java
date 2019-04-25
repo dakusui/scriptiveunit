@@ -26,14 +26,14 @@ public interface Form<O> extends
   @Override
   default void formatTo(Formatter formatter, int flags, int width, int precision) {
     try {
-      formatter.out().append(this.toString());
+      formatter.out().append(this.name());
     } catch (IOException e) {
       throw wrap(e);
     }
   }
 
-
-  interface Memoized<O> extends Form<O> {
+  default String name() {
+    return "(noname)";
   }
 
   /**

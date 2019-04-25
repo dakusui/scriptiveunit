@@ -7,6 +7,7 @@ import com.github.dakusui.scriptiveunit.annotations.Scriptable;
 import com.github.dakusui.scriptiveunit.core.Utils;
 import com.github.dakusui.scriptiveunit.model.Stage;
 import com.github.dakusui.scriptiveunit.model.func.Form;
+import com.github.dakusui.scriptiveunit.model.func.Func;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -126,7 +127,7 @@ public class Basic {
 
   int i = 0;
   @Scriptable
-  public final Form.Memoized<Integer> increment() {
+  public final Func.Memoized<Integer> increment() {
     return input -> i++;
   }
 }

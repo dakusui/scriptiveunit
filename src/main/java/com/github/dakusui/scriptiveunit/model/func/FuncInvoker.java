@@ -67,7 +67,7 @@ public interface FuncInvoker {
 
     @Override
     public Object invokeFunc(Form target, Stage stage, String alias) {
-      boolean targetIsMemoized = target instanceof Form.Memoized;
+      boolean targetIsMemoized = target instanceof Func.Memoized;
       Object ret = "(N/A)";
       this.enter();
       try {
