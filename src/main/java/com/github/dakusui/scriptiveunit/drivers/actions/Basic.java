@@ -12,6 +12,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Objects;
 import java.util.function.Consumer;
 
@@ -25,7 +27,8 @@ import static java.util.stream.Collectors.toList;
 public class Basic {
   private static final Logger LOGGER = LoggerFactory.getLogger(Basic.class);
 
-  private static Consumer<String> out = System.err::println;//LOGGER::debug;
+  private static Consumer<String>       out  = System.err::println;//LOGGER::debug;
+  private        Map<Func.Call, Object> memo = new HashMap<>();
 
   public static void setOut(Consumer<String> out) {
     Basic.out = requireNonNull(out);
@@ -126,8 +129,28 @@ public class Basic {
   }
 
   int i = 0;
+
   @Scriptable
-  public final Func.Memoized<Integer> increment() {
-    return input -> i++;
+  public final Func<Integer> increment() {
+    return Func.memoize(
+        new Func.Builder<Integer>(Utils.funcId())
+            .func(input -> i++)
+            .addParameters()
+            .build(),
+        memo
+    );
   }
+
+  @Scriptable
+  public final Func<Integer> op(Form<Integer> a, Form<Integer> b) {
+    return Func.memoize(
+        new Func.Builder<Integer>(Utils.funcId())
+            .func(objects -> (Integer) objects[0] + (Integer) objects[1] + i++)
+            .addParameter(a)
+            .addParameter(b)
+            .build(),
+        memo
+    );
+  }
+
 }

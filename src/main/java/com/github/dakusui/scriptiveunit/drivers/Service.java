@@ -1,16 +1,15 @@
 package com.github.dakusui.scriptiveunit.drivers;
 
 import com.github.dakusui.scriptiveunit.annotations.Scriptable;
-import com.github.dakusui.scriptiveunit.model.func.Form;
 import com.github.dakusui.scriptiveunit.model.Stage;
-import com.github.dakusui.scriptiveunit.model.func.Func;
+import com.github.dakusui.scriptiveunit.model.func.Form;
 
 import java.util.Map;
 
 public abstract class Service<REQUEST, RESPONSE> extends Core {
   @SuppressWarnings("unused")
   @Scriptable
-  public Func.Memoized<RESPONSE> service(Form<REQUEST> request) {
+  public Form<RESPONSE> service(Form<REQUEST> request) {
     return (Stage input) -> Service.this.service(request.apply(input));
   }
 

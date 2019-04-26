@@ -33,13 +33,9 @@ public interface FormCall {
 
   abstract class Base implements FormCall {
     List<Form> toFuncs(FuncInvoker funcInvoker, Iterable<Statement> arguments) {
-      return stream(
-          arguments.spliterator(), false
-      ).map(
-          statement -> statement.compile(funcInvoker)
-      ).collect(
-          toList()
-      );
+      return stream(arguments.spliterator(), false)
+          .map(statement -> statement.compile(funcInvoker))
+          .collect(toList());
     }
   }
 
@@ -166,10 +162,10 @@ public interface FormCall {
             toFuncs(funcInvoker, arguments),
             Form.class
         );
-        return createFunc(funcInvoker, args);
+        return createForm(funcInvoker, args);
       }
 
-      Form createFunc(FuncInvoker funcInvoker, Form[] args) {
+      Form createForm(FuncInvoker funcInvoker, Form[] args) {
         Object[] argValues;
         if (requireNonNull(objectMethod).isVarArgs()) {
           int parameterCount = objectMethod.getParameterCount();

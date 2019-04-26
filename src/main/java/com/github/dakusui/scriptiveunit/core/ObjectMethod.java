@@ -88,8 +88,20 @@ public interface ObjectMethod {
         try {
           return method.invoke(driverObject, args);
         } catch (IllegalAccessException | InvocationTargetException | IllegalArgumentException e) {
-          String message = format("Failed to invoke %s#%s(%s) with %s", method.getDeclaringClass().getCanonicalName(), method.getName(), Arrays.toString(method.getParameterTypes()), Arrays.toString(args));
+          String message = format("Failed to invoke %s#%s(%s) with %s",
+              method.getDeclaringClass().getCanonicalName(),
+              method.getName(),
+              arrayToString(method.getParameterTypes()),
+              arrayToString(args));
           throw wrap(e, message);
+        }
+      }
+
+      String arrayToString(Object[] args) {
+        try {
+          return Arrays.toString(args);
+        } catch (Exception e) {
+          return "(N/A)";
         }
       }
 

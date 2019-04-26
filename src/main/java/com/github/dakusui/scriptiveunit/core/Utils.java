@@ -310,13 +310,13 @@ public enum Utils {
 
   public static BigDecimal toBigDecimal(Number number) {
     if (number instanceof BigDecimal)
-      return BigDecimal.class.cast(number);
+      return (BigDecimal) number;
     return new BigDecimal(number.toString(), DECIMAL128);
   }
 
   public static Object toBigDecimalIfPossible(Object object) {
     if (object instanceof Number) {
-      return toBigDecimal(Number.class.cast(object));
+      return toBigDecimal((Number) object);
     }
     return object;
   }
@@ -442,6 +442,18 @@ public enum Utils {
 
   public static Stream<Class<?>> findEntitiesUnder(String prefix, Function<Reflections, Set<Class<?>>> func) {
     return func.apply(new Reflections(prefix, new TypeAnnotationsScanner(), new SubTypesScanner())).stream();
+  }
+
+  /**
+   * This method returns an identifier string for a {@link com.github.dakusui.scriptiveunit.model.func.Func} object.
+   * Note that the ID is composed by FQCN of the class and method name that directly calls this method by calling
+   * {@link Thread#currentThread()}{@code .getStackTrace()}.
+   * This means, refactoring, such as "extract method", made on the caller method
+   * may result in an unintended behaviour change and you need to be cautious.
+   */
+  public static String funcId() {
+    StackTraceElement caller = Thread.currentThread().getStackTrace()[2];
+    return String.format("%s:%s", caller.getClassName(), caller.getMethodName());
   }
 
   private interface Converter<FROM, TO> extends Function<FROM, TO> {
