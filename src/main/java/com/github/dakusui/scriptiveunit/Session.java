@@ -9,7 +9,6 @@ import com.github.dakusui.scriptiveunit.model.Stage;
 import com.github.dakusui.scriptiveunit.model.TestItem;
 import com.github.dakusui.scriptiveunit.model.TestOracle;
 import com.github.dakusui.scriptiveunit.model.TestSuiteDescriptor;
-import com.github.dakusui.scriptiveunit.model.statement.Statement;
 
 import java.util.List;
 import java.util.Map;
@@ -57,59 +56,54 @@ public interface Session {
     return createActionForFixture(
         SETUP,
         fixtureTuple,
-        testSuiteDescriptor.getSetUpActionFactory(),
-        testSuiteDescriptor.statementFactory());
+        testSuiteDescriptor.getSetUpActionFactory());
   }
 
   default Action createTearDownActionForFixture(TestSuiteDescriptor testSuiteDescriptor, Tuple fixtureTuple) {
     return createActionForFixture(
         TEARDOWN,
         fixtureTuple,
-        testSuiteDescriptor.getTearDownActionFactory(),
-        testSuiteDescriptor.statementFactory());
+        testSuiteDescriptor.getTearDownActionFactory());
   }
 
   default Action createActionForFixture(
       Stage.Type fixtureLevelStageType,
       Tuple fixtureTuple,
-      Function<Stage, Action> fixtureLevelActionFactory,
-      Statement.Factory statementFactory) {
+      Function<Stage, Action> fixtureLevelActionFactory) {
     return createFixtureLevelActionForTestCase(
         fixtureTuple,
         fixtureLevelStageType,
-        fixtureLevelActionFactory,
-        statementFactory);
+        fixtureLevelActionFactory
+    );
   }
 
-  default Stage createConstraintConstraintGenerationStage(Statement.Factory statementFactory, Tuple tuple) {
-    return Stage.Factory.createConstraintGenerationStage(this.getConfig(), statementFactory, tuple);
+  default Stage createConstraintConstraintGenerationStage(Tuple tuple) {
+    return Stage.Factory.createConstraintGenerationStage(this.getConfig(), tuple);
   }
 
-  default Stage createSuiteLevelStage(Stage.Type type, Tuple commonFixture, Statement.Factory statementFactory) {
-    return Stage.Factory.createSuiteLevelStage(type, commonFixture, statementFactory, this.getConfig());
+  default Stage createSuiteLevelStage(Stage.Type type, Tuple commonFixture) {
+    return Stage.Factory.createSuiteLevelStage(type, commonFixture, this.getConfig());
   }
 
-  default Stage createOracleLevelStage(Stage.Type type, TestItem testItem, Report report, Statement.Factory statementFactory) {
-    return Stage.Factory.createOracleLevelStage(type, testItem, report, statementFactory, this.getConfig());
+  default Stage createOracleLevelStage(Stage.Type type, TestItem testItem, Report report) {
+    return Stage.Factory.createOracleLevelStage(type, testItem, report, this.getConfig());
   }
 
-  default <RESPONSE> Stage createOracleVerificationStage(Statement.Factory statementFactory, TestItem testItem, RESPONSE response, Report report) {
-    return Stage.Factory.createOracleVerificationStage(this, statementFactory, testItem, response, report);
+  default <RESPONSE> Stage createOracleVerificationStage(TestItem testItem, RESPONSE response, Report report) {
+    return Stage.Factory.createOracleVerificationStage(this, testItem, response, report);
   }
 
-  default Stage createOracleFailureHandlingStage(TestItem testItem, Throwable throwable, Report report, Statement.Factory statementFactory) {
-    return Stage.Factory.createOracleFailureHandlingStage(this, testItem, throwable, report, statementFactory);
+  default Stage createOracleFailureHandlingStage(TestItem testItem, Throwable throwable, Report report) {
+    return Stage.Factory.createOracleFailureHandlingStage(this, testItem, throwable, report);
   }
 
   default Action createFixtureLevelActionForTestCase(
       Tuple testCaseTuple,
       Stage.Type stageType,
-      Function<Stage, Action> fixtureLevelActionFactory,
-      Statement.Factory statementFactory) {
+      Function<Stage, Action> fixtureLevelActionFactory) {
     return fixtureLevelActionFactory.apply(
         StageFactory.fixtureLevel(
             testCaseTuple,
-            statementFactory,
             this.getConfig())
             .createStage(stageType));
   }
@@ -117,8 +111,8 @@ public interface Session {
   interface StageFactory {
     Stage createStage(Stage.Type stageTyp);
 
-    static StageFactory fixtureLevel(Tuple fixture, Statement.Factory statementFactory, Config config) {
-      return stageType -> Stage.Factory.createFixtureLevelStage(stageType, fixture, statementFactory, config);
+    static StageFactory fixtureLevel(Tuple fixture, Config config) {
+      return stageType -> Stage.Factory.createFixtureLevelStage(stageType, fixture, config);
     }
   }
 

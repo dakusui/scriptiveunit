@@ -3,7 +3,6 @@ package com.github.dakusui.scriptiveunit.model;
 import com.github.dakusui.jcunit.core.tuples.Tuple;
 import com.github.dakusui.scriptiveunit.Session;
 import com.github.dakusui.scriptiveunit.core.Config;
-import com.github.dakusui.scriptiveunit.model.statement.Statement;
 
 import java.util.Objects;
 
@@ -16,14 +15,13 @@ import static java.util.Objects.requireNonNull;
  * executed.
  */
 public interface Stage {
-  Statement.Factory getStatementFactory();
-
   Tuple getTestCaseTuple();
 
   <RESPONSE> RESPONSE response();
 
   /**
    * Reurns a type of this stage.
+   *
    * @return Type of this stage.
    */
   Type getType();
@@ -52,11 +50,6 @@ public interface Stage {
 
     protected Delegating(Stage stage) {
       this.target = requireNonNull(stage);
-    }
-
-    @Override
-    public Statement.Factory getStatementFactory() {
-      return this.target.getStatementFactory();
     }
 
     @Override
@@ -108,8 +101,8 @@ public interface Stage {
   enum Factory {
     ;
 
-    public static Stage createConstraintGenerationStage(Config config, Statement.Factory statementFactory, Tuple tuple) {
-      return createFixtureLevelStage(CONSTRAINT_GENERATION, tuple, statementFactory, config);
+    public static Stage createConstraintGenerationStage(Config config, Tuple tuple) {
+      return createFixtureLevelStage(CONSTRAINT_GENERATION, tuple, config);
     }
 
     /**
@@ -122,12 +115,10 @@ public interface Stage {
     public static Stage createSuiteLevelStage(
         Type type,
         Tuple commonFixture,
-        Statement.Factory statementFactory,
         Config config) {
       return _create(
           type,
           config,
-          statementFactory,
           commonFixture,
           null,
           null,
@@ -139,54 +130,49 @@ public interface Stage {
      * Creates a fixture level stage, which shares the same fixture specified by
      * {@code fixture} parameter.
      *
-     * @param config
+     * @param config  A config object
      * @param type    should be either SETUP or TEARDOWN
      * @param fixture A fixture level settings.
      * @return Created stage.
      */
-    public static Stage createFixtureLevelStage(Type type, Tuple fixture, Statement.Factory statementFactory, Config config) {
-      return createSuiteLevelStage(type, fixture, statementFactory, config);
+    public static Stage createFixtureLevelStage(Type type, Tuple fixture, Config config) {
+      return createSuiteLevelStage(type, fixture, config);
     }
 
     /**
      * Creates an oracle level stage.
      *
-     * @param type             should be either GIVEN, WHEN, BEFORE, or AFTER
-     * @param testItem         An item to be executed as a test.
-     * @param report           A report object to which tesing activities are written.
-     * @param statementFactory
-     * @param config
+     * @param type     should be either GIVEN, WHEN, BEFORE, or AFTER
+     * @param testItem An item to be executed as a test.
+     * @param report   A report object to which tesing activities are written.
+     * @param config   A config object
      * @return Created stage
      */
-    public static Stage createOracleLevelStage(Type type, TestItem testItem, Report report, Statement.Factory statementFactory, Config config) {
+    public static Stage createOracleLevelStage(Type type, TestItem testItem, Report report, Config config) {
       return _create(type,
-          config, statementFactory, testItem.getTestCaseTuple(), testItem, null, null, report);
+          config, testItem.getTestCaseTuple(), testItem, null, null, report);
     }
 
-    public static <RESPONSE> Stage createOracleVerificationStage(Session session, Statement.Factory statementFactory, TestItem testItem, RESPONSE response, Report report) {
+    public static <RESPONSE> Stage createOracleVerificationStage(Session session, TestItem testItem, RESPONSE response, Report report) {
       return _create(Type.THEN,
-          session.getConfig(), statementFactory, testItem.getTestCaseTuple(), testItem,
+          session.getConfig(), testItem.getTestCaseTuple(), testItem,
           requireNonNull(response),
           null,
           report);
     }
 
-    public static Stage createOracleFailureHandlingStage(Session session, TestItem testItem, Throwable throwable, Report report, Statement.Factory statementFactory) {
-      return _create(Type.FAILURE_HANDLING, session.getConfig(), statementFactory, testItem.getTestCaseTuple(), testItem, null, throwable, report);
+    public static Stage createOracleFailureHandlingStage(Session session, TestItem testItem, Throwable throwable, Report report) {
+      return _create(Type.FAILURE_HANDLING, session.getConfig(), testItem.getTestCaseTuple(), testItem, null, throwable, report);
     }
 
-    private static <RESPONSE> Stage _create(Type type, Config config, Statement.Factory statementFactory, Tuple testCase, TestItem testItem, RESPONSE response, Throwable throwable, Report report) {
+    private static <RESPONSE> Stage _create(Type type, Config config, Tuple testCase, TestItem testItem, RESPONSE response, Throwable throwable, Report report) {
       return new Stage() {
-        @Override
-        public Statement.Factory getStatementFactory() {
-          return statementFactory;
-        }
-
         @Override
         public Tuple getTestCaseTuple() {
           return testCase;
         }
 
+        @SuppressWarnings("unchecked")
         @Override
         public RESPONSE response() {
           return checkState(response, Objects::nonNull);

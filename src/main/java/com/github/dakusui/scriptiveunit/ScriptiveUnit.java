@@ -105,7 +105,6 @@ public class ScriptiveUnit extends Parameterized {
                 SETUP_BEFORE_ALL,
                 session,
                 createCommonFixture(testSuiteDescriptor.getFactorSpaceDescriptor().getParameters()),
-                testSuiteDescriptor,
                 testSuiteDescriptor.getSetUpBeforeAllActionFactory()));
         super.evaluate();
       }
@@ -123,7 +122,6 @@ public class ScriptiveUnit extends Parameterized {
                 TEARDOWN_AFTER_ALL,
                 session,
                 createCommonFixture(testSuiteDescriptor.getFactorSpaceDescriptor().getParameters()),
-                testSuiteDescriptor,
                 testSuiteDescriptor.getTearDownAfterAllActionFactory())
         );
       }
@@ -139,9 +137,9 @@ public class ScriptiveUnit extends Parameterized {
     return b.build();
   }
 
-  private static Action createSuiteLevelAction(Stage.Type stageType, Session session, Tuple commonFixture, TestSuiteDescriptor testSuiteDescriptor, Function<Stage, Action> suiteLevelActionFactory) {
+  private static Action createSuiteLevelAction(Stage.Type stageType, Session session, Tuple commonFixture, Function<Stage, Action> suiteLevelActionFactory) {
     return suiteLevelActionFactory
-        .apply(session.createSuiteLevelStage(stageType, commonFixture, testSuiteDescriptor.statementFactory()));
+        .apply(session.createSuiteLevelStage(stageType, commonFixture));
   }
 
   private static TestSuiteDescriptor.Loader createTestSuiteDescriptorLoader(Config config) {
