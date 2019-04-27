@@ -14,6 +14,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 
+import static com.github.dakusui.scriptiveunit.model.Stage.Type.CONSTRAINT_GENERATION;
 import static com.github.dakusui.scriptiveunit.model.Stage.Type.SETUP;
 import static com.github.dakusui.scriptiveunit.model.Stage.Type.TEARDOWN;
 
@@ -78,7 +79,7 @@ public interface Session {
   }
 
   default Stage createConstraintConstraintGenerationStage(Tuple tuple) {
-    return Stage.Factory.createConstraintGenerationStage(this.getConfig(), tuple);
+    return Stage.Factory.createFixtureLevelStage(CONSTRAINT_GENERATION, tuple, this.getConfig());
   }
 
   default Stage createSuiteLevelStage(Stage.Type type, Tuple commonFixture) {

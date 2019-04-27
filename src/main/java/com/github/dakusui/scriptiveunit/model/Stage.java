@@ -7,7 +7,6 @@ import com.github.dakusui.scriptiveunit.core.Config;
 import java.util.Objects;
 
 import static com.github.dakusui.scriptiveunit.core.Utils.checkState;
-import static com.github.dakusui.scriptiveunit.model.Stage.Type.CONSTRAINT_GENERATION;
 import static java.util.Objects.requireNonNull;
 
 /**
@@ -101,10 +100,6 @@ public interface Stage {
   enum Factory {
     ;
 
-    public static Stage createConstraintGenerationStage(Config config, Tuple tuple) {
-      return createFixtureLevelStage(CONSTRAINT_GENERATION, tuple, config);
-    }
-
     /**
      * Creates a suite level stage, which corresponds to {@code @}{@code BeforeClass} or {@code @}{@code AfterClass}.
      *
@@ -136,7 +131,14 @@ public interface Stage {
      * @return Created stage.
      */
     public static Stage createFixtureLevelStage(Type type, Tuple fixture, Config config) {
-      return createSuiteLevelStage(type, fixture, config);
+      return _create(
+          type,
+          config,
+          fixture,
+          null,
+          null,
+          null,
+          null);
     }
 
     /**
@@ -165,7 +167,7 @@ public interface Stage {
       return _create(Type.FAILURE_HANDLING, session.getConfig(), testItem.getTestCaseTuple(), testItem, null, throwable, report);
     }
 
-    private static <RESPONSE> Stage _create(Type type, Config config, Tuple testCase, TestItem testItem, RESPONSE response, Throwable throwable, Report report) {
+    public static <RESPONSE> Stage _create(Type type, Config config, Tuple testCase, TestItem testItem, RESPONSE response, Throwable throwable, Report report) {
       return new Stage() {
         @Override
         public Tuple getTestCaseTuple() {
@@ -198,7 +200,9 @@ public interface Stage {
           return checkState(
               throwable,
               Objects::nonNull,
-              "This method is only allowed to be called in '%s' stage but it was in '%s'", Type.FAILURE_HANDLING, this);
+              "This method is only allowed to be called in '%s' stage but it was in '%s'",
+              Type.FAILURE_HANDLING,
+              this);
         }
 
         @Override
