@@ -81,7 +81,9 @@ public class Core {
   @SuppressWarnings("unused")
   @Scriptable
   public Form<TestItem> testItem() {
-    return Stage::getTestItem;
+    return stage -> stage.getTestItem().orElseThrow(
+        () -> new IllegalStateException(
+            format("This method cannot be called on '%s' stage", stage.getType())));
   }
 
   @SuppressWarnings("unused")

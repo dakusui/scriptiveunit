@@ -33,7 +33,7 @@ public interface Stage {
 
   Optional<Report> getReport();
 
-  TestItem getTestItem();
+  Optional<TestItem> getTestItem();
 
   abstract class Delegating implements Stage {
     private final Stage target;
@@ -83,7 +83,7 @@ public interface Stage {
     }
 
     @Override
-    public TestItem getTestItem() {
+    public Optional<TestItem> getTestItem() {
       return this.target.getTestItem();
     }
   }

@@ -3,10 +3,7 @@ package com.github.dakusui.scriptiveunit.model;
 import com.github.dakusui.jcunit.core.tuples.Tuple;
 import com.github.dakusui.scriptiveunit.core.Config;
 
-import java.util.Objects;
 import java.util.Optional;
-
-import static com.github.dakusui.scriptiveunit.core.Utils.checkState;
 
 public interface StageFactory {
   static <RESPONSE> Stage _create(Stage.Type type, Config config, Tuple testCase, TestItem testItem, RESPONSE response, Throwable throwable, Report report) {
@@ -53,12 +50,8 @@ public interface StageFactory {
       }
 
       @Override
-      public TestItem getTestItem() {
-        return checkState(
-            testItem,
-            Objects::nonNull,
-            "This method is not allowed to be called in '%s' stage.", this
-        );
+      public Optional<TestItem> getTestItem() {
+        return Optional.ofNullable(testItem);
       }
     };
   }
