@@ -2,7 +2,7 @@ package com.github.dakusui.scriptiveunit.action;
 
 import com.github.dakusui.actionunit.Action;
 import com.github.dakusui.actionunit.Actions;
-import com.github.dakusui.scriptiveunit.Session;
+import com.github.dakusui.scriptiveunit.model.Session;
 import com.github.dakusui.scriptiveunit.loaders.IndexedTestCase;
 import com.github.dakusui.scriptiveunit.model.TestOracle;
 import com.github.dakusui.scriptiveunit.model.TestSuiteDescriptor;

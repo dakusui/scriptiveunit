@@ -1,14 +1,9 @@
-package com.github.dakusui.scriptiveunit;
+package com.github.dakusui.scriptiveunit.model;
 
 import com.github.dakusui.actionunit.Action;
 import com.github.dakusui.jcunit.core.tuples.Tuple;
 import com.github.dakusui.scriptiveunit.core.Config;
 import com.github.dakusui.scriptiveunit.loaders.IndexedTestCase;
-import com.github.dakusui.scriptiveunit.model.Report;
-import com.github.dakusui.scriptiveunit.model.Stage;
-import com.github.dakusui.scriptiveunit.model.TestItem;
-import com.github.dakusui.scriptiveunit.model.TestOracle;
-import com.github.dakusui.scriptiveunit.model.TestSuiteDescriptor;
 
 import java.util.List;
 import java.util.Map;
@@ -17,6 +12,7 @@ import java.util.function.Function;
 import static com.github.dakusui.scriptiveunit.model.Stage.Type.CONSTRAINT_GENERATION;
 import static com.github.dakusui.scriptiveunit.model.Stage.Type.SETUP;
 import static com.github.dakusui.scriptiveunit.model.Stage.Type.TEARDOWN;
+import static java.util.Objects.requireNonNull;
 
 /**
  * <pre>
@@ -79,42 +75,49 @@ public interface Session {
   }
 
   default Stage createConstraintConstraintGenerationStage(Tuple tuple) {
-    return Stage.Factory.createFixtureLevelStage(CONSTRAINT_GENERATION, tuple, this.getConfig());
+    return StageFactory._create(
+        CONSTRAINT_GENERATION,
+        this.getConfig(),
+        tuple,
+        null,
+        null,
+        null,
+        null);
   }
 
   default Stage createSuiteLevelStage(Stage.Type type, Tuple commonFixture) {
-    return Stage.Factory.createSuiteLevelStage(type, commonFixture, this.getConfig());
+    return StageFactory._create(
+        type,
+        this.getConfig(),
+        commonFixture,
+        null,
+        null,
+        null,
+        null);
   }
 
   default Stage createOracleLevelStage(Stage.Type type, TestItem testItem, Report report) {
-    return Stage.Factory.createOracleLevelStage(type, testItem, report, this.getConfig());
+    return StageFactory._create(type,
+        this.getConfig(), testItem.getTestCaseTuple(), testItem, null, null, report);
   }
 
   default <RESPONSE> Stage createOracleVerificationStage(TestItem testItem, RESPONSE response, Report report) {
-    return Stage.Factory.createOracleVerificationStage(this, testItem, response, report);
+    return StageFactory._create(Stage.Type.THEN,
+        getConfig(), testItem.getTestCaseTuple(), testItem,
+        requireNonNull(response),
+        null,
+        report);
   }
 
   default Stage createOracleFailureHandlingStage(TestItem testItem, Throwable throwable, Report report) {
-    return Stage.Factory.createOracleFailureHandlingStage(this, testItem, throwable, report);
+    return StageFactory._create(Stage.Type.FAILURE_HANDLING, getConfig(), testItem.getTestCaseTuple(), testItem, null, throwable, report);
   }
 
   default Action createFixtureLevelActionForTestCase(
       Tuple testCaseTuple,
       Stage.Type stageType,
       Function<Stage, Action> fixtureLevelActionFactory) {
-    return fixtureLevelActionFactory.apply(
-        StageFactory.fixtureLevel(
-            testCaseTuple,
-            this.getConfig())
-            .createStage(stageType));
-  }
-
-  interface StageFactory {
-    Stage createStage(Stage.Type stageTyp);
-
-    static StageFactory fixtureLevel(Tuple fixture, Config config) {
-      return stageType -> Stage.Factory.createFixtureLevelStage(stageType, fixture, config);
-    }
+    return fixtureLevelActionFactory.apply(StageFactory.createFixtureLevelStage(stageType, testCaseTuple, this.getConfig()));
   }
 
   static Session create(Config config) {

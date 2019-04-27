@@ -2,7 +2,6 @@ package com.github.dakusui.scriptiveunit.model;
 
 import com.github.dakusui.actionunit.Action;
 import com.github.dakusui.scriptiveunit.GroupedTestItemRunner;
-import com.github.dakusui.scriptiveunit.Session;
 import com.github.dakusui.scriptiveunit.core.Config;
 import com.github.dakusui.scriptiveunit.loaders.IndexedTestCase;
 import com.github.dakusui.scriptiveunit.model.func.Form;
