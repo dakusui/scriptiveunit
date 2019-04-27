@@ -22,14 +22,14 @@ public abstract class Service<REQUEST, RESPONSE> extends Core {
   @SuppressWarnings("unused")
   @Scriptable
   public Form<REQUEST> request() {
-    return (Stage input) -> buildRequest(input.getTestCaseTuple());
+    return (Stage input) -> buildRequest(input.getTestCaseTuple().orElseThrow(RuntimeException::new));
   }
 
   @SuppressWarnings("unused")
   @Scriptable
   public Form<RESPONSE> response() {
     //noinspection unchecked
-    return (Stage input) -> (RESPONSE) input.response();
+    return (Stage input) -> (RESPONSE) input.response().orElseThrow(RuntimeException::new);
   }
 
   /**

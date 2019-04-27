@@ -4,6 +4,7 @@ import com.github.dakusui.jcunit.core.tuples.Tuple;
 import com.github.dakusui.scriptiveunit.core.Config;
 
 import java.util.Objects;
+import java.util.Optional;
 
 import static com.github.dakusui.scriptiveunit.core.Utils.checkState;
 
@@ -11,14 +12,14 @@ public interface StageFactory {
   static <RESPONSE> Stage _create(Stage.Type type, Config config, Tuple testCase, TestItem testItem, RESPONSE response, Throwable throwable, Report report) {
     return new Stage() {
       @Override
-      public Tuple getTestCaseTuple() {
-        return testCase;
+      public Optional<Tuple> getTestCaseTuple() {
+        return Optional.ofNullable(testCase);
       }
 
       @SuppressWarnings("unchecked")
       @Override
-      public RESPONSE response() {
-        return checkState(response, Objects::nonNull);
+      public Optional<RESPONSE> response() {
+        return Optional.ofNullable(response);
       }
 
       @Override
@@ -37,13 +38,8 @@ public interface StageFactory {
       }
 
       @Override
-      public Throwable getThrowable() {
-        return checkState(
-            throwable,
-            Objects::nonNull,
-            "This method is only allowed to be called in '%s' stage but it was in '%s'",
-            Type.FAILURE_HANDLING,
-            this);
+      public Optional<Throwable> getThrowable() {
+        return Optional.ofNullable(throwable);
       }
 
       @Override
@@ -52,8 +48,8 @@ public interface StageFactory {
       }
 
       @Override
-      public Report getReport() {
-        return report;
+      public Optional<Report> getReport() {
+        return Optional.ofNullable(report);
       }
 
       @Override

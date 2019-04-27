@@ -3,6 +3,8 @@ package com.github.dakusui.scriptiveunit.model;
 import com.github.dakusui.jcunit.core.tuples.Tuple;
 import com.github.dakusui.scriptiveunit.core.Config;
 
+import java.util.Optional;
+
 import static java.util.Objects.requireNonNull;
 
 /**
@@ -10,10 +12,6 @@ import static java.util.Objects.requireNonNull;
  * executed.
  */
 public interface Stage {
-  Tuple getTestCaseTuple();
-
-  <RESPONSE> RESPONSE response();
-
   /**
    * Reurns a type of this stage.
    *
@@ -21,22 +19,19 @@ public interface Stage {
    */
   Type getType();
 
-  <T> T getArgument(int index);
+  Config getConfig();
 
   int sizeOfArguments();
 
-  /**
-   * Returns a throwable object which is thrown and captured in executions of {@code GIVEN},
-   * {@code WHEN}, and {@code THEN} stages.
-   * <p>
-   * Calling this method in stages except for {@code FAILURE_HANDLING} will result in an
-   * {@code IllegalStateException}.
-   */
-  Throwable getThrowable();
+  <T> T getArgument(int index);
 
-  Config getConfig();
+  Optional<Throwable> getThrowable();
 
-  Report getReport();
+  Optional<Tuple> getTestCaseTuple();
+
+  <RESPONSE> Optional<RESPONSE> response();
+
+  Optional<Report> getReport();
 
   TestItem getTestItem();
 
@@ -48,12 +43,12 @@ public interface Stage {
     }
 
     @Override
-    public Tuple getTestCaseTuple() {
+    public Optional<Tuple> getTestCaseTuple() {
       return this.target.getTestCaseTuple();
     }
 
     @Override
-    public <RESPONSE> RESPONSE response() {
+    public <RESPONSE> Optional<RESPONSE> response() {
       return this.target.response();
     }
 
@@ -73,7 +68,7 @@ public interface Stage {
     }
 
     @Override
-    public Throwable getThrowable() {
+    public Optional<Throwable> getThrowable() {
       return this.target.getThrowable();
     }
 
@@ -83,7 +78,7 @@ public interface Stage {
     }
 
     @Override
-    public Report getReport() {
+    public Optional<Report> getReport() {
       return this.target.getReport();
     }
 
@@ -95,20 +90,16 @@ public interface Stage {
 
   enum Type {
     CONSTRAINT_GENERATION,
-    SETUP_BEFORE_ALL {
-    },
-    SETUP {
-    },
+    SETUP_BEFORE_ALL,
+    SETUP,
     BEFORE,
     GIVEN,
     WHEN,
     THEN,
     FAILURE_HANDLING,
     AFTER,
-    TEARDOWN {
-    },
-    TEARDOWN_AFTER_ALL {
-    },
+    TEARDOWN,
+    TEARDOWN_AFTER_ALL,
     ;
   }
 }

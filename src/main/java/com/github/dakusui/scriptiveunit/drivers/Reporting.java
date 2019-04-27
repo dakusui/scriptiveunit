@@ -14,7 +14,9 @@ public class Reporting {
   public Form<Object> write_report(Form<String> name, Form<Object> value) {
     return input -> {
       Object ret;
-      input.getReport().put(name.apply(input), ret = value.apply(input));
+      input.getReport()
+          .orElseThrow(RuntimeException::new)
+          .put(name.apply(input), ret = value.apply(input));
       return ret;
     };
   }
@@ -22,6 +24,8 @@ public class Reporting {
   @SuppressWarnings("unused")
   @Scriptable
   public Form<Action> submit() {
-    return (Stage input) -> simple(prettify("submit", () -> input.getReport().submit()));
+    return (Stage input) -> simple(prettify("submit", () ->
+        input.getReport()
+            .orElseThrow(RuntimeException::new).submit()));
   }
 }

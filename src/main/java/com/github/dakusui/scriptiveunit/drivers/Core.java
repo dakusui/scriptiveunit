@@ -16,6 +16,7 @@ import java.util.List;
 
 import static com.github.dakusui.scriptiveunit.core.Utils.check;
 import static com.github.dakusui.scriptiveunit.exceptions.SyntaxException.attributeNotFound;
+import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
 import static java.util.stream.Collectors.toList;
 
@@ -33,7 +34,7 @@ public class Core {
   @AccessesTestParameter
   public <E> Form<E> attr(Form<String> attr) {
     return (Stage input) -> {
-      Tuple testCase = input.getTestCaseTuple();
+      Tuple testCase = input.getTestCaseTuple().orElseThrow(RuntimeException::new);
       String attrName = attr.apply(input);
       check(
           testCase.containsKey(attrName),
@@ -69,7 +70,12 @@ public class Core {
   @SuppressWarnings("unused")
   @Scriptable
   public Form<Throwable> exception() {
-    return Stage::getThrowable;
+    return stage ->
+        stage.getThrowable()
+            .orElseThrow(() -> new IllegalStateException(
+                format("This method is only allowed to be called in '%s' stage but it was in '%s'",
+                    Stage.Type.FAILURE_HANDLING,
+                    this)));
   }
 
   @SuppressWarnings("unused")
