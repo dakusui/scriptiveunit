@@ -13,8 +13,6 @@ public interface TestItem {
   class Impl implements TestItem {
     private final IndexedTestCase indexedTestCase;
     private final TestOracle      testOracle;
-    private String          testSuiteDescription;
-
     Impl(IndexedTestCase indexedTestCase, TestOracle testOracle) {
       this.indexedTestCase = indexedTestCase;
       this.testOracle = testOracle;

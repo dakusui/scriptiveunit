@@ -2,8 +2,11 @@ package com.github.dakusui.scriptiveunit.model;
 
 import com.github.dakusui.jcunit.core.tuples.Tuple;
 import com.github.dakusui.scriptiveunit.core.Config;
+import com.github.dakusui.scriptiveunit.model.func.Func;
 
+import java.util.Map;
 import java.util.Optional;
+import java.util.function.Function;
 
 import static java.util.Objects.requireNonNull;
 
@@ -35,6 +38,56 @@ public interface Stage {
 
   Optional<TestItem> getTestItem();
 
+  Map<Func.Call, Object> memo();
+
+  default Optional<Stage> parent() {
+    return Optional.empty();
+  }
+
+  default Stage createChildOf(Type type) {
+    requireNonNull(type);
+    Stage stage = this;
+    return new Delegating(stage) {
+      @Override
+      public Type getType() {
+        return type;
+      }
+
+      @Override
+      public Optional<Stage> parent() {
+        return Optional.of(stage);
+      }
+    };
+  }
+
+  default Stage createChildOf(Type type, Tuple tuple) {
+    requireNonNull(tuple);
+    return new Delegating(createChildOf(type)) {
+      @Override
+      public Optional<Tuple> getTestCaseTuple() {
+        return Optional.of(tuple);
+      }
+    };
+  }
+
+  default Stage createChildOf(Type type, Function<Tuple, TestItem> testItemFunction, Report report) {
+    requireNonNull(testItemFunction);
+    requireNonNull(report);
+    return new Delegating(createChildOf(type)) {
+      TestItem testItem = testItemFunction.apply(getTestCaseTuple().orElseThrow(RuntimeException::new));
+
+      @Override
+      public Optional<TestItem> getTestItem() {
+        return Optional.of(testItem);
+      }
+
+      @Override
+      public Optional<Report> getReport() {
+        return Optional.of(report);
+      }
+    };
+  }
+
   abstract class Delegating implements Stage {
     private final Stage target;
 
@@ -55,6 +108,11 @@ public interface Stage {
     @Override
     public Type getType() {
       return this.target.getType();
+    }
+
+    @Override
+    public Map<Func.Call, Object> memo() {
+      return this.target.memo();
     }
 
     @Override

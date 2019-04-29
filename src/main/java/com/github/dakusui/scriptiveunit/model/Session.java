@@ -74,50 +74,71 @@ public interface Session {
     );
   }
 
-  default Stage createConstraintConstraintGenerationStage(Tuple tuple) {
-    return StageFactory._create(
+  default Action createFixtureLevelActionForTestCase(
+      Tuple testCaseTuple,
+      Stage.Type stageType,
+      Function<Stage, Action> fixtureLevelActionFactory) {
+    return fixtureLevelActionFactory.apply(createFixtureLevelStage(testCaseTuple, stageType));
+  }
+
+  default Stage createConstraintGenerationStage(Tuple tuple) {
+    return StageFactory._create2(
         CONSTRAINT_GENERATION,
         this.getConfig(),
         tuple,
-        null,
         null,
         null,
         null);
   }
 
   default Stage createSuiteLevelStage(Stage.Type type, Tuple commonFixture) {
-    return StageFactory._create(
+    return StageFactory._create2(
         type,
         this.getConfig(),
         commonFixture,
         null,
+        null,
+        null);
+  }
+
+  default Stage createFixtureLevelStage(Tuple testCaseTuple, Stage.Type stageType) {
+    return StageFactory._create2(
+        stageType,
+        this.getConfig(),
+        testCaseTuple,
         null,
         null,
         null);
   }
 
   default Stage createOracleLevelStage(Stage.Type type, TestItem testItem, Report report) {
-    return StageFactory._create(type,
-        this.getConfig(), testItem.getTestCaseTuple(), testItem, null, null, report);
+    return StageFactory._create(
+        type,
+        this.getConfig(),
+        testItem,
+        null,
+        null,
+        report);
   }
 
   default <RESPONSE> Stage createOracleVerificationStage(TestItem testItem, RESPONSE response, Report report) {
-    return StageFactory._create(Stage.Type.THEN,
-        getConfig(), testItem.getTestCaseTuple(), testItem,
+    return StageFactory._create(
+        Stage.Type.THEN,
+        getConfig(),
+        testItem,
         requireNonNull(response),
         null,
         report);
   }
 
   default Stage createOracleFailureHandlingStage(TestItem testItem, Throwable throwable, Report report) {
-    return StageFactory._create(Stage.Type.FAILURE_HANDLING, getConfig(), testItem.getTestCaseTuple(), testItem, null, throwable, report);
-  }
-
-  default Action createFixtureLevelActionForTestCase(
-      Tuple testCaseTuple,
-      Stage.Type stageType,
-      Function<Stage, Action> fixtureLevelActionFactory) {
-    return fixtureLevelActionFactory.apply(StageFactory.createFixtureLevelStage(stageType, testCaseTuple, this.getConfig()));
+    return StageFactory._create(
+        Stage.Type.FAILURE_HANDLING,
+        getConfig(),
+        testItem,
+        null,
+        throwable,
+        report);
   }
 
   static Session create(Config config) {
