@@ -43,6 +43,108 @@ import static java.util.Objects.requireNonNull;
 import static java.util.stream.Collectors.toCollection;
 import static java.util.stream.Collectors.toList;
 
+/**
+ * = Test Case structure in scriptiveunit
+ *
+ * A fixture is a subtuple of a test case, where attributes involved in a setUp procedure
+ * are projected from the test case.
+ *
+ * For each of running mode, the suite level set up is executed always before all
+ * tests.
+ * Also the suite level tear down is executed always after all tests.
+ *
+ * Three running modes:
+ *
+ * - ByTestOracle
+ * - ByTestCase
+ * - ByTestFixture
+ *
+ * == Execution Models of Running Modes
+ * In this section, we assume that each test case has two attributes ``F`` and ``T``.
+ * ``F`` is used in setUp procedure while ``T`` is not.
+ * Also we have three test cases ``TestCase_1``, ``TestCase_2``, and ``TestCase_3``,
+ * each of which has following values.
+ *
+ * |===
+ * |           |``F``|``T``
+ * |TestCase_1 |x    |100
+ * |TestCase_2 |x    |200
+ * |TestCase_3 |Y    |300
+ * |===
+ *
+ * === ByTestOracle
+ *
+ * [ditaa]
+ * ----
+ * +--------------------------------------------+
+ * |Suite                                       |
+ * |+------------+ +------------+ +------------+|
+ * ||Oracle_a    | |Oracle_b    | |Oracle_c    ||
+ * ||+----------+| |+----------+| |+----------+||
+ * |||TestCase_1|| ||TestCase_1|| ||TestCase_1|||
+ * ||+----------+| |+----------+| |+----------+||
+ * ||            | |            | |            ||
+ * ||+----------+| |+----------+| |+----------+||
+ * |||TestCase_2|| ||TestCase_2|| ||TestCase_2|||
+ * ||+----------+| |+----------+| |+----------+||
+ * ||            | |            | |            ||
+ * ||+----------+| |+----------+| |+----------+||
+ * |||TestCase_3|| ||TestCase_3|| ||TestCase_3|||
+ * ||+----------+| |+----------+| |+----------+||
+ * |+------------+ +------------+ +------------+|
+ * +--------------------------------------------+
+ * ----
+ *
+ * === ByTestCase
+ *
+ * [ditaa]
+ * ----
+ * +-----------------------------------------+
+ * |Suite                                    |
+ * |+-----------+ +-----------+ +-----------+|
+ * ||TestCase_1 | |TestCase_2 | |TestCase_3 ||
+ * ||+---------+| |+---------+| |+---------+||
+ * |||Oracle_a || ||Oracle_a || ||Oracle_a |||
+ * ||+---------+| |+---------+| |+---------+||
+ * ||           | |           | |           ||
+ * ||+---------+| |+---------+| |+---------+||
+ * |||Oracle_b || ||Oracle_c || ||Oracle_b |||
+ * ||+---------+| |+---------+| |+---------+||
+ * ||           | |           | |           ||
+ * ||+---------+| |+---------+| |+---------+||
+ * |||Oracle_c || ||Oracle_c || ||Oracle_c |||
+ * ||+---------+| |+---------+| |+---------+||
+ * |+-----------+ +-----------+ +-----------+|
+ * +-----------------------------------------+
+ * ----
+ *
+ * === ByTestFixture
+ *
+ * [ditaa]
+ * ----
+ * +---------------------------------------------+
+ * |Suite                                        |
+ * |+---------------------------+ +-------------+|
+ * ||Fixture_(F:x)              | |Fixture_(F:Y)||
+ * ||+-----------+ +-----------+| |+-----------+||
+ * |||TestCase_1 | |TestCase_2 || ||TestCase_3 |||
+ * |||+---------+| |+---------+|| ||+---------+|||
+ * ||||Oracle_a || ||Oracle_a ||| |||Oracle_a ||||
+ * |||+---------+| |+---------+|| ||+---------+|||
+ * |||           | |           || ||           |||
+ * |||+---------+| |+---------+|| ||+---------+|||
+ * ||||Oracle_b || ||Oracle_c ||| |||Oracle_b ||||
+ * |||+---------+| |+---------+|| ||+---------+|||
+ * |||           | |           || ||           |||
+ * |||+---------+| |+---------+|| ||+---------+|||
+ * ||||Oracle_c || ||Oracle_c ||| |||Oracle_c ||||
+ * |||+---------+| |+---------+|| ||+---------+|||
+ * ||+-----------+ +-----------+| |+-----------+||
+ * |+---------------------------+ +-------------+|
+ * +---------------------------------------------+
+ * ----
+ *
+ */
 public final class GroupedTestItemRunner extends ParentRunner<Action> {
   private static Iterable<Runner> createRunnersGroupingByTestOracle(
       final Session session,
