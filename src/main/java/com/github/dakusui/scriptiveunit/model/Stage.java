@@ -44,7 +44,7 @@ public interface Stage {
     return Optional.empty();
   }
 
-  default Stage createChildOf(Type type) {
+  default Stage createChild(Type type) {
     requireNonNull(type);
     Stage stage = this;
     return new Delegating(stage) {
@@ -60,9 +60,9 @@ public interface Stage {
     };
   }
 
-  default Stage createChildOf(Type type, Tuple tuple) {
+  default Stage createChild(Type type, Tuple tuple) {
     requireNonNull(tuple);
-    return new Delegating(createChildOf(type)) {
+    return new Delegating(createChild(type)) {
       @Override
       public Optional<Tuple> getTestCaseTuple() {
         return Optional.of(tuple);
@@ -70,10 +70,10 @@ public interface Stage {
     };
   }
 
-  default Stage createChildOf(Type type, Function<Tuple, TestItem> testItemFunction, Report report) {
+  default Stage createChild(Type type, Function<Tuple, TestItem> testItemFunction, Report report) {
     requireNonNull(testItemFunction);
     requireNonNull(report);
-    return new Delegating(createChildOf(type)) {
+    return new Delegating(createChild(type)) {
       TestItem testItem = testItemFunction.apply(getTestCaseTuple().orElseThrow(RuntimeException::new));
 
       @Override
@@ -86,6 +86,16 @@ public interface Stage {
         return Optional.of(report);
       }
     };
+  }
+
+  static Stage create(Type type, Config config, Tuple commonFixture) {
+    return StageFactory._create2(
+        type,
+        config,
+        commonFixture,
+        null,
+        null,
+        null);
   }
 
   abstract class Delegating implements Stage {

@@ -91,16 +91,6 @@ public interface Session {
         null);
   }
 
-  default Stage createSuiteLevelStage(Stage.Type type, Tuple commonFixture) {
-    return StageFactory._create2(
-        type,
-        this.getConfig(),
-        commonFixture,
-        null,
-        null,
-        null);
-  }
-
   default Stage createFixtureLevelStage(Tuple testCaseTuple, Stage.Type stageType) {
     return StageFactory._create2(
         stageType,

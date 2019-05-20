@@ -140,7 +140,7 @@ public class ScriptiveUnit extends Parameterized {
 
   private static Action createSuiteLevelAction(Stage.Type stageType, Session session, Tuple commonFixture, Function<Stage, Action> suiteLevelActionFactory) {
     return suiteLevelActionFactory
-        .apply(session.createSuiteLevelStage(stageType, commonFixture));
+        .apply(Stage.create(stageType, session.getConfig(), commonFixture));
   }
 
   private static TestSuiteDescriptor.Loader createTestSuiteDescriptorLoader(Config config) {
