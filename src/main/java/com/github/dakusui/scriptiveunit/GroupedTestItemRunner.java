@@ -96,6 +96,7 @@ import static java.util.stream.Collectors.toList;
  * ----
  *
  * === ByTestCase
+ * A test runner is created for a ''
  *
  * [ditaa]
  * ----
@@ -119,6 +120,7 @@ import static java.util.stream.Collectors.toList;
  * ----
  *
  * === ByTestFixture
+ * GroupedTestItemRunner
  *
  * [ditaa]
  * ----

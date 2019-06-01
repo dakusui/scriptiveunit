@@ -175,6 +175,21 @@ public interface Stage {
     ;
   }
 
+  enum Scenario {
+    BY_TESTORACLE {
+
+    },
+    BY_TESTCASE {
+
+    },
+    BY_TESTFIXTURE {
+
+    },
+    BY_TESTFIXTURE_ORDERED_BY_TESTORACLE {
+
+    }
+
+  }
   enum Level {
     SUITE {
       @Override
