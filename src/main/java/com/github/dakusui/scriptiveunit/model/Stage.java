@@ -3,10 +3,8 @@ package com.github.dakusui.scriptiveunit.model;
 import com.github.dakusui.jcunit.core.tuples.Tuple;
 import com.github.dakusui.scriptiveunit.GroupedTestItemRunner;
 import com.github.dakusui.scriptiveunit.core.Config;
-import com.github.dakusui.scriptiveunit.model.func.Func;
 
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.function.Function;
 
@@ -42,12 +40,6 @@ public interface Stage {
 
   Optional<TestItem> getTestItem();
 
-  Map<Func.Call, Object> memo();
-
-  default Optional<Stage> parent() {
-    return Optional.empty();
-  }
-
   default Stage createChild(Type type) {
     requireNonNull(type);
     Stage stage = this;
@@ -55,11 +47,6 @@ public interface Stage {
       @Override
       public Type getType() {
         return type;
-      }
-
-      @Override
-      public Optional<Stage> parent() {
-        return Optional.of(stage);
       }
     };
   }
@@ -125,11 +112,6 @@ public interface Stage {
     }
 
     @Override
-    public Map<Func.Call, Object> memo() {
-      return this.target.memo();
-    }
-
-    @Override
     public <T> T getArgument(int index) {
       return this.target.getArgument(index);
     }
@@ -175,7 +157,7 @@ public interface Stage {
     ;
   }
 
-  enum Scenario {
+  enum ScenarioFactory {
     BY_TESTORACLE {
 
     },
@@ -187,9 +169,20 @@ public interface Stage {
     },
     BY_TESTFIXTURE_ORDERED_BY_TESTORACLE {
 
+    };
+    void constraintGeneration() {
+
     }
 
+    void setUpBeforeAll() {
+
+    }
+
+    void tearDownAfterAll() {
+
+    }
   }
+
   enum Level {
     SUITE {
       @Override

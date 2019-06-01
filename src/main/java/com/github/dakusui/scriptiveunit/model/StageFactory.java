@@ -70,11 +70,6 @@ public interface StageFactory {
     public Optional<Report> getReport() {
       return Optional.ofNullable(report);
     }
-
-    @Override
-    public Map<Func.Call, Object> memo() {
-      return memo;
-    }
   }
 
   class MyStage2<RESPONSE> extends MyStageBase<RESPONSE> {
