@@ -2,6 +2,13 @@ package com.github.dakusui.scriptiveunit.model;
 
 import org.junit.runner.Runner;
 
+/**
+ * *byTestOracle*
+ * setUpBeforeAll (setUpFixture before given when (handleError|then) after) tearDownFixture)+ tearDownBeforeAll
+ * *byTestCase*
+ * setUpBeforeAll (setUpFixture before given when (handleError|then) after) tearDownFixture)+ tearDownBeforeAll
+ *
+ */
 public interface RunnerFactory {
   int numRunners();
   Runner createRunner(int runnerId, ActionFactory actionFactory);

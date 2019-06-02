@@ -49,7 +49,7 @@ public class Collections {
     return (Stage i) -> {
       //noinspection unchecked
       return (Iterable<? extends E>) stream(
-          requireNonNull(iterable.apply(i)).<E>spliterator(),
+          requireNonNull(iterable.apply(i)).spliterator(),
           false
       ).filter(
           (E entry) -> predicate.apply(i).apply(wrapValueAsArgumentInStage(i, toFunc(entry)))

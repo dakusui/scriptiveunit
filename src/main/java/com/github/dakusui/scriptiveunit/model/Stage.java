@@ -6,7 +6,6 @@ import com.github.dakusui.scriptiveunit.core.Config;
 
 import java.util.List;
 import java.util.Optional;
-import java.util.function.Function;
 
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
@@ -39,45 +38,6 @@ public interface Stage {
   Optional<Report> getReport();
 
   Optional<TestItem> getTestItem();
-
-  default Stage createChild(Type type) {
-    requireNonNull(type);
-    Stage stage = this;
-    return new Delegating(stage) {
-      @Override
-      public Type getType() {
-        return type;
-      }
-    };
-  }
-
-  default Stage createChild(Type type, Tuple tuple) {
-    requireNonNull(tuple);
-    return new Delegating(createChild(type)) {
-      @Override
-      public Optional<Tuple> getTestCaseTuple() {
-        return Optional.of(tuple);
-      }
-    };
-  }
-
-  default Stage createChild(Type type, Function<Tuple, TestItem> testItemFunction, Report report) {
-    requireNonNull(testItemFunction);
-    requireNonNull(report);
-    return new Delegating(createChild(type)) {
-      TestItem testItem = testItemFunction.apply(getTestCaseTuple().orElseThrow(RuntimeException::new));
-
-      @Override
-      public Optional<TestItem> getTestItem() {
-        return Optional.of(testItem);
-      }
-
-      @Override
-      public Optional<Report> getReport() {
-        return Optional.of(report);
-      }
-    };
-  }
 
   static Stage create(Type type, Config config, Tuple commonFixture) {
     return StageFactory._create2(
@@ -154,33 +114,15 @@ public interface Stage {
     AFTER,
     TEARDOWN,
     TEARDOWN_AFTER_ALL,
+    NONE
     ;
   }
 
-  enum ScenarioFactory {
-    BY_TESTORACLE {
-
-    },
-    BY_TESTCASE {
-
-    },
-    BY_TESTFIXTURE {
-
-    },
-    BY_TESTFIXTURE_ORDERED_BY_TESTORACLE {
-
-    };
-    void constraintGeneration() {
-
-    }
-
-    void setUpBeforeAll() {
-
-    }
-
-    void tearDownAfterAll() {
-
-    }
+  interface Factory {
+    Stage suiteLevel(Tuple commonFixture);
+    Stage fixtureLevel(Tuple fixture);
+    Stage testCaseLevel(Tuple testCase);
+    Stage oracleLevel(Tuple testCase);
   }
 
   enum Level {

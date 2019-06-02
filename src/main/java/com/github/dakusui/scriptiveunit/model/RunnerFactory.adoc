@@ -1,0 +1,27 @@
+byTestOracle::::
+structure:::
+fixtures::
+testcases::
+oracles::
+sequence:::
+----
+setUpBeforeAll (setUpFixture[i] before[i] given[j] when[j] (handleError[j]|then[j]) after[j]) tearDownFixture)+ tearDownBeforeAll
+----
+byTestCase::::
+structure:::
+fixtures::
+testcases::
+oracles::
+sequence:::
+----
+setUpBeforeAll (setUpFixture before given when (handleError|then) after) tearDownFixture)+ tearDownBeforeAll
+----
+byTestFixture::::
+structure:::
+fixtures::
+testcases::
+oracles::
+sequence:::
+----
+setUpBeforeAll (setUpFixture before given when (handleError|then) after) tearDownFixture)+ tearDownBeforeAll
+----
