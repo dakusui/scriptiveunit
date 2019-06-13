@@ -2,17 +2,15 @@ package com.github.dakusui.scriptiveunit.action;
 
 import com.github.dakusui.actionunit.Action;
 import com.github.dakusui.actionunit.Actions;
-import com.github.dakusui.scriptiveunit.model.Session;
 import com.github.dakusui.scriptiveunit.loaders.IndexedTestCase;
+import com.github.dakusui.scriptiveunit.model.Session;
 import com.github.dakusui.scriptiveunit.model.TestOracle;
 import com.github.dakusui.scriptiveunit.model.TestSuiteDescriptor;
 
 import java.util.List;
-import java.util.Map;
 import java.util.function.Function;
 
 import static com.github.dakusui.actionunit.Actions.attempt;
-import static com.github.dakusui.scriptiveunit.model.func.FuncInvoker.createMemo;
 import static java.util.stream.Collectors.toList;
 
 public enum ActionUtils {
@@ -36,9 +34,7 @@ public enum ActionUtils {
                   attempt(
                       session.createMainActionForTestOracle(
                           testOracle,
-                          input,
-                          createMemo()
-                      ))
+                          input))
                       .ensure(
                           session.createTearDownActionForFixture(testSuiteDescriptor, input.get()))
                       .build());
@@ -52,10 +48,10 @@ public enum ActionUtils {
   public static List<Action> createMainActionsForTestCase(
       Session session,
       IndexedTestCase indexedTestCase,
-      List<? extends TestOracle> testOracles, Map<List<Object>, Object> memo) {
+      List<? extends TestOracle> testOracles) {
     return testOracles.stream()
         .map((TestOracle input) ->
-            session.createMainActionForTestOracle(input, indexedTestCase, memo))
+            session.createMainActionForTestOracle(input, indexedTestCase))
         .collect(toList());
   }
 

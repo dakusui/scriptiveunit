@@ -6,7 +6,6 @@ import com.github.dakusui.scriptiveunit.core.Config;
 import com.github.dakusui.scriptiveunit.loaders.IndexedTestCase;
 import com.github.dakusui.scriptiveunit.model.func.Form;
 import com.github.dakusui.scriptiveunit.model.statement.Statement;
-import org.junit.runner.Runner;
 
 import java.lang.reflect.InvocationTargetException;
 import java.util.List;
@@ -39,10 +38,6 @@ public interface TestSuiteDescriptor {
   List<String> getInvolvedParameterNamesInSetUpAction();
 
   Config getConfig();
-
-  default Iterable<Runner> createRunners(Session session) {
-    return this.getRunnerType().createRunners(session, this);
-  }
 
   Statement.Factory statementFactory();
 

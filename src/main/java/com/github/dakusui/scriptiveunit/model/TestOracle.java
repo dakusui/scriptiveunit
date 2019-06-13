@@ -3,8 +3,6 @@ package com.github.dakusui.scriptiveunit.model;
 import com.github.dakusui.actionunit.Action;
 import com.github.dakusui.jcunit.core.tuples.Tuple;
 
-import java.util.List;
-import java.util.Map;
 import java.util.function.Function;
 
 import static com.github.dakusui.scriptiveunit.core.Utils.append;
@@ -26,8 +24,5 @@ public interface TestOracle {
 
   String templateDescription(Tuple testCaseTuple, String testSuiteDescription);
 
-  Function<Session, Action> createTestActionFactory(
-      TestItem testItem,
-      Map<List<Object>, Object> memo
-  );
+  Function<Session, Action> createTestActionFactory(TestItem testItem);
 }

@@ -9,7 +9,6 @@ import com.github.dakusui.scriptiveunit.core.Config;
 import com.github.dakusui.scriptiveunit.core.Description;
 import com.github.dakusui.scriptiveunit.core.ObjectMethod;
 import com.github.dakusui.scriptiveunit.core.Utils;
-import com.github.dakusui.scriptiveunit.model.ActionFactory;
 import com.github.dakusui.scriptiveunit.model.Session;
 import com.github.dakusui.scriptiveunit.model.Stage;
 import com.github.dakusui.scriptiveunit.model.TestSuiteDescriptor;
@@ -74,7 +73,7 @@ public class ScriptiveUnit extends Parameterized {
     super(klass);
     this.session = Session.create(loader.getConfig());
     this.testSuiteDescriptor = requireNonNull(loader.loadTestSuiteDescriptor(session));
-    this.runners = newLinkedList(this.testSuiteDescriptor.createRunners(this.session));
+    this.runners = newLinkedList(createRunners());
   }
 
   @Override
@@ -105,7 +104,7 @@ public class ScriptiveUnit extends Parameterized {
             createSuiteLevelAction(
                 SETUP_BEFORE_ALL,
                 session,
-                ActionFactory.Utils.createCommonFixture(testSuiteDescriptor.getFactorSpaceDescriptor().getParameters()),
+                createCommonFixture(testSuiteDescriptor.getFactorSpaceDescriptor().getParameters()),
                 testSuiteDescriptor.getSetUpBeforeAllActionFactory()));
         super.evaluate();
       }
@@ -122,7 +121,7 @@ public class ScriptiveUnit extends Parameterized {
             createSuiteLevelAction(
                 TEARDOWN_AFTER_ALL,
                 session,
-                ActionFactory.Utils.createCommonFixture(testSuiteDescriptor.getFactorSpaceDescriptor().getParameters()),
+                createCommonFixture(testSuiteDescriptor.getFactorSpaceDescriptor().getParameters()),
                 testSuiteDescriptor.getTearDownAfterAllActionFactory())
         );
       }
@@ -197,5 +196,18 @@ public class ScriptiveUnit extends Parameterized {
     return ret != null ?
         ret :
         defaultValue;
+  }
+
+  private static Tuple createCommonFixture(List<com.github.dakusui.jcunit8.factorspace.Parameter> parameters) {
+    Tuple.Builder b = new Tuple.Builder();
+    parameters.stream()
+        .filter((com.github.dakusui.jcunit8.factorspace.Parameter in) -> in instanceof com.github.dakusui.jcunit8.factorspace.Parameter.Simple)
+        .filter((com.github.dakusui.jcunit8.factorspace.Parameter in) -> in.getKnownValues().size() == 1)
+        .forEach((com.github.dakusui.jcunit8.factorspace.Parameter in) -> b.put(in.getName(), in.getKnownValues().get(0)));
+    return b.build();
+  }
+
+  private Iterable<Runner> createRunners() {
+    return this.testSuiteDescriptor.getRunnerType().createRunners(this.session, this.testSuiteDescriptor);
   }
 }

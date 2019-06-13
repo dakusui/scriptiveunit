@@ -23,7 +23,7 @@ import static java.util.stream.Collectors.toList;
 public class Core {
   /**
    * Returns a function to access an attribute value in a test case.
-   * This can be used in {@code GENERATION}, {@code GIVEN}, {@code WHEN}, and {@code THEN}
+   * This can be used in {@code GENERATION}, {@code ORACLE_EXECUTION}, {@code WHEN}, and {@code THEN}
    * stages.
    *
    * @param attr Attribute name whose value should be returned

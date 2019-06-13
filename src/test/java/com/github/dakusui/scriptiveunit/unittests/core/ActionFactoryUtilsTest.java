@@ -12,7 +12,7 @@ import static com.github.dakusui.scriptiveunit.core.Utils.mergeObjectNodes;
 import static org.junit.Assert.assertTrue;
 
 @RunWith(JUnit4.class)
-public class UtilsTest {
+public class ActionFactoryUtilsTest {
   @Test
   public void mergeTest() {
     ObjectNode a = JsonNodeFactory.instance.objectNode();
@@ -32,7 +32,7 @@ public class UtilsTest {
   public void whenAllTypesAnnotatedWith$thenThisClassIsFound() {
     assertTrue(
         Utils.allTypesAnnotatedWith("com.github.dakusui.scriptiveunit", RunWith.class)
-            .anyMatch(UtilsTest.class::equals)
+            .anyMatch(ActionFactoryUtilsTest.class::equals)
     );
   }
 
@@ -48,7 +48,7 @@ public class UtilsTest {
   public void whenAllTypesUnderNonExistingPackageAnnotatedWith() {
     assertTrue(
         Utils.allTypesAnnotatedWith("com.github.dakusui.non.existing", RunWith.class)
-            .noneMatch(UtilsTest.class::equals)
+            .noneMatch(ActionFactoryUtilsTest.class::equals)
     );
   }
 

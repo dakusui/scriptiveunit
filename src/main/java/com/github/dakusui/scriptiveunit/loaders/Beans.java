@@ -15,12 +15,12 @@ import com.github.dakusui.jcunit8.pipeline.Pipeline;
 import com.github.dakusui.jcunit8.pipeline.Requirement;
 import com.github.dakusui.jcunit8.testsuite.TestCase;
 import com.github.dakusui.scriptiveunit.GroupedTestItemRunner.Type;
-import com.github.dakusui.scriptiveunit.model.Session;
 import com.github.dakusui.scriptiveunit.core.Config;
 import com.github.dakusui.scriptiveunit.core.Utils;
 import com.github.dakusui.scriptiveunit.exceptions.ScriptiveUnitException;
 import com.github.dakusui.scriptiveunit.model.ParameterSpaceDescriptor;
 import com.github.dakusui.scriptiveunit.model.Report;
+import com.github.dakusui.scriptiveunit.model.Session;
 import com.github.dakusui.scriptiveunit.model.Stage;
 import com.github.dakusui.scriptiveunit.model.TestIO;
 import com.github.dakusui.scriptiveunit.model.TestItem;
@@ -48,7 +48,7 @@ import static com.github.dakusui.scriptiveunit.core.Utils.template;
 import static com.github.dakusui.scriptiveunit.exceptions.ScriptiveUnitException.wrap;
 import static com.github.dakusui.scriptiveunit.model.Stage.Type.AFTER;
 import static com.github.dakusui.scriptiveunit.model.Stage.Type.BEFORE;
-import static com.github.dakusui.scriptiveunit.model.Stage.Type.GIVEN;
+import static com.github.dakusui.scriptiveunit.model.Stage.Type.ORACLE_EXECUTION;
 import static com.github.dakusui.scriptiveunit.model.Stage.Type.WHEN;
 import static com.github.dakusui.scriptiveunit.model.func.FuncInvoker.createMemo;
 import static com.github.dakusui.scriptiveunit.model.statement.Statement.createStatementFactory;
@@ -146,26 +146,25 @@ public enum Beans {
           public Form<Action> getSetUpBeforeAllActionFactory() {
             return createActionFactory(
                 format("Suite level set up: %s", description),
-                setUpBeforeAllStatement,
-                createMemo());
+                setUpBeforeAllStatement
+            );
           }
 
           @Override
           public Form<Action> getSetUpActionFactory() {
-            return createActionFactory("Fixture set up", setUpStatement, createMemo());
+            return createActionFactory("Fixture set up", setUpStatement);
           }
 
           @Override
           public Form<Action> getTearDownActionFactory() {
-            return createActionFactory("Fixture tear down", tearDownStatement, createMemo());
+            return createActionFactory("Fixture tear down", tearDownStatement);
           }
 
           @Override
           public Form<Action> getTearDownAfterAllActionFactory() {
             return createActionFactory(
                 format("Suite level tear down: %s", description),
-                tearDownAfterAllStatement,
-                createMemo()
+                tearDownAfterAllStatement
             );
           }
 
@@ -184,7 +183,7 @@ public enum Beans {
             return statementFactory;
           }
 
-          private Form<Action> createActionFactory(String actionName, Statement statement, Map<List<Object>, Object> memo) {
+          private Form<Action> createActionFactory(String actionName, Statement statement) {
             return (Stage input) -> {
               Object result =
                   statement == null ?
@@ -377,27 +376,28 @@ public enum Beans {
         }
 
         /**
-         * Warning: Created action is not thread safe. Users should create 1 action for 1 thread.
+         * Warning: Created action is not thread safe. Users must create 1 action for 1 thread.
          */
         @Override
-        public Function<Session, Action>
-        createTestActionFactory(TestItem testItem, Map<List<Object>, Object> memo) {
+        public Function<Session, Action> createTestActionFactory(TestItem testItem) {
           Tuple testCaseTuple = testItem.getTestCaseTuple();
           Report report = session.createReport(testItem);
-          return (Session session) -> sequential(
-              composeDescription(testCaseTuple),
-              createBefore(testItem, report, memo),
-              attempt(
-                  Actions.<Tuple, TestIO>test("Verify with: " + projectMultiLevelFactors(testCaseTuple))
-                      .given(createGiven(testItem, report, session, memo))
-                      .when(createWhen(testItem, report, session, memo))
-                      .then(createThen(testItem, report, session, memo)).build())
-                  .recover(
-                      AssertionError.class,
-                      onTestFailure(testItem, report, session, memo))
-                  .ensure(createAfter(testItem, report, memo))
-                  .build()
-          );
+          return (Session session) -> {
+            Map<List<Object>, Object> memo = createMemo();
+            return sequential(
+                composeDescription(testCaseTuple),
+                createBefore(testItem, report, memo),
+                attempt(Actions.<Tuple, TestIO>test("Verify with: " + projectMultiLevelFactors(testCaseTuple))
+                    .given(createGiven(testItem, report, session, memo))
+                    .when(createWhen(testItem, report, session, memo))
+                    .then(createThen(testItem, report, session, memo)).build())
+                    .recover(
+                        AssertionError.class,
+                        onTestFailure(testItem, report, session, memo))
+                    .ensure(createAfter(testItem, report, memo))
+                    .build()
+            );
+          };
         }
 
         private Tuple projectMultiLevelFactors(Tuple testCaseTuple) {
@@ -420,7 +420,7 @@ public enum Beans {
           Tuple testCaseTuple = testItem.getTestCaseTuple();
           return new Source<Tuple>() {
             FuncInvoker funcInvoker = FuncInvoker.create(memo);
-            Stage givenStage = session.createOracleLevelStage(GIVEN, testItem, report);
+            Stage givenStage = session.createOracleLevelStage(ORACLE_EXECUTION, testItem, report);
             Statement givenStatement = statementFactory.create(givenClause);
 
             @Override
@@ -437,7 +437,7 @@ public enum Beans {
                       format("input (%s) should have made true following criterion but not.:%n'%s' defined in stage:%s",
                           testCaseTuple,
                           funcInvoker.asString(),
-                          GIVEN));
+                          ORACLE_EXECUTION));
                 }
               });
               return testCaseTuple;

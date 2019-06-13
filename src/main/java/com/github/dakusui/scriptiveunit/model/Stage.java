@@ -1,14 +1,10 @@
 package com.github.dakusui.scriptiveunit.model;
 
 import com.github.dakusui.jcunit.core.tuples.Tuple;
-import com.github.dakusui.scriptiveunit.GroupedTestItemRunner;
 import com.github.dakusui.scriptiveunit.core.Config;
 
-import java.util.List;
 import java.util.Optional;
 
-import static java.util.Arrays.asList;
-import static java.util.Collections.emptyList;
 import static java.util.Objects.requireNonNull;
 
 /**
@@ -107,67 +103,13 @@ public interface Stage {
     SETUP_BEFORE_ALL,
     SETUP,
     BEFORE,
-    GIVEN,
+    ORACLE_EXECUTION,
     WHEN,
     THEN,
     FAILURE_HANDLING,
     AFTER,
     TEARDOWN,
     TEARDOWN_AFTER_ALL,
-    NONE
     ;
-  }
-
-  interface Factory {
-    Stage suiteLevel(Tuple commonFixture);
-    Stage fixtureLevel(Tuple fixture);
-    Stage testCaseLevel(Tuple testCase);
-    Stage oracleLevel(Tuple testCase);
-  }
-
-  enum Level {
-    SUITE {
-      @Override
-      public List<Type> stageTypes(GroupedTestItemRunner.Type runnerType) {
-        return asList(Type.CONSTRAINT_GENERATION, Type.SETUP_BEFORE_ALL, Type.TEARDOWN_AFTER_ALL);
-      }
-    },
-    FIXTURE {
-      @Override
-      public List<Type> stageTypes(GroupedTestItemRunner.Type runnerType) {
-        if (runnerType == GroupedTestItemRunner.Type.GROUP_BY_TEST_FIXTURE ||
-            runnerType == GroupedTestItemRunner.Type.GROUP_BY_TEST_FIXTURE_ORDER_BY_TEST_ORACLE)
-          return asList(Type.SETUP, Type.TEARDOWN);
-        return emptyList();
-      }
-    },
-    TESTCASE {
-      @Override
-      public List<Type> stageTypes(GroupedTestItemRunner.Type runnerType) {
-        if (runnerType == GroupedTestItemRunner.Type.GROUP_BY_TEST_ORACLE)
-          return asList(Type.SETUP, Type.BEFORE, Type.GIVEN, Type.WHEN, Type.THEN, Type.FAILURE_HANDLING, Type.AFTER,
-              Type.TEARDOWN);
-        if (runnerType == GroupedTestItemRunner.Type.GROUP_BY_TEST_CASE)
-          return asList(Type.SETUP, Type.TEARDOWN);
-        if (runnerType == GroupedTestItemRunner.Type.GROUP_BY_TEST_FIXTURE)
-          return emptyList();
-        if (runnerType == GroupedTestItemRunner.Type.GROUP_BY_TEST_FIXTURE_ORDER_BY_TEST_ORACLE)
-          return asList(Type.BEFORE, Type.GIVEN, Type.WHEN, Type.THEN, Type.FAILURE_HANDLING, Type.AFTER);
-        return emptyList();
-      }
-    },
-    ORACLE {
-      @Override
-      public List<Type> stageTypes(GroupedTestItemRunner.Type runnerType) {
-        if (runnerType == GroupedTestItemRunner.Type.GROUP_BY_TEST_ORACLE)
-          return emptyList();
-        if (runnerType == GroupedTestItemRunner.Type.GROUP_BY_TEST_CASE ||
-            runnerType == GroupedTestItemRunner.Type.GROUP_BY_TEST_FIXTURE)
-          return asList(Type.BEFORE, Type.GIVEN, Type.WHEN, Type.THEN, Type.FAILURE_HANDLING, Type.AFTER);
-        return emptyList();
-      }
-    };
-
-    public abstract List<Type> stageTypes(GroupedTestItemRunner.Type runnerType);
   }
 }

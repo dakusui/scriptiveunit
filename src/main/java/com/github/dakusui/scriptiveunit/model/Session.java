@@ -5,8 +5,6 @@ import com.github.dakusui.jcunit.core.tuples.Tuple;
 import com.github.dakusui.scriptiveunit.core.Config;
 import com.github.dakusui.scriptiveunit.loaders.IndexedTestCase;
 
-import java.util.List;
-import java.util.Map;
 import java.util.function.Function;
 
 import static com.github.dakusui.scriptiveunit.model.Stage.Type.CONSTRAINT_GENERATION;
@@ -39,13 +37,9 @@ public interface Session {
 
   Report createReport(TestItem testItem);
 
-  default Action createMainActionForTestOracle(
-      TestOracle testOracle,
-      IndexedTestCase indexedTestCase,
-      Map<List<Object>, Object> memo
-  ) {
+  default Action createMainActionForTestOracle(TestOracle testOracle, IndexedTestCase indexedTestCase) {
     return testOracle
-        .createTestActionFactory(TestItem.create(indexedTestCase, testOracle), memo)
+        .createTestActionFactory(TestItem.create(indexedTestCase, testOracle))
         .apply(this);
   }
 
