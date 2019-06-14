@@ -1,8 +1,8 @@
 package com.github.dakusui.scriptiveunit.testassets.drivers;
 
 import com.github.dakusui.scriptiveunit.core.Config;
-import com.github.dakusui.scriptiveunit.core.Utils;
 import com.github.dakusui.scriptiveunit.loaders.json.JsonBasedLoader;
+import com.github.dakusui.scriptiveunit.loaders.json.JsonUtils;
 import com.github.dakusui.scriptiveunit.testutils.Resource;
 import org.codehaus.jackson.node.ObjectNode;
 
@@ -20,7 +20,7 @@ public abstract class Loader extends JsonBasedLoader {
   protected ObjectNode readObjectNodeWithMerging(String resourceName) {
     ObjectNode work = super.readObjectNodeWithMerging(resourceName);
     for (ObjectNode each : objectNodes()) {
-      Utils.deepMerge(each, work);
+      JsonUtils.deepMerge(each, work);
     }
     return work;
   }

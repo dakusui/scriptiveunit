@@ -11,25 +11,16 @@ import com.github.dakusui.jcunit.core.tuples.Tuple;
 import com.github.dakusui.jcunit8.factorspace.Parameter;
 import com.github.dakusui.scriptiveunit.exceptions.ResourceException;
 import com.github.dakusui.scriptiveunit.exceptions.ScriptiveUnitException;
-import com.github.dakusui.scriptiveunit.exceptions.SyntaxException;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
-import org.codehaus.jackson.JsonNode;
-import org.codehaus.jackson.map.ObjectMapper;
-import org.codehaus.jackson.node.JsonNodeFactory;
-import org.codehaus.jackson.node.ObjectNode;
 import org.reflections.Reflections;
 import org.reflections.scanners.ResourcesScanner;
 import org.reflections.scanners.SubTypesScanner;
 import org.reflections.scanners.TypeAnnotationsScanner;
 
-import java.io.IOException;
 import java.io.InputStream;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.AnnotatedElement;
-import java.lang.reflect.Array;
-import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.math.BigDecimal;
 import java.util.Arrays;
@@ -44,7 +35,6 @@ import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
 import static com.github.dakusui.scriptiveunit.exceptions.SyntaxException.cyclicTemplatingFound;
-import static com.github.dakusui.scriptiveunit.exceptions.SyntaxException.mergeFailed;
 import static com.github.dakusui.scriptiveunit.exceptions.SyntaxException.undefinedFactor;
 import static java.lang.Character.isUpperCase;
 import static java.lang.Character.toLowerCase;
@@ -57,12 +47,6 @@ import static java.util.stream.Collectors.toList;
 
 public enum Utils {
   ;
-
-  public static <T, R> R[] castArray(T[] array, Class<R> klass) {
-    R[] ret = (R[]) Array.newInstance(klass, array.length);
-    System.arraycopy(array, 0, ret, 0, ret.length);
-    return ret;
-  }
 
   public static Runnable prettify(String prettyString, Runnable runnable) {
     return new Runnable() {
@@ -190,51 +174,6 @@ public enum Utils {
     }
   }
 
-  /**
-   * Merges two object nodes and merged object node will be returned.
-   * If {@code a} and {@code b} has the same attributes the value comes from
-   * {@code a} will override the other's.
-   * Values in both {@code a} and {@code b} will not be changed and new object node
-   * will be returned
-   *
-   * @param a An object node.
-   * @param b An object node.
-   * @return A merged object node that is newly created.
-   */
-  public static Object mergeObjectNodes(ObjectNode a, ObjectNode b) {
-    return deepMerge(a, (ObjectNode) JsonNodeFactory.instance.objectNode().putAll(b));
-  }
-
-  /**
-   * Merges {@code source} object node into {@code target} and returns {@code target}.
-   *
-   * @param source An object node to be merged into {@code target}.
-   * @param target An object node to be put attributes in {@code source}
-   * @return {@code target} object node
-   */
-  public static ObjectNode deepMerge(ObjectNode source, ObjectNode target) {
-    requireNonNull(source);
-    requireNonNull(target);
-    for (String key : (Iterable<String>) source::getFieldNames) {
-      JsonNode sourceValue = source.get(key);
-      if (!target.has(key)) {
-        // new value for "key":
-        target.put(key, sourceValue);
-      } else {
-        // existing value for "key" - recursively deep merge:
-        if (sourceValue.isObject()) {
-          ObjectNode sourceObject = (ObjectNode) sourceValue;
-          JsonNode targetValue = target.get(key);
-          check(targetValue.isObject(), () -> mergeFailed(source, target, key));
-          deepMerge(sourceObject, (ObjectNode) targetValue);
-        } else {
-          target.put(key, sourceValue);
-        }
-      }
-    }
-    return target;
-  }
-
   public static String toALL_CAPS(String inputString) {
     StringBuilder b = new StringBuilder();
     boolean wasPreviousUpper = true;
@@ -269,15 +208,6 @@ public enum Utils {
     return b.toString();
   }
 
-  public static <T> Constructor<T> getConstructor(Class<? extends T> clazz) {
-    Constructor[] constructors = clazz.getConstructors();
-    checkState(constructors, constructors1 -> constructors1.length == 1,
-        "There must be 1 and only 1 public constructor in order to use '%s' as a JCUnit plug-in(%s found). Also please make sure the class is public and static.",
-        clazz, constructors.length);
-    //noinspection unchecked
-    return (Constructor<T>) constructors[0];
-  }
-
   public static <E extends ScriptiveUnitException> void check(boolean cond, Supplier<E> thrower) {
     if (!cond)
       throw thrower.get();
@@ -296,17 +226,6 @@ public enum Utils {
     return target;
   }
 
-  public static <V> V checkState(V target, Predicate<? super V> predicate) {
-    if (predicate.test(target))
-      return target;
-    throw new IllegalStateException();
-  }
-
-  public static <V> V checkState(V target, Predicate<? super V> predicate, String fmt, Object... args) {
-    if (predicate.test(target))
-      return target;
-    throw new IllegalStateException(String.format(fmt, args));
-  }
 
   public static BigDecimal toBigDecimal(Number number) {
     if (number instanceof BigDecimal)
@@ -331,37 +250,6 @@ public enum Utils {
       .put(boolean.class, Boolean.class).put(byte.class, Byte.class).put(char.class, Character.class)
       .put(double.class, Double.class).put(float.class, Float.class).put(int.class, Integer.class)
       .put(long.class, Long.class).put(short.class, Short.class).put(void.class, Void.class).build();
-
-  public static boolean isCompatible(Object input, Class<?> to) {
-    requireNonNull(to);
-    if (to.isPrimitive()) {
-      requireNonNull(input);
-      return Utils.wrap(to).isAssignableFrom(input.getClass());
-    }
-    //noinspection SimplifiableIfStatement
-    if (input == null)
-      return true;
-    return to.isAssignableFrom(input.getClass());
-  }
-
-  public static <T> T convert(Object input, Class<T> to) {
-    requireNonNull(input);
-    requireNonNull(to);
-    for (Converter each : TYPE_CONVERTERS) {
-      //noinspection unchecked
-      if (each.supports(input, to))
-        //noinspection unchecked
-        return (T) each.apply(input);
-    }
-    throw SyntaxException.typeMismatch(to, input);
-  }
-
-  public static <T> Object convertIfNecessary(Object input, Class<T> type) {
-    if (isCompatible(input, type)) {
-      return input;
-    }
-    return convert(input, type);
-  }
 
   /**
    * Returns an annotation element of a specified type ({@code annotationClass})
@@ -403,14 +291,6 @@ public enum Utils {
 
   public static InputStream openResourceAsStream(String resourceName) {
     return ResourceException.scriptExists(getSystemResourceAsStream(resourceName), resourceName);
-  }
-
-  public static JsonNode readJsonNodeFromStream(InputStream is) {
-    try {
-      return new ObjectMapper().readTree(is);
-    } catch (IOException e) {
-      throw ScriptiveUnitException.wrap(e, "Non-welformed input is given.");
-    }
   }
 
   public static String iterableToString(Iterable<?> i) {
@@ -455,29 +335,4 @@ public enum Utils {
     StackTraceElement caller = Thread.currentThread().getStackTrace()[2];
     return String.format("%s:%s", caller.getClassName(), caller.getMethodName());
   }
-
-  private interface Converter<FROM, TO> extends Function<FROM, TO> {
-    boolean supports(Object input, Class<?> to);
-
-    static <FROM, TO> Converter<FROM, TO> create(Class<FROM> fromClass, Class<TO> toClass,
-        Function<FROM, TO> conveterBody) {
-      return new Converter<FROM, TO>() {
-        @Override
-        public boolean supports(Object input, Class<?> to) {
-          return fromClass.isAssignableFrom(input.getClass()) && toClass.isAssignableFrom(wrap(to));
-        }
-
-        @Override
-        public TO apply(FROM from) {
-          return conveterBody.apply(from);
-        }
-      };
-    }
-  }
-
-  private static final List<Converter<?, ?>> TYPE_CONVERTERS = new ImmutableList.Builder<Converter<?, ?>>()
-      .add(Converter.create(BigDecimal.class, Integer.class, BigDecimal::intValue)).add(Converter
-          .create(Number.class, BigDecimal.class, (Number input) -> new BigDecimal(input.toString(), DECIMAL128)))
-      .build();
-
 }

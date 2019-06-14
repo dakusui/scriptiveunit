@@ -2,7 +2,6 @@ package com.github.dakusui.scriptiveunit.loaders.json;
 
 import com.github.dakusui.scriptiveunit.model.Session;
 import com.github.dakusui.scriptiveunit.core.Config;
-import com.github.dakusui.scriptiveunit.core.Preprocessor;
 import com.github.dakusui.scriptiveunit.loaders.json.JsonBeans.TestSuiteDescriptorBean;
 import com.github.dakusui.scriptiveunit.model.TestSuiteDescriptor;
 import org.codehaus.jackson.JsonNode;
@@ -44,13 +43,13 @@ public class JsonBasedLoader extends TestSuiteDescriptor.Loader.Base {
   }
 
   protected ObjectNode readObjectNodeWithMerging(String resourceName) {
-    ObjectNode child = checkObjectNode(preprocess(readJsonNodeFromStream(openResourceAsStream(resourceName))));
+    ObjectNode child = checkObjectNode(preprocess(JsonUtils.readJsonNodeFromStream(openResourceAsStream(resourceName))));
     ObjectNode work = JsonNodeFactory.instance.objectNode();
     if (child.has(EXTENDS_KEYWORD)) {
       getParentsOf(child, EXTENDS_KEYWORD)
-          .forEach(s -> deepMerge(checkObjectNode(readObjectNodeWithMerging(s)), work));
+          .forEach(s -> JsonUtils.deepMerge(checkObjectNode(readObjectNodeWithMerging(s)), work));
     }
-    deepMerge(child, work);
+    JsonUtils.deepMerge(child, work);
     return work;
   }
 
@@ -60,8 +59,8 @@ public class JsonBasedLoader extends TestSuiteDescriptor.Loader.Base {
 
   protected ObjectNode readScript(String scriptResourceName) {
     ObjectNode work = readObjectNodeWithMerging(scriptResourceName);
-    ObjectNode ret = checkObjectNode(readJsonNodeFromStream(openResourceAsStream(DEFAULTS_JSON)));
-    deepMerge(work, ret);
+    ObjectNode ret = checkObjectNode(JsonUtils.readJsonNodeFromStream(openResourceAsStream(DEFAULTS_JSON)));
+    JsonUtils.deepMerge(work, ret);
     ret.remove(EXTENDS_KEYWORD);
     return ret;
   }

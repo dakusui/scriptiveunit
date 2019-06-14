@@ -1,4 +1,4 @@
-package com.github.dakusui.scriptiveunit.core;
+package com.github.dakusui.scriptiveunit.loaders.json;
 
 import com.google.common.collect.Lists;
 import org.codehaus.jackson.JsonNode;

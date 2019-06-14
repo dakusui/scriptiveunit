@@ -8,7 +8,7 @@ import com.github.dakusui.jcunit8.runners.junit4.annotations.Given;
 import com.github.dakusui.jcunit8.runners.junit4.annotations.ParameterSource;
 import com.github.dakusui.scriptiveunit.ScriptiveUnit;
 import com.github.dakusui.scriptiveunit.core.Config;
-import com.github.dakusui.scriptiveunit.core.Utils;
+import com.github.dakusui.scriptiveunit.loaders.json.JsonUtils;
 import com.github.dakusui.scriptiveunit.testassets.drivers.Loader;
 import com.github.dakusui.scriptiveunit.testassets.drivers.Simple;
 import com.github.dakusui.scriptiveunit.testutils.Resource;
@@ -40,7 +40,7 @@ public class VariationTest {
             .map((Function<String, Resource<ObjectNode>>) s -> new Resource.Base<ObjectNode>(s) {
               @Override
               protected ObjectNode readObjectFromStream(InputStream is) {
-                return (ObjectNode) Utils.readJsonNodeFromStream(is);
+                return (ObjectNode) JsonUtils.readJsonNodeFromStream(is);
               }
             })
             .collect(Collectors.toList())

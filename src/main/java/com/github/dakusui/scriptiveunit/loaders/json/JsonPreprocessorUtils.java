@@ -1,6 +1,5 @@
 package com.github.dakusui.scriptiveunit.loaders.json;
 
-import com.github.dakusui.scriptiveunit.core.Preprocessor;
 import org.codehaus.jackson.JsonNode;
 import org.codehaus.jackson.node.ArrayNode;
 import org.codehaus.jackson.node.ObjectNode;
@@ -9,7 +8,7 @@ import org.codehaus.jackson.node.TextNode;
 import java.util.AbstractList;
 import java.util.List;
 
-import static com.github.dakusui.scriptiveunit.core.JsonUtils.*;
+import static com.github.dakusui.scriptiveunit.loaders.json.JsonUtils.*;
 import static com.github.dakusui.scriptiveunit.core.Utils.check;
 import static com.github.dakusui.scriptiveunit.exceptions.SyntaxException.*;
 import static java.util.Collections.singletonList;

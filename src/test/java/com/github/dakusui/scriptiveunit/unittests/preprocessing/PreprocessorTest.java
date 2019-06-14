@@ -1,6 +1,6 @@
 package com.github.dakusui.scriptiveunit.unittests.preprocessing;
 
-import com.github.dakusui.scriptiveunit.core.Preprocessor;
+import com.github.dakusui.scriptiveunit.loaders.json.Preprocessor;
 import org.codehaus.jackson.JsonNode;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.node.JsonNodeFactory;

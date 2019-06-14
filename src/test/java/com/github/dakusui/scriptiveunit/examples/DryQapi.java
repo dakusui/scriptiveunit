@@ -3,6 +3,7 @@ package com.github.dakusui.scriptiveunit.examples;
 import com.github.dakusui.scriptiveunit.annotations.Load;
 import com.github.dakusui.scriptiveunit.core.Config;
 import com.github.dakusui.scriptiveunit.loaders.json.JsonPreprocessorUtils;
+import com.github.dakusui.scriptiveunit.loaders.json.JsonUtils;
 import org.codehaus.jackson.node.JsonNodeFactory;
 import org.codehaus.jackson.node.ObjectNode;
 import org.junit.runner.JUnitCore;
@@ -32,19 +33,19 @@ public class DryQapi extends Qapi {
     protected ObjectNode readScript(String resourceName) {
       System.out.println("<" + resourceName + ">");
       ObjectNode work = readObjectNodeDirectlyWithMerging(resourceName);
-      ObjectNode ret = JsonPreprocessorUtils.checkObjectNode(readJsonNodeFromStream(openResourceAsStream(DEFAULTS_JSON)));
-      ret = deepMerge(work, ret);
+      ObjectNode ret = JsonPreprocessorUtils.checkObjectNode(JsonUtils.readJsonNodeFromStream(openResourceAsStream(DEFAULTS_JSON)));
+      ret = JsonUtils.deepMerge(work, ret);
       ret.remove(EXTENDS_KEYWORD);
       return ret;
     }
 
     ObjectNode readObjectNodeDirectlyWithMerging(String script) {
-      ObjectNode child = JsonPreprocessorUtils.checkObjectNode(preprocess(readJsonNodeFromStream(toInputStream(script))));
+      ObjectNode child = JsonPreprocessorUtils.checkObjectNode(preprocess(JsonUtils.readJsonNodeFromStream(toInputStream(script))));
       ObjectNode work = JsonNodeFactory.instance.objectNode();
       if (child.has(EXTENDS_KEYWORD)) {
-        JsonPreprocessorUtils.getParentsOf(child, EXTENDS_KEYWORD).forEach(s -> deepMerge(JsonPreprocessorUtils.checkObjectNode(readObjectNodeWithMerging(s)), work));
+        JsonPreprocessorUtils.getParentsOf(child, EXTENDS_KEYWORD).forEach(s -> JsonUtils.deepMerge(JsonPreprocessorUtils.checkObjectNode(readObjectNodeWithMerging(s)), work));
       }
-      return deepMerge(child, work);
+      return JsonUtils.deepMerge(child, work);
     }
 
     private InputStream toInputStream(String script) {
