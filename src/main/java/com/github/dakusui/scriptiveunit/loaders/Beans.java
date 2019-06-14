@@ -278,7 +278,7 @@ public enum Beans {
                     FuncInvoker.create(createMemo())
                 );
                 return Constraint.create(
-                    (Tuple in) -> requireNonNull(form.apply(session.createConstraintGenerationStage(in))),
+                    (Tuple in) -> requireNonNull(form.apply(session.createSuiteLevelStage(in))),
                     Statement.Utils.involvedParameters(statement)
                 );
               })

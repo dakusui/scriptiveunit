@@ -7,8 +7,8 @@ import com.github.dakusui.scriptiveunit.loaders.IndexedTestCase;
 
 import java.util.function.Function;
 
-import static com.github.dakusui.scriptiveunit.model.Stage.Type.CONSTRAINT_GENERATION;
 import static com.github.dakusui.scriptiveunit.model.Stage.Type.SETUP;
+import static com.github.dakusui.scriptiveunit.model.Stage.Type.SUITE_LEVEL;
 import static com.github.dakusui.scriptiveunit.model.Stage.Type.TEARDOWN;
 import static java.util.Objects.requireNonNull;
 
@@ -75,16 +75,12 @@ public interface Session {
     return fixtureLevelActionFactory.apply(createFixtureLevelStage(testCaseTuple, stageType));
   }
 
-  default Stage createConstraintGenerationStage(Tuple tuple) {
-    return StageFactory._create2(
-        CONSTRAINT_GENERATION,
-        this.getConfig(),
-        tuple
-    );
+  default Stage createSuiteLevelStage(Tuple commonFixture) {
+    return StageFactory.frameworkStageFor(SUITE_LEVEL, this.getConfig(), commonFixture);
   }
 
   default Stage createFixtureLevelStage(Tuple testCaseTuple, Stage.Type stageType) {
-    return StageFactory._create2(
+    return StageFactory.frameworkStageFor(
         stageType,
         this.getConfig(),
         testCaseTuple
@@ -92,7 +88,7 @@ public interface Session {
   }
 
   default Stage createOracleLevelStage(Stage.Type type, TestItem testItem, Report report) {
-    return StageFactory._create(
+    return StageFactory.oracleLevelStageFor(
         type,
         this.getConfig(),
         testItem,
@@ -102,7 +98,7 @@ public interface Session {
   }
 
   default <RESPONSE> Stage createOracleVerificationStage(TestItem testItem, RESPONSE response, Report report) {
-    return StageFactory._create(
+    return StageFactory.oracleLevelStageFor(
         Stage.Type.ORACLE_EXECUTION,
         getConfig(),
         testItem,
@@ -112,7 +108,7 @@ public interface Session {
   }
 
   default Stage createOracleFailureHandlingStage(TestItem testItem, Throwable throwable, Report report) {
-    return StageFactory._create(
+    return StageFactory.oracleLevelStageFor(
         Stage.Type.ORACLE_EXECUTION,
         getConfig(),
         testItem,

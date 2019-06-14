@@ -1,6 +1,5 @@
 package com.github.dakusui.scriptiveunit;
 
-import com.github.dakusui.actionunit.Action;
 import com.github.dakusui.jcunit.core.tuples.Tuple;
 import com.github.dakusui.scriptiveunit.annotations.Import;
 import com.github.dakusui.scriptiveunit.annotations.Load;
@@ -10,8 +9,6 @@ import com.github.dakusui.scriptiveunit.core.Description;
 import com.github.dakusui.scriptiveunit.core.ObjectMethod;
 import com.github.dakusui.scriptiveunit.core.Utils;
 import com.github.dakusui.scriptiveunit.model.Session;
-import com.github.dakusui.scriptiveunit.model.Stage;
-import com.github.dakusui.scriptiveunit.model.StageFactory;
 import com.github.dakusui.scriptiveunit.model.TestSuiteDescriptor;
 import org.junit.internal.runners.statements.RunBefores;
 import org.junit.runner.Runner;
@@ -26,14 +23,11 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.function.Function;
 import java.util.stream.Stream;
 
 import static com.github.dakusui.actionunit.Utils.createTestClassMock;
 import static com.github.dakusui.scriptiveunit.core.Utils.performActionWithLogging;
 import static com.github.dakusui.scriptiveunit.exceptions.ResourceException.functionNotFound;
-import static com.github.dakusui.scriptiveunit.model.Stage.Type.SETUP_BEFORE_ALL;
-import static com.github.dakusui.scriptiveunit.model.Stage.Type.TEARDOWN_AFTER_ALL;
 import static com.google.common.collect.Lists.newLinkedList;
 import static java.util.Objects.requireNonNull;
 import static java.util.stream.Collectors.toList;
@@ -49,6 +43,7 @@ public class ScriptiveUnit extends Parameterized {
   private final List<Runner>        runners;
   private final Session             session;
   private final TestSuiteDescriptor testSuiteDescriptor;
+  private       Tuple               commonFixture;
 
   /**
    * Only called reflectively. Do not use programmatically.
@@ -75,6 +70,7 @@ public class ScriptiveUnit extends Parameterized {
     this.session = Session.create(loader.getConfig());
     this.testSuiteDescriptor = requireNonNull(loader.loadTestSuiteDescriptor(session));
     this.runners = newLinkedList(createRunners());
+    this.commonFixture = ScriptiveUnitUtils.createCommonFixture(testSuiteDescriptor.getFactorSpaceDescriptor().getParameters());
   }
 
   @Override
@@ -101,12 +97,9 @@ public class ScriptiveUnit extends Parameterized {
     return new RunBefores(statement, Collections.emptyList(), null) {
       @Override
       public void evaluate() throws Throwable {
-        performActionWithLogging(
-            createSuiteLevelAction(
-                SETUP_BEFORE_ALL,
-                session,
-                ScriptiveUnitUtils.createCommonFixture(testSuiteDescriptor.getFactorSpaceDescriptor().getParameters()),
-                testSuiteDescriptor.getSetUpBeforeAllActionFactory()));
+        performActionWithLogging(testSuiteDescriptor
+            .getSetUpBeforeAllActionFactory()
+            .apply(session.createSuiteLevelStage(commonFixture)));
         super.evaluate();
       }
     };
@@ -118,24 +111,11 @@ public class ScriptiveUnit extends Parameterized {
       @Override
       public void evaluate() throws Throwable {
         super.evaluate();
-        performActionWithLogging(
-            createSuiteLevelAction(
-                TEARDOWN_AFTER_ALL,
-                session,
-                ScriptiveUnitUtils.createCommonFixture(testSuiteDescriptor.getFactorSpaceDescriptor().getParameters()),
-                testSuiteDescriptor.getTearDownAfterAllActionFactory())
-        );
+        performActionWithLogging(testSuiteDescriptor
+            .getTearDownAfterAllActionFactory()
+            .apply(session.createSuiteLevelStage(commonFixture)));
       }
     };
-  }
-
-  private static Action createSuiteLevelAction(Stage.Type stageType, Session session, Tuple commonFixture, Function<Stage, Action> suiteLevelActionFactory) {
-    return suiteLevelActionFactory
-        .apply(StageFactory._create2(
-            stageType,
-            session.getConfig(),
-            commonFixture
-        ));
   }
 
   private static TestSuiteDescriptor.Loader createTestSuiteDescriptorLoader(Config config) {

@@ -90,7 +90,7 @@ public interface Stage {
 
   enum Type {
     CONSTRAINT_GENERATION,
-    SETUP_BEFORE_ALL,
+    SUITE_LEVEL,
     SETUP,
     ORACLE_EXECUTION,
     TEARDOWN,

@@ -275,36 +275,39 @@ public final class GroupedTestItemRunner extends ParentRunner<Action> {
      * byTestOracle::::
      * structure:::
      *
+     * //<pre>
      * [ditaa]
      * ----
-     * +-------------------+
-     * |ParentRunner       |
-     * +---------+---------+
-     * |
-     * |
-     * |                1  +---------------+
-     * ^              +--->|withBeforeClass| (nop)
-     * |              |    +---------------+
-     * |              |                      forEachTestCase; j
+     *                            +-------------------+
+     *                            |ParentRunner       |
+     *                            +---------+---------+
+     *                                      |
+     *                                      |
+     *                                      |                1  +---------------+
+     *                                      ^              +--->|withBeforeClass| (nop)
+     *                                      |              |    +---------------+
+     *                                      |              |                      forEachTestCase; j
      * +------------------+ 1  n  +---------+---------+ 1  | n  +---------------+   setUp[j]
      * |ScriptiveUnit     +------>|GroupItemTestRunner|<>--+--->|MainActions    |   given/when/then[i]
      * |                  | 1     |                   |    |    +---------------+   (withTestCase[j])
      * |                  |<>-+   |groupId            |    |                        tearDown[j]
      * +------------------+   |   +-------------------+    | 1  +---------------+
-     * |   forEachTestOracle; i     +--->|withAfterClass | (nop)
-     * |                                 +---------------+
-     * |
-     * |                              1  +---------------+
-     * |                           +---->|withBeforeClass| setUpBeforeAll
-     * |                           |     +---------------+
-     * |                           |
-     * +---------------------------+
-     * |
-     * |  1  +---------------+
-     * +---->|withAfterClass | tearDownAfterAll
-     * +---------------+
+     *                        |   forEachTestOracle; i     +--->|withAfterClass | (nop)
+     *                        |                                 +---------------+
+     *                        |
+     *                        |                              1  +---------------+
+     *                        |                           +---->|withBeforeClass| setUpBeforeAll
+     *                        |                           |     +---------------+
+     *                        |                           |
+     *                        +---------------------------+
+     *                                                    |
+     *                                                    |  1  +---------------+
+     *                                                    +---->|withAfterClass | tearDownAfterAll
+     *                                                          +---------------+
      *
      * ----
+     * //</pre>
+     *
      * sequence:::
      *
      * ----
@@ -320,36 +323,40 @@ public final class GroupedTestItemRunner extends ParentRunner<Action> {
     /**
      * byTestCase::::
      * structure:::
+     *
+     * //<pre>
      * [ditaa]
      * ----
-     * +-------------------+
-     * |ParentRunner       |
-     * +---------+---------+
-     * |
-     * |
-     * |                1  +---------------+
-     * ^              +--->|withBeforeClass| setUpActionForFixture[i]
-     * |              |    +---------------+
-     * |              |
+     *                            +-------------------+
+     *                            |ParentRunner       |
+     *                            +---------+---------+
+     *                                      |
+     *                                      |
+     *                                      |                1  +---------------+
+     *                                      ^              +--->|withBeforeClass| setUp[i]
+     *                                      |              |    +---------------+
+     *                                      |              |
      * +------------------+ 1  n  +---------+---------+ 1  | n  +---------------+ forEachOracle; j
      * |ScriptiveUnit     +------>|GroupItemTestRunner|<>--+--->|MainAction     |   given/when/then[j]
      * |                  | 1     |                   |    |    +---------------+   (withTestCase[i])
      * |                  |<>-+   |groupId            |    |
      * +------------------+   |   +-------------------+    | 1  +---------------+
-     * |   forEachTestCase; i       +--->|withAfterClass | tearDownActionForFixture[i]
-     * |                                 +---------------+
-     * |
-     * |                              1  +---------------+
-     * |                           +---->|withBeforeClass| setUpBeforeAll
-     * |                           |     +---------------+
-     * |                           |
-     * +---------------------------+
-     * |
-     * |  1  +---------------+
-     * +---->|withAfterClass | tearDownAfterAll
-     * +---------------+
+     *                        |   forEachTestCase; i       +--->|withAfterClass | tearDown[i]
+     *                        |                                 +---------------+
+     *                        |
+     *                        |                              1  +---------------+
+     *                        |                           +---->|withBeforeClass| setUpBeforeAll
+     *                        |                           |     +---------------+
+     *                        |                           |
+     *                        +---------------------------+
+     *                                                    |
+     *                                                    |  1  +---------------+
+     *                                                    +---->|withAfterClass | tearDownAfterAll
+     *                                                          +---------------+
      *
      * ----
+     * //</pre>
+     *
      * sequence:::
      *
      * ----
@@ -365,35 +372,39 @@ public final class GroupedTestItemRunner extends ParentRunner<Action> {
     /**
      * byTestFixture::::
      * structure:::
+     *
+     * //<pre>
      * [ditaa]
      * ----
-     * +-------------------+
-     * |ParentRunner       |
-     * +---------+---------+
-     * |
-     * |
-     * |                1  +---------------+
-     * ^              +--->|withBeforeClass| setUpActionForFixture[i]
-     * |              |    +---------------+
-     * |              |
+     *                            +-------------------+
+     *                            |ParentRunner       |
+     *                            +---------+---------+
+     *                                      |
+     *                                      |
+     *                                      |                1  +---------------+
+     *                                      ^              +--->|withBeforeClass| setUp[i]
+     *                                      |              |    +---------------+
+     *                                      |              |
      * +------------------+ 1  n  +---------+---------+ 1  | n  +---------------+ forEachTestOracle; j
      * |ScriptiveUnit     +------>|GroupItemTestRunner|<>--+--->|MainAction     |   forEachTestCaseInFixture; k
      * |                  | 1     |                   |    |    +---------------+     given/when/then[j]
      * |                  |<>-+   |groupId            |    |                          (with testCase[k])
      * +------------------+   |   +-------------------+    | 1  +---------------+
-     * |   forEachTestFixture; i    +--->|withAfterClass | tearDownActionForFixture[i]
-     * |                                 +---------------+
-     * |
-     * |                              1  +---------------+
-     * |                           +---->|withBeforeClass| setUpBeforeAll
-     * |                           |     +---------------+
-     * |                           |
-     * +---------------------------+
-     * |
-     * |  1  +---------------+
-     * +---->|withAfterClass | tearDownAfterAll
-     * +---------------+
+     *                        |   forEachTestFixture; i    +--->|withAfterClass | tearDown[i]
+     *                        |                                 +---------------+
+     *                        |
+     *                        |                              1  +---------------+
+     *                        |                           +---->|withBeforeClass| setUpBeforeAll
+     *                        |                           |     +---------------+
+     *                        |                           |
+     *                        +---------------------------+
+     *                                                    |
+     *                                                    |  1  +---------------+
+     *                                                    +---->|withAfterClass | tearDownAfterAll
+     *                                                          +---------------+
      * ----
+     * //</pre>
+     *
      * sequence:::
      *
      * ----
@@ -416,15 +427,16 @@ public final class GroupedTestItemRunner extends ParentRunner<Action> {
      * first and then by test cases within a fixture.
      *
      * That is, main actions are constructed in a manner illustrated in the following diagram.
-     *
+     * //<pre>
      * [ditaa]
      * ----
      *
-     * 1    n  +---------------+ forEachTestCaseInFixture; j
+     *  1    n  +---------------+ forEachTestCaseInFixture; j
      * <>------>|MainAction     |   forEachTestOracle; k
-     * +---------------+     given/when/then[k]
-     * (with testCase[j])
+     *          +---------------+     given/when/then[k]
+     *          (with testCase[j])
      * ----
+     * //</pre>
      */
     GROUP_BY_TEST_FIXTURE_ORDER_BY_TEST_ORACLE {
       @Override

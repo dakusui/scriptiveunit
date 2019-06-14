@@ -6,23 +6,22 @@ import com.github.dakusui.scriptiveunit.core.Config;
 import java.util.Optional;
 
 public interface StageFactory {
-  static <RESPONSE> Stage _create(Stage.Type type, Config config, TestItem testItem, RESPONSE response, Throwable throwable, Report report) {
-    return new MyStage<>(response, type, throwable, config, report, testItem);
+  static <RESPONSE> Stage oracleLevelStageFor(Stage.Type type, Config config, TestItem testItem, RESPONSE response, Throwable throwable, Report report) {
+    return new OracleLevelStage<>(response, type, throwable, config, report, testItem);
   }
 
-  static Stage _create2(Stage.Type type, Config config, Tuple testCase) {
-    return new MyStage2<>(testCase, type, config);
+  static Stage frameworkStageFor(Stage.Type type, Config config, Tuple fixture) {
+    return new FrameworkStage<>(fixture, type, config);
   }
 
-  abstract class MyStageBase<RESPONSE> implements Stage {
+  abstract class StageBase<RESPONSE> implements Stage {
     private final RESPONSE  response;
     private final Type      type;
     private final Throwable throwable;
     private final Config    config;
     private final Report    report;
 
-    MyStageBase(RESPONSE response, Type type, Throwable throwable, Config config, Report report) {
-      System.out.println(type);
+    StageBase(RESPONSE response, Type type, Throwable throwable, Config config, Report report) {
       this.response = response;
       this.type = type;
       this.throwable = throwable;
@@ -67,15 +66,11 @@ public interface StageFactory {
     }
   }
 
-  class MyStage2<RESPONSE> extends MyStageBase<RESPONSE> {
+  class FrameworkStage<RESPONSE> extends StageBase<RESPONSE> {
     private final Tuple testCase;
 
-    MyStage2(Tuple testCase, Type type, Config config) {
-      this(testCase, null, type, null, config, null);
-    }
-
-    MyStage2(Tuple testCase, RESPONSE response, Type type, Throwable throwable, Config config, Report report) {
-      super(response, type, throwable, config, report);
+    FrameworkStage(Tuple testCase, Type type, Config config) {
+      super(null, type, null, config, null);
       this.testCase = testCase;
     }
 
@@ -90,13 +85,17 @@ public interface StageFactory {
     }
   }
 
-  class MyStage<RESPONSE> extends MyStage2<RESPONSE> {
-
+  class OracleLevelStage<RESPONSE> extends StageBase<RESPONSE> {
     private final TestItem testItem;
 
-    MyStage(RESPONSE response, Type type, Throwable throwable, Config config, Report report, TestItem testItem) {
-      super(testItem.getTestCaseTuple(), response, type, throwable, config, report);
+    OracleLevelStage(RESPONSE response, Type type, Throwable throwable, Config config, Report report, TestItem testItem) {
+      super(response, type, throwable, config, report);
       this.testItem = testItem;
+    }
+
+    @Override
+    public Optional<Tuple> getTestCaseTuple() {
+      return Optional.of(this.testItem.getTestCaseTuple());
     }
 
     @Override
