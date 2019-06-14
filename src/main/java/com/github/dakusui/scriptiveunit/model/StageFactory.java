@@ -2,10 +2,7 @@ package com.github.dakusui.scriptiveunit.model;
 
 import com.github.dakusui.jcunit.core.tuples.Tuple;
 import com.github.dakusui.scriptiveunit.core.Config;
-import com.github.dakusui.scriptiveunit.model.func.Func;
 
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Optional;
 
 public interface StageFactory {
@@ -13,16 +10,16 @@ public interface StageFactory {
     return new MyStage<>(response, type, throwable, config, report, testItem);
   }
 
-  static <RESPONSE> Stage _create2(Stage.Type type, Config config, Tuple testCase, RESPONSE response, Throwable throwable, Report report) {
-    return new MyStage2<>(testCase, response, type, throwable, config, report);
+  static Stage _create2(Stage.Type type, Config config, Tuple testCase) {
+    return new MyStage2<>(testCase, type, config);
   }
 
   abstract class MyStageBase<RESPONSE> implements Stage {
-    private final RESPONSE               response;
-    private final Type                   type;
-    private final Throwable              throwable;
-    private final Config                 config;
-    private final Report                 report;
+    private final RESPONSE  response;
+    private final Type      type;
+    private final Throwable throwable;
+    private final Config    config;
+    private final Report    report;
 
     MyStageBase(RESPONSE response, Type type, Throwable throwable, Config config, Report report) {
       System.out.println(type);
@@ -72,6 +69,10 @@ public interface StageFactory {
 
   class MyStage2<RESPONSE> extends MyStageBase<RESPONSE> {
     private final Tuple testCase;
+
+    MyStage2(Tuple testCase, Type type, Config config) {
+      this(testCase, null, type, null, config, null);
+    }
 
     MyStage2(Tuple testCase, RESPONSE response, Type type, Throwable throwable, Config config, Report report) {
       super(response, type, throwable, config, report);

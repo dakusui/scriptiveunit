@@ -35,16 +35,6 @@ public interface Stage {
 
   Optional<TestItem> getTestItem();
 
-  static Stage create(Type type, Config config, Tuple commonFixture) {
-    return StageFactory._create2(
-        type,
-        config,
-        commonFixture,
-        null,
-        null,
-        null);
-  }
-
   abstract class Delegating implements Stage {
     private final Stage target;
 

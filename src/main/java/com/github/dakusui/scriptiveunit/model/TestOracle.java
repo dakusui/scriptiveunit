@@ -24,5 +24,5 @@ public interface TestOracle {
 
   String templateDescription(Tuple testCaseTuple, String testSuiteDescription);
 
-  Function<Session, Action> createTestActionFactory(TestItem testItem);
+  Function<Session, Action> createOracleActionFactory(TestItem testItem);
 }

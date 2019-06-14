@@ -376,7 +376,7 @@ public enum Beans {
          * Warning: Created action is not thread safe. Users must create 1 action for 1 thread.
          */
         @Override
-        public Function<Session, Action> createTestActionFactory(TestItem testItem) {
+        public Function<Session, Action> createOracleActionFactory(TestItem testItem) {
           Tuple testCaseTuple = testItem.getTestCaseTuple();
           Report report = session.createReport(testItem);
           return (Session session) -> {

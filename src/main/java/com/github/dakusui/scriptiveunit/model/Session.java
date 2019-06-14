@@ -39,7 +39,7 @@ public interface Session {
 
   default Action createMainActionForTestOracle(TestOracle testOracle, IndexedTestCase indexedTestCase) {
     return testOracle
-        .createTestActionFactory(TestItem.create(indexedTestCase, testOracle))
+        .createOracleActionFactory(TestItem.create(indexedTestCase, testOracle))
         .apply(this);
   }
 
@@ -79,20 +79,16 @@ public interface Session {
     return StageFactory._create2(
         CONSTRAINT_GENERATION,
         this.getConfig(),
-        tuple,
-        null,
-        null,
-        null);
+        tuple
+    );
   }
 
   default Stage createFixtureLevelStage(Tuple testCaseTuple, Stage.Type stageType) {
     return StageFactory._create2(
         stageType,
         this.getConfig(),
-        testCaseTuple,
-        null,
-        null,
-        null);
+        testCaseTuple
+    );
   }
 
   default Stage createOracleLevelStage(Stage.Type type, TestItem testItem, Report report) {
