@@ -102,12 +102,7 @@ public interface Stage {
     CONSTRAINT_GENERATION,
     SETUP_BEFORE_ALL,
     SETUP,
-    BEFORE,
     ORACLE_EXECUTION,
-    WHEN,
-    THEN,
-    FAILURE_HANDLING,
-    AFTER,
     TEARDOWN,
     TEARDOWN_AFTER_ALL,
     ;

@@ -23,7 +23,6 @@ public interface StageFactory {
     private final Throwable              throwable;
     private final Config                 config;
     private final Report                 report;
-    private final Map<Func.Call, Object> memo;
 
     MyStageBase(RESPONSE response, Type type, Throwable throwable, Config config, Report report) {
       System.out.println(type);
@@ -32,7 +31,6 @@ public interface StageFactory {
       this.throwable = throwable;
       this.config = config;
       this.report = report;
-      this.memo = new HashMap<>();
     }
 
     @SuppressWarnings("unchecked")

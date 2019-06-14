@@ -72,10 +72,7 @@ public class Core {
   public Form<Throwable> _exception() {
     return stage ->
         stage.getThrowable()
-            .orElseThrow(() -> new IllegalStateException(
-                format("This method is only allowed to be called in '%s' stage but it was in '%s'",
-                    Stage.Type.FAILURE_HANDLING,
-                    this)));
+            .orElseThrow(IllegalStateException::new);
   }
 
   @SuppressWarnings("unused")

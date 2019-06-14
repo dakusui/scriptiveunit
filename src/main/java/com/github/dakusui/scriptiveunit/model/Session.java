@@ -107,7 +107,7 @@ public interface Session {
 
   default <RESPONSE> Stage createOracleVerificationStage(TestItem testItem, RESPONSE response, Report report) {
     return StageFactory._create(
-        Stage.Type.THEN,
+        Stage.Type.ORACLE_EXECUTION,
         getConfig(),
         testItem,
         requireNonNull(response),
@@ -117,7 +117,7 @@ public interface Session {
 
   default Stage createOracleFailureHandlingStage(TestItem testItem, Throwable throwable, Report report) {
     return StageFactory._create(
-        Stage.Type.FAILURE_HANDLING,
+        Stage.Type.ORACLE_EXECUTION,
         getConfig(),
         testItem,
         null,

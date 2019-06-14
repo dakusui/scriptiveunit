@@ -46,10 +46,7 @@ import static com.github.dakusui.scriptiveunit.core.Utils.append;
 import static com.github.dakusui.scriptiveunit.core.Utils.iterableToString;
 import static com.github.dakusui.scriptiveunit.core.Utils.template;
 import static com.github.dakusui.scriptiveunit.exceptions.ScriptiveUnitException.wrap;
-import static com.github.dakusui.scriptiveunit.model.Stage.Type.AFTER;
-import static com.github.dakusui.scriptiveunit.model.Stage.Type.BEFORE;
 import static com.github.dakusui.scriptiveunit.model.Stage.Type.ORACLE_EXECUTION;
-import static com.github.dakusui.scriptiveunit.model.Stage.Type.WHEN;
 import static com.github.dakusui.scriptiveunit.model.func.FuncInvoker.createMemo;
 import static com.github.dakusui.scriptiveunit.model.statement.Statement.createStatementFactory;
 import static java.lang.Class.forName;
@@ -413,7 +410,7 @@ public enum Beans {
 
 
         private Action createBefore(TestItem testItem, Report report, Map<List<Object>, Object> memo) {
-          return createActionFromClause(BEFORE, beforeClause, testItem, report, memo);
+          return createActionFromClause(ORACLE_EXECUTION, beforeClause, testItem, report, memo);
         }
 
         private Source<Tuple> createGiven(final TestItem testItem, final Report report, final Session session, Map<List<Object>, Object> memo) {
@@ -456,7 +453,7 @@ public enum Beans {
 
             @Override
             public TestIO apply(Tuple testCase, Context context) {
-              Stage whenStage = session.createOracleLevelStage(WHEN, testItem, report);
+              Stage whenStage = session.createOracleLevelStage(ORACLE_EXECUTION, testItem, report);
               return TestIO.create(
                   testCase,
                   Beans.<Boolean>toFunc(statementFactory.create(whenClause), funcInvoker).apply(whenStage));
@@ -535,7 +532,7 @@ public enum Beans {
         }
 
         private Action createAfter(TestItem testItem, Report report, Map<List<Object>, Object> memo) {
-          return createActionFromClause(AFTER, afterClause, testItem, report, memo);
+          return createActionFromClause(ORACLE_EXECUTION, afterClause, testItem, report, memo);
         }
 
         private Action createActionFromClause(Stage.Type stageType, List<Object> clause, final TestItem testItem, Report report, Map<List<Object>, Object> memo) {
