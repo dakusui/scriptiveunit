@@ -25,6 +25,7 @@ public interface Preprocessor {
 
   enum Utils {
     ;
+
     public static List<Path.Component> pathComponentList(Object... pathComponents) {
       return Lists.newArrayList(pathComponents).stream().map(Utils::pathComponent).collect(toList());
     }
@@ -156,7 +157,7 @@ public interface Preprocessor {
     JsonNode work;
     if (targetElement instanceof ObjectNode) {
       work = targetElement;
-      ((Iterable<String>) targetElement::getFieldNames).forEach(
+      ((Iterable<String>) () -> requireNonNull(targetElement.getFieldNames())).forEach(
           (String attributeName) ->
               ((ObjectNode) targetElement).put(
                   attributeName,

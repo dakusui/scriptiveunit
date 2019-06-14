@@ -136,6 +136,15 @@ public enum JsonUtils {
     throw new UnsupportedOperationException();
   }
 
+  /**
+   * Returns a preprocessor instance which translates a JSON node ona path specified by {@code pathMatcher}
+   * in a given {@code JSON} node using a function {@code translator}.
+   *
+   * @param translator  A function with which the translation is made.
+   * @param pathMatcher A predicate that returns {@code true} for a path in a JSON node,
+   *                    where translations by {@code translator} are desired.
+   * @return A new preprocessor.
+   */
   public static Preprocessor preprocessor(Function<JsonNode, JsonNode> translator, Predicate<Path> pathMatcher) {
     requireNonNull(translator);
     requireNonNull(pathMatcher);

@@ -1,10 +1,10 @@
 package com.github.dakusui.scriptiveunit;
 
 import com.github.dakusui.actionunit.Action;
+import com.github.dakusui.actionunit.Actions;
 import com.github.dakusui.jcunit.core.tuples.Tuple;
 import com.github.dakusui.jcunit8.factorspace.Parameter;
 import com.github.dakusui.jcunit8.testsuite.TestCase;
-import com.github.dakusui.scriptiveunit.action.ActionUtils;
 import com.github.dakusui.scriptiveunit.exceptions.ScriptiveUnitException;
 import com.github.dakusui.scriptiveunit.loaders.IndexedTestCase;
 import com.github.dakusui.scriptiveunit.model.Session;
@@ -31,13 +31,13 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
+import static com.github.dakusui.actionunit.Actions.attempt;
 import static com.github.dakusui.actionunit.Actions.nop;
 import static com.github.dakusui.scriptiveunit.GroupedTestItemRunner.Type.OrderBy.TEST_CASE;
 import static com.github.dakusui.scriptiveunit.GroupedTestItemRunner.Type.OrderBy.TEST_ORACLE;
-import static com.github.dakusui.scriptiveunit.action.ActionUtils.createMainActionsForTestCase;
-import static com.github.dakusui.scriptiveunit.action.ActionUtils.createMainActionsForTestFixture;
+import static com.github.dakusui.scriptiveunit.GroupedTestItemRunner.Utils.createMainActionsForTestCase;
+import static com.github.dakusui.scriptiveunit.GroupedTestItemRunner.Utils.createMainActionsForTestFixture;
 import static com.github.dakusui.scriptiveunit.core.Utils.performActionWithLogging;
-import static com.github.dakusui.scriptiveunit.model.func.FuncInvoker.createMemo;
 import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
 import static java.util.stream.Collectors.toCollection;
@@ -595,7 +595,7 @@ public final class GroupedTestItemRunner extends ParentRunner<Action> {
           testClass,
           testOracleId,
           nop(),
-          ActionUtils.createMainActionsForTestOracle(
+          Utils.createMainActionsForTestOracle(
               session, testOracle,
               testSuiteDescriptor
           ),
@@ -614,7 +614,6 @@ public final class GroupedTestItemRunner extends ParentRunner<Action> {
     int testCaseId = indexedTestCase.getIndex();
     try {
       Tuple testCaseTuple = indexedTestCase.get();
-      Map<List<Object>, Object> memo = createMemo();
       return new GroupedTestItemRunner(
           testClass,
           testCaseId,
@@ -652,6 +651,60 @@ public final class GroupedTestItemRunner extends ParentRunner<Action> {
       );
     } catch (InitializationError initializationError) {
       throw ScriptiveUnitException.wrap(initializationError);
+    }
+  }
+
+  enum Utils {
+    ;
+
+    static List<Action> createMainActionsForTestOracle(
+        Session session,
+        TestOracle testOracle,
+        TestSuiteDescriptor testSuiteDescriptor) {
+      return testSuiteDescriptor.getTestCases().stream()
+          .map(new Function<IndexedTestCase, Action>() {
+            String testSuiteDescription = testSuiteDescriptor.getDescription();
+            int i = 0;
+
+            @Override
+            public Action apply(IndexedTestCase input) {
+              try {
+                return Actions.sequential(
+                    format("%03d: %s", i, testOracle.templateDescription(input.get(), testSuiteDescription)),
+                    session.createSetUpActionForFixture(testSuiteDescriptor, input.get()),
+                    attempt(
+                        session.createMainActionForTestOracle(
+                            testOracle,
+                            input))
+                        .ensure(
+                            session.createTearDownActionForFixture(testSuiteDescriptor, input.get()))
+                        .build());
+              } finally {
+                i++;
+              }
+            }
+          }).collect(toList());
+    }
+
+    static List<Action> createMainActionsForTestCase(
+        Session session,
+        IndexedTestCase indexedTestCase,
+        List<? extends TestOracle> testOracles) {
+      return testOracles.stream()
+          .map((TestOracle input) ->
+              session.createMainActionForTestOracle(input, indexedTestCase))
+          .collect(toList());
+    }
+
+    static List<Action> createMainActionsForTestFixture
+        (List<IndexedTestCase> testCasesFilteredByFixture,
+            Session session,
+            TestSuiteDescriptor testSuiteDescriptor) {
+      return testSuiteDescriptor
+          .getRunnerType()
+          .orderBy()
+          .buildSortedActionStreamOrderingBy(session, testCasesFilteredByFixture, testSuiteDescriptor.getTestOracles())
+          .collect(toList());
     }
   }
 }

@@ -44,35 +44,15 @@ public interface Session {
   }
 
   default Action createSetUpActionForFixture(TestSuiteDescriptor testSuiteDescriptor, Tuple fixtureTuple) {
-    return createActionForFixture(
-        SETUP,
-        fixtureTuple,
-        testSuiteDescriptor.getSetUpActionFactory());
+    return testSuiteDescriptor
+        .getSetUpActionFactory()
+        .apply(createFixtureLevelStage(fixtureTuple, SETUP));
   }
 
   default Action createTearDownActionForFixture(TestSuiteDescriptor testSuiteDescriptor, Tuple fixtureTuple) {
-    return createActionForFixture(
-        TEARDOWN,
-        fixtureTuple,
-        testSuiteDescriptor.getTearDownActionFactory());
-  }
-
-  default Action createActionForFixture(
-      Stage.Type fixtureLevelStageType,
-      Tuple fixtureTuple,
-      Function<Stage, Action> fixtureLevelActionFactory) {
-    return createFixtureLevelActionForTestCase(
-        fixtureTuple,
-        fixtureLevelStageType,
-        fixtureLevelActionFactory
-    );
-  }
-
-  default Action createFixtureLevelActionForTestCase(
-      Tuple testCaseTuple,
-      Stage.Type stageType,
-      Function<Stage, Action> fixtureLevelActionFactory) {
-    return fixtureLevelActionFactory.apply(createFixtureLevelStage(testCaseTuple, stageType));
+    return testSuiteDescriptor
+        .getTearDownActionFactory()
+        .apply(createFixtureLevelStage(fixtureTuple, TEARDOWN));
   }
 
   default Stage createSuiteLevelStage(Tuple commonFixture) {
