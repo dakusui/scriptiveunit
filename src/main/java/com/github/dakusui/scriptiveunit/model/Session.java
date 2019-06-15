@@ -1,16 +1,35 @@
 package com.github.dakusui.scriptiveunit.model;
 
 import com.github.dakusui.actionunit.Action;
+import com.github.dakusui.actionunit.Actions;
+import com.github.dakusui.actionunit.Context;
+import com.github.dakusui.actionunit.connectors.Pipe;
+import com.github.dakusui.actionunit.connectors.Sink;
+import com.github.dakusui.actionunit.connectors.Source;
 import com.github.dakusui.jcunit.core.tuples.Tuple;
 import com.github.dakusui.scriptiveunit.core.Config;
+import com.github.dakusui.scriptiveunit.core.Utils;
+import com.github.dakusui.scriptiveunit.loaders.Beans;
 import com.github.dakusui.scriptiveunit.loaders.IndexedTestCase;
+import com.github.dakusui.scriptiveunit.model.func.Form;
+import com.github.dakusui.scriptiveunit.model.func.FuncInvoker;
 import com.github.dakusui.scriptiveunit.model.stage.Stage;
+import com.github.dakusui.scriptiveunit.model.statement.Statement;
+import org.hamcrest.BaseMatcher;
+import org.hamcrest.Description;
 
+import java.util.List;
+import java.util.Map;
 import java.util.function.Function;
 
+import static com.github.dakusui.scriptiveunit.core.Utils.iterableToString;
 import static com.github.dakusui.scriptiveunit.model.stage.Stage.ExecutionLevel.FIXTURE;
+import static com.github.dakusui.scriptiveunit.model.stage.Stage.ExecutionLevel.ORACLE;
 import static com.github.dakusui.scriptiveunit.model.stage.Stage.ExecutionLevel.SUITE;
+import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
+import static org.junit.Assert.assertThat;
+import static org.junit.Assume.assumeThat;
 
 /**
  * <pre>
@@ -43,6 +62,31 @@ public interface Session {
 
   Action createMainActionForTestOracle(TestOracle testOracle, IndexedTestCase indexedTestCase);
 
+  Source<Tuple> createGiven(
+      TestItem testItem,
+      Report report,
+      Map<List<Object>, Object> memo,
+      Statement givenStatement);
+
+  Pipe<Tuple, TestIO> createWhen(
+      TestItem testItem,
+      Report report,
+      Map<List<Object>, Object> memo,
+      Statement whenStatement);
+
+  Sink<TestIO> createThen(
+      TestItem testItem,
+      Report report,
+      Map<List<Object>, Object> memo,
+      Statement thenStatement);
+
+  <T extends AssertionError> Sink<T> onTestFailure(
+      TestItem testItem,
+      Report report,
+      Map<List<Object>, Object> memo,
+      Statement onFailureStatement,
+      boolean isOnFailureClausePresent);
+
   Action createTearDownActionForFixture(TestSuiteDescriptor testSuiteDescriptor, Tuple fixtureTuple);
 
   Action createSetUpBeforeAllAction(Tuple commonFixtureTuple);
@@ -51,24 +95,6 @@ public interface Session {
 
   default Stage createSuiteLevelStage(Tuple commonFixture) {
     return Stage.Factory.frameworkStageFor(SUITE, this.getConfig(), commonFixture);
-  }
-
-  default Stage createOracleLevelStage(TestItem testItem, Report report) {
-    return Stage.Factory.oracleLevelStageFor(
-        this.getConfig(),
-        testItem,
-        null,
-        null,
-        report);
-  }
-
-  default <RESPONSE> Stage createOracleVerificationStage(TestItem testItem, RESPONSE response, Report report) {
-    return Stage.Factory.oracleLevelStageFor(
-        getConfig(),
-        testItem,
-        requireNonNull(response),
-        null,
-        report);
   }
 
   default Stage createOracleFailureHandlingStage(TestItem testItem, Throwable throwable, Report report) {
@@ -83,6 +109,9 @@ public interface Session {
   static Session create(Config config, TestSuiteDescriptor.Loader testSuiteDescriptorLoader) {
     return new Impl(config, testSuiteDescriptorLoader);
   }
+
+  Stage createOracleLevelStage(TestItem testItem, Report report);
+
 
   class Impl implements Session {
     private final Config                     config;
@@ -151,8 +180,148 @@ public interface Session {
           .apply(this.createSuiteLevelStage(commonFixtureTuple));
     }
 
+    @Override
+    public Source<Tuple> createGiven(
+        TestItem testItem,
+        Report report,
+        Map<List<Object>, Object> memo, Statement givenStatement) {
+      FuncInvoker funcInvoker = FuncInvoker.create(memo);
+      Tuple testCaseTuple = testItem.getTestCaseTuple();
+      Stage givenStage = createOracleLevelStage(testItem, report);
+      return new Source<Tuple>() {
+        @Override
+        public Tuple apply(Context context) {
+          assumeThat(testCaseTuple, new BaseMatcher<Tuple>() {
+            @Override
+            public boolean matches(Object item) {
+              return requireNonNull(Beans.<Boolean>toFunc(givenStatement, funcInvoker).apply(givenStage));
+            }
+
+            @Override
+            public void describeTo(Description description) {
+              description.appendText(
+                  format("input (%s) should have made true following criterion but not.:%n'%s' defined in stage:%s",
+                      testCaseTuple,
+                      funcInvoker.asString(),
+                      ORACLE));
+            }
+          });
+          return testCaseTuple;
+        }
+
+        @Override
+        public String toString() {
+          return format("%n%s", funcInvoker.asString());
+        }
+      };
+    }
+
+    @Override
+    public Pipe<Tuple, TestIO> createWhen(TestItem testItem, Report report, Map<List<Object>, Object> memo, Statement whenStatement) {
+      return new Pipe<Tuple, TestIO>() {
+        FuncInvoker funcInvoker = FuncInvoker.create(memo);
+
+        @Override
+        public TestIO apply(Tuple testCase, Context context) {
+          Stage whenStage = createOracleLevelStage(testItem, report);
+          return TestIO.create(
+              testCase,
+              Beans.<Boolean>toFunc(whenStatement, funcInvoker).apply(whenStage));
+        }
+
+        @Override
+        public String toString() {
+          return format("%n%s", funcInvoker.asString());
+        }
+      };
+    }
+
+    @Override
+    public Sink<TestIO> createThen(TestItem testItem, Report report, Map<List<Object>, Object> memo, Statement thenStatement) {
+      return new Sink<TestIO>() {
+        FuncInvoker funcInvoker = FuncInvoker.create(memo);
+
+        @Override
+        public void apply(TestIO testIO, Context context) {
+          Stage thenStage = createOracleVerificationStage(testItem, testIO.getOutput(), report);
+          assertThat(
+              thenStage,
+              new BaseMatcher<Stage>() {
+                @Override
+                public boolean matches(Object item) {
+                  return requireNonNull(
+                      Beans.<Boolean>toFunc(thenStatement, funcInvoker)
+                          .apply(thenStage));
+                }
+
+                @Override
+                public void describeTo(Description description) {
+                  description.appendText(format("output should have made true the criterion defined in stage:%s", thenStage.getExecutionLevel()));
+                }
+
+                @Override
+                public void describeMismatch(Object item, Description description) {
+                  Object output = testIO.getOutput() instanceof Iterable ?
+                      iterableToString((Iterable<?>) testIO.getOutput()) :
+                      testIO.getOutput();
+                  description.appendText(String.format("output '%s' created from '%s' did not satisfy it.:%n'%s'",
+                      output,
+                      testItem.getTestCaseTuple(),
+                      funcInvoker.asString()));
+                }
+              }
+          );
+        }
+
+        @Override
+        public String toString() {
+          return format("%n%s", funcInvoker.asString());
+        }
+      };
+    }
+
+    @Override
+    public <T extends AssertionError> Sink<T> onTestFailure(TestItem testItem, Report report, Map<List<Object>, Object> memo, Statement onFailureStatement, boolean isOnFailureClausePresent) {
+      return new Sink<T>() {
+        FuncInvoker funcInvoker = FuncInvoker.create(memo);
+
+        @Override
+        public void apply(T input, Context context) {
+          Stage onFailureStage = createOracleFailureHandlingStage(testItem, input, report);
+          Utils.performActionWithLogging(requireNonNull(
+              isOnFailureClausePresent ?
+                  Beans.<Action>toFunc(onFailureStatement, funcInvoker) :
+                  (Form<Action>) input1 -> Actions.nop()).apply(onFailureStage));
+          throw requireNonNull(input);
+        }
+
+        @Override
+        public String toString() {
+          return format("%n%s", funcInvoker.asString());
+        }
+      };
+    }
+
     Stage createFixtureLevelStage(Tuple testCaseTuple) {
       return Stage.Factory.frameworkStageFor(FIXTURE, this.getConfig(), testCaseTuple);
+    }
+
+    public Stage createOracleLevelStage(TestItem testItem, Report report) {
+      return Stage.Factory.oracleLevelStageFor(
+          this.getConfig(),
+          testItem,
+          null,
+          null,
+          report);
+    }
+
+    <RESPONSE> Stage createOracleVerificationStage(TestItem testItem, RESPONSE response, Report report) {
+      return Stage.Factory.oracleLevelStageFor(
+          getConfig(),
+          testItem,
+          requireNonNull(response),
+          null,
+          report);
     }
   }
 }
