@@ -17,7 +17,7 @@ public interface Stage {
    *
    * @return Type of this stage.
    */
-  Type getType();
+  ExecutionLevel getExecutionLevel();
 
   Config getConfig();
 
@@ -53,8 +53,8 @@ public interface Stage {
     }
 
     @Override
-    public Type getType() {
-      return this.target.getType();
+    public ExecutionLevel getExecutionLevel() {
+      return this.target.getExecutionLevel();
     }
 
     @Override
@@ -88,13 +88,10 @@ public interface Stage {
     }
   }
 
-  enum Type {
-    CONSTRAINT_GENERATION,
-    SUITE_LEVEL,
-    SETUP,
-    ORACLE_EXECUTION,
-    TEARDOWN,
-    TEARDOWN_AFTER_ALL,
+  enum ExecutionLevel {
+    SUITE,
+    FIXTURE,
+    ORACLE,
     ;
   }
 }

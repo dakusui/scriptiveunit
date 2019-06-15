@@ -19,7 +19,7 @@ import static com.github.dakusui.scriptiveunit.exceptions.FacadeException.valida
 import static java.util.stream.Collectors.toList;
 
 /**
- * A facade to ScriptiveUnit's functionalities.
+ * A facade to {@code ScriptiveUnit}'s functionalities.
  */
 public class ScriptiveCore {
   public ScriptiveCore() {
@@ -58,7 +58,7 @@ public class ScriptiveCore {
   }
 
   public List<String> listRunners() {
-    return Arrays.stream(GroupedTestItemRunner.Type.values()).map((GroupedTestItemRunner.Type type) -> Utils.toCamelCase(type.name())).collect(toList());
+    return Arrays.stream(ScriptiveUnit.Mode.values()).map((ScriptiveUnit.Mode mode) -> Utils.toCamelCase(mode.name())).collect(toList());
   }
 
   public List<Class<?>> listSuiteSets(String packagePrefix) {

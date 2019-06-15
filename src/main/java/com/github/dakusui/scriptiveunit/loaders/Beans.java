@@ -14,7 +14,7 @@ import com.github.dakusui.jcunit8.factorspace.ParameterSpace;
 import com.github.dakusui.jcunit8.pipeline.Pipeline;
 import com.github.dakusui.jcunit8.pipeline.Requirement;
 import com.github.dakusui.jcunit8.testsuite.TestCase;
-import com.github.dakusui.scriptiveunit.GroupedTestItemRunner.Type;
+import com.github.dakusui.scriptiveunit.ScriptiveUnit.Mode;
 import com.github.dakusui.scriptiveunit.core.Config;
 import com.github.dakusui.scriptiveunit.core.Utils;
 import com.github.dakusui.scriptiveunit.exceptions.ScriptiveUnitException;
@@ -46,7 +46,7 @@ import static com.github.dakusui.scriptiveunit.core.Utils.append;
 import static com.github.dakusui.scriptiveunit.core.Utils.iterableToString;
 import static com.github.dakusui.scriptiveunit.core.Utils.template;
 import static com.github.dakusui.scriptiveunit.exceptions.ScriptiveUnitException.wrap;
-import static com.github.dakusui.scriptiveunit.model.Stage.Type.ORACLE_EXECUTION;
+import static com.github.dakusui.scriptiveunit.model.Stage.ExecutionLevel.ORACLE;
 import static com.github.dakusui.scriptiveunit.model.func.FuncInvoker.createMemo;
 import static com.github.dakusui.scriptiveunit.model.statement.Statement.createStatementFactory;
 import static java.lang.Class.forName;
@@ -65,7 +65,7 @@ public enum Beans {
     final         BaseForFactorSpaceDescriptor      factorSpaceBean;
     final         List<? extends BaseForTestOracle> testOracleBeanList;
     final         String                            description;
-    final         Type                              runnerType;
+    final         Mode                              runnerMode;
     private final Map<String, List<Object>>         userDefinedFormClauses;
     private final List<Object>                      setUpClause;
     private final List<Object>                      setUpBeforeAllClause;
@@ -83,7 +83,7 @@ public enum Beans {
         List<Object> tearDownClause,
         List<Object> tearDownAfterAllClause) {
       this.description = description;
-      this.runnerType = Type.valueOf(Utils.toALL_CAPS(runnerType));
+      this.runnerMode = Mode.valueOf(Utils.toALL_CAPS(runnerType));
       this.factorSpaceBean = factorSpaceBean;
       this.userDefinedFormClauses = userDefinedFormClauses;
       this.setUpBeforeAllClause = setUpBeforeAllClause;
@@ -194,8 +194,8 @@ public enum Beans {
           }
 
           @Override
-          public Type getRunnerType() {
-            return runnerType;
+          public Mode getRunnerType() {
+            return runnerMode;
           }
 
           private List<IndexedTestCase> createTestCases(TestSuiteDescriptor testSuiteDescriptor) {
@@ -410,14 +410,14 @@ public enum Beans {
 
 
         private Action createBefore(TestItem testItem, Report report, Map<List<Object>, Object> memo) {
-          return createActionFromClause(ORACLE_EXECUTION, beforeClause, testItem, report, memo);
+          return createActionFromClause(ORACLE, beforeClause, testItem, report, memo);
         }
 
         private Source<Tuple> createGiven(final TestItem testItem, final Report report, final Session session, Map<List<Object>, Object> memo) {
           Tuple testCaseTuple = testItem.getTestCaseTuple();
           return new Source<Tuple>() {
             FuncInvoker funcInvoker = FuncInvoker.create(memo);
-            Stage givenStage = session.createOracleLevelStage(ORACLE_EXECUTION, testItem, report);
+            Stage givenStage = session.createOracleLevelStage(ORACLE, testItem, report);
             Statement givenStatement = statementFactory.create(givenClause);
 
             @Override
@@ -434,7 +434,7 @@ public enum Beans {
                       format("input (%s) should have made true following criterion but not.:%n'%s' defined in stage:%s",
                           testCaseTuple,
                           funcInvoker.asString(),
-                          ORACLE_EXECUTION));
+                          ORACLE));
                 }
               });
               return testCaseTuple;
@@ -453,7 +453,7 @@ public enum Beans {
 
             @Override
             public TestIO apply(Tuple testCase, Context context) {
-              Stage whenStage = session.createOracleLevelStage(ORACLE_EXECUTION, testItem, report);
+              Stage whenStage = session.createOracleLevelStage(ORACLE, testItem, report);
               return TestIO.create(
                   testCase,
                   Beans.<Boolean>toFunc(statementFactory.create(whenClause), funcInvoker).apply(whenStage));
@@ -485,7 +485,7 @@ public enum Beans {
 
                     @Override
                     public void describeTo(Description description) {
-                      description.appendText(format("output should have made true the criterion defined in stage:%s", thenStage.getType()));
+                      description.appendText(format("output should have made true the criterion defined in stage:%s", thenStage.getExecutionLevel()));
                     }
 
                     @Override
@@ -532,13 +532,13 @@ public enum Beans {
         }
 
         private Action createAfter(TestItem testItem, Report report, Map<List<Object>, Object> memo) {
-          return createActionFromClause(ORACLE_EXECUTION, afterClause, testItem, report, memo);
+          return createActionFromClause(ORACLE, afterClause, testItem, report, memo);
         }
 
-        private Action createActionFromClause(Stage.Type stageType, List<Object> clause, final TestItem testItem, Report report, Map<List<Object>, Object> memo) {
+        private Action createActionFromClause(Stage.ExecutionLevel stageExecutionLevel, List<Object> clause, final TestItem testItem, Report report, Map<List<Object>, Object> memo) {
           if (clause == null)
             return (Action) NOP_CLAUSE;
-          Stage stage = session.createOracleLevelStage(stageType, testItem, report);
+          Stage stage = session.createOracleLevelStage(stageExecutionLevel, testItem, report);
           Statement statement = statementFactory.create(clause);
           FuncInvoker funcInvoker = FuncInvoker.create(memo);
           return Beans.<Action>toFunc(statement, funcInvoker).apply(stage);

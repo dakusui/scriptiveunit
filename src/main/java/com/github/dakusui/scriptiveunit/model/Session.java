@@ -7,9 +7,8 @@ import com.github.dakusui.scriptiveunit.loaders.IndexedTestCase;
 
 import java.util.function.Function;
 
-import static com.github.dakusui.scriptiveunit.model.Stage.Type.SETUP;
-import static com.github.dakusui.scriptiveunit.model.Stage.Type.SUITE_LEVEL;
-import static com.github.dakusui.scriptiveunit.model.Stage.Type.TEARDOWN;
+import static com.github.dakusui.scriptiveunit.model.Stage.ExecutionLevel.FIXTURE;
+import static com.github.dakusui.scriptiveunit.model.Stage.ExecutionLevel.SUITE;
 import static java.util.Objects.requireNonNull;
 
 /**
@@ -46,30 +45,30 @@ public interface Session {
   default Action createSetUpActionForFixture(TestSuiteDescriptor testSuiteDescriptor, Tuple fixtureTuple) {
     return testSuiteDescriptor
         .getSetUpActionFactory()
-        .apply(createFixtureLevelStage(fixtureTuple, SETUP));
+        .apply(createFixtureLevelStage(fixtureTuple, FIXTURE));
   }
 
   default Action createTearDownActionForFixture(TestSuiteDescriptor testSuiteDescriptor, Tuple fixtureTuple) {
     return testSuiteDescriptor
         .getTearDownActionFactory()
-        .apply(createFixtureLevelStage(fixtureTuple, TEARDOWN));
+        .apply(createFixtureLevelStage(fixtureTuple, FIXTURE));
   }
 
   default Stage createSuiteLevelStage(Tuple commonFixture) {
-    return StageFactory.frameworkStageFor(SUITE_LEVEL, this.getConfig(), commonFixture);
+    return StageFactory.frameworkStageFor(SUITE, this.getConfig(), commonFixture);
   }
 
-  default Stage createFixtureLevelStage(Tuple testCaseTuple, Stage.Type stageType) {
+  default Stage createFixtureLevelStage(Tuple testCaseTuple, Stage.ExecutionLevel stageExecutionLevel) {
     return StageFactory.frameworkStageFor(
-        stageType,
+        stageExecutionLevel,
         this.getConfig(),
         testCaseTuple
     );
   }
 
-  default Stage createOracleLevelStage(Stage.Type type, TestItem testItem, Report report) {
+  default Stage createOracleLevelStage(Stage.ExecutionLevel executionLevel, TestItem testItem, Report report) {
     return StageFactory.oracleLevelStageFor(
-        type,
+        executionLevel,
         this.getConfig(),
         testItem,
         null,
@@ -79,7 +78,7 @@ public interface Session {
 
   default <RESPONSE> Stage createOracleVerificationStage(TestItem testItem, RESPONSE response, Report report) {
     return StageFactory.oracleLevelStageFor(
-        Stage.Type.ORACLE_EXECUTION,
+        Stage.ExecutionLevel.ORACLE,
         getConfig(),
         testItem,
         requireNonNull(response),
@@ -89,7 +88,7 @@ public interface Session {
 
   default Stage createOracleFailureHandlingStage(TestItem testItem, Throwable throwable, Report report) {
     return StageFactory.oracleLevelStageFor(
-        Stage.Type.ORACLE_EXECUTION,
+        Stage.ExecutionLevel.ORACLE,
         getConfig(),
         testItem,
         null,

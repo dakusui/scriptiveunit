@@ -20,7 +20,7 @@ public class SyntaxException extends ScriptiveUnitException {
       throw new SyntaxException(format(
           "Attribute '%s' is accessed in '%s', but not found in your test case. Known attribute names are %s'",
           attributeName,
-          context.getType().toString().toLowerCase(),
+          context.getExecutionLevel().toString().toLowerCase(),
           knownAttributeNames));
     };
   }

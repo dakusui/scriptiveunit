@@ -1,7 +1,7 @@
 package com.github.dakusui.scriptiveunit.model;
 
 import com.github.dakusui.actionunit.Action;
-import com.github.dakusui.scriptiveunit.GroupedTestItemRunner;
+import com.github.dakusui.scriptiveunit.ScriptiveUnit;
 import com.github.dakusui.scriptiveunit.core.Config;
 import com.github.dakusui.scriptiveunit.loaders.IndexedTestCase;
 import com.github.dakusui.scriptiveunit.model.func.Form;
@@ -17,7 +17,7 @@ import static java.util.Objects.requireNonNull;
 public interface TestSuiteDescriptor {
   String getDescription();
 
-  GroupedTestItemRunner.Type getRunnerType();
+  ScriptiveUnit.Mode getRunnerType();
 
   ParameterSpaceDescriptor getFactorSpaceDescriptor();
 

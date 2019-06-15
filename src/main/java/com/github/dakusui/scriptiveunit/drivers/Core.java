@@ -23,7 +23,7 @@ import static java.util.stream.Collectors.toList;
 public class Core {
   /**
    * Returns a function to access an attribute value in a test case.
-   * This can be used in {@code GENERATION}, {@code ORACLE_EXECUTION}, {@code WHEN}, and {@code THEN}
+   * This can be used in {@code SUITE}, {@code FIXTURE}, and {@code ORACLE}
    * stages.
    *
    * @param attr Attribute name whose value should be returned
@@ -80,7 +80,7 @@ public class Core {
   public Form<TestItem> testItem() {
     return stage -> stage.getTestItem().orElseThrow(
         () -> new IllegalStateException(
-            format("This method cannot be called on '%s' stage", stage.getType())));
+            format("This method cannot be called on '%s' stage", stage.getExecutionLevel())));
   }
 
   @SuppressWarnings("unused")

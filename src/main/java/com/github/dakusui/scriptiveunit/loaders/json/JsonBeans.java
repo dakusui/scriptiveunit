@@ -24,10 +24,15 @@ public enum JsonBeans {
         @JsonProperty("tearDown") List<Object> tearDownClause,
         @JsonProperty("tearDownAfterAll") List<Object> tearDownAfterAllClause
     ) {
-      super(
-          description, factorSpaceBean, runnerType, userFormMap,
-          setUpBeforeAllClause, setUpClause,
-          testOracleBeanList, tearDownClause, tearDownAfterAllClause);
+      super(description,
+          factorSpaceBean,
+          runnerType,
+          userFormMap,
+          setUpBeforeAllClause,
+          setUpClause,
+          testOracleBeanList,
+          tearDownClause,
+          tearDownAfterAllClause);
     }
 
     public static class FactorSpaceDescriptorBean extends Beans.BaseForFactorSpaceDescriptor {

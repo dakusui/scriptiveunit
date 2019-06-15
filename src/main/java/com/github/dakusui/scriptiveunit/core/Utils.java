@@ -335,4 +335,11 @@ public enum Utils {
     StackTraceElement caller = Thread.currentThread().getStackTrace()[2];
     return String.format("%s:%s", caller.getClassName(), caller.getMethodName());
   }
+
+  public static <T extends Annotation> T getAnnotationWithDefault(Class javaClass, T defaultValue) {
+    @SuppressWarnings("unchecked") T ret = (T) javaClass.<T>getAnnotation(defaultValue.annotationType());
+    return ret != null ?
+        ret :
+        defaultValue;
+  }
 }

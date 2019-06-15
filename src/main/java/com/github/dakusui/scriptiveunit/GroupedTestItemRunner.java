@@ -33,8 +33,6 @@ import java.util.stream.Stream;
 
 import static com.github.dakusui.actionunit.Actions.attempt;
 import static com.github.dakusui.actionunit.Actions.nop;
-import static com.github.dakusui.scriptiveunit.GroupedTestItemRunner.Type.OrderBy.TEST_CASE;
-import static com.github.dakusui.scriptiveunit.GroupedTestItemRunner.Type.OrderBy.TEST_ORACLE;
 import static com.github.dakusui.scriptiveunit.GroupedTestItemRunner.Utils.createMainActionsForTestCase;
 import static com.github.dakusui.scriptiveunit.GroupedTestItemRunner.Utils.createMainActionsForTestFixture;
 import static com.github.dakusui.scriptiveunit.core.Utils.performActionWithLogging;
@@ -74,6 +72,7 @@ import static java.util.stream.Collectors.toList;
  *
  * === ByTestOracle
  *
+ * //<pre>
  * [ditaa]
  * ----
  * +--------------------------------------------+
@@ -95,8 +94,12 @@ import static java.util.stream.Collectors.toList;
  * +--------------------------------------------+
  * ----
  *
+ * //</pre>
+ *
  * === ByTestCase
  * A test runner is created for a ''
+ *
+ * //<pre>
  *
  * [ditaa]
  * ----
@@ -119,8 +122,12 @@ import static java.util.stream.Collectors.toList;
  * +-----------------------------------------+
  * ----
  *
+ * //</pre>
+ *
  * === ByTestFixture
  * GroupedTestItemRunner
+ *
+ * //<pre>
  *
  * [ditaa]
  * ----
@@ -146,7 +153,12 @@ import static java.util.stream.Collectors.toList;
  * +---------------------------------------------+
  * ----
  *
+ * //</pre>
+ *
  * === ByTestFixtureOrderedByTestOracle
+ *
+ *
+ * //<pre>
  *
  * [ditaa]
  * ----
@@ -168,10 +180,12 @@ import static java.util.stream.Collectors.toList;
  * +---------------------------------------------------------------------------------------------+
  * ----
  *
- * @see GroupedTestItemRunner.Type
+ * //</pre>
+ *
+ * @see ScriptiveUnit.Mode
  */
 public final class GroupedTestItemRunner extends ParentRunner<Action> {
-  private static Iterable<Runner> createRunnersGroupingByTestOracle(
+  static Iterable<Runner> createRunnersGroupingByTestOracle(
       final Session session,
       TestSuiteDescriptor testSuiteDescriptor) {
     AtomicInteger id = new AtomicInteger(0);
@@ -187,7 +201,7 @@ public final class GroupedTestItemRunner extends ParentRunner<Action> {
         .collect(toList());
   }
 
-  private static Iterable<Runner> createRunnersGroupingByTestCase(
+  static Iterable<Runner> createRunnersGroupingByTestCase(
       final Session session,
       TestSuiteDescriptor testSuiteDescriptor) {
     return testSuiteDescriptor.getTestCases()
@@ -201,7 +215,7 @@ public final class GroupedTestItemRunner extends ParentRunner<Action> {
         ).collect(toList());
   }
 
-  private static Iterable<Runner> createRunnersGroupingByTestFixture(
+  static Iterable<Runner> createRunnersGroupingByTestFixture(
       Session session,
       TestSuiteDescriptor testSuiteDescriptor) {
     List<Parameter> parameters = testSuiteDescriptor.getFactorSpaceDescriptor().getParameters();
@@ -268,227 +282,6 @@ public final class GroupedTestItemRunner extends ParentRunner<Action> {
       }
       return 0;
     };
-  }
-
-  public enum Type {
-    /**
-     * byTestOracle::::
-     * structure:::
-     *
-     * //<pre>
-     * [ditaa]
-     * ----
-     *                            +-------------------+
-     *                            |ParentRunner       |
-     *                            +---------+---------+
-     *                                      |
-     *                                      |
-     *                                      |                1  +---------------+
-     *                                      ^              +--->|withBeforeClass| (nop)
-     *                                      |              |    +---------------+
-     *                                      |              |                      forEachTestCase; j
-     * +------------------+ 1  n  +---------+---------+ 1  | n  +---------------+   setUp[j]
-     * |ScriptiveUnit     +------>|GroupItemTestRunner|<>--+--->|MainActions    |   given/when/then[i]
-     * |                  | 1     |                   |    |    +---------------+   (withTestCase[j])
-     * |                  |<>-+   |groupId            |    |                        tearDown[j]
-     * +------------------+   |   +-------------------+    | 1  +---------------+
-     *                        |   forEachTestOracle; i     +--->|withAfterClass | (nop)
-     *                        |                                 +---------------+
-     *                        |
-     *                        |                              1  +---------------+
-     *                        |                           +---->|withBeforeClass| setUpBeforeAll
-     *                        |                           |     +---------------+
-     *                        |                           |
-     *                        +---------------------------+
-     *                                                    |
-     *                                                    |  1  +---------------+
-     *                                                    +---->|withAfterClass | tearDownAfterAll
-     *                                                          +---------------+
-     *
-     * ----
-     * //</pre>
-     *
-     * sequence:::
-     *
-     * ----
-     * setUpBeforeAll (setUpFixture[i] before[i] given[j] when[j] (handleError[j]|then[j]) after[j]) tearDownFixture)+ tearDownBeforeAll
-     * ----
-     */
-    GROUP_BY_TEST_ORACLE {
-      @Override
-      public Iterable<Runner> createRunners(Session session, TestSuiteDescriptor testSuiteDescriptor) {
-        return createRunnersGroupingByTestOracle(session, testSuiteDescriptor);
-      }
-    },
-    /**
-     * byTestCase::::
-     * structure:::
-     *
-     * //<pre>
-     * [ditaa]
-     * ----
-     *                            +-------------------+
-     *                            |ParentRunner       |
-     *                            +---------+---------+
-     *                                      |
-     *                                      |
-     *                                      |                1  +---------------+
-     *                                      ^              +--->|withBeforeClass| setUp[i]
-     *                                      |              |    +---------------+
-     *                                      |              |
-     * +------------------+ 1  n  +---------+---------+ 1  | n  +---------------+ forEachOracle; j
-     * |ScriptiveUnit     +------>|GroupItemTestRunner|<>--+--->|MainAction     |   given/when/then[j]
-     * |                  | 1     |                   |    |    +---------------+   (withTestCase[i])
-     * |                  |<>-+   |groupId            |    |
-     * +------------------+   |   +-------------------+    | 1  +---------------+
-     *                        |   forEachTestCase; i       +--->|withAfterClass | tearDown[i]
-     *                        |                                 +---------------+
-     *                        |
-     *                        |                              1  +---------------+
-     *                        |                           +---->|withBeforeClass| setUpBeforeAll
-     *                        |                           |     +---------------+
-     *                        |                           |
-     *                        +---------------------------+
-     *                                                    |
-     *                                                    |  1  +---------------+
-     *                                                    +---->|withAfterClass | tearDownAfterAll
-     *                                                          +---------------+
-     *
-     * ----
-     * //</pre>
-     *
-     * sequence:::
-     *
-     * ----
-     * setUpBeforeAll (setUpFixture before given when (handleError|then) after) tearDownFixture)+ tearDownBeforeAll
-     * ----
-     */
-    GROUP_BY_TEST_CASE {
-      @Override
-      public Iterable<Runner> createRunners(Session session, TestSuiteDescriptor testSuiteDescriptor) {
-        return createRunnersGroupingByTestCase(session, testSuiteDescriptor);
-      }
-    },
-    /**
-     * byTestFixture::::
-     * structure:::
-     *
-     * //<pre>
-     * [ditaa]
-     * ----
-     *                            +-------------------+
-     *                            |ParentRunner       |
-     *                            +---------+---------+
-     *                                      |
-     *                                      |
-     *                                      |                1  +---------------+
-     *                                      ^              +--->|withBeforeClass| setUp[i]
-     *                                      |              |    +---------------+
-     *                                      |              |
-     * +------------------+ 1  n  +---------+---------+ 1  | n  +---------------+ forEachTestOracle; j
-     * |ScriptiveUnit     +------>|GroupItemTestRunner|<>--+--->|MainAction     |   forEachTestCaseInFixture; k
-     * |                  | 1     |                   |    |    +---------------+     given/when/then[j]
-     * |                  |<>-+   |groupId            |    |                          (with testCase[k])
-     * +------------------+   |   +-------------------+    | 1  +---------------+
-     *                        |   forEachTestFixture; i    +--->|withAfterClass | tearDown[i]
-     *                        |                                 +---------------+
-     *                        |
-     *                        |                              1  +---------------+
-     *                        |                           +---->|withBeforeClass| setUpBeforeAll
-     *                        |                           |     +---------------+
-     *                        |                           |
-     *                        +---------------------------+
-     *                                                    |
-     *                                                    |  1  +---------------+
-     *                                                    +---->|withAfterClass | tearDownAfterAll
-     *                                                          +---------------+
-     * ----
-     * //</pre>
-     *
-     * sequence:::
-     *
-     * ----
-     * setUpBeforeAll (setUpFixture before given when (handleError|then) after) tearDownFixture)+ tearDownBeforeAll
-     * ----
-     */
-    GROUP_BY_TEST_FIXTURE {
-      @Override
-      public Iterable<Runner> createRunners(Session session, TestSuiteDescriptor testSuiteDescriptor) {
-        return createRunnersGroupingByTestFixture(session, testSuiteDescriptor);
-      }
-
-      @Override
-      public OrderBy orderBy() {
-        return TEST_CASE;
-      }
-    },
-    /**
-     * This is similar to {@code Type.GROUP_BY_TEST_FIXTURE}, but concrete test oracles are ordered by test oracle definitions
-     * first and then by test cases within a fixture.
-     *
-     * That is, main actions are constructed in a manner illustrated in the following diagram.
-     * //<pre>
-     * [ditaa]
-     * ----
-     *
-     *  1    n  +---------------+ forEachTestCaseInFixture; j
-     * <>------>|MainAction     |   forEachTestOracle; k
-     *          +---------------+     given/when/then[k]
-     *          (with testCase[j])
-     * ----
-     * //</pre>
-     */
-    GROUP_BY_TEST_FIXTURE_ORDER_BY_TEST_ORACLE {
-      @Override
-      public Iterable<Runner> createRunners(Session session, TestSuiteDescriptor testSuiteDescriptor) {
-        return createRunnersGroupingByTestFixture(session, testSuiteDescriptor);
-      }
-
-      @Override
-      public OrderBy orderBy() {
-        return TEST_ORACLE;
-      }
-    },
-    ;
-
-    public enum OrderBy {
-      TEST_CASE {
-        public Stream<Action> buildSortedActionStreamOrderingBy(Session session, List<IndexedTestCase> testCases, List<? extends TestOracle> testOracles) {
-          return testCases.stream()
-              .flatMap(eachTestCase -> testOracles
-                  .stream()
-                  .map((TestOracle eachOracle) ->
-                      session.createMainActionForTestOracle(
-                          eachOracle,
-                          eachTestCase
-                      )));
-        }
-      },
-      TEST_ORACLE {
-        @Override
-        public Stream<Action> buildSortedActionStreamOrderingBy(Session session, List<IndexedTestCase> testCases, List<? extends TestOracle> testOracles) {
-          return testOracles.stream()
-              .flatMap(eachOracle -> testCases
-                  .stream()
-                  .map((IndexedTestCase eachTestCase) ->
-                      session.createMainActionForTestOracle(
-                          eachOracle,
-                          eachTestCase
-                      )));
-        }
-      };
-
-      public abstract Stream<Action> buildSortedActionStreamOrderingBy(
-          Session session,
-          List<IndexedTestCase> testCases,
-          List<? extends TestOracle> testOracles);
-    }
-
-    public abstract Iterable<Runner> createRunners(Session session, TestSuiteDescriptor testSuiteDescriptor);
-
-    public OrderBy orderBy() {
-      throw new UnsupportedOperationException();
-    }
   }
 
   private final int          groupId;
