@@ -4,6 +4,7 @@ import com.github.dakusui.actionunit.Action;
 import com.github.dakusui.actionunit.Actions;
 import com.github.dakusui.actionunit.connectors.Pipe;
 import com.github.dakusui.actionunit.connectors.Sink;
+import com.github.dakusui.actionunit.connectors.Source;
 import com.github.dakusui.jcunit.core.tuples.Tuple;
 import com.github.dakusui.jcunit.fsm.spec.FsmSpec;
 import com.github.dakusui.jcunit8.factorspace.Constraint;
@@ -47,6 +48,7 @@ import static com.github.dakusui.scriptiveunit.core.Utils.iterableToString;
 import static com.github.dakusui.scriptiveunit.core.Utils.template;
 import static com.github.dakusui.scriptiveunit.exceptions.ScriptiveUnitException.wrap;
 import static com.github.dakusui.scriptiveunit.model.func.FuncInvoker.createMemo;
+import static com.github.dakusui.scriptiveunit.model.stage.Stage.ExecutionLevel.ORACLE;
 import static com.github.dakusui.scriptiveunit.model.statement.Statement.createStatementFactory;
 import static java.lang.Class.forName;
 import static java.lang.String.format;
@@ -382,7 +384,7 @@ public enum Beans {
                 composeDescription(testCaseTuple),
                 createBefore(testItem, report, memo),
                 attempt(Actions.<Tuple, TestIO>test("Verify with: " + projectMultiLevelFactors(testCaseTuple))
-                    .given(session.createGiven(testItem, report, memo, statementFactory.create(givenClause)))
+                    .given(createGiven(testItem, report, session, memo))
                     .when(createWhen(testItem, report, session, memo))
                     .then(createThen(testItem, report, session, memo)).build())
                     .recover(
@@ -392,6 +394,27 @@ public enum Beans {
                     .build()
             );
           };
+        }
+
+        Source<Tuple> createGiven(TestItem testItem, Report report, Session session, Map<List<Object>, Object> memo) {
+          return session.createGiven(testItem, report, (Stage s) -> new BaseMatcher<Tuple>() {
+            FuncInvoker funcInvoker = FuncInvoker.create(memo);
+            Statement givenStatement1 = statementFactory.create(givenClause);
+
+            @Override
+            public boolean matches(Object item) {
+              return requireNonNull(Beans.<Boolean>toFunc(givenStatement1, funcInvoker).apply(s));
+            }
+
+            @Override
+            public void describeTo(Description description) {
+              description.appendText(
+                  format("input (%s) should have made true following criterion but not.:%n'%s' defined in stage:%s",
+                      testItem.getTestCaseTuple(),
+                      funcInvoker.asString(),
+                      ORACLE));
+            }
+          });
         }
 
         Pipe<Tuple, TestIO> createWhen(TestItem testItem, Report report, Session session, Map<List<Object>, Object> memo) {
@@ -407,11 +430,11 @@ public enum Beans {
         Sink<TestIO> createThen(TestItem testItem, Report report, Session session, Map<List<Object>, Object> memo) {
           Statement thenStatement = statementFactory.create(thenClause);
           return session.createThen(testItem, report,
-              new Function<Stage, Function<TestIO, Matcher<Stage>>>() {
+              new Function<Stage, Function<Object, Matcher<Stage>>>() {
                 FuncInvoker funcInvoker = FuncInvoker.create(memo);
 
                 @Override
-                public Function<TestIO, Matcher<Stage>> apply(Stage stage) {
+                public Function<Object, Matcher<Stage>> apply(Stage stage) {
                   return testIO -> new BaseMatcher<Stage>() {
                     Function<FuncInvoker, Predicate<Stage>> p = fi -> s -> requireNonNull(
                         Beans.<Boolean>toFunc(thenStatement, fi).apply(s));
@@ -429,9 +452,9 @@ public enum Beans {
 
                     @Override
                     public void describeMismatch(Object item, Description description) {
-                      Object output = testIO.getOutput() instanceof Iterable ?
-                          iterableToString((Iterable<?>) testIO.getOutput()) :
-                          testIO.getOutput();
+                      Object output = testIO instanceof Iterable ?
+                          iterableToString((Iterable<?>) testIO) :
+                          testIO;
                       description.appendText(String.format("output '%s' created from '%s' did not satisfy it.:%n'%s'",
                           output,
                           testItem.getTestCaseTuple(),

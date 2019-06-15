@@ -15,8 +15,6 @@ import com.github.dakusui.scriptiveunit.model.func.Form;
 import com.github.dakusui.scriptiveunit.model.func.FuncInvoker;
 import com.github.dakusui.scriptiveunit.model.stage.Stage;
 import com.github.dakusui.scriptiveunit.model.statement.Statement;
-import org.hamcrest.BaseMatcher;
-import org.hamcrest.Description;
 import org.hamcrest.Matcher;
 
 import java.util.List;
@@ -24,9 +22,7 @@ import java.util.Map;
 import java.util.function.Function;
 
 import static com.github.dakusui.scriptiveunit.model.stage.Stage.ExecutionLevel.FIXTURE;
-import static com.github.dakusui.scriptiveunit.model.stage.Stage.ExecutionLevel.ORACLE;
 import static com.github.dakusui.scriptiveunit.model.stage.Stage.ExecutionLevel.SUITE;
-import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assume.assumeThat;
@@ -64,9 +60,7 @@ public interface Session {
 
   Source<Tuple> createGiven(
       TestItem testItem,
-      Report report,
-      Map<List<Object>, Object> memo,
-      Statement givenStatement);
+      Report report, final Function<Stage, Matcher<Tuple>> stageMatcherFunction);
 
   Pipe<Tuple, TestIO> createWhen(
       TestItem testItem,
@@ -75,7 +69,7 @@ public interface Session {
   Sink<TestIO> createThen(
       TestItem testItem,
       Report report,
-      Function<Stage, Function<TestIO, Matcher<Stage>>> matcherFunction);
+      Function<Stage, Function<Object, Matcher<Stage>>> matcherFunction);
 
   <T extends AssertionError> Sink<T> onTestFailure(
       TestItem testItem,
@@ -180,32 +174,13 @@ public interface Session {
     @Override
     public Source<Tuple> createGiven(
         TestItem testItem,
-        Report report,
-        Map<List<Object>, Object> memo, Statement givenStatement) {
+        Report report, final Function<Stage, Matcher<Tuple>> stageMatcherFunction) {
       Tuple testCaseTuple = testItem.getTestCaseTuple();
       Stage givenStage = createOracleLevelStage(testItem, report);
-      return new Source<Tuple>() {
-
-        @Override
-        public Tuple apply(Context context) {
-          assumeThat(testCaseTuple, new BaseMatcher<Tuple>() {
-            FuncInvoker funcInvoker = FuncInvoker.create(memo);
-            @Override
-            public boolean matches(Object item) {
-              return requireNonNull(Beans.<Boolean>toFunc(givenStatement, funcInvoker).apply(givenStage));
-            }
-
-            @Override
-            public void describeTo(Description description) {
-              description.appendText(
-                  format("input (%s) should have made true following criterion but not.:%n'%s' defined in stage:%s",
-                      testCaseTuple,
-                      funcInvoker.asString(),
-                      ORACLE));
-            }
-          });
-          return testCaseTuple;
-        }
+      return context -> {
+        Matcher<Tuple> matcher = stageMatcherFunction.apply(givenStage);
+        assumeThat(testCaseTuple, matcher);
+        return testCaseTuple;
       };
     }
 
@@ -220,10 +195,10 @@ public interface Session {
     }
 
     @Override
-    public Sink<TestIO> createThen(TestItem testItem, Report report, Function<Stage, Function<TestIO, Matcher<Stage>>> matcherFunction) {
+    public Sink<TestIO> createThen(TestItem testItem, Report report, Function<Stage, Function<Object, Matcher<Stage>>> matcherFunction) {
       return (testIO, context) -> {
         Stage thenStage = createOracleVerificationStage(testItem, testIO.getOutput(), report);
-        assertThat(thenStage, matcherFunction.apply(thenStage).apply(testIO));
+        assertThat(thenStage, matcherFunction.apply(thenStage).apply(testIO.getOutput()));
       };
     }
 
