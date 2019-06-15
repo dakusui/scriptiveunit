@@ -415,36 +415,13 @@ public enum Beans {
 
         private Source<Tuple> createGiven(final TestItem testItem, final Report report, final Session session, Map<List<Object>, Object> memo) {
           Tuple testCaseTuple = testItem.getTestCaseTuple();
-          return new Source<Tuple>() {
-            FuncInvoker funcInvoker = FuncInvoker.create(memo);
-            Stage givenStage = session.createOracleLevelStage(testItem, report);
-            Statement givenStatement = statementFactory.create(givenClause);
+          return getGivenSource(session.createOracleLevelStage(testItem, report), memo, testCaseTuple);
+        }
 
-            @Override
-            public Tuple apply(Context context) {
-              assumeThat(testCaseTuple, new BaseMatcher<Tuple>() {
-                @Override
-                public boolean matches(Object item) {
-                  return requireNonNull(Beans.<Boolean>toFunc(givenStatement, funcInvoker).apply(givenStage));
-                }
-
-                @Override
-                public void describeTo(Description description) {
-                  description.appendText(
-                      format("input (%s) should have made true following criterion but not.:%n'%s' defined in stage:%s",
-                          testCaseTuple,
-                          funcInvoker.asString(),
-                          ORACLE));
-                }
-              });
-              return testCaseTuple;
-            }
-
-            @Override
-            public String toString() {
-              return format("%n%s", funcInvoker.asString());
-            }
-          };
+        private Source<Tuple> getGivenSource(Stage givenStage, Map<List<Object>, Object> memo, Tuple testCaseTuple) {
+          FuncInvoker funcInvoker = FuncInvoker.create(memo);
+          Statement givenStatement = statementFactory.create(givenClause);
+          return getSource(givenStage, testCaseTuple, funcInvoker, givenStatement);
         }
 
         private Pipe<Tuple, TestIO> createWhen(final TestItem testItem, final Report report, final Session session, Map<List<Object>, Object> memo) {
@@ -545,6 +522,35 @@ public enum Beans {
         }
       };
     }
+  }
+
+  private static Source<Tuple> getSource(Stage givenStage, Tuple testCaseTuple, FuncInvoker funcInvoker, Statement givenStatement) {
+    return new Source<Tuple>() {
+      @Override
+      public Tuple apply(Context context) {
+        assumeThat(testCaseTuple, new BaseMatcher<Tuple>() {
+          @Override
+          public boolean matches(Object item) {
+            return requireNonNull(Beans.<Boolean>toFunc(givenStatement, funcInvoker).apply(givenStage));
+          }
+
+          @Override
+          public void describeTo(Description description) {
+            description.appendText(
+                format("input (%s) should have made true following criterion but not.:%n'%s' defined in stage:%s",
+                    testCaseTuple,
+                    funcInvoker.asString(),
+                    ORACLE));
+          }
+        });
+        return testCaseTuple;
+      }
+
+      @Override
+      public String toString() {
+        return format("%n%s", funcInvoker.asString());
+      }
+    };
   }
 
   private static <U> Form<U> toFunc(Statement statement, FuncInvoker funcInvoker) {
