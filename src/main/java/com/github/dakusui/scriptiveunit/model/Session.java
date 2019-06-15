@@ -208,11 +208,6 @@ public interface Session {
           });
           return testCaseTuple;
         }
-
-        @Override
-        public String toString() {
-          return format("%n%s", funcInvoker.asString());
-        }
       };
     }
 
@@ -227,11 +222,6 @@ public interface Session {
           return TestIO.create(
               testCase,
               Beans.<Boolean>toFunc(whenStatement, funcInvoker).apply(whenStage));
-        }
-
-        @Override
-        public String toString() {
-          return format("%n%s", funcInvoker.asString());
         }
       };
     }
@@ -272,11 +262,6 @@ public interface Session {
               }
           );
         }
-
-        @Override
-        public String toString() {
-          return format("%n%s", funcInvoker.asString());
-        }
       };
     }
 
@@ -293,11 +278,6 @@ public interface Session {
                   Beans.<Action>toFunc(onFailureStatement, funcInvoker) :
                   (Form<Action>) input1 -> Actions.nop()).apply(onFailureStage));
           throw requireNonNull(input);
-        }
-
-        @Override
-        public String toString() {
-          return format("%n%s", funcInvoker.asString());
         }
       };
     }
