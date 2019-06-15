@@ -1,6 +1,7 @@
 package com.github.dakusui.scriptiveunit.model;
 
 import com.github.dakusui.actionunit.Action;
+import com.github.dakusui.actionunit.Actions;
 import com.github.dakusui.actionunit.Context;
 import com.github.dakusui.actionunit.connectors.Pipe;
 import com.github.dakusui.actionunit.connectors.Sink;
@@ -12,8 +13,12 @@ import com.github.dakusui.scriptiveunit.loaders.IndexedTestCase;
 import com.github.dakusui.scriptiveunit.model.stage.Stage;
 import org.hamcrest.Matcher;
 
+import java.util.List;
+import java.util.Map;
 import java.util.function.Function;
 
+import static com.github.dakusui.actionunit.Actions.attempt;
+import static com.github.dakusui.actionunit.Actions.sequential;
 import static com.github.dakusui.scriptiveunit.model.stage.Stage.ExecutionLevel.FIXTURE;
 import static com.github.dakusui.scriptiveunit.model.stage.Stage.ExecutionLevel.SUITE;
 import static java.util.Objects.requireNonNull;
@@ -53,7 +58,8 @@ public interface Session {
 
   Source<Tuple> createGiven(
       TestItem testItem,
-      Report report, final Function<Stage, Matcher<Tuple>> stageMatcherFunction);
+      Report report,
+      final Function<Stage, Matcher<Tuple>> stageMatcherFunction);
 
   Pipe<Tuple, TestIO> createWhen(
       TestItem testItem,
@@ -93,6 +99,44 @@ public interface Session {
 
   Stage createOracleLevelStage(TestItem testItem, Report report);
 
+  interface Box {
+
+    String composeDescription(Tuple testCaseTuple);
+
+    Action createBefore(TestItem testItem, Report report, Map<List<Object>, Object> memo);
+
+    Function<Stage, Matcher<Tuple>> givenFactory();
+
+    Function<Stage, Object> whenFactory();
+
+    Sink<AssertionError> errorHandlerFactory(TestItem testItem, Report report, Session session, Map<List<Object>, Object> memo);
+
+    Action createAfter(TestItem testItem, Report report, Map<List<Object>, Object> memo);
+
+    Tuple projectMultiLevelFactors(Tuple testCaseTuple);
+
+    Map<List<Object>, Object> memo();
+
+    Function<Stage, Function<Object, Matcher<Stage>>> thenFactory();
+  }
+
+  default Action createOracleAction(TestItem testItem, Box box) {
+    Tuple testCaseTuple = testItem.getTestCaseTuple();
+    Report report = createReport(testItem);
+    return sequential(
+        box.composeDescription(testCaseTuple),
+        box.createBefore(testItem, report, box.memo()),
+        attempt(Actions.<Tuple, TestIO>test("Verify with: " + box.projectMultiLevelFactors(testCaseTuple))
+            .given(createGiven(testItem, report, box.givenFactory()))
+            .when(createWhen(testItem, report, box.whenFactory()))
+            .then(createThen(testItem, report, box.thenFactory())).build())
+            .recover(
+                AssertionError.class,
+                box.errorHandlerFactory(testItem, report, this, box.memo()))
+            .ensure(box.createAfter(testItem, report, box.memo()))
+            .build()
+    );
+  }
 
   class Impl implements Session {
     private final Config                     config;

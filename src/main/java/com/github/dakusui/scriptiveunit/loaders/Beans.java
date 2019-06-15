@@ -30,6 +30,7 @@ import com.github.dakusui.scriptiveunit.model.stage.Stage;
 import com.github.dakusui.scriptiveunit.model.statement.Statement;
 import org.hamcrest.BaseMatcher;
 import org.hamcrest.Description;
+import org.hamcrest.Matcher;
 
 import java.util.List;
 import java.util.Map;
@@ -39,9 +40,7 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
-import static com.github.dakusui.actionunit.Actions.attempt;
 import static com.github.dakusui.actionunit.Actions.nop;
-import static com.github.dakusui.actionunit.Actions.sequential;
 import static com.github.dakusui.scriptiveunit.core.Utils.append;
 import static com.github.dakusui.scriptiveunit.core.Utils.iterableToString;
 import static com.github.dakusui.scriptiveunit.core.Utils.template;
@@ -375,6 +374,114 @@ public enum Beans {
          */
         @Override
         public Function<Session, Action> createOracleActionFactory(TestItem testItem) {
+          return session1 -> session1.createOracleAction(testItem, new Session.Box() {
+            private Map<List<Object>, Object> memo = createMemo();
+            @Override
+            public String composeDescription(Tuple testCaseTuple) {
+              return template(description, append(testCaseTuple, "@TESTSUITE", testSuiteDescriptor.getDescription()));
+            }
+
+            @Override
+            public Action createBefore(TestItem testItem, Report report, Map<List<Object>, Object> memo) {
+              return createActionFromClause(beforeClause, testItem, report, memo);
+            }
+
+            @Override
+            public Function<Stage, Matcher<Tuple>> givenFactory() {
+              return (Stage s) -> new BaseMatcher<Tuple>() {
+                private Statement givenStatement = statementFactory.create(givenClause);
+                private FuncInvoker funcInvoker = FuncInvoker.create(memo);
+
+                @Override
+                public boolean matches(Object item) {
+                  return requireNonNull(Beans.<Boolean>toFunc(givenStatement, funcInvoker).apply(s));
+                }
+
+                @Override
+                public void describeTo(Description description) {
+                  description.appendText(
+                      format("input (%s) should have made true following criterion but not.:%n'%s' defined in stage:%s",
+                          testItem.getTestCaseTuple(),
+                          funcInvoker.asString(),
+                          ORACLE));
+                }
+              };
+            }
+
+            @Override
+            public Function<Stage, Object> whenFactory() {
+              return new Function<Stage, Object>() {
+                FuncInvoker funcInvoker = FuncInvoker.create(memo);
+                @Override
+                public Object apply(Stage s) {
+                  return Beans.<Boolean>toFunc(statementFactory.create(whenClause), funcInvoker).apply(s);
+                }
+              };
+            }
+
+            @Override
+            public Function<Stage, Function<Object, Matcher<Stage>>> thenFactory() {
+              Statement thenStatement = statementFactory.create(thenClause);
+              FuncInvoker funcInvoker = FuncInvoker.create(memo);
+              return stage -> out -> new BaseMatcher<Stage>() {
+                Function<FuncInvoker, Predicate<Stage>> p = fi -> s -> requireNonNull(
+                    Beans.<Boolean>toFunc(thenStatement, fi).apply(s));
+                Function<FuncInvoker, Function<Stage, String>> c = fi -> s -> fi.asString();
+
+                @Override
+                public boolean matches(Object item) {
+                  return p.apply(funcInvoker).test(stage);
+                }
+
+                @Override
+                public void describeTo(Description description) {
+                  description.appendText(format("output should have made true the criterion defined in stage:%s", stage.getExecutionLevel()));
+                }
+
+                @Override
+                public void describeMismatch(Object item, Description description) {
+                  Object output = out instanceof Iterable ?
+                      iterableToString((Iterable<?>) out) :
+                      out;
+                  description.appendText(String.format("output '%s' created from '%s' did not satisfy it.:%n'%s'",
+                      output,
+                      testItem.getTestCaseTuple(),
+                      c.apply(funcInvoker).apply(stage)));
+                }
+              };
+            }
+
+            @Override
+            public Sink<AssertionError> errorHandlerFactory(TestItem testItem, Report report, Session session, Map<List<Object>, Object> memo) {
+              Statement onFailureStatement = statementFactory.create(onFailureClause);
+              FuncInvoker funcInvoker = FuncInvoker.create(memo);
+              return session.onTestFailure(testItem, report, s -> requireNonNull(
+                  onFailureClause != null ?
+                      Beans.<Action>toFunc(onFailureStatement, funcInvoker) :
+                      (Form<Action>) input1 -> nop()).apply(s));
+            }
+
+            @Override
+            public Action createAfter(TestItem testItem, Report report, Map<List<Object>, Object> memo) {
+              return createActionFromClause(afterClause, testItem, report, memo);
+            }
+
+
+            @Override
+            public Tuple projectMultiLevelFactors(Tuple testCaseTuple) {
+              return Utils.filterSimpleSingleLevelParametersOut(
+                  testCaseTuple,
+                  testSuiteDescriptor.getFactorSpaceDescriptor().getParameters()
+              );
+            }
+
+            @Override
+            public Map<List<Object>, Object> memo() {
+              return memo;
+            }
+
+          });
+          /*
           Tuple testCaseTuple = testItem.getTestCaseTuple();
           Report report = session.createReport(testItem);
           return (Session session) -> {
@@ -393,6 +500,7 @@ public enum Beans {
                     .build()
             );
           };
+          */
         }
 
         Source<Tuple> createGiven(TestItem testItem, Report report, Session session, Map<List<Object>, Object> memo) {
@@ -415,7 +523,6 @@ public enum Beans {
             }
           });
         }
-
         Pipe<Tuple, TestIO> createWhen(TestItem testItem, Report report, Session session, Map<List<Object>, Object> memo) {
           return session.createWhen(testItem, report, new Function<Stage, Object>() {
             FuncInvoker funcInvoker = FuncInvoker.create(memo);
@@ -468,27 +575,22 @@ public enum Beans {
                   (Form<Action>) input1 -> nop()).apply(s));
         }
 
-        private Tuple projectMultiLevelFactors(Tuple testCaseTuple) {
+        Tuple projectMultiLevelFactors(Tuple testCaseTuple) {
           return Utils.filterSimpleSingleLevelParametersOut(
               testCaseTuple,
               testSuiteDescriptor.getFactorSpaceDescriptor().getParameters()
           );
         }
 
-        private String composeDescription(Tuple testCaseTuple) {
-          return template(description, append(testCaseTuple, "@TESTSUITE", testSuiteDescriptor.getDescription()));
-        }
-
-
-        private Action createBefore(TestItem testItem, Report report, Map<List<Object>, Object> memo) {
+        Action createBefore(TestItem testItem, Report report, Map<List<Object>, Object> memo) {
           return createActionFromClause(beforeClause, testItem, report, memo);
         }
 
-        private Action createAfter(TestItem testItem, Report report, Map<List<Object>, Object> memo) {
+        Action createAfter(TestItem testItem, Report report, Map<List<Object>, Object> memo) {
           return createActionFromClause(afterClause, testItem, report, memo);
         }
 
-        private Action createActionFromClause(List<Object> clause, final TestItem testItem, Report report, Map<List<Object>, Object> memo) {
+        Action createActionFromClause(List<Object> clause, final TestItem testItem, Report report, Map<List<Object>, Object> memo) {
           if (clause == null)
             return (Action) NOP_CLAUSE;
           Stage stage = session.createOracleLevelStage(testItem, report);
