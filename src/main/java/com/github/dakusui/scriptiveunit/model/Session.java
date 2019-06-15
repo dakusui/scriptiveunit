@@ -1,7 +1,6 @@
 package com.github.dakusui.scriptiveunit.model;
 
 import com.github.dakusui.actionunit.Action;
-import com.github.dakusui.actionunit.Actions;
 import com.github.dakusui.actionunit.Context;
 import com.github.dakusui.actionunit.connectors.Pipe;
 import com.github.dakusui.actionunit.connectors.Sink;
@@ -9,16 +8,10 @@ import com.github.dakusui.actionunit.connectors.Source;
 import com.github.dakusui.jcunit.core.tuples.Tuple;
 import com.github.dakusui.scriptiveunit.core.Config;
 import com.github.dakusui.scriptiveunit.core.Utils;
-import com.github.dakusui.scriptiveunit.loaders.Beans;
 import com.github.dakusui.scriptiveunit.loaders.IndexedTestCase;
-import com.github.dakusui.scriptiveunit.model.func.Form;
-import com.github.dakusui.scriptiveunit.model.func.FuncInvoker;
 import com.github.dakusui.scriptiveunit.model.stage.Stage;
-import com.github.dakusui.scriptiveunit.model.statement.Statement;
 import org.hamcrest.Matcher;
 
-import java.util.List;
-import java.util.Map;
 import java.util.function.Function;
 
 import static com.github.dakusui.scriptiveunit.model.stage.Stage.ExecutionLevel.FIXTURE;
@@ -73,10 +66,7 @@ public interface Session {
 
   <T extends AssertionError> Sink<T> onTestFailure(
       TestItem testItem,
-      Report report,
-      Map<List<Object>, Object> memo,
-      Statement onFailureStatement,
-      boolean isOnFailureClausePresent);
+      Report report, final Function<Stage, Action> errorHandler);
 
   Action createTearDownActionForFixture(TestSuiteDescriptor testSuiteDescriptor, Tuple fixtureTuple);
 
@@ -203,17 +193,13 @@ public interface Session {
     }
 
     @Override
-    public <T extends AssertionError> Sink<T> onTestFailure(TestItem testItem, Report report, Map<List<Object>, Object> memo, Statement onFailureStatement, boolean isOnFailureClausePresent) {
+    public <T extends AssertionError> Sink<T> onTestFailure(TestItem testItem, Report report, final Function<Stage, Action> errorHandler) {
       return new Sink<T>() {
-        FuncInvoker funcInvoker = FuncInvoker.create(memo);
 
         @Override
         public void apply(T input, Context context) {
           Stage onFailureStage = createOracleFailureHandlingStage(testItem, input, report);
-          Utils.performActionWithLogging(requireNonNull(
-              isOnFailureClausePresent ?
-                  Beans.<Action>toFunc(onFailureStatement, funcInvoker) :
-                  (Form<Action>) input1 -> Actions.nop()).apply(onFailureStage));
+          Utils.performActionWithLogging(errorHandler.apply(onFailureStage));
           throw requireNonNull(input);
         }
       };

@@ -30,7 +30,6 @@ import com.github.dakusui.scriptiveunit.model.stage.Stage;
 import com.github.dakusui.scriptiveunit.model.statement.Statement;
 import org.hamcrest.BaseMatcher;
 import org.hamcrest.Description;
-import org.hamcrest.Matcher;
 
 import java.util.List;
 import java.util.Map;
@@ -389,7 +388,7 @@ public enum Beans {
                     .then(createThen(testItem, report, session, memo)).build())
                     .recover(
                         AssertionError.class,
-                        session.onTestFailure(testItem, report, memo, statementFactory.create(onFailureClause), onFailureClause != null))
+                        createErrorHandler(testItem, report, session, memo))
                     .ensure(createAfter(testItem, report, memo))
                     .build()
             );
@@ -397,13 +396,13 @@ public enum Beans {
         }
 
         Source<Tuple> createGiven(TestItem testItem, Report report, Session session, Map<List<Object>, Object> memo) {
+          FuncInvoker funcInvoker = FuncInvoker.create(memo);
+          Statement givenStatement = statementFactory.create(givenClause);
           return session.createGiven(testItem, report, (Stage s) -> new BaseMatcher<Tuple>() {
-            FuncInvoker funcInvoker = FuncInvoker.create(memo);
-            Statement givenStatement1 = statementFactory.create(givenClause);
 
             @Override
             public boolean matches(Object item) {
-              return requireNonNull(Beans.<Boolean>toFunc(givenStatement1, funcInvoker).apply(s));
+              return requireNonNull(Beans.<Boolean>toFunc(givenStatement, funcInvoker).apply(s));
             }
 
             @Override
@@ -429,41 +428,44 @@ public enum Beans {
 
         Sink<TestIO> createThen(TestItem testItem, Report report, Session session, Map<List<Object>, Object> memo) {
           Statement thenStatement = statementFactory.create(thenClause);
+          FuncInvoker funcInvoker = FuncInvoker.create(memo);
           return session.createThen(testItem, report,
-              new Function<Stage, Function<Object, Matcher<Stage>>>() {
-                FuncInvoker funcInvoker = FuncInvoker.create(memo);
+              stage -> out -> new BaseMatcher<Stage>() {
+                Function<FuncInvoker, Predicate<Stage>> p = fi -> s -> requireNonNull(
+                    Beans.<Boolean>toFunc(thenStatement, fi).apply(s));
+                Function<FuncInvoker, Function<Stage, String>> c = fi -> s -> fi.asString();
 
                 @Override
-                public Function<Object, Matcher<Stage>> apply(Stage stage) {
-                  return out -> new BaseMatcher<Stage>() {
-                    Function<FuncInvoker, Predicate<Stage>> p = fi -> s -> requireNonNull(
-                        Beans.<Boolean>toFunc(thenStatement, fi).apply(s));
-                    Function<FuncInvoker, Function<Stage, String>> c = fi -> s -> fi.asString();
+                public boolean matches(Object item) {
+                  return p.apply(funcInvoker).test(stage);
+                }
 
-                    @Override
-                    public boolean matches(Object item) {
-                      return p.apply(funcInvoker).test(stage);
-                    }
+                @Override
+                public void describeTo(Description description) {
+                  description.appendText(format("output should have made true the criterion defined in stage:%s", stage.getExecutionLevel()));
+                }
 
-                    @Override
-                    public void describeTo(Description description) {
-                      description.appendText(format("output should have made true the criterion defined in stage:%s", stage.getExecutionLevel()));
-                    }
-
-                    @Override
-                    public void describeMismatch(Object item, Description description) {
-                      Object output = out instanceof Iterable ?
-                          iterableToString((Iterable<?>) out) :
-                          out;
-                      description.appendText(String.format("output '%s' created from '%s' did not satisfy it.:%n'%s'",
-                          output,
-                          testItem.getTestCaseTuple(),
-                          c.apply(funcInvoker).apply(stage)));
-                    }
-                  };
+                @Override
+                public void describeMismatch(Object item, Description description) {
+                  Object output = out instanceof Iterable ?
+                      iterableToString((Iterable<?>) out) :
+                      out;
+                  description.appendText(String.format("output '%s' created from '%s' did not satisfy it.:%n'%s'",
+                      output,
+                      testItem.getTestCaseTuple(),
+                      c.apply(funcInvoker).apply(stage)));
                 }
               }
           );
+        }
+
+        Sink<AssertionError> createErrorHandler(TestItem testItem, Report report, Session session, Map<List<Object>, Object> memo) {
+          Statement onFailureStatement = statementFactory.create(onFailureClause);
+          FuncInvoker funcInvoker = FuncInvoker.create(memo);
+          return session.onTestFailure(testItem, report, s -> requireNonNull(
+              onFailureClause != null ?
+                  Beans.<Action>toFunc(onFailureStatement, funcInvoker) :
+                  (Form<Action>) input1 -> nop()).apply(s));
         }
 
         private Tuple projectMultiLevelFactors(Tuple testCaseTuple) {
