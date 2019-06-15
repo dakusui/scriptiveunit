@@ -435,7 +435,7 @@ public enum Beans {
 
                 @Override
                 public Function<Object, Matcher<Stage>> apply(Stage stage) {
-                  return testIO -> new BaseMatcher<Stage>() {
+                  return out -> new BaseMatcher<Stage>() {
                     Function<FuncInvoker, Predicate<Stage>> p = fi -> s -> requireNonNull(
                         Beans.<Boolean>toFunc(thenStatement, fi).apply(s));
                     Function<FuncInvoker, Function<Stage, String>> c = fi -> s -> fi.asString();
@@ -452,9 +452,9 @@ public enum Beans {
 
                     @Override
                     public void describeMismatch(Object item, Description description) {
-                      Object output = testIO instanceof Iterable ?
-                          iterableToString((Iterable<?>) testIO) :
-                          testIO;
+                      Object output = out instanceof Iterable ?
+                          iterableToString((Iterable<?>) out) :
+                          out;
                       description.appendText(String.format("output '%s' created from '%s' did not satisfy it.:%n'%s'",
                           output,
                           testItem.getTestCaseTuple(),
