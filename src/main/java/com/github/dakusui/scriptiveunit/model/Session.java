@@ -17,12 +17,12 @@ import com.github.dakusui.scriptiveunit.model.stage.Stage;
 import com.github.dakusui.scriptiveunit.model.statement.Statement;
 import org.hamcrest.BaseMatcher;
 import org.hamcrest.Description;
+import org.hamcrest.Matcher;
 
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 
-import static com.github.dakusui.scriptiveunit.core.Utils.iterableToString;
 import static com.github.dakusui.scriptiveunit.model.stage.Stage.ExecutionLevel.FIXTURE;
 import static com.github.dakusui.scriptiveunit.model.stage.Stage.ExecutionLevel.ORACLE;
 import static com.github.dakusui.scriptiveunit.model.stage.Stage.ExecutionLevel.SUITE;
@@ -70,15 +70,12 @@ public interface Session {
 
   Pipe<Tuple, TestIO> createWhen(
       TestItem testItem,
-      Report report,
-      Map<List<Object>, Object> memo,
-      Statement whenStatement);
+      Report report, final Function<Stage, Object> predicate);
 
   Sink<TestIO> createThen(
       TestItem testItem,
       Report report,
-      Map<List<Object>, Object> memo,
-      Statement thenStatement);
+      Function<Stage, Function<TestIO, Matcher<Stage>>> matcherFunction);
 
   <T extends AssertionError> Sink<T> onTestFailure(
       TestItem testItem,
@@ -185,13 +182,14 @@ public interface Session {
         TestItem testItem,
         Report report,
         Map<List<Object>, Object> memo, Statement givenStatement) {
-      FuncInvoker funcInvoker = FuncInvoker.create(memo);
       Tuple testCaseTuple = testItem.getTestCaseTuple();
       Stage givenStage = createOracleLevelStage(testItem, report);
       return new Source<Tuple>() {
+
         @Override
         public Tuple apply(Context context) {
           assumeThat(testCaseTuple, new BaseMatcher<Tuple>() {
+            FuncInvoker funcInvoker = FuncInvoker.create(memo);
             @Override
             public boolean matches(Object item) {
               return requireNonNull(Beans.<Boolean>toFunc(givenStatement, funcInvoker).apply(givenStage));
@@ -212,56 +210,20 @@ public interface Session {
     }
 
     @Override
-    public Pipe<Tuple, TestIO> createWhen(TestItem testItem, Report report, Map<List<Object>, Object> memo, Statement whenStatement) {
-      return new Pipe<Tuple, TestIO>() {
-        FuncInvoker funcInvoker = FuncInvoker.create(memo);
-
-        @Override
-        public TestIO apply(Tuple testCase, Context context) {
-          Stage whenStage = createOracleLevelStage(testItem, report);
-          return TestIO.create(
-              testCase,
-              Beans.<Boolean>toFunc(whenStatement, funcInvoker).apply(whenStage));
-        }
+    public Pipe<Tuple, TestIO> createWhen(TestItem testItem, Report report, final Function<Stage, Object> function) {
+      return (testCase, context) -> {
+        Stage whenStage = createOracleLevelStage(testItem, report);
+        return TestIO.create(
+            testCase,
+            function.apply(whenStage));
       };
     }
 
     @Override
-    public Sink<TestIO> createThen(TestItem testItem, Report report, Map<List<Object>, Object> memo, Statement thenStatement) {
-      return new Sink<TestIO>() {
-        FuncInvoker funcInvoker = FuncInvoker.create(memo);
-
-        @Override
-        public void apply(TestIO testIO, Context context) {
-          Stage thenStage = createOracleVerificationStage(testItem, testIO.getOutput(), report);
-          assertThat(
-              thenStage,
-              new BaseMatcher<Stage>() {
-                @Override
-                public boolean matches(Object item) {
-                  return requireNonNull(
-                      Beans.<Boolean>toFunc(thenStatement, funcInvoker)
-                          .apply(thenStage));
-                }
-
-                @Override
-                public void describeTo(Description description) {
-                  description.appendText(format("output should have made true the criterion defined in stage:%s", thenStage.getExecutionLevel()));
-                }
-
-                @Override
-                public void describeMismatch(Object item, Description description) {
-                  Object output = testIO.getOutput() instanceof Iterable ?
-                      iterableToString((Iterable<?>) testIO.getOutput()) :
-                      testIO.getOutput();
-                  description.appendText(String.format("output '%s' created from '%s' did not satisfy it.:%n'%s'",
-                      output,
-                      testItem.getTestCaseTuple(),
-                      funcInvoker.asString()));
-                }
-              }
-          );
-        }
+    public Sink<TestIO> createThen(TestItem testItem, Report report, Function<Stage, Function<TestIO, Matcher<Stage>>> matcherFunction) {
+      return (testIO, context) -> {
+        Stage thenStage = createOracleVerificationStage(testItem, testIO.getOutput(), report);
+        assertThat(thenStage, matcherFunction.apply(thenStage).apply(testIO));
       };
     }
 

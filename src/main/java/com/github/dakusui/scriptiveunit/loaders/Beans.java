@@ -2,6 +2,8 @@ package com.github.dakusui.scriptiveunit.loaders;
 
 import com.github.dakusui.actionunit.Action;
 import com.github.dakusui.actionunit.Actions;
+import com.github.dakusui.actionunit.connectors.Pipe;
+import com.github.dakusui.actionunit.connectors.Sink;
 import com.github.dakusui.jcunit.core.tuples.Tuple;
 import com.github.dakusui.jcunit.fsm.spec.FsmSpec;
 import com.github.dakusui.jcunit8.factorspace.Constraint;
@@ -25,18 +27,23 @@ import com.github.dakusui.scriptiveunit.model.func.Form;
 import com.github.dakusui.scriptiveunit.model.func.FuncInvoker;
 import com.github.dakusui.scriptiveunit.model.stage.Stage;
 import com.github.dakusui.scriptiveunit.model.statement.Statement;
+import org.hamcrest.BaseMatcher;
+import org.hamcrest.Description;
+import org.hamcrest.Matcher;
 
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import static com.github.dakusui.actionunit.Actions.attempt;
 import static com.github.dakusui.actionunit.Actions.nop;
 import static com.github.dakusui.actionunit.Actions.sequential;
 import static com.github.dakusui.scriptiveunit.core.Utils.append;
+import static com.github.dakusui.scriptiveunit.core.Utils.iterableToString;
 import static com.github.dakusui.scriptiveunit.core.Utils.template;
 import static com.github.dakusui.scriptiveunit.exceptions.ScriptiveUnitException.wrap;
 import static com.github.dakusui.scriptiveunit.model.func.FuncInvoker.createMemo;
@@ -376,8 +383,8 @@ public enum Beans {
                 createBefore(testItem, report, memo),
                 attempt(Actions.<Tuple, TestIO>test("Verify with: " + projectMultiLevelFactors(testCaseTuple))
                     .given(session.createGiven(testItem, report, memo, statementFactory.create(givenClause)))
-                    .when(session.createWhen(testItem, report, memo, statementFactory.create(whenClause)))
-                    .then(session.createThen(testItem, report, memo, statementFactory.create(thenClause))).build())
+                    .when(createWhen(testItem, report, session, memo))
+                    .then(createThen(testItem, report, session, memo)).build())
                     .recover(
                         AssertionError.class,
                         session.onTestFailure(testItem, report, memo, statementFactory.create(onFailureClause), onFailureClause != null))
@@ -385,6 +392,55 @@ public enum Beans {
                     .build()
             );
           };
+        }
+
+        Pipe<Tuple, TestIO> createWhen(TestItem testItem, Report report, Session session, Map<List<Object>, Object> memo) {
+          return session.createWhen(testItem, report, new Function<Stage, Object>() {
+            FuncInvoker funcInvoker = FuncInvoker.create(memo);
+            @Override
+            public Object apply(Stage s) {
+              return Beans.<Boolean>toFunc(statementFactory.create(whenClause), funcInvoker).apply(s);
+            }
+          });
+        }
+
+        Sink<TestIO> createThen(TestItem testItem, Report report, Session session, Map<List<Object>, Object> memo) {
+          Statement thenStatement = statementFactory.create(thenClause);
+          return session.createThen(testItem, report,
+              new Function<Stage, Function<TestIO, Matcher<Stage>>>() {
+                FuncInvoker funcInvoker = FuncInvoker.create(memo);
+
+                @Override
+                public Function<TestIO, Matcher<Stage>> apply(Stage stage) {
+                  return testIO -> new BaseMatcher<Stage>() {
+                    Function<FuncInvoker, Predicate<Stage>> p = fi -> s -> requireNonNull(
+                        Beans.<Boolean>toFunc(thenStatement, fi).apply(s));
+                    Function<FuncInvoker, Function<Stage, String>> c = fi -> s -> fi.asString();
+
+                    @Override
+                    public boolean matches(Object item) {
+                      return p.apply(funcInvoker).test(stage);
+                    }
+
+                    @Override
+                    public void describeTo(Description description) {
+                      description.appendText(format("output should have made true the criterion defined in stage:%s", stage.getExecutionLevel()));
+                    }
+
+                    @Override
+                    public void describeMismatch(Object item, Description description) {
+                      Object output = testIO.getOutput() instanceof Iterable ?
+                          iterableToString((Iterable<?>) testIO.getOutput()) :
+                          testIO.getOutput();
+                      description.appendText(String.format("output '%s' created from '%s' did not satisfy it.:%n'%s'",
+                          output,
+                          testItem.getTestCaseTuple(),
+                          c.apply(funcInvoker).apply(stage)));
+                    }
+                  };
+                }
+              }
+          );
         }
 
         private Tuple projectMultiLevelFactors(Tuple testCaseTuple) {
