@@ -94,7 +94,7 @@ public enum Beans {
 
           private List<TestOracle> createTestOracles() {
             AtomicInteger i = new AtomicInteger(0);
-            return testOracleBeanList.stream().map((BaseForTestOracle each) -> each.create(i.getAndIncrement(), session, this)).collect(toList());
+            return testOracleBeanList.stream().map((BaseForTestOracle each) -> each.create(i.getAndIncrement(), this)).collect(toList());
           }
 
           @Override
@@ -337,9 +337,9 @@ public enum Beans {
      * objects) have their internal states and not created every time the oracles
      * are performed.
      */
-    public TestOracle create(int index, Session session, TestSuiteDescriptor testSuiteDescriptor) {
+    public TestOracle create(int index, TestSuiteDescriptor testSuiteDescriptor) {
       Statement.Factory statementFactory = testSuiteDescriptor.statementFactory();
-      return new TestOracle.MyTestOracle(afterClause, beforeClause, description, givenClause, onFailureClause, thenClause, whenClause, index, testSuiteDescriptor, statementFactory, session);
+      return new TestOracle.MyTestOracle(afterClause, beforeClause, description, givenClause, onFailureClause, thenClause, whenClause, index, testSuiteDescriptor, statementFactory);
     }
 
   }

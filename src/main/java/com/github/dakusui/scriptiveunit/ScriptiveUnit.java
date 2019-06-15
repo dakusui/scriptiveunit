@@ -551,24 +551,22 @@ public class ScriptiveUnit extends Parameterized {
           return testCases.stream()
               .flatMap(eachTestCase -> testOracles
                   .stream()
-                  .map((TestOracle eachOracle) ->
-                      session.createMainAction(
-                          eachOracle,
-                          eachTestCase
-                      )));
+                  .map((TestOracle eachOracle) -> session.createMainAction(
+                      eachOracle,
+                      eachTestCase
+                  )));
         }
       },
       TEST_ORACLE {
         @Override
         public Stream<Action> buildSortedActionStreamOrderingBy(Session session, List<IndexedTestCase> testCases, List<? extends TestOracle> testOracles) {
           return testOracles.stream()
-              .flatMap(eachOracle -> testCases
+              .flatMap((TestOracle eachOracle) -> testCases
                   .stream()
-                  .map((IndexedTestCase eachTestCase) ->
-                      session.createMainAction(
-                          eachOracle,
-                          eachTestCase
-                      )));
+                  .map((IndexedTestCase eachTestCase) -> session.createMainAction(
+                      eachOracle,
+                      eachTestCase
+                  )));
         }
       };
 

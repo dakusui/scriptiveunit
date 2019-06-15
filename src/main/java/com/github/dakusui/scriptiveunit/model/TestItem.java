@@ -10,9 +10,12 @@ public interface TestItem {
 
   int getTestOracleId();
 
+  TestOracle.Box createBox();
+
   class Impl implements TestItem {
     private final IndexedTestCase indexedTestCase;
     private final TestOracle      testOracle;
+
     Impl(IndexedTestCase indexedTestCase, TestOracle testOracle) {
       this.indexedTestCase = indexedTestCase;
       this.testOracle = testOracle;
@@ -31,6 +34,11 @@ public interface TestItem {
     @Override
     public int getTestOracleId() {
       return testOracle.getIndex();
+    }
+
+    @Override
+    public TestOracle.Box createBox() {
+      return this.testOracle.createBox(this);
     }
   }
 

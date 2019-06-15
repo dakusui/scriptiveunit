@@ -7,6 +7,7 @@ import com.github.dakusui.actionunit.connectors.Sink;
 import com.github.dakusui.jcunit.core.tuples.Tuple;
 import com.github.dakusui.scriptiveunit.core.Utils;
 import com.github.dakusui.scriptiveunit.loaders.Beans;
+import com.github.dakusui.scriptiveunit.loaders.IndexedTestCase;
 import com.github.dakusui.scriptiveunit.model.func.Form;
 import com.github.dakusui.scriptiveunit.model.func.FuncInvoker;
 import com.github.dakusui.scriptiveunit.model.stage.Stage;
@@ -45,7 +46,9 @@ public interface TestOracle {
 
   String templateDescription(Tuple testCaseTuple, String testSuiteDescription);
 
-  Function<Session, Action> createOracleActionFactory(TestItem testItem);
+  Function<Session, Action> createOracleActionFactory(TestOracle testOracle, IndexedTestCase indexedTestCase);
+
+  Box createBox(TestItem testItem);
 
   interface Box {
     Function<Stage, Action> createBefore(TestItem testItem, Report report);
@@ -75,7 +78,7 @@ public interface TestOracle {
     private       List<Object>        thenClause;
     private       List<Object>        whenClause;
 
-    MyTestOracle(final List<Object> afterClause, final List<Object> beforeClause, final String description, final List<Object> givenClause, final List<Object> onFailureClause, final List<Object> thenClause, final List<Object> whenClause, int index, TestSuiteDescriptor testSuiteDescriptor, Statement.Factory statementFactory, Session session) {
+    public MyTestOracle(final List<Object> afterClause, final List<Object> beforeClause, final String description, final List<Object> givenClause, final List<Object> onFailureClause, final List<Object> thenClause, final List<Object> whenClause, int index, TestSuiteDescriptor testSuiteDescriptor, Statement.Factory statementFactory) {
       this.index = index;
       this.testSuiteDescriptor = testSuiteDescriptor;
       this.statementFactory = statementFactory;
@@ -102,17 +105,15 @@ public interface TestOracle {
     public String templateDescription(Tuple testCaseTuple, String testSuiteDescription) {
       return TestOracle.templateTestOracleDescription(this, testCaseTuple, testSuiteDescription);
     }
-
     /**
      * Warning: Created action is not thread safe. Users must create 1 action for 1 thread.
      */
     @Override
-    public Function<Session, Action> createOracleActionFactory(TestItem testItem) {
-      return session1 -> session1.createOracleAction(testItem, createBox(testItem)
-      );
+    public Function<Session, Action> createOracleActionFactory(TestOracle testOracle, IndexedTestCase indexedTestCase) {
+      return s -> s.createMainAction(testOracle, indexedTestCase);
     }
 
-    private Box createBox(TestItem testItem) {
+    public Box createBox(TestItem testItem) {
       return new Box() {
         private Map<List<Object>, Object> memo = createMemo();
 

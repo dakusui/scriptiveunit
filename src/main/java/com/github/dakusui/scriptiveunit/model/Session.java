@@ -95,13 +95,8 @@ public interface Session {
 
     @Override
     public Action createMainAction(TestOracle testOracle, IndexedTestCase indexedTestCase) {
-      return testOracle
-          .createOracleActionFactory(TestItem.create(indexedTestCase, testOracle))
-          .apply(this);
-    }
-
-    @Override
-    public Action createOracleAction(TestItem testItem, TestOracle.Box box) {
+      TestItem testItem = TestItem.create(indexedTestCase, testOracle);
+      TestOracle.Box box = testItem.createBox();
       Tuple testCaseTuple = testItem.getTestCaseTuple();
       Report report = createReport(testItem);
       return sequential(
@@ -145,6 +140,11 @@ public interface Session {
       return testSuiteDescriptor
           .getTearDownAfterAllActionFactory()
           .apply(this.createSuiteLevelStage(commonFixtureTuple));
+    }
+
+    @Override
+    public Action createOracleAction(TestItem testItem, TestOracle.Box box) {
+      return null;
     }
 
     Action createBefore(TestItem testItem, TestOracle.Box box, Report report) {
