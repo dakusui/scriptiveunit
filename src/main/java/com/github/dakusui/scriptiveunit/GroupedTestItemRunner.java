@@ -186,8 +186,8 @@ import static java.util.stream.Collectors.toList;
  */
 public final class GroupedTestItemRunner extends ParentRunner<Action> {
   static Iterable<Runner> createRunnersGroupingByTestOracle(
-      final Session session,
-      TestSuiteDescriptor testSuiteDescriptor) {
+      final Session session) {
+    TestSuiteDescriptor testSuiteDescriptor = session.getTestSuiteDescriptor();
     AtomicInteger id = new AtomicInteger(0);
     return testSuiteDescriptor.getTestOracles()
         .stream()
@@ -201,9 +201,8 @@ public final class GroupedTestItemRunner extends ParentRunner<Action> {
         .collect(toList());
   }
 
-  static Iterable<Runner> createRunnersGroupingByTestCase(
-      final Session session,
-      TestSuiteDescriptor testSuiteDescriptor) {
+  static Iterable<Runner> createRunnersGroupingByTestCase(final Session session) {
+    TestSuiteDescriptor testSuiteDescriptor = session.getTestSuiteDescriptor();
     return testSuiteDescriptor.getTestCases()
         .stream()
         .map(
@@ -215,9 +214,8 @@ public final class GroupedTestItemRunner extends ParentRunner<Action> {
         ).collect(toList());
   }
 
-  static Iterable<Runner> createRunnersGroupingByTestFixture(
-      Session session,
-      TestSuiteDescriptor testSuiteDescriptor) {
+  static Iterable<Runner> createRunnersGroupingByTestFixture(Session session) {
+    TestSuiteDescriptor testSuiteDescriptor = session.getTestSuiteDescriptor();
     List<Parameter> parameters = testSuiteDescriptor.getFactorSpaceDescriptor().getParameters();
     List<String> singleLevelFactors = parameters.stream()
         .filter((Parameter each) -> each instanceof Parameter.Simple)

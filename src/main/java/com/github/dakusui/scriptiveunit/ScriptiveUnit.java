@@ -42,10 +42,9 @@ public class ScriptiveUnit extends Parameterized {
   /**
    * Test runners each of which runs a test case represented by an action.
    */
-  private final List<Runner>        runners;
-  private final Session             session;
-  private final TestSuiteDescriptor testSuiteDescriptor;
-  private       Tuple               commonFixture;
+  private final List<Runner> runners;
+  private final Session      session;
+  private       Tuple        commonFixture;
 
   /**
    * Only called reflectively. Do not use programmatically.
@@ -69,10 +68,9 @@ public class ScriptiveUnit extends Parameterized {
 
   public ScriptiveUnit(Class<?> klass, TestSuiteDescriptor.Loader loader) throws Throwable {
     super(klass);
-    this.session = Session.create(loader.getConfig());
-    this.testSuiteDescriptor = requireNonNull(loader.loadTestSuiteDescriptor(session));
+    this.session = Session.create(loader.getConfig(), loader);
     this.runners = newLinkedList(createRunners());
-    this.commonFixture = ScriptiveUnitUtils.createCommonFixture(testSuiteDescriptor.getFactorSpaceDescriptor().getParameters());
+    this.commonFixture = ScriptiveUnitUtils.createCommonFixture(getTestSuiteDescriptor().getFactorSpaceDescriptor().getParameters());
   }
 
   @Override
@@ -80,7 +78,7 @@ public class ScriptiveUnit extends Parameterized {
     return this.session.getConfig().getScriptResourceName()
         .replaceAll(".+/", "")
         .replaceAll("\\.[^.]*$", "")
-        + ":" + this.testSuiteDescriptor.getDescription();
+        + ":" + getTestSuiteDescriptor().getDescription();
   }
 
 
@@ -99,9 +97,7 @@ public class ScriptiveUnit extends Parameterized {
     return new RunBefores(statement, Collections.emptyList(), null) {
       @Override
       public void evaluate() throws Throwable {
-        performActionWithLogging(testSuiteDescriptor
-            .getSetUpBeforeAllActionFactory()
-            .apply(session.createSuiteLevelStage(commonFixture)));
+        performActionWithLogging(session.createSetUpBeforeAllAction(commonFixture));
         super.evaluate();
       }
     };
@@ -113,9 +109,7 @@ public class ScriptiveUnit extends Parameterized {
       @Override
       public void evaluate() throws Throwable {
         super.evaluate();
-        performActionWithLogging(testSuiteDescriptor
-            .getTearDownAfterAllActionFactory()
-            .apply(session.createSuiteLevelStage(commonFixture)));
+        performActionWithLogging(session.createTearDownAfterAllAction(commonFixture));
       }
     };
   }
@@ -155,7 +149,7 @@ public class ScriptiveUnit extends Parameterized {
   }
 
   private Map<String, List<Object>> getUserDefinedFormClauses() {
-    return this.testSuiteDescriptor.getUserDefinedFormClauses();
+    return getTestSuiteDescriptor().getUserDefinedFormClauses();
   }
 
   public static List<ObjectMethod> getObjectMethodsFromImportedFieldsInObject(Object object) {
@@ -179,7 +173,11 @@ public class ScriptiveUnit extends Parameterized {
   }
 
   private Iterable<Runner> createRunners() {
-    return this.testSuiteDescriptor.getRunnerType().createRunners(this.session, this.testSuiteDescriptor);
+    return getTestSuiteDescriptor().getRunnerType().createRunners(this.session);
+  }
+
+  private TestSuiteDescriptor getTestSuiteDescriptor() {
+    return this.session.getTestSuiteDescriptor();
   }
 
   /**
@@ -266,7 +264,6 @@ public class ScriptiveUnit extends Parameterized {
    *
    * `setUp` and `tearDown`::
    * `setUp` and `tearDown` are actions created from a test fixture.
-   *
    */
   public enum Mode {
     /**
@@ -332,8 +329,8 @@ public class ScriptiveUnit extends Parameterized {
      */
     GROUP_BY_TEST_ORACLE {
       @Override
-      public Iterable<Runner> createRunners(Session session, TestSuiteDescriptor testSuiteDescriptor) {
-        return GroupedTestItemRunner.createRunnersGroupingByTestOracle(session, testSuiteDescriptor);
+      public Iterable<Runner> createRunners(Session session) {
+        return GroupedTestItemRunner.createRunnersGroupingByTestOracle(session);
       }
     },
     /**
@@ -401,8 +398,8 @@ public class ScriptiveUnit extends Parameterized {
      */
     GROUP_BY_TEST_CASE {
       @Override
-      public Iterable<Runner> createRunners(Session session, TestSuiteDescriptor testSuiteDescriptor) {
-        return GroupedTestItemRunner.createRunnersGroupingByTestCase(session, testSuiteDescriptor);
+      public Iterable<Runner> createRunners(Session session) {
+        return GroupedTestItemRunner.createRunnersGroupingByTestCase(session);
       }
     },
     /**
@@ -480,8 +477,8 @@ public class ScriptiveUnit extends Parameterized {
      */
     GROUP_BY_TEST_FIXTURE {
       @Override
-      public Iterable<Runner> createRunners(Session session, TestSuiteDescriptor testSuiteDescriptor) {
-        return GroupedTestItemRunner.createRunnersGroupingByTestFixture(session, testSuiteDescriptor);
+      public Iterable<Runner> createRunners(Session session) {
+        return GroupedTestItemRunner.createRunnersGroupingByTestFixture(session);
       }
 
       @Override
@@ -537,8 +534,8 @@ public class ScriptiveUnit extends Parameterized {
      */
     GROUP_BY_TEST_FIXTURE_ORDER_BY_TEST_ORACLE {
       @Override
-      public Iterable<Runner> createRunners(Session session, TestSuiteDescriptor testSuiteDescriptor) {
-        return GroupedTestItemRunner.createRunnersGroupingByTestFixture(session, testSuiteDescriptor);
+      public Iterable<Runner> createRunners(Session session) {
+        return GroupedTestItemRunner.createRunnersGroupingByTestFixture(session);
       }
 
       @Override
@@ -581,7 +578,7 @@ public class ScriptiveUnit extends Parameterized {
           List<? extends TestOracle> testOracles);
     }
 
-    public abstract Iterable<Runner> createRunners(Session session, TestSuiteDescriptor testSuiteDescriptor);
+    public abstract Iterable<Runner> createRunners(Session session);
 
     public OrderBy orderBy() {
       throw new UnsupportedOperationException();

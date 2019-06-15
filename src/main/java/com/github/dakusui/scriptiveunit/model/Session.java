@@ -37,30 +37,20 @@ public interface Session {
 
   Report createReport(TestItem testItem);
 
-  default Action createMainActionForTestOracle(TestOracle testOracle, IndexedTestCase indexedTestCase) {
-    return testOracle
-        .createOracleActionFactory(TestItem.create(indexedTestCase, testOracle))
-        .apply(this);
-  }
+  TestSuiteDescriptor getTestSuiteDescriptor();
 
-  default Action createSetUpActionForFixture(TestSuiteDescriptor testSuiteDescriptor, Tuple fixtureTuple) {
-    return testSuiteDescriptor
-        .getSetUpActionFactory()
-        .apply(createFixtureLevelStage(fixtureTuple));
-  }
+  Action createSetUpActionForFixture(TestSuiteDescriptor testSuiteDescriptor, Tuple fixtureTuple);
 
-  default Action createTearDownActionForFixture(TestSuiteDescriptor testSuiteDescriptor, Tuple fixtureTuple) {
-    return testSuiteDescriptor
-        .getTearDownActionFactory()
-        .apply(createFixtureLevelStage(fixtureTuple));
-  }
+  Action createMainActionForTestOracle(TestOracle testOracle, IndexedTestCase indexedTestCase);
+
+  Action createTearDownActionForFixture(TestSuiteDescriptor testSuiteDescriptor, Tuple fixtureTuple);
+
+  Action createSetUpBeforeAllAction(Tuple commonFixtureTuple);
+
+  Action createTearDownAfterAllAction(Tuple commonFixtureTuple);
 
   default Stage createSuiteLevelStage(Tuple commonFixture) {
     return Stage.Factory.frameworkStageFor(SUITE, this.getConfig(), commonFixture);
-  }
-
-  default Stage createFixtureLevelStage(Tuple testCaseTuple) {
-    return Stage.Factory.frameworkStageFor(FIXTURE, this.getConfig(), testCaseTuple);
   }
 
   default Stage createOracleLevelStage(TestItem testItem, Report report) {
@@ -90,16 +80,17 @@ public interface Session {
         report);
   }
 
-  static Session create(Config config) {
-    return new Impl(config);
+  static Session create(Config config, TestSuiteDescriptor.Loader testSuiteDescriptorLoader) {
+    return new Impl(config, testSuiteDescriptorLoader);
   }
 
   class Impl implements Session {
     private final Config                     config;
     private final Function<TestItem, Report> reportCreator;
+    private final TestSuiteDescriptor        testSuiteDescriptor;
 
     @SuppressWarnings("WeakerAccess")
-    protected Impl(Config config) {
+    protected Impl(Config config, TestSuiteDescriptor.Loader testSuiteDescriptorLoader) {
       this.config = config;
       this.reportCreator = testItem ->
           Report.create(
@@ -107,6 +98,7 @@ public interface Session {
               getConfig().getScriptResourceName(),
               getConfig().getBaseDirectory(),
               getConfig().getReportFileName());
+      this.testSuiteDescriptor = testSuiteDescriptorLoader.loadTestSuiteDescriptor(this);
     }
 
     @Override
@@ -116,7 +108,51 @@ public interface Session {
 
     @Override
     public Report createReport(TestItem testItem) {
-      return reportCreator.apply(testItem);
+      return this.reportCreator.apply(testItem);
+    }
+
+    @Override
+    public TestSuiteDescriptor getTestSuiteDescriptor() {
+      return this.testSuiteDescriptor;
+    }
+
+    @Override
+    public Action createMainActionForTestOracle(TestOracle testOracle, IndexedTestCase indexedTestCase) {
+      return testOracle
+          .createOracleActionFactory(TestItem.create(indexedTestCase, testOracle))
+          .apply(this);
+    }
+
+    @Override
+    public Action createSetUpActionForFixture(TestSuiteDescriptor testSuiteDescriptor, Tuple fixtureTuple) {
+      return testSuiteDescriptor
+          .getSetUpActionFactory()
+          .apply(createFixtureLevelStage(fixtureTuple));
+    }
+
+    @Override
+    public Action createTearDownActionForFixture(TestSuiteDescriptor testSuiteDescriptor, Tuple fixtureTuple) {
+      return testSuiteDescriptor
+          .getTearDownActionFactory()
+          .apply(createFixtureLevelStage(fixtureTuple));
+    }
+
+    @Override
+    public Action createSetUpBeforeAllAction(Tuple commonFixtureTuple) {
+      return testSuiteDescriptor
+          .getSetUpBeforeAllActionFactory()
+          .apply(this.createSuiteLevelStage(commonFixtureTuple));
+    }
+
+    @Override
+    public Action createTearDownAfterAllAction(Tuple commonFixtureTuple) {
+      return testSuiteDescriptor
+          .getTearDownAfterAllActionFactory()
+          .apply(this.createSuiteLevelStage(commonFixtureTuple));
+    }
+
+    Stage createFixtureLevelStage(Tuple testCaseTuple) {
+      return Stage.Factory.frameworkStageFor(FIXTURE, this.getConfig(), testCaseTuple);
     }
   }
 }
