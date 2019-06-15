@@ -464,7 +464,7 @@ public final class GroupedTestItemRunner extends ParentRunner<Action> {
                     format("%03d: %s", i, testOracle.templateDescription(input.get(), testSuiteDescription)),
                     session.createSetUpActionForFixture(testSuiteDescriptor, input.get()),
                     attempt(
-                        session.createMainActionForTestOracle(
+                        session.createMainAction(
                             testOracle,
                             input))
                         .ensure(
@@ -483,7 +483,7 @@ public final class GroupedTestItemRunner extends ParentRunner<Action> {
         List<? extends TestOracle> testOracles) {
       return testOracles.stream()
           .map((TestOracle input) ->
-              session.createMainActionForTestOracle(input, indexedTestCase))
+              session.createMainAction(input, indexedTestCase))
           .collect(toList());
     }
 

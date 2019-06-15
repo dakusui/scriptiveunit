@@ -552,7 +552,7 @@ public class ScriptiveUnit extends Parameterized {
               .flatMap(eachTestCase -> testOracles
                   .stream()
                   .map((TestOracle eachOracle) ->
-                      session.createMainActionForTestOracle(
+                      session.createMainAction(
                           eachOracle,
                           eachTestCase
                       )));
@@ -565,7 +565,7 @@ public class ScriptiveUnit extends Parameterized {
               .flatMap(eachOracle -> testCases
                   .stream()
                   .map((IndexedTestCase eachTestCase) ->
-                      session.createMainActionForTestOracle(
+                      session.createMainAction(
                           eachOracle,
                           eachTestCase
                       )));

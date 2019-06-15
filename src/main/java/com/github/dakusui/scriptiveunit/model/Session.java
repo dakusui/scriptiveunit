@@ -48,7 +48,7 @@ public interface Session {
 
   Action createSetUpActionForFixture(TestSuiteDescriptor testSuiteDescriptor, Tuple fixtureTuple);
 
-  Action createMainActionForTestOracle(TestOracle testOracle, IndexedTestCase indexedTestCase);
+  Action createMainAction(TestOracle testOracle, IndexedTestCase indexedTestCase);
 
   Action createTearDownActionForFixture(TestSuiteDescriptor testSuiteDescriptor, Tuple fixtureTuple);
 
@@ -64,31 +64,7 @@ public interface Session {
     return new Impl(config, testSuiteDescriptorLoader);
   }
 
-
-   interface Box {
-
-    String composeDescription(Tuple testCaseTuple);
-
-    Function<Stage, Action> createBefore(TestItem testItem, Report report);
-
-    Function<Stage, Matcher<Tuple>> givenFactory();
-
-    Function<Stage, Object> whenFactory();
-
-    Function<Stage, Sink<AssertionError>> errorHandlerFactory(TestItem testItem, Report report);
-
-    Function<Stage, Action> createAfter(TestItem testItem, Report report);
-
-    Tuple projectMultiLevelFactors(Tuple testCaseTuple);
-
-    Function<Stage, Function<Object, Matcher<Stage>>> thenFactory();
-
-    default String describeTestCase(Tuple testCaseTuple) {
-      return "Verify with: " + projectMultiLevelFactors(testCaseTuple);
-    }
-  }
-
-  Action createOracleAction(TestItem testItem, Box box);
+  Action createOracleAction(TestItem testItem, TestOracle.Box box);
 
   class Impl implements Session {
     private final Config                     config;
@@ -118,20 +94,20 @@ public interface Session {
     }
 
     @Override
-    public Action createMainActionForTestOracle(TestOracle testOracle, IndexedTestCase indexedTestCase) {
+    public Action createMainAction(TestOracle testOracle, IndexedTestCase indexedTestCase) {
       return testOracle
           .createOracleActionFactory(TestItem.create(indexedTestCase, testOracle))
           .apply(this);
     }
 
     @Override
-    public Action createOracleAction(TestItem testItem, Box box) {
+    public Action createOracleAction(TestItem testItem, TestOracle.Box box) {
       Tuple testCaseTuple = testItem.getTestCaseTuple();
       Report report = createReport(testItem);
       return sequential(
-          box.composeDescription(testCaseTuple),
+          box.describeTestCase(testCaseTuple),
           createBefore(testItem, box, report),
-          attempt(Actions.<Tuple, TestIO>test(box.describeTestCase(testCaseTuple))
+          attempt(Actions.<Tuple, TestIO>test()
               .given(createGiven(testItem, report, box.givenFactory()))
               .when(createWhen(testItem, report, box.whenFactory()))
               .then(createThen(testItem, report, box.thenFactory())).build())
@@ -171,7 +147,7 @@ public interface Session {
           .apply(this.createSuiteLevelStage(commonFixtureTuple));
     }
 
-    Action createBefore(TestItem testItem, Box box, Report report) {
+    Action createBefore(TestItem testItem, TestOracle.Box box, Report report) {
       Stage beforeStage = this.createOracleLevelStage(testItem, report);
       return box.createBefore(testItem, report).apply(beforeStage);
     }
@@ -208,7 +184,7 @@ public interface Session {
       return this.reportCreator.apply(testItem);
     }
 
-    Sink<AssertionError> createErrorHandler(TestItem testItem, Box box, Report report) {
+    Sink<AssertionError> createErrorHandler(TestItem testItem, TestOracle.Box box, Report report) {
       return (input, context) -> {
         Stage onFailureStage = createOracleFailureHandlingStage(testItem, input, report);
         box.errorHandlerFactory(testItem, report).apply(onFailureStage);
@@ -216,7 +192,7 @@ public interface Session {
       };
     }
 
-    Action createAfter(TestItem testItem, Box box, Report report) {
+    Action createAfter(TestItem testItem, TestOracle.Box box, Report report) {
       Stage afterStage = this.createOracleLevelStage(testItem, report);
       return box.createAfter(testItem, report).apply(afterStage);
     }
