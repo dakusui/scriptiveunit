@@ -1,7 +1,7 @@
 package com.github.dakusui.scriptiveunit.model.func;
 
 import com.github.dakusui.scriptiveunit.core.ObjectMethod;
-import com.github.dakusui.scriptiveunit.model.Stage;
+import com.github.dakusui.scriptiveunit.model.stage.Stage;
 
 import java.io.IOException;
 import java.lang.reflect.InvocationHandler;

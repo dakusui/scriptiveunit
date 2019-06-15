@@ -21,7 +21,7 @@ import com.github.dakusui.scriptiveunit.exceptions.ScriptiveUnitException;
 import com.github.dakusui.scriptiveunit.model.ParameterSpaceDescriptor;
 import com.github.dakusui.scriptiveunit.model.Report;
 import com.github.dakusui.scriptiveunit.model.Session;
-import com.github.dakusui.scriptiveunit.model.Stage;
+import com.github.dakusui.scriptiveunit.model.stage.Stage;
 import com.github.dakusui.scriptiveunit.model.TestIO;
 import com.github.dakusui.scriptiveunit.model.TestItem;
 import com.github.dakusui.scriptiveunit.model.TestOracle;
@@ -46,7 +46,7 @@ import static com.github.dakusui.scriptiveunit.core.Utils.append;
 import static com.github.dakusui.scriptiveunit.core.Utils.iterableToString;
 import static com.github.dakusui.scriptiveunit.core.Utils.template;
 import static com.github.dakusui.scriptiveunit.exceptions.ScriptiveUnitException.wrap;
-import static com.github.dakusui.scriptiveunit.model.Stage.ExecutionLevel.ORACLE;
+import static com.github.dakusui.scriptiveunit.model.stage.Stage.ExecutionLevel.ORACLE;
 import static com.github.dakusui.scriptiveunit.model.func.FuncInvoker.createMemo;
 import static com.github.dakusui.scriptiveunit.model.statement.Statement.createStatementFactory;
 import static java.lang.Class.forName;
@@ -410,14 +410,14 @@ public enum Beans {
 
 
         private Action createBefore(TestItem testItem, Report report, Map<List<Object>, Object> memo) {
-          return createActionFromClause(ORACLE, beforeClause, testItem, report, memo);
+          return createActionFromClause(beforeClause, testItem, report, memo);
         }
 
         private Source<Tuple> createGiven(final TestItem testItem, final Report report, final Session session, Map<List<Object>, Object> memo) {
           Tuple testCaseTuple = testItem.getTestCaseTuple();
           return new Source<Tuple>() {
             FuncInvoker funcInvoker = FuncInvoker.create(memo);
-            Stage givenStage = session.createOracleLevelStage(ORACLE, testItem, report);
+            Stage givenStage = session.createOracleLevelStage(testItem, report);
             Statement givenStatement = statementFactory.create(givenClause);
 
             @Override
@@ -453,7 +453,7 @@ public enum Beans {
 
             @Override
             public TestIO apply(Tuple testCase, Context context) {
-              Stage whenStage = session.createOracleLevelStage(ORACLE, testItem, report);
+              Stage whenStage = session.createOracleLevelStage(testItem, report);
               return TestIO.create(
                   testCase,
                   Beans.<Boolean>toFunc(statementFactory.create(whenClause), funcInvoker).apply(whenStage));
@@ -532,13 +532,13 @@ public enum Beans {
         }
 
         private Action createAfter(TestItem testItem, Report report, Map<List<Object>, Object> memo) {
-          return createActionFromClause(ORACLE, afterClause, testItem, report, memo);
+          return createActionFromClause(afterClause, testItem, report, memo);
         }
 
-        private Action createActionFromClause(Stage.ExecutionLevel stageExecutionLevel, List<Object> clause, final TestItem testItem, Report report, Map<List<Object>, Object> memo) {
+        private Action createActionFromClause(List<Object> clause, final TestItem testItem, Report report, Map<List<Object>, Object> memo) {
           if (clause == null)
             return (Action) NOP_CLAUSE;
-          Stage stage = session.createOracleLevelStage(stageExecutionLevel, testItem, report);
+          Stage stage = session.createOracleLevelStage(testItem, report);
           Statement statement = statementFactory.create(clause);
           FuncInvoker funcInvoker = FuncInvoker.create(memo);
           return Beans.<Action>toFunc(statement, funcInvoker).apply(stage);

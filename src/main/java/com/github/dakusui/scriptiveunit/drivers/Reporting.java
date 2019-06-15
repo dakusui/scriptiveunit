@@ -2,7 +2,7 @@ package com.github.dakusui.scriptiveunit.drivers;
 
 import com.github.dakusui.actionunit.Action;
 import com.github.dakusui.scriptiveunit.annotations.Scriptable;
-import com.github.dakusui.scriptiveunit.model.Stage;
+import com.github.dakusui.scriptiveunit.model.stage.Stage;
 import com.github.dakusui.scriptiveunit.model.func.Form;
 
 import static com.github.dakusui.actionunit.Actions.simple;

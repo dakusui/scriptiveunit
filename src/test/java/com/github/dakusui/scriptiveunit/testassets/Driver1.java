@@ -4,7 +4,7 @@ import com.github.dakusui.scriptiveunit.ScriptiveUnit;
 import com.github.dakusui.scriptiveunit.annotations.Doc;
 import com.github.dakusui.scriptiveunit.annotations.Import;
 import com.github.dakusui.scriptiveunit.annotations.Scriptable;
-import com.github.dakusui.scriptiveunit.model.Stage;
+import com.github.dakusui.scriptiveunit.model.stage.Stage;
 import com.github.dakusui.scriptiveunit.model.func.Form;
 import org.junit.runner.RunWith;
 

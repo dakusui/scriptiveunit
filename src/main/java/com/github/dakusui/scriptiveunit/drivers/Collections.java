@@ -1,9 +1,8 @@
 package com.github.dakusui.scriptiveunit.drivers;
 
 import com.github.dakusui.scriptiveunit.annotations.Scriptable;
-import com.github.dakusui.scriptiveunit.model.Stage;
+import com.github.dakusui.scriptiveunit.model.stage.Stage;
 import com.github.dakusui.scriptiveunit.model.func.Form;
-import com.github.dakusui.scriptiveunit.model.statement.FormCall;
 import com.google.common.collect.Iterables;
 
 import java.util.Map;
@@ -64,7 +63,7 @@ public class Collections {
   }
 
   public static <E> Stage wrapValueAsArgumentInStage(Stage i, Form<E> value) {
-    return FormCall.Utils.createWrappedStage(i,  value);
+    return Stage.Factory.createWrappedStage(i,  value);
   }
 
   @SuppressWarnings("unused")

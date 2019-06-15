@@ -1,6 +1,6 @@
 package com.github.dakusui.scriptiveunit.model.func;
 
-import com.github.dakusui.scriptiveunit.model.Stage;
+import com.github.dakusui.scriptiveunit.model.stage.Stage;
 
 public class FuncHandler {
   public FuncHandler() {

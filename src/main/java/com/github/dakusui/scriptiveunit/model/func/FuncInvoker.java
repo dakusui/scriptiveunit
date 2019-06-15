@@ -3,7 +3,7 @@ package com.github.dakusui.scriptiveunit.model.func;
 import com.github.dakusui.actionunit.visitors.ActionPrinter;
 import com.github.dakusui.jcunit.core.utils.StringUtils;
 import com.github.dakusui.scriptiveunit.core.Utils;
-import com.github.dakusui.scriptiveunit.model.Stage;
+import com.github.dakusui.scriptiveunit.model.stage.Stage;
 import com.google.common.collect.Lists;
 
 import java.util.Arrays;

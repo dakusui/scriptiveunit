@@ -3,9 +3,8 @@ package com.github.dakusui.scriptiveunit.model.statement;
 import com.github.dakusui.scriptiveunit.ScriptiveUnit;
 import com.github.dakusui.scriptiveunit.core.Config;
 import com.github.dakusui.scriptiveunit.core.ObjectMethod;
-import com.github.dakusui.scriptiveunit.model.Stage;
+import com.github.dakusui.scriptiveunit.model.stage.Stage;
 import com.github.dakusui.scriptiveunit.model.func.Form;
-import com.github.dakusui.scriptiveunit.model.func.Func;
 import com.github.dakusui.scriptiveunit.model.func.FuncInvoker;
 
 import java.lang.reflect.Array;
@@ -19,7 +18,6 @@ import java.util.stream.Stream;
 
 import static com.github.dakusui.scriptiveunit.core.Exceptions.SCRIPTIVEUNIT;
 import static com.github.dakusui.scriptiveunit.core.Utils.check;
-import static com.github.dakusui.scriptiveunit.exceptions.ScriptiveUnitException.indexOutOfBounds;
 import static com.google.common.collect.Iterables.getOnlyElement;
 import static com.google.common.collect.Iterables.toArray;
 import static java.lang.String.format;
@@ -55,21 +53,6 @@ public interface FormCall {
       );
     }
 
-    public static Stage createWrappedStage(Stage input, Form<?>... args) {
-      return new Stage.Delegating(input) {
-        @Override
-        public <U> U getArgument(int index) {
-          check(index < sizeOfArguments(), () -> indexOutOfBounds(index, sizeOfArguments()));
-          //noinspection unchecked
-          return (U) args[index].apply(input);
-        }
-
-        @Override
-        public int sizeOfArguments() {
-          return args.length;
-        }
-      };
-    }
   }
 
   class Factory {
@@ -208,7 +191,7 @@ public interface FormCall {
       }
 
       private static Form<Object> userFunc(Form<Statement> statementForm, Form<?>... args) {
-        return (Stage input) -> compile(statementForm.apply(input)).<Form<Object>>apply(Utils.createWrappedStage(input, args));
+        return (Stage input) -> compile(statementForm.apply(input)).<Form<Object>>apply(Stage.Factory.createWrappedStage(input, args));
       }
     }
 
