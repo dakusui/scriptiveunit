@@ -2,9 +2,8 @@ package com.github.dakusui.scriptiveunit.loaders;
 
 import com.github.dakusui.actionunit.Action;
 import com.github.dakusui.actionunit.Actions;
-import com.github.dakusui.actionunit.connectors.Pipe;
+import com.github.dakusui.actionunit.Context;
 import com.github.dakusui.actionunit.connectors.Sink;
-import com.github.dakusui.actionunit.connectors.Source;
 import com.github.dakusui.jcunit.core.tuples.Tuple;
 import com.github.dakusui.jcunit.fsm.spec.FsmSpec;
 import com.github.dakusui.jcunit8.factorspace.Constraint;
@@ -20,7 +19,6 @@ import com.github.dakusui.scriptiveunit.exceptions.ScriptiveUnitException;
 import com.github.dakusui.scriptiveunit.model.ParameterSpaceDescriptor;
 import com.github.dakusui.scriptiveunit.model.Report;
 import com.github.dakusui.scriptiveunit.model.Session;
-import com.github.dakusui.scriptiveunit.model.TestIO;
 import com.github.dakusui.scriptiveunit.model.TestItem;
 import com.github.dakusui.scriptiveunit.model.TestOracle;
 import com.github.dakusui.scriptiveunit.model.TestSuiteDescriptor;
@@ -353,252 +351,175 @@ public enum Beans {
      */
     public TestOracle create(int index, Session session, TestSuiteDescriptor testSuiteDescriptor) {
       Statement.Factory statementFactory = testSuiteDescriptor.statementFactory();
-      return new TestOracle() {
-        @Override
-        public int getIndex() {
-          return index;
-        }
+      return new MyTestOracle(afterClause, beforeClause, description, givenClause, onFailureClause, thenClause, whenClause, index, testSuiteDescriptor, statementFactory, session);
+    }
 
-        @Override
-        public String getDescription() {
-          return description;
-        }
+    private static class MyTestOracle implements TestOracle {
+      private final int                 index;
+      private final TestSuiteDescriptor testSuiteDescriptor;
+      private final Statement.Factory   statementFactory;
+      private final Session             session;
+      private       List<Object>        afterClause;
+      private       List<Object>        beforeClause;
+      private       String              description;
+      private       List<Object>        givenClause;
+      private       List<Object>        onFailureClause;
+      private       List<Object>        thenClause;
+      private       List<Object>        whenClause;
 
-        @Override
-        public String templateDescription(Tuple testCaseTuple, String testSuiteDescription) {
-          return TestOracle.templateTestOracleDescription(this, testCaseTuple, testSuiteDescription);
-        }
+      public MyTestOracle(final List<Object> afterClause, final List<Object> beforeClause, final String description, final List<Object> givenClause, final List<Object> onFailureClause, final List<Object> thenClause, final List<Object> whenClause, int index, TestSuiteDescriptor testSuiteDescriptor, Statement.Factory statementFactory, Session session) {
+        this.index = index;
+        this.testSuiteDescriptor = testSuiteDescriptor;
+        this.statementFactory = statementFactory;
+        this.session = session;
+        this.afterClause = afterClause;
+        this.beforeClause = beforeClause;
+        this.description = description;
+        this.givenClause = givenClause;
+        this.onFailureClause = onFailureClause;
+        this.thenClause = thenClause;
+        this.whenClause = whenClause;
+      }
 
-        /**
-         * Warning: Created action is not thread safe. Users must create 1 action for 1 thread.
-         */
-        @Override
-        public Function<Session, Action> createOracleActionFactory(TestItem testItem) {
-          return session1 -> session1.createOracleAction(testItem, new Session.Box() {
-            private Map<List<Object>, Object> memo = createMemo();
-            @Override
-            public String composeDescription(Tuple testCaseTuple) {
-              return template(description, append(testCaseTuple, "@TESTSUITE", testSuiteDescriptor.getDescription()));
-            }
+      @Override
+      public int getIndex() {
+        return index;
+      }
 
-            @Override
-            public Action createBefore(TestItem testItem, Report report, Map<List<Object>, Object> memo) {
-              return createActionFromClause(beforeClause, testItem, report, memo);
-            }
+      @Override
+      public String getDescription() {
+        return description;
+      }
 
-            @Override
-            public Function<Stage, Matcher<Tuple>> givenFactory() {
-              return (Stage s) -> new BaseMatcher<Tuple>() {
-                private Statement givenStatement = statementFactory.create(givenClause);
-                private FuncInvoker funcInvoker = FuncInvoker.create(memo);
+      @Override
+      public String templateDescription(Tuple testCaseTuple, String testSuiteDescription) {
+        return TestOracle.templateTestOracleDescription(this, testCaseTuple, testSuiteDescription);
+      }
 
-                @Override
-                public boolean matches(Object item) {
-                  return requireNonNull(Beans.<Boolean>toFunc(givenStatement, funcInvoker).apply(s));
-                }
+      /**
+       * Warning: Created action is not thread safe. Users must create 1 action for 1 thread.
+       */
+      @Override
+      public Function<Session, Action> createOracleActionFactory(TestItem testItem) {
+        return session1 -> session1.createOracleAction(testItem,
+            createBox(testItem)
+        );
+      }
 
-                @Override
-                public void describeTo(Description description) {
-                  description.appendText(
-                      format("input (%s) should have made true following criterion but not.:%n'%s' defined in stage:%s",
-                          testItem.getTestCaseTuple(),
-                          funcInvoker.asString(),
-                          ORACLE));
-                }
-              };
-            }
+      private Session.Box createBox(TestItem testItem) {
+        return new Session.Box() {
+          private Map<List<Object>, Object> memo = createMemo();
 
-            @Override
-            public Function<Stage, Object> whenFactory() {
-              return new Function<Stage, Object>() {
-                FuncInvoker funcInvoker = FuncInvoker.create(memo);
-                @Override
-                public Object apply(Stage s) {
-                  return Beans.<Boolean>toFunc(statementFactory.create(whenClause), funcInvoker).apply(s);
-                }
-              };
-            }
+          @Override
+          public String composeDescription(Tuple testCaseTuple) {
+            return template(description, append(testCaseTuple, "@TESTSUITE", testSuiteDescriptor.getDescription()));
+          }
 
-            @Override
-            public Function<Stage, Function<Object, Matcher<Stage>>> thenFactory() {
-              Statement thenStatement = statementFactory.create(thenClause);
-              FuncInvoker funcInvoker = FuncInvoker.create(memo);
-              return stage -> out -> new BaseMatcher<Stage>() {
-                Function<FuncInvoker, Predicate<Stage>> p = fi -> s -> requireNonNull(
-                    Beans.<Boolean>toFunc(thenStatement, fi).apply(s));
-                Function<FuncInvoker, Function<Stage, String>> c = fi -> s -> fi.asString();
-
-                @Override
-                public boolean matches(Object item) {
-                  return p.apply(funcInvoker).test(stage);
-                }
-
-                @Override
-                public void describeTo(Description description) {
-                  description.appendText(format("output should have made true the criterion defined in stage:%s", stage.getExecutionLevel()));
-                }
-
-                @Override
-                public void describeMismatch(Object item, Description description) {
-                  Object output = out instanceof Iterable ?
-                      iterableToString((Iterable<?>) out) :
-                      out;
-                  description.appendText(String.format("output '%s' created from '%s' did not satisfy it.:%n'%s'",
-                      output,
-                      testItem.getTestCaseTuple(),
-                      c.apply(funcInvoker).apply(stage)));
-                }
-              };
-            }
-
-            @Override
-            public Sink<AssertionError> errorHandlerFactory(TestItem testItem, Report report, Session session, Map<List<Object>, Object> memo) {
-              Statement onFailureStatement = statementFactory.create(onFailureClause);
-              FuncInvoker funcInvoker = FuncInvoker.create(memo);
-              return session.onTestFailure(testItem, report, s -> requireNonNull(
-                  onFailureClause != null ?
-                      Beans.<Action>toFunc(onFailureStatement, funcInvoker) :
-                      (Form<Action>) input1 -> nop()).apply(s));
-            }
-
-            @Override
-            public Action createAfter(TestItem testItem, Report report, Map<List<Object>, Object> memo) {
-              return createActionFromClause(afterClause, testItem, report, memo);
-            }
-
-
-            @Override
-            public Tuple projectMultiLevelFactors(Tuple testCaseTuple) {
-              return Utils.filterSimpleSingleLevelParametersOut(
-                  testCaseTuple,
-                  testSuiteDescriptor.getFactorSpaceDescriptor().getParameters()
-              );
-            }
-
-            @Override
-            public Map<List<Object>, Object> memo() {
-              return memo;
-            }
-
-          });
-          /*
-          Tuple testCaseTuple = testItem.getTestCaseTuple();
-          Report report = session.createReport(testItem);
-          return (Session session) -> {
-            Map<List<Object>, Object> memo = createMemo();
-            return sequential(
-                composeDescription(testCaseTuple),
-                createBefore(testItem, report, memo),
-                attempt(Actions.<Tuple, TestIO>test("Verify with: " + projectMultiLevelFactors(testCaseTuple))
-                    .given(createGiven(testItem, report, session, memo))
-                    .when(createWhen(testItem, report, session, memo))
-                    .then(createThen(testItem, report, session, memo)).build())
-                    .recover(
-                        AssertionError.class,
-                        createErrorHandler(testItem, report, session, memo))
-                    .ensure(createAfter(testItem, report, memo))
-                    .build()
-            );
-          };
-          */
-        }
-
-        Source<Tuple> createGiven(TestItem testItem, Report report, Session session, Map<List<Object>, Object> memo) {
-          FuncInvoker funcInvoker = FuncInvoker.create(memo);
-          Statement givenStatement = statementFactory.create(givenClause);
-          return session.createGiven(testItem, report, (Stage s) -> new BaseMatcher<Tuple>() {
-
-            @Override
-            public boolean matches(Object item) {
-              return requireNonNull(Beans.<Boolean>toFunc(givenStatement, funcInvoker).apply(s));
-            }
-
-            @Override
-            public void describeTo(Description description) {
-              description.appendText(
-                  format("input (%s) should have made true following criterion but not.:%n'%s' defined in stage:%s",
-                      testItem.getTestCaseTuple(),
-                      funcInvoker.asString(),
-                      ORACLE));
-            }
-          });
-        }
-        Pipe<Tuple, TestIO> createWhen(TestItem testItem, Report report, Session session, Map<List<Object>, Object> memo) {
-          return session.createWhen(testItem, report, new Function<Stage, Object>() {
+          @Override
+          public Function<Stage, Action> createBefore(TestItem testItem, Report report) {
+            if (beforeClause == null)
+              return s -> Actions.nop();
+            Statement statement = statementFactory.create(beforeClause);
             FuncInvoker funcInvoker = FuncInvoker.create(memo);
-            @Override
-            public Object apply(Stage s) {
-              return Beans.<Boolean>toFunc(statementFactory.create(whenClause), funcInvoker).apply(s);
-            }
-          });
-        }
+            return s -> Beans.<Action>toFunc(statement, funcInvoker).apply(s);
+          }
 
-        Sink<TestIO> createThen(TestItem testItem, Report report, Session session, Map<List<Object>, Object> memo) {
-          Statement thenStatement = statementFactory.create(thenClause);
-          FuncInvoker funcInvoker = FuncInvoker.create(memo);
-          return session.createThen(testItem, report,
-              stage -> out -> new BaseMatcher<Stage>() {
-                Function<FuncInvoker, Predicate<Stage>> p = fi -> s -> requireNonNull(
-                    Beans.<Boolean>toFunc(thenStatement, fi).apply(s));
-                Function<FuncInvoker, Function<Stage, String>> c = fi -> s -> fi.asString();
+          @Override
+          public Function<Stage, Matcher<Tuple>> givenFactory() {
+            return (Stage s) -> new BaseMatcher<Tuple>() {
+              private Statement givenStatement = statementFactory.create(givenClause);
+              private FuncInvoker funcInvoker = FuncInvoker.create(memo);
 
-                @Override
-                public boolean matches(Object item) {
-                  return p.apply(funcInvoker).test(stage);
-                }
-
-                @Override
-                public void describeTo(Description description) {
-                  description.appendText(format("output should have made true the criterion defined in stage:%s", stage.getExecutionLevel()));
-                }
-
-                @Override
-                public void describeMismatch(Object item, Description description) {
-                  Object output = out instanceof Iterable ?
-                      iterableToString((Iterable<?>) out) :
-                      out;
-                  description.appendText(String.format("output '%s' created from '%s' did not satisfy it.:%n'%s'",
-                      output,
-                      testItem.getTestCaseTuple(),
-                      c.apply(funcInvoker).apply(stage)));
-                }
+              @Override
+              public boolean matches(Object item) {
+                return requireNonNull(Beans.<Boolean>toFunc(givenStatement, funcInvoker).apply(s));
               }
-          );
-        }
 
-        Sink<AssertionError> createErrorHandler(TestItem testItem, Report report, Session session, Map<List<Object>, Object> memo) {
-          Statement onFailureStatement = statementFactory.create(onFailureClause);
-          FuncInvoker funcInvoker = FuncInvoker.create(memo);
-          return session.onTestFailure(testItem, report, s -> requireNonNull(
-              onFailureClause != null ?
-                  Beans.<Action>toFunc(onFailureStatement, funcInvoker) :
-                  (Form<Action>) input1 -> nop()).apply(s));
-        }
+              @Override
+              public void describeTo(Description description) {
+                description.appendText(
+                    format("input (%s) should have made true following criterion but not.:%n'%s' defined in stage:%s",
+                        testItem.getTestCaseTuple(),
+                        funcInvoker.asString(),
+                        ORACLE));
+              }
+            };
+          }
 
-        Tuple projectMultiLevelFactors(Tuple testCaseTuple) {
-          return Utils.filterSimpleSingleLevelParametersOut(
-              testCaseTuple,
-              testSuiteDescriptor.getFactorSpaceDescriptor().getParameters()
-          );
-        }
+          @Override
+          public Function<Stage, Object> whenFactory() {
+            return new Function<Stage, Object>() {
+              FuncInvoker funcInvoker = FuncInvoker.create(memo);
 
-        Action createBefore(TestItem testItem, Report report, Map<List<Object>, Object> memo) {
-          return createActionFromClause(beforeClause, testItem, report, memo);
-        }
+              @Override
+              public Object apply(Stage s) {
+                return Beans.<Boolean>toFunc(statementFactory.create(whenClause), funcInvoker).apply(s);
+              }
+            };
+          }
 
-        Action createAfter(TestItem testItem, Report report, Map<List<Object>, Object> memo) {
-          return createActionFromClause(afterClause, testItem, report, memo);
-        }
+          @Override
+          public Function<Stage, Function<Object, Matcher<Stage>>> thenFactory() {
+            Statement thenStatement = statementFactory.create(thenClause);
+            FuncInvoker funcInvoker = FuncInvoker.create(memo);
+            return stage -> out -> new BaseMatcher<Stage>() {
+              Function<FuncInvoker, Predicate<Stage>> p = fi -> s -> requireNonNull(
+                  Beans.<Boolean>toFunc(thenStatement, fi).apply(s));
+              Function<FuncInvoker, Function<Stage, String>> c = fi -> s -> fi.asString();
 
-        Action createActionFromClause(List<Object> clause, final TestItem testItem, Report report, Map<List<Object>, Object> memo) {
-          if (clause == null)
-            return (Action) NOP_CLAUSE;
-          Stage stage = session.createOracleLevelStage(testItem, report);
-          Statement statement = statementFactory.create(clause);
-          FuncInvoker funcInvoker = FuncInvoker.create(memo);
-          return Beans.<Action>toFunc(statement, funcInvoker).apply(stage);
-        }
-      };
+              @Override
+              public boolean matches(Object item) {
+                return p.apply(funcInvoker).test(stage);
+              }
+
+              @Override
+              public void describeTo(Description description) {
+                description.appendText(format("output should have made true the criterion defined in stage:%s", stage.getExecutionLevel()));
+              }
+
+              @Override
+              public void describeMismatch(Object item, Description description) {
+                Object output = out instanceof Iterable ?
+                    iterableToString((Iterable<?>) out) :
+                    out;
+                description.appendText(String.format("output '%s' created from '%s' did not satisfy it.:%n'%s'",
+                    output,
+                    testItem.getTestCaseTuple(),
+                    c.apply(funcInvoker).apply(stage)));
+              }
+            };
+          }
+
+          @Override
+          public Function<Stage, Sink<AssertionError>> errorHandlerFactory(TestItem testItem, Report report) {
+            Statement onFailureStatement = statementFactory.create(onFailureClause);
+            FuncInvoker funcInvoker = FuncInvoker.create(memo);
+            return (Stage s) -> (AssertionError input, Context context) -> requireNonNull(
+                    onFailureClause != null ?
+                        Beans.<Action>toFunc(onFailureStatement, funcInvoker) :
+                        (Form<Action>) input1 -> nop()).apply(s);
+          }
+
+          @Override
+          public Function<Stage, Action> createAfter(TestItem testItem, Report report) {
+            if (afterClause == null)
+              return s -> Actions.nop();
+            Statement statement = statementFactory.create(afterClause);
+            FuncInvoker funcInvoker = FuncInvoker.create(memo);
+            return s -> Beans.<Action>toFunc(statement, funcInvoker).apply(s);
+          }
+
+
+          @Override
+          public Tuple projectMultiLevelFactors(Tuple testCaseTuple) {
+            return Utils.filterSimpleSingleLevelParametersOut(
+                testCaseTuple,
+                testSuiteDescriptor.getFactorSpaceDescriptor().getParameters()
+            );
+          }
+        };
+      }
+
     }
   }
 

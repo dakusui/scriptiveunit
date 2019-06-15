@@ -2,19 +2,15 @@ package com.github.dakusui.scriptiveunit.model;
 
 import com.github.dakusui.actionunit.Action;
 import com.github.dakusui.actionunit.Actions;
-import com.github.dakusui.actionunit.Context;
 import com.github.dakusui.actionunit.connectors.Pipe;
 import com.github.dakusui.actionunit.connectors.Sink;
 import com.github.dakusui.actionunit.connectors.Source;
 import com.github.dakusui.jcunit.core.tuples.Tuple;
 import com.github.dakusui.scriptiveunit.core.Config;
-import com.github.dakusui.scriptiveunit.core.Utils;
 import com.github.dakusui.scriptiveunit.loaders.IndexedTestCase;
 import com.github.dakusui.scriptiveunit.model.stage.Stage;
 import org.hamcrest.Matcher;
 
-import java.util.List;
-import java.util.Map;
 import java.util.function.Function;
 
 import static com.github.dakusui.actionunit.Actions.attempt;
@@ -48,31 +44,11 @@ import static org.junit.Assume.assumeThat;
 public interface Session {
   Config getConfig();
 
-  Report createReport(TestItem testItem);
-
   TestSuiteDescriptor getTestSuiteDescriptor();
 
   Action createSetUpActionForFixture(TestSuiteDescriptor testSuiteDescriptor, Tuple fixtureTuple);
 
   Action createMainActionForTestOracle(TestOracle testOracle, IndexedTestCase indexedTestCase);
-
-  Source<Tuple> createGiven(
-      TestItem testItem,
-      Report report,
-      final Function<Stage, Matcher<Tuple>> stageMatcherFunction);
-
-  Pipe<Tuple, TestIO> createWhen(
-      TestItem testItem,
-      Report report, final Function<Stage, Object> predicate);
-
-  Sink<TestIO> createThen(
-      TestItem testItem,
-      Report report,
-      Function<Stage, Function<Object, Matcher<Stage>>> matcherFunction);
-
-  <T extends AssertionError> Sink<T> onTestFailure(
-      TestItem testItem,
-      Report report, final Function<Stage, Action> errorHandler);
 
   Action createTearDownActionForFixture(TestSuiteDescriptor testSuiteDescriptor, Tuple fixtureTuple);
 
@@ -84,59 +60,35 @@ public interface Session {
     return Stage.Factory.frameworkStageFor(SUITE, this.getConfig(), commonFixture);
   }
 
-  default Stage createOracleFailureHandlingStage(TestItem testItem, Throwable throwable, Report report) {
-    return Stage.Factory.oracleLevelStageFor(
-        getConfig(),
-        testItem,
-        null,
-        throwable,
-        report);
-  }
-
   static Session create(Config config, TestSuiteDescriptor.Loader testSuiteDescriptorLoader) {
     return new Impl(config, testSuiteDescriptorLoader);
   }
 
-  Stage createOracleLevelStage(TestItem testItem, Report report);
 
-  interface Box {
+   interface Box {
 
     String composeDescription(Tuple testCaseTuple);
 
-    Action createBefore(TestItem testItem, Report report, Map<List<Object>, Object> memo);
+    Function<Stage, Action> createBefore(TestItem testItem, Report report);
 
     Function<Stage, Matcher<Tuple>> givenFactory();
 
     Function<Stage, Object> whenFactory();
 
-    Sink<AssertionError> errorHandlerFactory(TestItem testItem, Report report, Session session, Map<List<Object>, Object> memo);
+    Function<Stage, Sink<AssertionError>> errorHandlerFactory(TestItem testItem, Report report);
 
-    Action createAfter(TestItem testItem, Report report, Map<List<Object>, Object> memo);
+    Function<Stage, Action> createAfter(TestItem testItem, Report report);
 
     Tuple projectMultiLevelFactors(Tuple testCaseTuple);
 
-    Map<List<Object>, Object> memo();
-
     Function<Stage, Function<Object, Matcher<Stage>>> thenFactory();
+
+    default String describeTestCase(Tuple testCaseTuple) {
+      return "Verify with: " + projectMultiLevelFactors(testCaseTuple);
+    }
   }
 
-  default Action createOracleAction(TestItem testItem, Box box) {
-    Tuple testCaseTuple = testItem.getTestCaseTuple();
-    Report report = createReport(testItem);
-    return sequential(
-        box.composeDescription(testCaseTuple),
-        box.createBefore(testItem, report, box.memo()),
-        attempt(Actions.<Tuple, TestIO>test("Verify with: " + box.projectMultiLevelFactors(testCaseTuple))
-            .given(createGiven(testItem, report, box.givenFactory()))
-            .when(createWhen(testItem, report, box.whenFactory()))
-            .then(createThen(testItem, report, box.thenFactory())).build())
-            .recover(
-                AssertionError.class,
-                box.errorHandlerFactory(testItem, report, this, box.memo()))
-            .ensure(box.createAfter(testItem, report, box.memo()))
-            .build()
-    );
-  }
+  Action createOracleAction(TestItem testItem, Box box);
 
   class Impl implements Session {
     private final Config                     config;
@@ -161,11 +113,6 @@ public interface Session {
     }
 
     @Override
-    public Report createReport(TestItem testItem) {
-      return this.reportCreator.apply(testItem);
-    }
-
-    @Override
     public TestSuiteDescriptor getTestSuiteDescriptor() {
       return this.testSuiteDescriptor;
     }
@@ -175,6 +122,25 @@ public interface Session {
       return testOracle
           .createOracleActionFactory(TestItem.create(indexedTestCase, testOracle))
           .apply(this);
+    }
+
+    @Override
+    public Action createOracleAction(TestItem testItem, Box box) {
+      Tuple testCaseTuple = testItem.getTestCaseTuple();
+      Report report = createReport(testItem);
+      return sequential(
+          box.composeDescription(testCaseTuple),
+          createBefore(testItem, box, report),
+          attempt(Actions.<Tuple, TestIO>test(box.describeTestCase(testCaseTuple))
+              .given(createGiven(testItem, report, box.givenFactory()))
+              .when(createWhen(testItem, report, box.whenFactory()))
+              .then(createThen(testItem, report, box.thenFactory())).build())
+              .recover(
+                  AssertionError.class,
+                  createErrorHandler(testItem, box, report))
+              .ensure(createAfter(testItem, box, report))
+              .build()
+      );
     }
 
     @Override
@@ -205,8 +171,12 @@ public interface Session {
           .apply(this.createSuiteLevelStage(commonFixtureTuple));
     }
 
-    @Override
-    public Source<Tuple> createGiven(
+    Action createBefore(TestItem testItem, Box box, Report report) {
+      Stage beforeStage = this.createOracleLevelStage(testItem, report);
+      return box.createBefore(testItem, report).apply(beforeStage);
+    }
+
+    Source<Tuple> createGiven(
         TestItem testItem,
         Report report, final Function<Stage, Matcher<Tuple>> stageMatcherFunction) {
       Tuple testCaseTuple = testItem.getTestCaseTuple();
@@ -218,8 +188,7 @@ public interface Session {
       };
     }
 
-    @Override
-    public Pipe<Tuple, TestIO> createWhen(TestItem testItem, Report report, final Function<Stage, Object> function) {
+    Pipe<Tuple, TestIO> createWhen(TestItem testItem, Report report, final Function<Stage, Object> function) {
       return (testCase, context) -> {
         Stage whenStage = createOracleLevelStage(testItem, report);
         return TestIO.create(
@@ -228,32 +197,36 @@ public interface Session {
       };
     }
 
-    @Override
-    public Sink<TestIO> createThen(TestItem testItem, Report report, Function<Stage, Function<Object, Matcher<Stage>>> matcherFunction) {
+    Sink<TestIO> createThen(TestItem testItem, Report report, Function<Stage, Function<Object, Matcher<Stage>>> matcherFunction) {
       return (testIO, context) -> {
         Stage thenStage = createOracleVerificationStage(testItem, testIO.getOutput(), report);
         assertThat(thenStage, matcherFunction.apply(thenStage).apply(testIO.getOutput()));
       };
     }
 
-    @Override
-    public <T extends AssertionError> Sink<T> onTestFailure(TestItem testItem, Report report, final Function<Stage, Action> errorHandler) {
-      return new Sink<T>() {
+    Report createReport(TestItem testItem) {
+      return this.reportCreator.apply(testItem);
+    }
 
-        @Override
-        public void apply(T input, Context context) {
-          Stage onFailureStage = createOracleFailureHandlingStage(testItem, input, report);
-          Utils.performActionWithLogging(errorHandler.apply(onFailureStage));
-          throw requireNonNull(input);
-        }
+    Sink<AssertionError> createErrorHandler(TestItem testItem, Box box, Report report) {
+      return (input, context) -> {
+        Stage onFailureStage = createOracleFailureHandlingStage(testItem, input, report);
+        box.errorHandlerFactory(testItem, report).apply(onFailureStage);
+        throw input;
       };
+    }
+
+    Action createAfter(TestItem testItem, Box box, Report report) {
+      Stage afterStage = this.createOracleLevelStage(testItem, report);
+      return box.createAfter(testItem, report).apply(afterStage);
     }
 
     Stage createFixtureLevelStage(Tuple testCaseTuple) {
       return Stage.Factory.frameworkStageFor(FIXTURE, this.getConfig(), testCaseTuple);
     }
 
-    public Stage createOracleLevelStage(TestItem testItem, Report report) {
+
+    Stage createOracleLevelStage(TestItem testItem, Report report) {
       return Stage.Factory.oracleLevelStageFor(
           this.getConfig(),
           testItem,
@@ -268,6 +241,15 @@ public interface Session {
           testItem,
           requireNonNull(response),
           null,
+          report);
+    }
+
+    Stage createOracleFailureHandlingStage(TestItem testItem, Throwable throwable, Report report) {
+      return Stage.Factory.oracleLevelStageFor(
+          getConfig(),
+          testItem,
+          null,
+          throwable,
           report);
     }
   }
