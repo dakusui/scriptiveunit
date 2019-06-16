@@ -22,10 +22,12 @@ public interface FormInvoker {
 
   Object invokeForm(Form target, Stage stage, String alias);
 
+  Memo memo();
+
   String asString();
 
-  static Map<List<Object>, Object> createMemo() {
-    return new HashMap<List<Object>, Object>() {
+  interface Memo extends Map<List<Object>, Object> {
+    class Impl extends HashMap<List<Object>, Object> implements Memo {
       @Override
       public Object computeIfAbsent(List<Object> key,
           Function<? super List<Object>, ?> mappingFunction) {
@@ -33,19 +35,23 @@ public interface FormInvoker {
         put(key, ret);
         return ret;
       }
-    };
+    }
   }
 
-  static FormInvoker create(Map<List<Object>, Object> memo) {
+  static Memo createMemo() {
+    return new Memo.Impl();
+  }
+
+  static FormInvoker create(Memo memo) {
     return new Impl(0, memo);
   }
 
   class Impl implements FormInvoker {
     private final Writer                    writer;
-    private final Map<List<Object>, Object> memo;
+    private final Memo memo;
     private       int                       indent;
 
-    private Impl(int initialIndent, Map<List<Object>, Object> memo) {
+    private Impl(int initialIndent, Memo memo) {
       this.indent = initialIndent;
       this.writer = new Writer();
       this.memo = memo;
@@ -78,6 +84,11 @@ public interface FormInvoker {
         this.writeLine(") -> %s", ret);
         this.leave();
       }
+    }
+
+    @Override
+    public Memo memo() {
+      return memo;
     }
 
     public String asString() {
@@ -134,5 +145,4 @@ public interface FormInvoker {
       return this.output.iterator();
     }
   }
-
 }

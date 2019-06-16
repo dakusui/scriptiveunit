@@ -1,0 +1,23 @@
+{
+  "$extends": [],
+  "description": "Memoization-3",
+  "runnerType": "groupByTestCase",
+  "factorSpace": {
+    "factors": {
+    }
+  },
+  "setUpBeforeAll": ["nop"],
+  "setUp": ["nop"],
+  "testOracles": [
+    {
+      "description": "Oracle",
+      "before": ["nop"],
+      "given": ["always"],
+      "when": ["+", 1, 2],
+      "then": ["always"],
+      "after": ["nop"]
+    }
+  ],
+  "tearDown": ["nop"],
+  "tearDownAfterAll": ["nop"]
+}

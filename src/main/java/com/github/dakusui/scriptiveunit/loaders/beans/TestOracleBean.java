@@ -6,9 +6,9 @@ import com.github.dakusui.actionunit.Context;
 import com.github.dakusui.actionunit.connectors.Sink;
 import com.github.dakusui.jcunit.core.tuples.Tuple;
 import com.github.dakusui.scriptiveunit.core.Utils;
+import com.github.dakusui.scriptiveunit.model.desc.TestSuiteDescriptor;
 import com.github.dakusui.scriptiveunit.model.desc.testitem.TestItem;
 import com.github.dakusui.scriptiveunit.model.desc.testitem.TestOracle;
-import com.github.dakusui.scriptiveunit.model.desc.TestSuiteDescriptor;
 import com.github.dakusui.scriptiveunit.model.form.Form;
 import com.github.dakusui.scriptiveunit.model.form.FormInvoker;
 import com.github.dakusui.scriptiveunit.model.session.Report;
@@ -19,7 +19,6 @@ import org.hamcrest.Description;
 import org.hamcrest.Matcher;
 
 import java.util.List;
-import java.util.Map;
 import java.util.function.Function;
 import java.util.function.Predicate;
 
@@ -100,8 +99,8 @@ public abstract class TestOracleBean {
     }
 
     class MyDefinition implements Definition {
-      private final TestItem                  testItem;
-      private       Map<List<Object>, Object> memo = createMemo();
+      private final TestItem         testItem;
+      private       FormInvoker.Memo memo = createMemo();
 
       MyDefinition(TestItem testItem) {
         this.testItem = testItem;

@@ -4,7 +4,6 @@ import com.github.dakusui.scriptiveunit.core.Config;
 import com.github.dakusui.scriptiveunit.exceptions.SyntaxException;
 import com.github.dakusui.scriptiveunit.exceptions.TypeMismatch;
 import com.github.dakusui.scriptiveunit.model.form.Form;
-import com.github.dakusui.scriptiveunit.model.form.FormHandler;
 import com.github.dakusui.scriptiveunit.model.form.FormInvoker;
 import com.google.common.collect.Lists;
 
@@ -29,7 +28,7 @@ public interface Statement {
   }
 
   interface Nested extends Statement {
-    FormCall getForm();
+    FormCall getFormCall();
 
     Arguments getArguments();
   }
@@ -39,9 +38,12 @@ public interface Statement {
     private final Form.Factory     formFactory;
 
     public Factory(Config config, Map<String, List<Object>> userDefinedFormClauses) {
-      FormHandler formHandler = new FormHandler();
-      this.formFactory = new Form.Factory(formHandler);
-      this.formCallFactory = new FormCall.Factory(formFactory, this, config, userDefinedFormClauses);
+      this.formFactory = new Form.Factory();
+      this.formCallFactory = new FormCall.Factory(
+          formFactory,
+          this,
+          config,
+          userDefinedFormClauses);
     }
 
     public Statement create(Object object) throws TypeMismatch {
@@ -54,7 +56,7 @@ public interface Statement {
         FormCall formCall = this.formCallFactory.create((String) car);
         return new Nested() {
           @Override
-          public FormCall getForm() {
+          public FormCall getFormCall() {
             return formCall;
           }
 
@@ -65,7 +67,7 @@ public interface Statement {
 
           @Override
           public Form<?> compile(FormInvoker invoker) {
-            return (Form<?>) getForm().apply(invoker, arguments);
+            return (Form<?>) getFormCall().apply(invoker, arguments);
           }
         };
       } else if (car instanceof Integer) {
@@ -97,7 +99,7 @@ public interface Statement {
       if (statement instanceof Atom)
         return work;
       if (statement instanceof Nested) {
-        if (((Nested) statement).getForm().isAccessor()) {
+        if (((Nested) statement).getFormCall().isAccessor()) {
           for (Statement each : ((Nested) statement).getArguments()) {
             if (each instanceof Atom) {
               /*

@@ -16,14 +16,19 @@ public class Arith {
   @SafeVarargs
   @Scriptable
   public final Form<BigDecimal> add(Form<Number>... numbers) {
-    return (Stage input) -> calc(input, (BigDecimal v) -> augend -> v.add(augend, DECIMAL128), numbers);
+    return (Stage input) -> calc(
+        input,
+        (BigDecimal v) -> (BigDecimal augend) -> v.add(augend, DECIMAL128), numbers);
   }
 
   @SuppressWarnings("unused")
   @SafeVarargs
   @Scriptable
   public final Form<BigDecimal> sub(Form<Number>... numbers) {
-    return (Stage input) -> calc(input, (BigDecimal v) -> subtrahend -> v.subtract(subtrahend, DECIMAL128), numbers);
+    return (Stage input) -> calc(
+        input,
+        (BigDecimal v) -> (BigDecimal subtrahend) -> v.subtract(subtrahend, DECIMAL128), numbers
+    );
   }
 
   @SuppressWarnings("unused")

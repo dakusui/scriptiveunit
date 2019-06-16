@@ -69,7 +69,7 @@ public class Core {
 
   @SuppressWarnings("unused")
   @Scriptable
-  public Form<Throwable> _exception() {
+  public Form<Throwable> exception() {
     return stage ->
         stage.getThrowable()
             .orElseThrow(IllegalStateException::new);

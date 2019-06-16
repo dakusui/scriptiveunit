@@ -46,10 +46,8 @@ public interface Form<O> extends Function<Stage, O>, Formattable {
   }
 
   class Factory {
-    private final FormHandler formHandler;
 
-    public Factory(FormHandler formHandler) {
-      this.formHandler = formHandler;
+    public Factory() {
     }
 
     /*
@@ -73,7 +71,9 @@ public interface Form<O> extends Function<Stage, O>, Formattable {
     }
 
     public <T> Form<T> createConst(FormInvoker invoker, T value) {
-      return createProxy((proxy, method, args) -> formHandler.handleConst(invoker, value), Const.class);
+      return createProxy(
+          (proxy, method, args) -> invoker.invokeConst(value),
+          Const.class);
     }
 
     private Form createForm(FormInvoker invoker, String name, Form target) {
@@ -91,7 +91,8 @@ public interface Form<O> extends Function<Stage, O>, Formattable {
                 Arrays.toString(args)
             ));
         //MEMOIZATION SHOULD HAPPEN HERE
-        return formHandler.handleForm(invoker, target, (Stage) args[0], name);
+        return invoker.invokeForm(target, (Stage) args[0], name);
+        //return formHandler.handleForm(invoker, target, (Stage) args[0], name);
       };
     }
 
