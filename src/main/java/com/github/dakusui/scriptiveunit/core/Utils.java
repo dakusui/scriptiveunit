@@ -325,7 +325,7 @@ public enum Utils {
   }
 
   /**
-   * This method returns an identifier string for a {@link com.github.dakusui.scriptiveunit.model.func.Func} object.
+   * This method returns an identifier string for a {@link com.github.dakusui.scriptiveunit.model.form.Func} object.
    * Note that the ID is composed by FQCN of the class and method name that directly calls this method by calling
    * {@link Thread#currentThread()}{@code .getStackTrace()}.
    * This means, refactoring, such as "extract method", made on the caller method

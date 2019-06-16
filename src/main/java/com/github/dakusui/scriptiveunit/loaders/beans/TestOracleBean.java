@@ -1,7 +1,7 @@
 package com.github.dakusui.scriptiveunit.loaders.beans;
 
-import com.github.dakusui.scriptiveunit.model.TestOracle;
-import com.github.dakusui.scriptiveunit.model.TestSuiteDescriptor;
+import com.github.dakusui.scriptiveunit.model.desc.testitem.TestOracle;
+import com.github.dakusui.scriptiveunit.model.desc.TestSuiteDescriptor;
 import com.github.dakusui.scriptiveunit.model.statement.Statement;
 
 import java.util.List;

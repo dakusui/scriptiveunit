@@ -1,4 +1,4 @@
-package com.github.dakusui.scriptiveunit.model;
+package com.github.dakusui.scriptiveunit.model.desc.testitem;
 
 import com.github.dakusui.actionunit.Action;
 import com.github.dakusui.actionunit.Actions;
@@ -7,9 +7,11 @@ import com.github.dakusui.actionunit.connectors.Sink;
 import com.github.dakusui.jcunit.core.tuples.Tuple;
 import com.github.dakusui.scriptiveunit.core.Utils;
 import com.github.dakusui.scriptiveunit.loaders.beans.BeanUtils;
-import com.github.dakusui.scriptiveunit.model.func.Form;
-import com.github.dakusui.scriptiveunit.model.func.FuncInvoker;
-import com.github.dakusui.scriptiveunit.model.stage.Stage;
+import com.github.dakusui.scriptiveunit.model.desc.TestSuiteDescriptor;
+import com.github.dakusui.scriptiveunit.model.form.Form;
+import com.github.dakusui.scriptiveunit.model.form.FormInvoker;
+import com.github.dakusui.scriptiveunit.model.session.Report;
+import com.github.dakusui.scriptiveunit.model.session.Stage;
 import com.github.dakusui.scriptiveunit.model.statement.Statement;
 import org.hamcrest.BaseMatcher;
 import org.hamcrest.Description;
@@ -24,8 +26,8 @@ import static com.github.dakusui.actionunit.Actions.nop;
 import static com.github.dakusui.scriptiveunit.core.Utils.append;
 import static com.github.dakusui.scriptiveunit.core.Utils.iterableToString;
 import static com.github.dakusui.scriptiveunit.core.Utils.template;
-import static com.github.dakusui.scriptiveunit.model.func.FuncInvoker.createMemo;
-import static com.github.dakusui.scriptiveunit.model.stage.Stage.ExecutionLevel.ORACLE;
+import static com.github.dakusui.scriptiveunit.model.form.FormInvoker.createMemo;
+import static com.github.dakusui.scriptiveunit.model.session.Stage.ExecutionLevel.ORACLE;
 import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
 
@@ -116,19 +118,19 @@ public interface TestOracle {
         if (beforeClause == null)
           return s -> Actions.nop();
         Statement statement = statementFactory.create(beforeClause);
-        FuncInvoker funcInvoker = FuncInvoker.create(memo);
-        return s -> BeanUtils.<Action>toForm(statement, funcInvoker).apply(s);
+        FormInvoker formInvoker = FormInvoker.create(memo);
+        return s -> BeanUtils.<Action>toForm(statement, formInvoker).apply(s);
       }
 
       @Override
       public Function<Stage, Matcher<Tuple>> givenFactory() {
         return (Stage s) -> new BaseMatcher<Tuple>() {
           private Statement givenStatement = statementFactory.create(givenClause);
-          private FuncInvoker funcInvoker = FuncInvoker.create(memo);
+          private FormInvoker formInvoker = FormInvoker.create(memo);
 
           @Override
           public boolean matches(Object item) {
-            return requireNonNull(BeanUtils.<Boolean>toForm(givenStatement, funcInvoker).apply(s));
+            return requireNonNull(BeanUtils.<Boolean>toForm(givenStatement, formInvoker).apply(s));
           }
 
           @Override
@@ -136,7 +138,7 @@ public interface TestOracle {
             description.appendText(
                 format("input (%s) should have made true following criterion but not.:%n'%s' defined in stage:%s",
                     testItem.getTestCaseTuple(),
-                    funcInvoker.asString(),
+                    formInvoker.asString(),
                     ORACLE));
           }
         };
@@ -145,11 +147,11 @@ public interface TestOracle {
       @Override
       public Function<Stage, Object> whenFactory() {
         return new Function<Stage, Object>() {
-          FuncInvoker funcInvoker = FuncInvoker.create(memo);
+          FormInvoker formInvoker = FormInvoker.create(memo);
 
           @Override
           public Object apply(Stage s) {
-            return BeanUtils.<Boolean>toForm(statementFactory.create(whenClause), funcInvoker).apply(s);
+            return BeanUtils.<Boolean>toForm(statementFactory.create(whenClause), formInvoker).apply(s);
           }
         };
       }
@@ -157,15 +159,15 @@ public interface TestOracle {
       @Override
       public Function<Stage, Function<Object, Matcher<Stage>>> thenFactory() {
         Statement thenStatement = statementFactory.create(thenClause);
-        FuncInvoker funcInvoker = FuncInvoker.create(memo);
+        FormInvoker formInvoker = FormInvoker.create(memo);
         return stage -> out -> new BaseMatcher<Stage>() {
-          Function<FuncInvoker, Predicate<Stage>> p = fi -> s -> requireNonNull(
+          Function<FormInvoker, Predicate<Stage>> p = fi -> s -> requireNonNull(
               BeanUtils.<Boolean>toForm(thenStatement, fi).apply(s));
-          Function<FuncInvoker, Function<Stage, String>> c = fi -> s -> fi.asString();
+          Function<FormInvoker, Function<Stage, String>> c = fi -> s -> fi.asString();
 
           @Override
           public boolean matches(Object item) {
-            return p.apply(funcInvoker).test(stage);
+            return p.apply(formInvoker).test(stage);
           }
 
           @Override
@@ -181,7 +183,7 @@ public interface TestOracle {
             description.appendText(String.format("output '%s' created from '%s' did not satisfy it.:%n'%s'",
                 output,
                 testItem.getTestCaseTuple(),
-                c.apply(funcInvoker).apply(stage)));
+                c.apply(formInvoker).apply(stage)));
           }
         };
       }
@@ -197,10 +199,10 @@ public interface TestOracle {
       @Override
       public Function<Stage, Sink<AssertionError>> errorHandlerFactory(TestItem testItem, Report report) {
         Statement onFailureStatement = statementFactory.create(onFailureClause);
-        FuncInvoker funcInvoker = FuncInvoker.create(memo);
+        FormInvoker formInvoker = FormInvoker.create(memo);
         return (Stage s) -> (AssertionError input, Context context) -> requireNonNull(
             onFailureClause != null ?
-                BeanUtils.<Action>toForm(onFailureStatement, funcInvoker) :
+                BeanUtils.<Action>toForm(onFailureStatement, formInvoker) :
                 (Form<Action>) input1 -> nop()).apply(s);
       }
 
@@ -209,8 +211,8 @@ public interface TestOracle {
         if (afterClause == null)
           return s -> Actions.nop();
         Statement statement = statementFactory.create(afterClause);
-        FuncInvoker funcInvoker = FuncInvoker.create(memo);
-        return s -> BeanUtils.<Action>toForm(statement, funcInvoker).apply(s);
+        FormInvoker formInvoker = FormInvoker.create(memo);
+        return s -> BeanUtils.<Action>toForm(statement, formInvoker).apply(s);
       }
 
     }

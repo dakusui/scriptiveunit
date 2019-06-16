@@ -1,8 +1,8 @@
 package com.github.dakusui.scriptiveunit.loaders.json;
 
-import com.github.dakusui.scriptiveunit.model.Session;
+import com.github.dakusui.scriptiveunit.model.session.Session;
 import com.github.dakusui.scriptiveunit.core.Config;
-import com.github.dakusui.scriptiveunit.model.TestSuiteDescriptor;
+import com.github.dakusui.scriptiveunit.model.desc.TestSuiteDescriptor;
 import org.codehaus.jackson.JsonNode;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.node.JsonNodeFactory;

@@ -1,4 +1,4 @@
-package com.github.dakusui.scriptiveunit.model;
+package com.github.dakusui.scriptiveunit.model.desc.testitem;
 
 import com.github.dakusui.jcunit.core.tuples.Tuple;
 import com.github.dakusui.jcunit8.factorspace.Constraint;

@@ -1,10 +1,13 @@
-package com.github.dakusui.scriptiveunit.model;
+package com.github.dakusui.scriptiveunit.model.desc;
 
 import com.github.dakusui.actionunit.Action;
 import com.github.dakusui.scriptiveunit.ScriptiveUnit;
 import com.github.dakusui.scriptiveunit.core.Config;
-import com.github.dakusui.scriptiveunit.model.func.Form;
+import com.github.dakusui.scriptiveunit.model.form.Form;
+import com.github.dakusui.scriptiveunit.model.session.Session;
 import com.github.dakusui.scriptiveunit.model.statement.Statement;
+import com.github.dakusui.scriptiveunit.model.desc.testitem.IndexedTestCase;
+import com.github.dakusui.scriptiveunit.model.desc.testitem.TestOracle;
 
 import java.lang.reflect.InvocationTargetException;
 import java.util.List;

@@ -2,8 +2,8 @@ package com.github.dakusui.scriptiveunit.drivers;
 
 import com.github.dakusui.actionunit.Action;
 import com.github.dakusui.scriptiveunit.annotations.Scriptable;
-import com.github.dakusui.scriptiveunit.model.stage.Stage;
-import com.github.dakusui.scriptiveunit.model.func.Form;
+import com.github.dakusui.scriptiveunit.model.session.Stage;
+import com.github.dakusui.scriptiveunit.model.form.Form;
 
 import static com.github.dakusui.actionunit.Actions.simple;
 import static com.github.dakusui.scriptiveunit.core.Utils.prettify;

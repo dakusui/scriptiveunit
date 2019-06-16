@@ -1,7 +1,7 @@
 package com.github.dakusui.scriptiveunit.annotations;
 
 import com.github.dakusui.scriptiveunit.loaders.json.JsonBasedLoader;
-import com.github.dakusui.scriptiveunit.model.TestSuiteDescriptor;
+import com.github.dakusui.scriptiveunit.model.desc.TestSuiteDescriptor;
 
 import java.lang.annotation.Annotation;
 import java.lang.annotation.Retention;

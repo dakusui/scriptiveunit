@@ -1,7 +1,8 @@
-package com.github.dakusui.scriptiveunit.model;
+package com.github.dakusui.scriptiveunit.model.session;
 
 import com.github.dakusui.scriptiveunit.core.Utils;
 import com.github.dakusui.scriptiveunit.exceptions.ScriptiveUnitException;
+import com.github.dakusui.scriptiveunit.model.desc.testitem.TestItem;
 import org.codehaus.jackson.map.ObjectMapper;
 
 import java.io.File;

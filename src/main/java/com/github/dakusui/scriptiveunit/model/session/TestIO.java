@@ -1,4 +1,4 @@
-package com.github.dakusui.scriptiveunit.model;
+package com.github.dakusui.scriptiveunit.model.session;
 
 import com.github.dakusui.jcunit.core.tuples.Tuple;
 

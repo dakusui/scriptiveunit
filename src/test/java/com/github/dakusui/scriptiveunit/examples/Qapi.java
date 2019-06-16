@@ -17,7 +17,7 @@ import com.github.dakusui.scriptiveunit.drivers.QueryApi;
 import com.github.dakusui.scriptiveunit.drivers.Strings;
 import com.github.dakusui.scriptiveunit.drivers.actions.Basic;
 import com.github.dakusui.scriptiveunit.loaders.json.JsonBasedLoader;
-import com.github.dakusui.scriptiveunit.model.func.Form;
+import com.github.dakusui.scriptiveunit.model.form.Form;
 import com.google.common.collect.Maps;
 import org.codehaus.jackson.JsonNode;
 import org.codehaus.jackson.node.ObjectNode;

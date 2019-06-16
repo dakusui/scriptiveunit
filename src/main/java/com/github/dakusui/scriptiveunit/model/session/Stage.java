@@ -1,10 +1,9 @@
-package com.github.dakusui.scriptiveunit.model.stage;
+package com.github.dakusui.scriptiveunit.model.session;
 
 import com.github.dakusui.jcunit.core.tuples.Tuple;
 import com.github.dakusui.scriptiveunit.core.Config;
-import com.github.dakusui.scriptiveunit.model.Report;
-import com.github.dakusui.scriptiveunit.model.TestItem;
-import com.github.dakusui.scriptiveunit.model.func.Form;
+import com.github.dakusui.scriptiveunit.model.desc.testitem.TestItem;
+import com.github.dakusui.scriptiveunit.model.form.Form;
 
 import java.util.Optional;
 

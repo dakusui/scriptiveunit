@@ -1,7 +1,7 @@
-package com.github.dakusui.scriptiveunit.model.func;
+package com.github.dakusui.scriptiveunit.model.form;
 
 import com.github.dakusui.scriptiveunit.core.ObjectMethod;
-import com.github.dakusui.scriptiveunit.model.stage.Stage;
+import com.github.dakusui.scriptiveunit.model.session.Stage;
 
 import java.io.IOException;
 import java.lang.reflect.InvocationHandler;
@@ -47,10 +47,10 @@ public interface Form<O> extends
   }
 
   class Factory {
-    private final FuncHandler funcHandler;
+    private final FormHandler formHandler;
 
-    public Factory(FuncHandler funcHandler) {
-      this.funcHandler = funcHandler;
+    public Factory(FormHandler formHandler) {
+      this.formHandler = formHandler;
     }
 
     /*
@@ -58,7 +58,7 @@ public interface Form<O> extends
      * can become Form[] it is because only the last argument of a method can become
      * a varargs.
      */
-    public Form create(FuncInvoker invoker, ObjectMethod objectMethod, Object[] args) {
+    public Form create(FormInvoker invoker, ObjectMethod objectMethod, Object[] args) {
       Object returnedValue;
       /*
        * By using dynamic proxy, we are making it possible to print structured pretty log.
@@ -73,15 +73,15 @@ public interface Form<O> extends
           ));
     }
 
-    public <T> Form<T> createConst(FuncInvoker invoker, T value) {
-      return createProxy((proxy, method, args) -> funcHandler.handleConst(invoker, value), Const.class);
+    public <T> Form<T> createConst(FormInvoker invoker, T value) {
+      return createProxy((proxy, method, args) -> formHandler.handleConst(invoker, value), Const.class);
     }
 
-    private Form createFunc(FuncInvoker invoker, String name, Form target) {
+    private Form createFunc(FormInvoker invoker, String name, Form target) {
       return createProxy(createInvocationHandler(invoker, name, target), Form.class);
     }
 
-    private InvocationHandler createInvocationHandler(FuncInvoker invoker, String name, Form target) {
+    private InvocationHandler createInvocationHandler(FormInvoker invoker, String name, Form target) {
       return (Object proxy, Method method, Object[] args) -> {
         if (!"apply".equals(method.getName()))
           return method.invoke(target, args);
@@ -90,7 +90,7 @@ public interface Form<O> extends
                 Stage.class.getCanonicalName(),
                 Arrays.toString(args)
             ));
-        return funcHandler.handle(invoker, target, (Stage) args[0], name);
+        return formHandler.handle(invoker, target, (Stage) args[0], name);
       };
     }
 

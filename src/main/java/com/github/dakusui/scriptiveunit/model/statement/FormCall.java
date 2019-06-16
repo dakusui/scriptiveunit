@@ -3,9 +3,9 @@ package com.github.dakusui.scriptiveunit.model.statement;
 import com.github.dakusui.scriptiveunit.ScriptiveUnit;
 import com.github.dakusui.scriptiveunit.core.Config;
 import com.github.dakusui.scriptiveunit.core.ObjectMethod;
-import com.github.dakusui.scriptiveunit.model.stage.Stage;
-import com.github.dakusui.scriptiveunit.model.func.Form;
-import com.github.dakusui.scriptiveunit.model.func.FuncInvoker;
+import com.github.dakusui.scriptiveunit.model.session.Stage;
+import com.github.dakusui.scriptiveunit.model.form.Form;
+import com.github.dakusui.scriptiveunit.model.form.FormInvoker;
 
 import java.lang.reflect.Array;
 import java.util.Arrays;
@@ -26,14 +26,14 @@ import static java.util.stream.Collectors.toList;
 import static java.util.stream.StreamSupport.stream;
 
 public interface FormCall {
-  Form apply(FuncInvoker funcInvoker, Arguments arguments);
+  Form apply(FormInvoker formInvoker, Arguments arguments);
 
   boolean isAccessor();
 
   abstract class Base implements FormCall {
-    List<Form> toFuncs(FuncInvoker funcInvoker, Iterable<Statement> arguments) {
+    List<Form> toFuncs(FormInvoker formInvoker, Iterable<Statement> arguments) {
       return stream(arguments.spliterator(), false)
-          .map(statement -> statement.compile(funcInvoker))
+          .map(statement -> statement.compile(formInvoker))
           .collect(toList());
     }
   }
@@ -90,7 +90,7 @@ public interface FormCall {
     }
 
     private static Form compile(Statement statement) {
-      return statement.compile(FuncInvoker.create(FuncInvoker.createMemo()));
+      return statement.compile(FormInvoker.create(FormInvoker.createMemo()));
     }
 
     private Optional<Supplier<List<Object>>> getUserDefinedFormClauseFromSessionByName(String name) {
@@ -141,22 +141,22 @@ public interface FormCall {
       }
 
       @Override
-      public Form apply(FuncInvoker funcInvoker, Arguments arguments) {
+      public Form apply(FormInvoker formInvoker, Arguments arguments) {
         Form[] args = toArray(
-            toFuncs(funcInvoker, arguments),
+            toFuncs(formInvoker, arguments),
             Form.class
         );
-        return createForm(funcInvoker, args);
+        return createForm(formInvoker, args);
       }
 
-      Form createForm(FuncInvoker funcInvoker, Form[] args) {
+      Form createForm(FormInvoker formInvoker, Form[] args) {
         Object[] argValues;
         if (requireNonNull(objectMethod).isVarArgs()) {
           int parameterCount = objectMethod.getParameterCount();
           argValues = Factory.this.shrinkTo(objectMethod.getParameterTypes()[parameterCount - 1].getComponentType(), parameterCount, args);
         } else
           argValues = args;
-        return funcFactory.create(funcInvoker, objectMethod, argValues);
+        return funcFactory.create(formInvoker, objectMethod, argValues);
       }
     }
 
@@ -168,12 +168,12 @@ public interface FormCall {
       }
 
       @Override
-      public Form<Object> apply(FuncInvoker funcInvoker, Arguments arguments) {
+      public Form<Object> apply(FormInvoker formInvoker, Arguments arguments) {
         return createFunc(
             toArray(
                 Stream.concat(
                     Stream.of((Form<Statement>) input -> userDefinedFormStatementSupplier.get()),
-                    toFuncs(funcInvoker, arguments).stream()
+                    toFuncs(formInvoker, arguments).stream()
                 ).collect(toList()),
                 Form.class
             )
@@ -202,8 +202,8 @@ public interface FormCall {
 
       @SuppressWarnings("unchecked")
       @Override
-      public Form<Form<Object>> apply(FuncInvoker funcInvoker, Arguments arguments) {
-        return (Stage ii) -> getOnlyElement(toFuncs(funcInvoker, arguments));
+      public Form<Form<Object>> apply(FormInvoker formInvoker, Arguments arguments) {
+        return (Stage ii) -> getOnlyElement(toFuncs(formInvoker, arguments));
       }
 
       @Override

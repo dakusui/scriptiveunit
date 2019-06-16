@@ -1,6 +1,6 @@
 package com.github.dakusui.scriptiveunit.exceptions;
 
-import com.github.dakusui.scriptiveunit.model.stage.Stage;
+import com.github.dakusui.scriptiveunit.model.session.Stage;
 import com.github.dakusui.scriptiveunit.model.statement.Statement;
 import org.codehaus.jackson.JsonNode;
 import org.codehaus.jackson.node.ObjectNode;

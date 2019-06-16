@@ -1,7 +1,6 @@
-package com.github.dakusui.scriptiveunit.model.stage;
+package com.github.dakusui.scriptiveunit.model.session;
 
 import com.github.dakusui.scriptiveunit.core.Config;
-import com.github.dakusui.scriptiveunit.model.Report;
 
 import java.util.Optional;
 

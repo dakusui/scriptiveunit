@@ -3,9 +3,9 @@ package com.github.dakusui.scriptiveunit.model.statement;
 import com.github.dakusui.scriptiveunit.core.Config;
 import com.github.dakusui.scriptiveunit.exceptions.SyntaxException;
 import com.github.dakusui.scriptiveunit.exceptions.TypeMismatch;
-import com.github.dakusui.scriptiveunit.model.func.Form;
-import com.github.dakusui.scriptiveunit.model.func.FuncHandler;
-import com.github.dakusui.scriptiveunit.model.func.FuncInvoker;
+import com.github.dakusui.scriptiveunit.model.form.Form;
+import com.github.dakusui.scriptiveunit.model.form.FormHandler;
+import com.github.dakusui.scriptiveunit.model.form.FormInvoker;
 import com.google.common.collect.Lists;
 
 import java.util.List;
@@ -23,7 +23,7 @@ public interface Statement {
     return new Factory(config, userDefinedFormClauses);
   }
 
-  Form compile(FuncInvoker invoker);
+  Form compile(FormInvoker invoker);
 
   interface Atom extends Statement {
   }
@@ -39,8 +39,8 @@ public interface Statement {
     private final Form.Factory funcFactory;
 
     public Factory(Config config, Map<String, List<Object>> userDefinedFormClauses) {
-      FuncHandler funcHandler = new FuncHandler();
-      this.funcFactory = new Form.Factory(funcHandler);
+      FormHandler formHandler = new FormHandler();
+      this.funcFactory = new Form.Factory(formHandler);
       this.formFactory = new FormCall.Factory(funcFactory, this, config, userDefinedFormClauses);
     }
 
@@ -64,7 +64,7 @@ public interface Statement {
           }
 
           @Override
-          public Form<?> compile(FuncInvoker invoker) {
+          public Form<?> compile(FormInvoker invoker) {
             return (Form<?>) getForm().apply(invoker, arguments);
           }
         };
@@ -105,7 +105,7 @@ public interface Statement {
                * the statement by evaluating it, it is valid to pass a fresh
                * memo object to an invoker.
                */
-              work.add(Objects.toString(each.compile(FuncInvoker.create(FuncInvoker.createMemo()))));
+              work.add(Objects.toString(each.compile(FormInvoker.create(FormInvoker.createMemo()))));
             } else {
               throw SyntaxException.parameterNameShouldBeSpecifiedWithConstant((Nested) statement);
             }

@@ -24,7 +24,7 @@ public @interface Import {
 
     /**
      * Returns an alias for the {@code Form} specified by {@code value()}.
-     * If a string whose length is 0 is returned, alias is not used and the func will
+     * If a string whose length is 0 is returned, alias is not used and the func(form) will
      * be referred to by the {@code value}.
      */
     String as() default "";

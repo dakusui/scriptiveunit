@@ -9,14 +9,14 @@ import com.github.dakusui.jcunit8.testsuite.TestCase;
 import com.github.dakusui.scriptiveunit.ScriptiveUnit;
 import com.github.dakusui.scriptiveunit.core.Config;
 import com.github.dakusui.scriptiveunit.core.Utils;
-import com.github.dakusui.scriptiveunit.model.IndexedTestCase;
-import com.github.dakusui.scriptiveunit.model.ParameterSpaceDescriptor;
-import com.github.dakusui.scriptiveunit.model.Session;
-import com.github.dakusui.scriptiveunit.model.TestOracle;
-import com.github.dakusui.scriptiveunit.model.TestSuiteDescriptor;
-import com.github.dakusui.scriptiveunit.model.func.Form;
-import com.github.dakusui.scriptiveunit.model.func.FuncInvoker;
-import com.github.dakusui.scriptiveunit.model.stage.Stage;
+import com.github.dakusui.scriptiveunit.model.desc.testitem.IndexedTestCase;
+import com.github.dakusui.scriptiveunit.model.desc.ParameterSpaceDescriptor;
+import com.github.dakusui.scriptiveunit.model.session.Session;
+import com.github.dakusui.scriptiveunit.model.desc.testitem.TestOracle;
+import com.github.dakusui.scriptiveunit.model.desc.TestSuiteDescriptor;
+import com.github.dakusui.scriptiveunit.model.form.Form;
+import com.github.dakusui.scriptiveunit.model.form.FormInvoker;
+import com.github.dakusui.scriptiveunit.model.session.Stage;
 import com.github.dakusui.scriptiveunit.model.statement.Statement;
 
 import java.util.List;
@@ -26,7 +26,7 @@ import java.util.function.Function;
 
 import static com.github.dakusui.actionunit.Actions.nop;
 import static com.github.dakusui.scriptiveunit.exceptions.ScriptiveUnitException.wrap;
-import static com.github.dakusui.scriptiveunit.model.func.FuncInvoker.createMemo;
+import static com.github.dakusui.scriptiveunit.model.form.FormInvoker.createMemo;
 import static com.github.dakusui.scriptiveunit.model.statement.Statement.createStatementFactory;
 import static java.lang.String.format;
 import static java.util.Collections.singletonList;
@@ -157,7 +157,7 @@ public abstract class TestSuiteDescriptorBean {
             Object result =
                 statement == null ?
                     nop() :
-                    BeanUtils.toForm(statement, FuncInvoker.create(createMemo())).apply(input);
+                    BeanUtils.toForm(statement, FormInvoker.create(createMemo())).apply(input);
             return (Action) requireNonNull(
                 result,
                 String.format("statement for '%s' was not valid '%s'", actionName, statement)

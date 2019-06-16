@@ -1,9 +1,9 @@
-package com.github.dakusui.scriptiveunit.model.func;
+package com.github.dakusui.scriptiveunit.model.form;
 
 import com.github.dakusui.actionunit.visitors.ActionPrinter;
 import com.github.dakusui.jcunit.core.utils.StringUtils;
 import com.github.dakusui.scriptiveunit.core.Utils;
-import com.github.dakusui.scriptiveunit.model.stage.Stage;
+import com.github.dakusui.scriptiveunit.model.session.Stage;
 import com.google.common.collect.Lists;
 
 import java.util.Arrays;
@@ -17,7 +17,7 @@ import static com.github.dakusui.scriptiveunit.core.Utils.toBigDecimalIfPossible
 import static java.lang.String.format;
 import static java.util.Arrays.stream;
 
-public interface FuncInvoker {
+public interface FormInvoker {
   <T> T invokeConst(Object value);
 
   Object invokeFunc(Form target, Stage stage, String alias);
@@ -36,11 +36,11 @@ public interface FuncInvoker {
     };
   }
 
-  static FuncInvoker create(Map<List<Object>, Object> memo) {
+  static FormInvoker create(Map<List<Object>, Object> memo) {
     return new Impl(0, memo);
   }
 
-  class Impl implements FuncInvoker {
+  class Impl implements FormInvoker {
     private final Writer writer;
     private       int    indent;
 

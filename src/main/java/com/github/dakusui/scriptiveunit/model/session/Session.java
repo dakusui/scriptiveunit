@@ -1,4 +1,4 @@
-package com.github.dakusui.scriptiveunit.model;
+package com.github.dakusui.scriptiveunit.model.session;
 
 import com.github.dakusui.actionunit.Action;
 import com.github.dakusui.actionunit.Actions;
@@ -8,15 +8,19 @@ import com.github.dakusui.actionunit.connectors.Source;
 import com.github.dakusui.jcunit.core.tuples.Tuple;
 import com.github.dakusui.jcunit8.factorspace.Constraint;
 import com.github.dakusui.scriptiveunit.core.Config;
-import com.github.dakusui.scriptiveunit.model.stage.Stage;
+import com.github.dakusui.scriptiveunit.model.desc.ConstraintDefinition;
+import com.github.dakusui.scriptiveunit.model.desc.testitem.IndexedTestCase;
+import com.github.dakusui.scriptiveunit.model.desc.testitem.TestItem;
+import com.github.dakusui.scriptiveunit.model.desc.testitem.TestOracle;
+import com.github.dakusui.scriptiveunit.model.desc.TestSuiteDescriptor;
 import org.hamcrest.Matcher;
 
 import java.util.function.Function;
 
 import static com.github.dakusui.actionunit.Actions.attempt;
 import static com.github.dakusui.actionunit.Actions.sequential;
-import static com.github.dakusui.scriptiveunit.model.stage.Stage.ExecutionLevel.FIXTURE;
-import static com.github.dakusui.scriptiveunit.model.stage.Stage.ExecutionLevel.SUITE;
+import static com.github.dakusui.scriptiveunit.model.session.Stage.ExecutionLevel.FIXTURE;
+import static com.github.dakusui.scriptiveunit.model.session.Stage.ExecutionLevel.SUITE;
 import static java.util.Objects.requireNonNull;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assume.assumeThat;

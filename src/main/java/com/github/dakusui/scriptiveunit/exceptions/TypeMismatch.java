@@ -1,6 +1,6 @@
 package com.github.dakusui.scriptiveunit.exceptions;
 
-import com.github.dakusui.scriptiveunit.model.func.Form;
+import com.github.dakusui.scriptiveunit.model.form.Form;
 
 import static java.lang.String.format;
 

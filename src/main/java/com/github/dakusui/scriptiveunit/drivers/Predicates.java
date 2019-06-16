@@ -2,8 +2,8 @@ package com.github.dakusui.scriptiveunit.drivers;
 
 import com.github.dakusui.scriptiveunit.annotations.Doc;
 import com.github.dakusui.scriptiveunit.annotations.Scriptable;
-import com.github.dakusui.scriptiveunit.model.stage.Stage;
-import com.github.dakusui.scriptiveunit.model.func.Form;
+import com.github.dakusui.scriptiveunit.model.session.Stage;
+import com.github.dakusui.scriptiveunit.model.form.Form;
 
 import java.util.Objects;
 

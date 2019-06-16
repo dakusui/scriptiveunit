@@ -1,6 +1,6 @@
-package com.github.dakusui.scriptiveunit.model.func;
+package com.github.dakusui.scriptiveunit.model.form;
 
-import com.github.dakusui.scriptiveunit.model.stage.Stage;
+import com.github.dakusui.scriptiveunit.model.session.Stage;
 
 import java.util.*;
 import java.util.function.Function;
