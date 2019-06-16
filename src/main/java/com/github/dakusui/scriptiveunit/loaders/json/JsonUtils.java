@@ -2,7 +2,6 @@ package com.github.dakusui.scriptiveunit.loaders.json;
 
 import com.github.dakusui.scriptiveunit.core.Utils;
 import com.github.dakusui.scriptiveunit.exceptions.ScriptiveUnitException;
-import com.github.dakusui.scriptiveunit.loaders.json.Preprocessor.Path;
 import org.codehaus.jackson.JsonNode;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.node.ArrayNode;
@@ -13,14 +12,9 @@ import org.codehaus.jackson.node.TextNode;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.List;
-import java.util.function.Function;
-import java.util.function.Predicate;
 
 import static com.github.dakusui.scriptiveunit.exceptions.SyntaxException.mergeFailed;
-import static java.util.Arrays.stream;
 import static java.util.Objects.requireNonNull;
-import static java.util.stream.Collectors.toList;
 
 public enum JsonUtils {
   ;
@@ -134,53 +128,5 @@ public enum JsonUtils {
     if (value instanceof Number)
       return numeric((Number) value);
     throw new UnsupportedOperationException();
-  }
-
-  /**
-   * Returns a preprocessor instance which translates a JSON node ona path specified by {@code pathMatcher}
-   * in a given {@code JSON} node using a function {@code translator}.
-   *
-   * @param translator  A function with which the translation is made.
-   * @param pathMatcher A predicate that returns {@code true} for a path in a JSON node,
-   *                    where translations by {@code translator} are desired.
-   * @return A new preprocessor.
-   */
-  public static Preprocessor preprocessor(Function<JsonNode, JsonNode> translator, Predicate<Path> pathMatcher) {
-    requireNonNull(translator);
-    requireNonNull(pathMatcher);
-    return new Preprocessor() {
-      @Override
-      public JsonNode translate(JsonNode targetElement) {
-        return translator.apply(targetElement);
-      }
-
-      @Override
-      public boolean matches(Path pathToTargetElement) {
-        return pathMatcher.test(pathToTargetElement);
-      }
-    };
-  }
-
-  public static Predicate<Path> pathMatcher(String... args) {
-    return new Predicate<Path>() {
-      @Override
-      public boolean test(Path path) {
-        List<Path.Component> pathComponents = path.asComponentList();
-        if (args.length != pathComponents.size())
-          return false;
-        int i = 0;
-        for (String eachArg : args) {
-          if (!pathComponents.get(i).value().toString().matches(eachArg))
-            return false;
-          i++;
-        }
-        return true;
-      }
-
-      @Override
-      public String toString() {
-        return stream(args).collect(toList()).toString();
-      }
-    };
   }
 }

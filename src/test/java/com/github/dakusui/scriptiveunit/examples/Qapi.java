@@ -7,8 +7,7 @@ import com.github.dakusui.scriptiveunit.annotations.Import.Alias;
 import com.github.dakusui.scriptiveunit.annotations.Load;
 import com.github.dakusui.scriptiveunit.annotations.Scriptable;
 import com.github.dakusui.scriptiveunit.core.Config;
-import com.github.dakusui.scriptiveunit.loaders.json.JsonUtils;
-import com.github.dakusui.scriptiveunit.loaders.json.Preprocessor;
+import com.github.dakusui.scriptiveunit.loaders.json.JsonPreprocessor;
 import com.github.dakusui.scriptiveunit.drivers.Arith;
 import com.github.dakusui.scriptiveunit.drivers.Collections;
 import com.github.dakusui.scriptiveunit.drivers.Core;
@@ -31,7 +30,7 @@ import java.util.stream.Collectors;
 
 import static com.github.dakusui.scriptiveunit.loaders.json.JsonUtils.array;
 import static com.github.dakusui.scriptiveunit.loaders.json.JsonUtils.object;
-import static com.github.dakusui.scriptiveunit.loaders.json.JsonUtils.pathMatcher;
+import static com.github.dakusui.scriptiveunit.loaders.Preprocessor.Utils.pathMatcher;
 import static com.github.dakusui.scriptiveunit.loaders.json.JsonUtils.deepMerge;
 import static java.lang.String.format;
 import static java.util.Collections.unmodifiableMap;
@@ -49,10 +48,10 @@ public class Qapi {
     }
 
     @Override
-    protected List<Preprocessor> getPreprocessors() {
-      return new LinkedList<Preprocessor>() {{
+    protected List<JsonPreprocessor> getPreprocessors() {
+      return new LinkedList<JsonPreprocessor>() {{
         addAll(Loader.super.getPreprocessors());
-        add(JsonUtils.preprocessor(
+        add(JsonPreprocessor.preprocessor(
             (JsonNode targetElement) ->
                 deepMerge(
                     ((ObjectNode) targetElement),

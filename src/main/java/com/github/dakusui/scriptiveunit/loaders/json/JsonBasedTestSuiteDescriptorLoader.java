@@ -53,7 +53,7 @@ public class JsonBasedTestSuiteDescriptorLoader extends TestSuiteDescriptorLoade
     return work;
   }
 
-  protected List<Preprocessor> getPreprocessors() {
+  protected List<JsonPreprocessor> getPreprocessors() {
     return JsonPreprocessorUtils.preprocessors();
   }
 
