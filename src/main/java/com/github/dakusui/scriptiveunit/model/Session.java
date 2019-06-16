@@ -149,7 +149,7 @@ public interface Session {
 
     Action createBefore(TestItem testItem, TestOracle.Box box, Report report) {
       Stage beforeStage = this.createOracleLevelStage(testItem, report);
-      return box.createBefore(testItem, report).apply(beforeStage);
+      return box.beforeFactory(testItem, report).apply(beforeStage);
     }
 
     Source<Tuple> createGiven(
@@ -194,7 +194,7 @@ public interface Session {
 
     Action createAfter(TestItem testItem, TestOracle.Box box, Report report) {
       Stage afterStage = this.createOracleLevelStage(testItem, report);
-      return box.createAfter(testItem, report).apply(afterStage);
+      return box.afterFactory(testItem, report).apply(afterStage);
     }
 
     Stage createFixtureLevelStage(Tuple testCaseTuple) {

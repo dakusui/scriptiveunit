@@ -2,7 +2,6 @@ package com.github.dakusui.scriptiveunit.loaders.json;
 
 import com.github.dakusui.scriptiveunit.model.Session;
 import com.github.dakusui.scriptiveunit.core.Config;
-import com.github.dakusui.scriptiveunit.loaders.json.JsonBeans.TestSuiteDescriptorBean;
 import com.github.dakusui.scriptiveunit.model.TestSuiteDescriptor;
 import org.codehaus.jackson.JsonNode;
 import org.codehaus.jackson.map.ObjectMapper;
@@ -35,7 +34,7 @@ public class JsonBasedLoader extends TestSuiteDescriptor.Loader.Base {
     try {
       return new ObjectMapper().readValue(
           readScript(session.getConfig().getScriptResourceName()),
-          TestSuiteDescriptorBean.class)
+          JsonTestSuiteDescriptorBean.class)
           .create(session);
     } catch (IOException e) {
       throw wrap(e);
