@@ -3,9 +3,9 @@ package com.github.dakusui.scriptiveunit.model.statement;
 import com.github.dakusui.scriptiveunit.ScriptiveUnit;
 import com.github.dakusui.scriptiveunit.core.Config;
 import com.github.dakusui.scriptiveunit.core.ObjectMethod;
-import com.github.dakusui.scriptiveunit.model.session.Stage;
 import com.github.dakusui.scriptiveunit.model.form.Form;
 import com.github.dakusui.scriptiveunit.model.form.FormInvoker;
+import com.github.dakusui.scriptiveunit.model.session.Stage;
 
 import java.lang.reflect.Array;
 import java.util.Arrays;
@@ -17,7 +17,6 @@ import java.util.function.Supplier;
 import java.util.stream.Stream;
 
 import static com.github.dakusui.scriptiveunit.core.Exceptions.SCRIPTIVEUNIT;
-import static com.github.dakusui.scriptiveunit.core.Utils.check;
 import static com.google.common.collect.Iterables.getOnlyElement;
 import static com.google.common.collect.Iterables.toArray;
 import static java.lang.String.format;
@@ -25,7 +24,7 @@ import static java.util.Objects.requireNonNull;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.StreamSupport.stream;
 
-public interface FormCall {
+interface FormCall {
   Form apply(FormInvoker formInvoker, Arguments arguments);
 
   boolean isAccessor();
@@ -191,12 +190,11 @@ public interface FormCall {
       }
 
       private static Form<Object> userFunc(Form<Statement> statementForm, Form<?>... args) {
-        return (Stage input) -> compile(statementForm.apply(input)).<Form<Object>>apply(Stage.Factory.createWrappedStage(input, args));
+        return (Stage input) -> compile(statementForm.apply(input)).apply(Stage.Factory.createWrappedStage(input, args));
       }
     }
 
     private static class Lambda extends Base {
-
       private Lambda() {
       }
 

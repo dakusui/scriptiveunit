@@ -20,7 +20,7 @@ import static java.util.Arrays.stream;
 public interface FormInvoker {
   <T> T invokeConst(Object value);
 
-  Object invokeFunc(Form target, Stage stage, String alias);
+  Object invokeForm(Form target, Stage stage, String alias);
 
   String asString();
 
@@ -41,12 +41,14 @@ public interface FormInvoker {
   }
 
   class Impl implements FormInvoker {
-    private final Writer writer;
-    private       int    indent;
+    private final Writer                    writer;
+    private final Map<List<Object>, Object> memo;
+    private       int                       indent;
 
     private Impl(int initialIndent, Map<List<Object>, Object> memo) {
       this.indent = initialIndent;
       this.writer = new Writer();
+      this.memo = memo;
     }
 
     void enter() {
@@ -66,18 +68,12 @@ public interface FormInvoker {
     }
 
     @Override
-    public Object invokeFunc(Form target, Stage stage, String alias) {
-      boolean targetIsMemoized = false; //target instanceof Func.Memoized;
+    public Object invokeForm(Form target, Stage stage, String alias) {
       Object ret = "(N/A)";
       this.enter();
       try {
         this.writeLine("%s(", alias);
-        if (targetIsMemoized) {
-          ret = computeIfAbsent(target, stage);
-        } else {
-          ret = target.apply(stage);
-        }
-        return toBigDecimalIfPossible(ret);
+        return toBigDecimalIfPossible(target.apply(stage));
       } finally {
         this.writeLine(") -> %s", ret);
         this.leave();
@@ -111,10 +107,6 @@ public interface FormInvoker {
 
     private String indent() {
       return "  ";
-    }
-
-    private Object computeIfAbsent(Form target, Stage stage) {
-      return target.apply(stage);
     }
 
     private static Object[] prettify(Object... args) {

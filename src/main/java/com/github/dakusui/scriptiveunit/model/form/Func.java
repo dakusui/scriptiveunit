@@ -2,7 +2,10 @@ package com.github.dakusui.scriptiveunit.model.form;
 
 import com.github.dakusui.scriptiveunit.model.session.Stage;
 
-import java.util.*;
+import java.util.Arrays;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Objects;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
@@ -11,9 +14,7 @@ import static java.util.Objects.requireNonNull;
 public interface Func<O> extends Form<O> {
   List<Form> parameters();
 
-  default O apply(Stage input) {
-    return call(input).get();
-  }
+  O apply(Stage input);
 
   default Call<O> call(Stage input) {
     return new Call<>(
@@ -96,6 +97,11 @@ public interface Func<O> extends Form<O> {
         }
 
         @Override
+        public O apply(Stage input) {
+          return call(input).get();
+        }
+
+        @Override
         public String id() {
           return id;
         }
@@ -113,7 +119,7 @@ public interface Func<O> extends Form<O> {
     }
   }
 
-  static <T> Func<T> memoize(Func<T> func, Map<Call, Object> memo) {
+  static <T> Func<T> memoize(Func<T> func) {
     return new Func<T>() {
       @Override
       public List<Form> parameters() {
@@ -128,7 +134,7 @@ public interface Func<O> extends Form<O> {
       @SuppressWarnings("unchecked")
       public T apply(Stage input) {
         Call<T> call = call(input);
-        return (T) memo.computeIfAbsent(call, Call::get);
+        return call.get();
       }
 
       @Override

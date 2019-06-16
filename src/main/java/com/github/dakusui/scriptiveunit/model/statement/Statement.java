@@ -35,23 +35,23 @@ public interface Statement {
   }
 
   class Factory {
-    private final FormCall.Factory formFactory;
-    private final Form.Factory funcFactory;
+    private final FormCall.Factory formCallFactory;
+    private final Form.Factory     formFactory;
 
     public Factory(Config config, Map<String, List<Object>> userDefinedFormClauses) {
       FormHandler formHandler = new FormHandler();
-      this.funcFactory = new Form.Factory(formHandler);
-      this.formFactory = new FormCall.Factory(funcFactory, this, config, userDefinedFormClauses);
+      this.formFactory = new Form.Factory(formHandler);
+      this.formCallFactory = new FormCall.Factory(formFactory, this, config, userDefinedFormClauses);
     }
 
     public Statement create(Object object) throws TypeMismatch {
       if (Utils.isAtom(object))
-        return (Atom) invoker -> (Form<Object>) funcFactory.createConst(invoker, object);
+        return (Atom) invoker -> (Form<Object>) formFactory.createConst(invoker, object);
       @SuppressWarnings("unchecked") List<Form> raw = (List<Form>) object;
       Object car = Utils.car(raw);
       if (car instanceof String) {
         Arguments arguments = Arguments.create(this, Utils.cdr(raw));
-        FormCall formCall = this.formFactory.create((String) car);
+        FormCall formCall = this.formCallFactory.create((String) car);
         return new Nested() {
           @Override
           public FormCall getForm() {

@@ -136,8 +136,7 @@ public class Basic {
         new Func.Builder<Integer>(Utils.funcId())
             .func(input -> i++)
             .addParameters()
-            .build(),
-        memo
+            .build()
     );
   }
 
@@ -148,8 +147,7 @@ public class Basic {
             .func(objects -> (Integer) objects[0] + (Integer) objects[1] + i++)
             .addParameter(a)
             .addParameter(b)
-            .build(),
-        memo
+            .build()
     );
   }
 

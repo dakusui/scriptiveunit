@@ -10,6 +10,7 @@ import java.lang.reflect.Proxy;
 import java.util.Arrays;
 import java.util.Formattable;
 import java.util.Formatter;
+import java.util.function.Function;
 
 import static com.github.dakusui.scriptiveunit.core.Utils.check;
 import static com.github.dakusui.scriptiveunit.exceptions.ScriptiveUnitException.fail;
@@ -17,9 +18,7 @@ import static com.github.dakusui.scriptiveunit.exceptions.ScriptiveUnitException
 import static com.github.dakusui.scriptiveunit.exceptions.TypeMismatch.valueReturnedByScriptableMethodMustBeFunc;
 
 @FunctionalInterface
-public interface Form<O> extends
-    java.util.function.Function<Stage, O>,
-    Formattable {
+public interface Form<O> extends Function<Stage, O>, Formattable {
   @Override
   O apply(Stage input);
 
@@ -63,7 +62,7 @@ public interface Form<O> extends
       /*
        * By using dynamic proxy, we are making it possible to print structured pretty log.
        */
-      return createFunc(
+      return createForm(
           invoker,
           objectMethod.getName(),
           (Form) check(
@@ -77,7 +76,7 @@ public interface Form<O> extends
       return createProxy((proxy, method, args) -> formHandler.handleConst(invoker, value), Const.class);
     }
 
-    private Form createFunc(FormInvoker invoker, String name, Form target) {
+    private Form createForm(FormInvoker invoker, String name, Form target) {
       return createProxy(createInvocationHandler(invoker, name, target), Form.class);
     }
 
@@ -85,12 +84,14 @@ public interface Form<O> extends
       return (Object proxy, Method method, Object[] args) -> {
         if (!"apply".equals(method.getName()))
           return method.invoke(target, args);
+        //MEMOIZATION SHOULD HAPPEN HERE
         check(args.length == 1 && args[0] instanceof Stage,
             fail("The argument should be an array of length 1 and its first element should be an instance of %s, but it was: %s",
                 Stage.class.getCanonicalName(),
                 Arrays.toString(args)
             ));
-        return formHandler.handle(invoker, target, (Stage) args[0], name);
+        //MEMOIZATION SHOULD HAPPEN HERE
+        return formHandler.handleForm(invoker, target, (Stage) args[0], name);
       };
     }
 

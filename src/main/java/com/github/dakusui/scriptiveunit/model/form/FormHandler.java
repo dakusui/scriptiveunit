@@ -6,8 +6,8 @@ public class FormHandler {
   public FormHandler() {
   }
 
-  Object handle(FormInvoker invoker, Form target, Stage stage, String alias) {
-    return invoker.invokeFunc(target, stage, alias);
+  Object handleForm(FormInvoker invoker, Form target, Stage stage, String alias) {
+    return invoker.invokeForm(target, stage, alias);
   }
 
   <T> T handleConst(FormInvoker invoker, T value) {
