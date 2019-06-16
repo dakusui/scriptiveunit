@@ -1,5 +1,6 @@
 package com.github.dakusui.scriptiveunit.loaders.json;
 
+import com.github.dakusui.scriptiveunit.loaders.TestSuiteDescriptorLoader;
 import com.github.dakusui.scriptiveunit.model.session.Session;
 import com.github.dakusui.scriptiveunit.core.Config;
 import com.github.dakusui.scriptiveunit.model.desc.TestSuiteDescriptor;
@@ -16,7 +17,7 @@ import static com.github.dakusui.scriptiveunit.exceptions.ScriptiveUnitException
 import static com.github.dakusui.scriptiveunit.loaders.json.JsonPreprocessorUtils.checkObjectNode;
 import static com.github.dakusui.scriptiveunit.loaders.json.JsonPreprocessorUtils.getParentsOf;
 
-public class JsonBasedTestSuiteDescriptorLoader extends TestSuiteDescriptor.TestSuiteDescriptorLoader.Base {
+public class JsonBasedTestSuiteDescriptorLoader extends TestSuiteDescriptorLoader.Base {
 
   protected static final String EXTENDS_KEYWORD = "$extends";
   /**

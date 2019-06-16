@@ -9,6 +9,7 @@ import com.github.dakusui.scriptiveunit.core.Config;
 import com.github.dakusui.scriptiveunit.core.Description;
 import com.github.dakusui.scriptiveunit.core.ObjectMethod;
 import com.github.dakusui.scriptiveunit.core.Utils;
+import com.github.dakusui.scriptiveunit.loaders.TestSuiteDescriptorLoader;
 import com.github.dakusui.scriptiveunit.model.desc.testitem.IndexedTestCase;
 import com.github.dakusui.scriptiveunit.model.session.Session;
 import com.github.dakusui.scriptiveunit.model.desc.testitem.TestOracle;
@@ -66,7 +67,7 @@ public class ScriptiveUnit extends Parameterized {
     this(klass, createTestSuiteDescriptorLoader(config));
   }
 
-  public ScriptiveUnit(Class<?> klass, TestSuiteDescriptor.TestSuiteDescriptorLoader loader) throws Throwable {
+  public ScriptiveUnit(Class<?> klass, TestSuiteDescriptorLoader loader) throws Throwable {
     super(klass);
     this.session = Session.create(loader.getConfig(), loader);
     this.runners = newLinkedList(createRunners());
@@ -114,8 +115,8 @@ public class ScriptiveUnit extends Parameterized {
     };
   }
 
-  private static TestSuiteDescriptor.TestSuiteDescriptorLoader createTestSuiteDescriptorLoader(Config config) {
-    return TestSuiteDescriptor.TestSuiteDescriptorLoader.createInstance(
+  private static TestSuiteDescriptorLoader createTestSuiteDescriptorLoader(Config config) {
+    return TestSuiteDescriptorLoader.createInstance(
         Utils.getAnnotationWithDefault(
             config.getDriverObject().getClass(),
             Load.DEFAULT_INSTANCE

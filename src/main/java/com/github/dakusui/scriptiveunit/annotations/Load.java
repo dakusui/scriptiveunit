@@ -1,7 +1,7 @@
 package com.github.dakusui.scriptiveunit.annotations;
 
 import com.github.dakusui.scriptiveunit.loaders.json.JsonBasedTestSuiteDescriptorLoader;
-import com.github.dakusui.scriptiveunit.model.desc.TestSuiteDescriptor;
+import com.github.dakusui.scriptiveunit.loaders.TestSuiteDescriptorLoader;
 
 import java.lang.annotation.Annotation;
 import java.lang.annotation.Retention;
@@ -29,7 +29,7 @@ public @interface Load {
     }
 
     @Override
-    public Class<? extends TestSuiteDescriptor.TestSuiteDescriptorLoader> with() {
+    public Class<? extends TestSuiteDescriptorLoader> with() {
       return JsonBasedTestSuiteDescriptorLoader.class;
     }
   };
@@ -38,5 +38,5 @@ public @interface Load {
 
   String scriptSystemPropertyKey() default DEFAULT_SCRIPT_SYSTEM_PROPERTY_KEY;
 
-  Class<? extends TestSuiteDescriptor.TestSuiteDescriptorLoader> with() default JsonBasedTestSuiteDescriptorLoader.class;
+  Class<? extends TestSuiteDescriptorLoader> with() default JsonBasedTestSuiteDescriptorLoader.class;
 }

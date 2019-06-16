@@ -9,6 +9,7 @@ import com.github.dakusui.jcunit.core.tuples.Tuple;
 import com.github.dakusui.jcunit8.factorspace.Constraint;
 import com.github.dakusui.scriptiveunit.core.Config;
 import com.github.dakusui.scriptiveunit.model.desc.ConstraintDefinition;
+import com.github.dakusui.scriptiveunit.loaders.TestSuiteDescriptorLoader;
 import com.github.dakusui.scriptiveunit.model.desc.testitem.IndexedTestCase;
 import com.github.dakusui.scriptiveunit.model.desc.testitem.TestItem;
 import com.github.dakusui.scriptiveunit.model.desc.testitem.TestOracle;
@@ -42,7 +43,7 @@ public interface Session {
 
   Action createTearDownAfterAllAction(Tuple commonFixtureTuple);
 
-  static Session create(Config config, TestSuiteDescriptor.TestSuiteDescriptorLoader testSuiteDescriptorLoader) {
+  static Session create(Config config, TestSuiteDescriptorLoader testSuiteDescriptorLoader) {
     return new Impl(config, testSuiteDescriptorLoader);
   }
 
@@ -52,7 +53,7 @@ public interface Session {
     private final TestSuiteDescriptor        testSuiteDescriptor;
 
     @SuppressWarnings("WeakerAccess")
-    protected Impl(Config config, TestSuiteDescriptor.TestSuiteDescriptorLoader testSuiteDescriptorLoader) {
+    protected Impl(Config config, TestSuiteDescriptorLoader testSuiteDescriptorLoader) {
       this.config = config;
       this.reportCreator = testItem ->
           Report.create(
