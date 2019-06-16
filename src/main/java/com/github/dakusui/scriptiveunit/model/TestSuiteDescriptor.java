@@ -3,7 +3,6 @@ package com.github.dakusui.scriptiveunit.model;
 import com.github.dakusui.actionunit.Action;
 import com.github.dakusui.scriptiveunit.ScriptiveUnit;
 import com.github.dakusui.scriptiveunit.core.Config;
-import com.github.dakusui.scriptiveunit.loaders.IndexedTestCase;
 import com.github.dakusui.scriptiveunit.model.func.Form;
 import com.github.dakusui.scriptiveunit.model.statement.Statement;
 

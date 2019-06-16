@@ -9,7 +9,7 @@ public enum BeanUtils {
   ;
   public static final Object NOP_CLAUSE = Actions.nop();
 
-  public static <U> Form<U> toFunc(Statement statement, FuncInvoker funcInvoker) {
+  public static <U> Form<U> toForm(Statement statement, FuncInvoker funcInvoker) {
     //noinspection unchecked
     return (Form) statement.compile(funcInvoker);
   }

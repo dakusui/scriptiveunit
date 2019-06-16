@@ -1,7 +1,6 @@
 package com.github.dakusui.scriptiveunit.model;
 
 import com.github.dakusui.jcunit.core.tuples.Tuple;
-import com.github.dakusui.scriptiveunit.loaders.IndexedTestCase;
 
 public interface TestItem {
   int getTestCaseId();
@@ -10,7 +9,7 @@ public interface TestItem {
 
   int getTestOracleId();
 
-  TestOracle.Box createBox();
+  TestOracle.Definition oracleDefinition();
 
   class Impl implements TestItem {
     private final IndexedTestCase indexedTestCase;
@@ -37,8 +36,8 @@ public interface TestItem {
     }
 
     @Override
-    public TestOracle.Box createBox() {
-      return this.testOracle.createBox(this);
+    public TestOracle.Definition oracleDefinition() {
+      return this.testOracle.definitionFor(this);
     }
   }
 

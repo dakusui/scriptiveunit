@@ -45,9 +45,9 @@ public interface TestOracle {
 
   String templateDescription(Tuple testCaseTuple, String testSuiteDescription);
 
-  Box createBox(TestItem testItem);
+  Definition definitionFor(TestItem testItem);
 
-  interface Box {
+  interface Definition {
     Function<Stage, Action> beforeFactory(TestItem testItem, Report report);
 
     Function<Stage, Matcher<Tuple>> givenFactory();
@@ -103,11 +103,11 @@ public interface TestOracle {
       return TestOracle.templateTestOracleDescription(this, testCaseTuple, testSuiteDescription);
     }
 
-    class MyBox implements Box {
+    class MyDefinition implements Definition {
       private final TestItem                  testItem;
       private       Map<List<Object>, Object> memo = createMemo();
 
-      MyBox(TestItem testItem) {
+      MyDefinition(TestItem testItem) {
         this.testItem = testItem;
       }
 
@@ -117,7 +117,7 @@ public interface TestOracle {
           return s -> Actions.nop();
         Statement statement = statementFactory.create(beforeClause);
         FuncInvoker funcInvoker = FuncInvoker.create(memo);
-        return s -> BeanUtils.<Action>toFunc(statement, funcInvoker).apply(s);
+        return s -> BeanUtils.<Action>toForm(statement, funcInvoker).apply(s);
       }
 
       @Override
@@ -128,7 +128,7 @@ public interface TestOracle {
 
           @Override
           public boolean matches(Object item) {
-            return requireNonNull(BeanUtils.<Boolean>toFunc(givenStatement, funcInvoker).apply(s));
+            return requireNonNull(BeanUtils.<Boolean>toForm(givenStatement, funcInvoker).apply(s));
           }
 
           @Override
@@ -149,7 +149,7 @@ public interface TestOracle {
 
           @Override
           public Object apply(Stage s) {
-            return BeanUtils.<Boolean>toFunc(statementFactory.create(whenClause), funcInvoker).apply(s);
+            return BeanUtils.<Boolean>toForm(statementFactory.create(whenClause), funcInvoker).apply(s);
           }
         };
       }
@@ -160,7 +160,7 @@ public interface TestOracle {
         FuncInvoker funcInvoker = FuncInvoker.create(memo);
         return stage -> out -> new BaseMatcher<Stage>() {
           Function<FuncInvoker, Predicate<Stage>> p = fi -> s -> requireNonNull(
-              BeanUtils.<Boolean>toFunc(thenStatement, fi).apply(s));
+              BeanUtils.<Boolean>toForm(thenStatement, fi).apply(s));
           Function<FuncInvoker, Function<Stage, String>> c = fi -> s -> fi.asString();
 
           @Override
@@ -200,7 +200,7 @@ public interface TestOracle {
         FuncInvoker funcInvoker = FuncInvoker.create(memo);
         return (Stage s) -> (AssertionError input, Context context) -> requireNonNull(
             onFailureClause != null ?
-                BeanUtils.<Action>toFunc(onFailureStatement, funcInvoker) :
+                BeanUtils.<Action>toForm(onFailureStatement, funcInvoker) :
                 (Form<Action>) input1 -> nop()).apply(s);
       }
 
@@ -210,13 +210,13 @@ public interface TestOracle {
           return s -> Actions.nop();
         Statement statement = statementFactory.create(afterClause);
         FuncInvoker funcInvoker = FuncInvoker.create(memo);
-        return s -> BeanUtils.<Action>toFunc(statement, funcInvoker).apply(s);
+        return s -> BeanUtils.<Action>toForm(statement, funcInvoker).apply(s);
       }
 
     }
 
-    public Box createBox(TestItem testItem) {
-      return new MyBox(testItem) {
+    public Definition definitionFor(TestItem testItem) {
+      return new MyDefinition(testItem) {
       };
     }
 

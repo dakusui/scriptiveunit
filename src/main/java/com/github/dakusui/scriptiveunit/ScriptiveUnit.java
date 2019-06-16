@@ -9,7 +9,7 @@ import com.github.dakusui.scriptiveunit.core.Config;
 import com.github.dakusui.scriptiveunit.core.Description;
 import com.github.dakusui.scriptiveunit.core.ObjectMethod;
 import com.github.dakusui.scriptiveunit.core.Utils;
-import com.github.dakusui.scriptiveunit.loaders.IndexedTestCase;
+import com.github.dakusui.scriptiveunit.model.IndexedTestCase;
 import com.github.dakusui.scriptiveunit.model.Session;
 import com.github.dakusui.scriptiveunit.model.TestOracle;
 import com.github.dakusui.scriptiveunit.model.TestSuiteDescriptor;
@@ -70,7 +70,7 @@ public class ScriptiveUnit extends Parameterized {
     super(klass);
     this.session = Session.create(loader.getConfig(), loader);
     this.runners = newLinkedList(createRunners());
-    this.commonFixture = ScriptiveUnitUtils.createCommonFixture(getTestSuiteDescriptor().getFactorSpaceDescriptor().getParameters());
+    this.commonFixture = Utils.createCommonFixture(getTestSuiteDescriptor().getFactorSpaceDescriptor().getParameters());
   }
 
   @Override

@@ -9,7 +9,7 @@ import com.github.dakusui.jcunit8.testsuite.TestCase;
 import com.github.dakusui.scriptiveunit.ScriptiveUnit;
 import com.github.dakusui.scriptiveunit.core.Config;
 import com.github.dakusui.scriptiveunit.core.Utils;
-import com.github.dakusui.scriptiveunit.loaders.IndexedTestCase;
+import com.github.dakusui.scriptiveunit.model.IndexedTestCase;
 import com.github.dakusui.scriptiveunit.model.ParameterSpaceDescriptor;
 import com.github.dakusui.scriptiveunit.model.Session;
 import com.github.dakusui.scriptiveunit.model.TestOracle;
@@ -157,7 +157,7 @@ public abstract class TestSuiteDescriptorBean {
             Object result =
                 statement == null ?
                     nop() :
-                    BeanUtils.toFunc(statement, FuncInvoker.create(createMemo())).apply(input);
+                    BeanUtils.toForm(statement, FuncInvoker.create(createMemo())).apply(input);
             return (Action) requireNonNull(
                 result,
                 String.format("statement for '%s' was not valid '%s'", actionName, statement)
@@ -202,8 +202,6 @@ public abstract class TestSuiteDescriptorBean {
               .build();
         }
       };
-    } catch (RuntimeException e) {
-      throw e;
     } catch (Exception e) {
       throw wrap(e);
     }

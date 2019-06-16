@@ -1,4 +1,4 @@
-package com.github.dakusui.scriptiveunit.loaders;
+package com.github.dakusui.scriptiveunit.model;
 
 import com.github.dakusui.jcunit.core.tuples.Tuple;
 import com.github.dakusui.jcunit8.factorspace.Constraint;

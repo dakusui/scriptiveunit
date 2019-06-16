@@ -6,7 +6,7 @@ import com.github.dakusui.jcunit.core.tuples.Tuple;
 import com.github.dakusui.jcunit8.factorspace.Parameter;
 import com.github.dakusui.jcunit8.testsuite.TestCase;
 import com.github.dakusui.scriptiveunit.exceptions.ScriptiveUnitException;
-import com.github.dakusui.scriptiveunit.loaders.IndexedTestCase;
+import com.github.dakusui.scriptiveunit.model.IndexedTestCase;
 import com.github.dakusui.scriptiveunit.model.Session;
 import com.github.dakusui.scriptiveunit.model.TestOracle;
 import com.github.dakusui.scriptiveunit.model.TestSuiteDescriptor;

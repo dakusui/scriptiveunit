@@ -1,14 +1,12 @@
 package com.github.dakusui.scriptiveunit.loaders.beans;
 
-import com.github.dakusui.jcunit.core.tuples.Tuple;
 import com.github.dakusui.jcunit.fsm.spec.FsmSpec;
 import com.github.dakusui.jcunit8.factorspace.Constraint;
 import com.github.dakusui.jcunit8.factorspace.Parameter;
 import com.github.dakusui.scriptiveunit.exceptions.ScriptiveUnitException;
+import com.github.dakusui.scriptiveunit.model.statement.ConstraintDefinitionImpl;
 import com.github.dakusui.scriptiveunit.model.ParameterSpaceDescriptor;
 import com.github.dakusui.scriptiveunit.model.Session;
-import com.github.dakusui.scriptiveunit.model.func.Form;
-import com.github.dakusui.scriptiveunit.model.func.FuncInvoker;
 import com.github.dakusui.scriptiveunit.model.statement.Statement;
 
 import java.util.List;
@@ -16,7 +14,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
-import static com.github.dakusui.scriptiveunit.model.func.FuncInvoker.createMemo;
 import static java.lang.Class.forName;
 import static java.util.Objects.requireNonNull;
 import static java.util.stream.Collectors.toList;
@@ -53,17 +50,9 @@ public abstract class FactorSpaceDescriptorBean {
       @Override
       public List<Constraint> getConstraints() {
         return constraintList.stream()
-            .map((List<Object> each) -> {
-              Statement statement = statementFactory.create(each);
-              Form<Boolean> form = BeanUtils.toFunc(
-                  statement,
-                  FuncInvoker.create(createMemo())
-              );
-              return Constraint.create(
-                  (Tuple in) -> requireNonNull(form.apply(session.createSuiteLevelStage(in))),
-                  Statement.Utils.involvedParameters(statement)
-              );
-            })
+            .map(statementFactory::create)
+            .map(ConstraintDefinitionImpl::new)
+            .map(session::createConstraint)
             .collect(toList());
       }
     };
