@@ -66,7 +66,7 @@ public class ScriptiveUnit extends Parameterized {
     this(klass, createTestSuiteDescriptorLoader(config));
   }
 
-  public ScriptiveUnit(Class<?> klass, TestSuiteDescriptor.Loader loader) throws Throwable {
+  public ScriptiveUnit(Class<?> klass, TestSuiteDescriptor.TestSuiteDescriptorLoader loader) throws Throwable {
     super(klass);
     this.session = Session.create(loader.getConfig(), loader);
     this.runners = newLinkedList(createRunners());
@@ -114,8 +114,8 @@ public class ScriptiveUnit extends Parameterized {
     };
   }
 
-  private static TestSuiteDescriptor.Loader createTestSuiteDescriptorLoader(Config config) {
-    return TestSuiteDescriptor.Loader.createInstance(
+  private static TestSuiteDescriptor.TestSuiteDescriptorLoader createTestSuiteDescriptorLoader(Config config) {
+    return TestSuiteDescriptor.TestSuiteDescriptorLoader.createInstance(
         Utils.getAnnotationWithDefault(
             config.getDriverObject().getClass(),
             Load.DEFAULT_INSTANCE

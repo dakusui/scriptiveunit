@@ -16,7 +16,7 @@ import com.github.dakusui.scriptiveunit.drivers.Predicates;
 import com.github.dakusui.scriptiveunit.drivers.QueryApi;
 import com.github.dakusui.scriptiveunit.drivers.Strings;
 import com.github.dakusui.scriptiveunit.drivers.actions.Basic;
-import com.github.dakusui.scriptiveunit.loaders.json.JsonBasedLoader;
+import com.github.dakusui.scriptiveunit.loaders.json.JsonBasedTestSuiteDescriptorLoader;
 import com.github.dakusui.scriptiveunit.model.form.Form;
 import com.google.common.collect.Maps;
 import org.codehaus.jackson.JsonNode;
@@ -43,7 +43,7 @@ import static java.util.Objects.requireNonNull;
 @Load(with = Qapi.Loader.class)
 @RunWith(ScriptiveUnit.class)
 public class Qapi {
-  public static class Loader extends JsonBasedLoader {
+  public static class Loader extends JsonBasedTestSuiteDescriptorLoader {
     public Loader(Config config) {
       super(config);
     }

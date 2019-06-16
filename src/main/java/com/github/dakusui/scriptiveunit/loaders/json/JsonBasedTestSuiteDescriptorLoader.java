@@ -16,7 +16,7 @@ import static com.github.dakusui.scriptiveunit.exceptions.ScriptiveUnitException
 import static com.github.dakusui.scriptiveunit.loaders.json.JsonPreprocessorUtils.checkObjectNode;
 import static com.github.dakusui.scriptiveunit.loaders.json.JsonPreprocessorUtils.getParentsOf;
 
-public class JsonBasedLoader extends TestSuiteDescriptor.Loader.Base {
+public class JsonBasedTestSuiteDescriptorLoader extends TestSuiteDescriptor.TestSuiteDescriptorLoader.Base {
 
   protected static final String EXTENDS_KEYWORD = "$extends";
   /**
@@ -25,7 +25,7 @@ public class JsonBasedLoader extends TestSuiteDescriptor.Loader.Base {
   protected static final String DEFAULTS_JSON   = "defaults/values.json";
 
   @SuppressWarnings("unused")
-  public JsonBasedLoader(Config config) {
+  public JsonBasedTestSuiteDescriptorLoader(Config config) {
     super(config);
   }
 

@@ -7,10 +7,10 @@ import com.github.dakusui.scriptiveunit.annotations.Import.Alias;
 import com.github.dakusui.scriptiveunit.annotations.Load;
 import com.github.dakusui.scriptiveunit.drivers.*;
 import com.github.dakusui.scriptiveunit.drivers.actions.Basic;
-import com.github.dakusui.scriptiveunit.loaders.json.JsonBasedLoader;
+import com.github.dakusui.scriptiveunit.loaders.json.JsonBasedTestSuiteDescriptorLoader;
 import org.junit.runner.RunWith;
 
-@Load(with = JsonBasedLoader.class)
+@Load(with = JsonBasedTestSuiteDescriptorLoader.class)
 @RunWith(ScriptiveUnit.class)
 public class Simple {
   @SuppressWarnings("unused")

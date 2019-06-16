@@ -42,7 +42,7 @@ public interface Session {
 
   Action createTearDownAfterAllAction(Tuple commonFixtureTuple);
 
-  static Session create(Config config, TestSuiteDescriptor.Loader testSuiteDescriptorLoader) {
+  static Session create(Config config, TestSuiteDescriptor.TestSuiteDescriptorLoader testSuiteDescriptorLoader) {
     return new Impl(config, testSuiteDescriptorLoader);
   }
 
@@ -52,7 +52,7 @@ public interface Session {
     private final TestSuiteDescriptor        testSuiteDescriptor;
 
     @SuppressWarnings("WeakerAccess")
-    protected Impl(Config config, TestSuiteDescriptor.Loader testSuiteDescriptorLoader) {
+    protected Impl(Config config, TestSuiteDescriptor.TestSuiteDescriptorLoader testSuiteDescriptorLoader) {
       this.config = config;
       this.reportCreator = testItem ->
           Report.create(

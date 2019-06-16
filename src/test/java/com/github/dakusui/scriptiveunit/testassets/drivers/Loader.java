@@ -1,7 +1,7 @@
 package com.github.dakusui.scriptiveunit.testassets.drivers;
 
 import com.github.dakusui.scriptiveunit.core.Config;
-import com.github.dakusui.scriptiveunit.loaders.json.JsonBasedLoader;
+import com.github.dakusui.scriptiveunit.loaders.json.JsonBasedTestSuiteDescriptorLoader;
 import com.github.dakusui.scriptiveunit.loaders.json.JsonUtils;
 import com.github.dakusui.scriptiveunit.testutils.Resource;
 import org.codehaus.jackson.node.ObjectNode;
@@ -11,7 +11,7 @@ import java.util.Arrays;
 import static java.util.stream.Collectors.toList;
 
 
-public abstract class Loader extends JsonBasedLoader {
+public abstract class Loader extends JsonBasedTestSuiteDescriptorLoader {
   @SuppressWarnings("WeakerAccess")
   protected Loader(Config config) {
     super(config);

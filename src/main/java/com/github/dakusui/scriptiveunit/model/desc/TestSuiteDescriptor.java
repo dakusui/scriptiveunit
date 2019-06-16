@@ -43,12 +43,12 @@ public interface TestSuiteDescriptor {
 
   Statement.Factory statementFactory();
 
-  interface Loader {
+  interface TestSuiteDescriptorLoader {
     Config getConfig();
 
     TestSuiteDescriptor loadTestSuiteDescriptor(Session session);
 
-    abstract class Base implements Loader {
+    abstract class Base implements TestSuiteDescriptorLoader {
 
       private final Config config;
 
@@ -61,7 +61,7 @@ public interface TestSuiteDescriptor {
       }
     }
 
-    static Loader createInstance(Class<? extends Loader> klass, Config config) {
+    static TestSuiteDescriptorLoader createInstance(Class<? extends TestSuiteDescriptorLoader> klass, Config config) {
       try {
         return klass.getConstructor(Config.class).newInstance(config);
       } catch (InstantiationException | IllegalAccessException | InvocationTargetException | NoSuchMethodException e) {
