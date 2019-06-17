@@ -324,18 +324,6 @@ public enum Utils {
     return func.apply(new Reflections(prefix, new TypeAnnotationsScanner(), new SubTypesScanner())).stream();
   }
 
-  /**
-   * This method returns an identifier string for a {@link com.github.dakusui.scriptiveunit.model.form.Func} object.
-   * Note that the ID is composed by FQCN of the class and method name that directly calls this method by calling
-   * {@link Thread#currentThread()}{@code .getStackTrace()}.
-   * This means, refactoring, such as "extract method", made on the caller method
-   * may result in an unintended behaviour change and you need to be cautious.
-   */
-  public static String funcId() {
-    StackTraceElement caller = Thread.currentThread().getStackTrace()[2];
-    return String.format("%s:%s", caller.getClassName(), caller.getMethodName());
-  }
-
   public static <T extends Annotation> T getAnnotationWithDefault(Class javaClass, T defaultValue) {
     @SuppressWarnings("unchecked") T ret = (T) javaClass.<T>getAnnotation(defaultValue.annotationType());
     return ret != null ?

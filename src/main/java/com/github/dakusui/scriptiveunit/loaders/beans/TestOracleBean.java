@@ -173,10 +173,13 @@ public abstract class TestOracleBean {
             Object output = out instanceof Iterable ?
                 iterableToString((Iterable<?>) out) :
                 out;
-            description.appendText(String.format("output '%s' created from '%s' did not satisfy it.:%n'%s'",
-                output,
-                testItem.getTestCaseTuple(),
-                c.apply(formInvoker).apply(stage)));
+            description.appendText(format("output '%s'", output));
+            description.appendText(" ");
+            if (!testItem.getTestCaseTuple().isEmpty()) {
+              description.appendText(format("created from '%s'", testItem.getTestCaseTuple()));
+              description.appendText(" ");
+            }
+            description.appendText(format("did not satisfy it.:%n'%s'", c.apply(formInvoker).apply(stage)));
           }
         };
       }

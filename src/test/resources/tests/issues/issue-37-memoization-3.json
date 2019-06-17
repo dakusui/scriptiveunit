@@ -10,11 +10,11 @@
   "setUp": ["nop"],
   "testOracles": [
     {
-      "description": "Oracle",
+      "description": "Expected to fail: when(op 1 2) then= (== 3 (result))",
       "before": ["nop"],
       "given": ["always"],
-      "when": ["debug", "when", ["format", "value=%s", ["+" ,1, 2]]],
-      "then": ["always"],
+      "when": ["op" ,1, 2],
+      "then": ["==", 3.1, ["result"]],
       "after": ["nop"]
     }
   ],

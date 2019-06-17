@@ -405,8 +405,8 @@ public class Issue37Test {
     @Override
     Matcher<? super Object> junitResultMatcher(AsObject<Object, Object> junitResultMatcherBuilder) {
       return junitResultMatcherBuilder
-          .check(call("wasSuccessful").$(), isTrue())
-          .check(call("getFailureCount").$(), equalTo(0))
+          .check(call("wasSuccessful").$(), isFalse())
+          .check(call("getFailureCount").$(), equalTo(1))
           .$();
     }
 

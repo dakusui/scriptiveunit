@@ -5,18 +5,23 @@ import com.github.dakusui.actionunit.Actions;
 import com.github.dakusui.scriptiveunit.annotations.Doc;
 import com.github.dakusui.scriptiveunit.annotations.Scriptable;
 import com.github.dakusui.scriptiveunit.core.Utils;
-import com.github.dakusui.scriptiveunit.model.session.Stage;
 import com.github.dakusui.scriptiveunit.model.form.Form;
 import com.github.dakusui.scriptiveunit.model.form.Func;
+import com.github.dakusui.scriptiveunit.model.session.Stage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.*;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Objects;
 import java.util.function.Consumer;
-import java.util.function.Function;
 
 import static com.github.dakusui.actionunit.Actions.simple;
 import static com.github.dakusui.scriptiveunit.core.Utils.prettify;
+import static com.github.dakusui.scriptiveunit.model.form.Func.createFunc;
+import static com.github.dakusui.scriptiveunit.model.form.Func.funcId;
+import static com.github.dakusui.scriptiveunit.model.form.Func.memoize;
 import static java.util.Arrays.stream;
 import static java.util.Objects.requireNonNull;
 import static java.util.stream.Collectors.toList;
@@ -126,51 +131,23 @@ public class Basic {
     };
   }
 
-  int i = 0;
+  private int i = 0;
 
   @Scriptable
   public final Func<Integer> increment() {
-    return Func.memoize(
-        new Func.Builder<Integer>(Utils.funcId())
-            .func(input -> i++)
-            .addParameters()
-            .build()
+    return memoize(
+        createFunc(funcId(), input -> i++)
     );
   }
 
   @Scriptable
-  public final Func<Integer> op2(Form<Integer> a, Form<Integer> b) {
-    return new Func<Integer>() {
-      @Override
-      public List<Form> parameters() {
-        return null;
-      }
-
-      @Override
-      public Integer apply(Stage input) {
-        return null;
-      }
-
-      @Override
-      public String id() {
-        return null;
-      }
-
-      @Override
-      public Function<Object[], Integer> body() {
-        return null;
-      }
-    };
-  }
-  @Scriptable
   public final Func<Integer> op(Form<Integer> a, Form<Integer> b) {
     return Func.memoize(
-        new Func.Builder<Integer>(Utils.funcId())
+        new Func.Builder<Integer>(Func.funcId())
             .func(objects -> (Integer) objects[0] + (Integer) objects[1] + i++)
             .addParameter(a)
             .addParameter(b)
             .build()
     );
   }
-
 }

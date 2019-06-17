@@ -7,7 +7,6 @@ import com.github.dakusui.scriptiveunit.annotations.Import.Alias;
 import com.github.dakusui.scriptiveunit.annotations.Load;
 import com.github.dakusui.scriptiveunit.annotations.Scriptable;
 import com.github.dakusui.scriptiveunit.core.Config;
-import com.github.dakusui.scriptiveunit.loaders.json.JsonPreprocessor;
 import com.github.dakusui.scriptiveunit.drivers.Arith;
 import com.github.dakusui.scriptiveunit.drivers.Collections;
 import com.github.dakusui.scriptiveunit.drivers.Core;
@@ -16,6 +15,7 @@ import com.github.dakusui.scriptiveunit.drivers.QueryApi;
 import com.github.dakusui.scriptiveunit.drivers.Strings;
 import com.github.dakusui.scriptiveunit.drivers.actions.Basic;
 import com.github.dakusui.scriptiveunit.loaders.json.JsonBasedTestSuiteDescriptorLoader;
+import com.github.dakusui.scriptiveunit.loaders.json.JsonPreprocessor;
 import com.github.dakusui.scriptiveunit.model.form.Form;
 import com.google.common.collect.Maps;
 import org.codehaus.jackson.JsonNode;
@@ -26,12 +26,11 @@ import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
-import static com.github.dakusui.scriptiveunit.loaders.json.JsonUtils.array;
-import static com.github.dakusui.scriptiveunit.loaders.json.JsonUtils.object;
 import static com.github.dakusui.scriptiveunit.loaders.Preprocessor.Utils.pathMatcher;
+import static com.github.dakusui.scriptiveunit.loaders.json.JsonUtils.array;
 import static com.github.dakusui.scriptiveunit.loaders.json.JsonUtils.deepMerge;
+import static com.github.dakusui.scriptiveunit.loaders.json.JsonUtils.object;
 import static java.lang.String.format;
 import static java.util.Collections.unmodifiableMap;
 import static java.util.Objects.requireNonNull;
@@ -43,6 +42,7 @@ import static java.util.Objects.requireNonNull;
 @RunWith(ScriptiveUnit.class)
 public class Qapi {
   public static class Loader extends JsonBasedTestSuiteDescriptorLoader {
+    @SuppressWarnings("WeakerAccess")
     public Loader(Config config) {
       super(config);
     }
@@ -162,7 +162,7 @@ public class Qapi {
   };
 
   public static class Request {
-    public static class Term {
+    static class Term {
       String[] words;
 
       Term(String term) {
@@ -184,9 +184,10 @@ public class Qapi {
     Request(Map<String, Object> fixture) {
       this.fixture = unmodifiableMap(fixture);
       //noinspection unchecked
-      this.terms = ((List<String>) this.fixture.get("terms")).stream()
+      this.terms = ((List<String>) this.fixture.get("terms"))
+          .stream()
           .map((Object input) -> new Term((String) input))
-          .collect(Collectors.toList()).toArray(new Term[0]);
+          .toArray(Term[]::new);
     }
 
     Term[] getTerms() {

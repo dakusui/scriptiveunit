@@ -12,6 +12,25 @@ import java.util.function.Supplier;
 import static java.util.Objects.requireNonNull;
 
 public interface Func<O> extends Form<O> {
+  /**
+   * This method returns an identifier string for a {@link Func} object.
+   * Note that the ID is composed by FQCN of the class and method name that directly calls this method by calling
+   * {@link Thread#currentThread()}{@code .getStackTrace()}.
+   * This means, refactoring, such as "extract method", made on the caller method
+   * may result in an unintended behaviour change and you need to be cautious.
+   */
+  static String funcId() {
+    StackTraceElement caller = Thread.currentThread().getStackTrace()[2];
+    return String.format("%s:%s", caller.getClassName(), caller.getMethodName());
+  }
+
+  static <T> Func<T> createFunc(String id, Function<Object[], T> body, Func<?>... parameters) {
+    return new Builder<T>(id)
+        .func(body)
+        .addParameters(parameters)
+        .build();
+  }
+
   List<Form> parameters();
 
   O apply(Stage input);
@@ -131,7 +150,6 @@ public interface Func<O> extends Form<O> {
         return func.body();
       }
 
-      @SuppressWarnings("unchecked")
       public T apply(Stage input) {
         Call<T> call = call(input);
         return call.get();
