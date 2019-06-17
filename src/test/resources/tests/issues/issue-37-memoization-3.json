@@ -13,7 +13,7 @@
       "description": "Oracle",
       "before": ["nop"],
       "given": ["always"],
-      "when": ["+", 1, 2],
+      "when": ["debug", "when", ["format", "value=%s", ["+" ,1, 2]]],
       "then": ["always"],
       "after": ["nop"]
     }

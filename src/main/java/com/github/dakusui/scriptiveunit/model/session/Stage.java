@@ -5,7 +5,9 @@ import com.github.dakusui.scriptiveunit.core.Config;
 import com.github.dakusui.scriptiveunit.model.desc.testitem.TestItem;
 import com.github.dakusui.scriptiveunit.model.form.Form;
 
+import java.util.List;
 import java.util.Optional;
+import java.util.function.Function;
 
 import static com.github.dakusui.scriptiveunit.core.Utils.check;
 import static com.github.dakusui.scriptiveunit.exceptions.ScriptiveUnitException.indexOutOfBounds;
@@ -37,6 +39,8 @@ public interface Stage {
   Optional<Report> getReport();
 
   Optional<TestItem> getTestItem();
+
+  <T> T eval(String name, Function<List<Object>, T> def, Form... args);
 
   enum ExecutionLevel {
     SUITE,

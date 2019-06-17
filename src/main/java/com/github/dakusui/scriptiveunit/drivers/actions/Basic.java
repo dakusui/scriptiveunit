@@ -11,11 +11,9 @@ import com.github.dakusui.scriptiveunit.model.form.Func;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 import java.util.function.Consumer;
+import java.util.function.Function;
 
 import static com.github.dakusui.actionunit.Actions.simple;
 import static com.github.dakusui.scriptiveunit.core.Utils.prettify;
@@ -140,6 +138,30 @@ public class Basic {
     );
   }
 
+  @Scriptable
+  public final Func<Integer> op2(Form<Integer> a, Form<Integer> b) {
+    return new Func<Integer>() {
+      @Override
+      public List<Form> parameters() {
+        return null;
+      }
+
+      @Override
+      public Integer apply(Stage input) {
+        return null;
+      }
+
+      @Override
+      public String id() {
+        return null;
+      }
+
+      @Override
+      public Function<Object[], Integer> body() {
+        return null;
+      }
+    };
+  }
   @Scriptable
   public final Func<Integer> op(Form<Integer> a, Form<Integer> b) {
     return Func.memoize(

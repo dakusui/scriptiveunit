@@ -3,8 +3,11 @@ package com.github.dakusui.scriptiveunit.model.session;
 import com.github.dakusui.jcunit.core.tuples.Tuple;
 import com.github.dakusui.scriptiveunit.core.Config;
 import com.github.dakusui.scriptiveunit.model.desc.testitem.TestItem;
+import com.github.dakusui.scriptiveunit.model.form.Form;
 
+import java.util.List;
 import java.util.Optional;
+import java.util.function.Function;
 
 import static java.util.Objects.requireNonNull;
 
@@ -58,5 +61,10 @@ abstract class Delegating implements Stage {
   @Override
   public Optional<TestItem> getTestItem() {
     return this.target.getTestItem();
+  }
+
+  @Override
+  public <T> T eval(String name, Function<List<Object>, T> def, Form... args) {
+    return target.eval(name, def, args);
   }
 }
