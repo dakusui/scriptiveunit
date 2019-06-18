@@ -8,7 +8,7 @@ import org.junit.runner.RunWith;
 import java.util.Objects;
 import java.util.function.Predicate;
 
-import static com.github.dakusui.scriptiveunit.core.Utils.prettify;
+import static com.github.dakusui.scriptiveunit.utils.StringUtils.prettify;
 
 public class FacadeException extends ScriptiveUnitException {
   private FacadeException(String message) {

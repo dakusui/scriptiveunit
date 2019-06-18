@@ -2,18 +2,18 @@ package com.github.dakusui.scriptiveunit;
 
 import com.github.dakusui.actionunit.Action;
 import com.github.dakusui.jcunit.core.tuples.Tuple;
-import com.github.dakusui.scriptiveunit.annotations.Import;
 import com.github.dakusui.scriptiveunit.annotations.Load;
-import com.github.dakusui.scriptiveunit.annotations.Scriptable;
 import com.github.dakusui.scriptiveunit.core.Config;
 import com.github.dakusui.scriptiveunit.core.Description;
 import com.github.dakusui.scriptiveunit.core.ObjectMethod;
-import com.github.dakusui.scriptiveunit.core.Utils;
 import com.github.dakusui.scriptiveunit.loaders.TestSuiteDescriptorLoader;
 import com.github.dakusui.scriptiveunit.model.desc.testitem.IndexedTestCase;
 import com.github.dakusui.scriptiveunit.model.session.Session;
 import com.github.dakusui.scriptiveunit.model.desc.testitem.TestOracle;
 import com.github.dakusui.scriptiveunit.model.desc.TestSuiteDescriptor;
+import com.github.dakusui.scriptiveunit.utils.DriverUtils;
+import com.github.dakusui.scriptiveunit.utils.ReflectionUtils;
+import com.github.dakusui.scriptiveunit.utils.TupleUtils;
 import org.junit.internal.runners.statements.RunBefores;
 import org.junit.runner.Runner;
 import org.junit.runners.Parameterized;
@@ -21,7 +21,6 @@ import org.junit.runners.model.Statement;
 import org.junit.runners.model.TestClass;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -71,7 +70,7 @@ public class ScriptiveUnit extends Parameterized {
     super(klass);
     this.session = Session.create(loader.getConfig(), loader);
     this.runners = newLinkedList(createRunners());
-    this.commonFixture = Utils.createCommonFixture(getTestSuiteDescriptor().getFactorSpaceDescriptor().getParameters());
+    this.commonFixture = TupleUtils.createCommonFixture(getTestSuiteDescriptor().getFactorSpaceDescriptor().getParameters());
   }
 
   @Override
@@ -117,7 +116,7 @@ public class ScriptiveUnit extends Parameterized {
 
   private static TestSuiteDescriptorLoader createTestSuiteDescriptorLoader(Config config) {
     return TestSuiteDescriptorLoader.createInstance(
-        Utils.getAnnotationWithDefault(
+        ReflectionUtils.getAnnotationWithDefault(
             config.getDriverObject().getClass(),
             Load.DEFAULT_INSTANCE
         ).with(),
@@ -128,7 +127,7 @@ public class ScriptiveUnit extends Parameterized {
   Description describeFunction(Object driverObject, String functionName) {
     Optional<Description> value =
         Stream.concat(
-            getObjectMethodsFromImportedFieldsInObject(driverObject).stream().map(ObjectMethod::describe),
+            DriverUtils.getObjectMethodsFromImportedFieldsInObject(driverObject).stream().map(ObjectMethod::describe),
             getUserDefinedFormClauses().entrySet().stream().map((Map.Entry<String, List<Object>> entry) -> Description.describe(entry.getKey(), entry.getValue()))
         ).filter(t -> functionName.equals(t.name())).findFirst();
     if (value.isPresent())
@@ -138,7 +137,7 @@ public class ScriptiveUnit extends Parameterized {
 
   List<String> getFormNames(Object driverObject) {
     return Stream.concat(
-        getObjectMethodsFromImportedFieldsInObject(driverObject)
+        DriverUtils.getObjectMethodsFromImportedFieldsInObject(driverObject)
             .stream()
             .map(ObjectMethod::getName),
         getUserDefinedFormClauseNamesFromScript().stream()).collect(toList());
@@ -153,28 +152,8 @@ public class ScriptiveUnit extends Parameterized {
     return getTestSuiteDescriptor().getUserDefinedFormClauses();
   }
 
-  public static List<ObjectMethod> getObjectMethodsFromImportedFieldsInObject(Object object) {
-    return Utils.getAnnotatedFields(object, Import.class)
-        .stream()
-        .map(
-            each -> Utils.getAnnotatedMethods(
-                each.get(),
-                Scriptable.class,
-                createAliasMap(each.getField().getAnnotation(Import.class).value())))
-        .flatMap(List::stream)
-        .filter(objectMethod -> objectMethod.getName() != null)
-        .collect(toList());
-  }
-
-  private static Map<String, String> createAliasMap(Import.Alias[] aliases) {
-    return Arrays.stream(
-        aliases
-    ).collect(toMap(alias -> requireNonNull(alias).value(), alias -> !"".equals(requireNonNull(alias).as()) ? alias.as() : ""
-    ));
-  }
-
   private Iterable<Runner> createRunners() {
-    return getTestSuiteDescriptor().getRunnerType().createRunners(this.session);
+    return getTestSuiteDescriptor().getRunnerMode().createRunners(this.session);
   }
 
   private TestSuiteDescriptor getTestSuiteDescriptor() {

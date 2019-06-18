@@ -14,7 +14,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.util.Arrays;
 import java.util.List;
 
-import static com.github.dakusui.scriptiveunit.core.Utils.check;
+import static com.github.dakusui.scriptiveunit.utils.Checks.check;
 import static com.github.dakusui.scriptiveunit.exceptions.SyntaxException.attributeNotFound;
 import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;

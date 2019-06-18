@@ -24,7 +24,7 @@ import java.util.function.Function;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
-import static com.github.dakusui.scriptiveunit.core.Utils.allScriptsUnderMatching;
+import static com.github.dakusui.scriptiveunit.utils.ReflectionUtils.allScriptsUnderMatching;
 
 
 @RunWith(JCUnit8.class)

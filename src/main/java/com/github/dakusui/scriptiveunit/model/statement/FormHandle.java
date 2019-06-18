@@ -1,11 +1,11 @@
 package com.github.dakusui.scriptiveunit.model.statement;
 
-import com.github.dakusui.scriptiveunit.ScriptiveUnit;
 import com.github.dakusui.scriptiveunit.core.Config;
 import com.github.dakusui.scriptiveunit.core.ObjectMethod;
 import com.github.dakusui.scriptiveunit.model.form.Form;
 import com.github.dakusui.scriptiveunit.model.form.FormInvoker;
 import com.github.dakusui.scriptiveunit.model.session.Stage;
+import com.github.dakusui.scriptiveunit.utils.DriverUtils;
 
 import java.lang.reflect.Array;
 import java.util.Arrays;
@@ -24,16 +24,26 @@ import static java.util.Objects.requireNonNull;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.StreamSupport.stream;
 
-interface FormCall {
+interface FormHandle {
+  static List<Form> toFuncs(FormInvoker formInvoker, Iterable<Statement> arguments) {
+    return stream(arguments.spliterator(), false)
+        .map(statement -> statement.compile(formInvoker))
+        .collect(toList());
+  }
+
   Form apply(FormInvoker formInvoker, Arguments arguments);
 
   boolean isAccessor();
 
-  abstract class Base implements FormCall {
-    List<Form> toFuncs(FormInvoker formInvoker, Iterable<Statement> arguments) {
-      return stream(arguments.spliterator(), false)
-          .map(statement -> statement.compile(formInvoker))
-          .collect(toList());
+  abstract class Base implements FormHandle {
+    private final String name;
+
+    Base(String name) {
+      this.name = name;
+    }
+
+    public String name() {
+      return this.name;
     }
   }
 
@@ -56,30 +66,30 @@ interface FormCall {
 
   class Factory {
     private final Object                    driver;
-    private final Form.Factory              funcFactory;
+    private final Form.Factory formFactory;
     private final Statement.Factory         statementFactory;
     private final Map<String, List<Object>> clauseMap;
 
-    public Factory(Form.Factory funcFactory, Statement.Factory statementFactory, Config config, Map<String, List<Object>> userDefinedFormClauses) {
+    Factory(Form.Factory formFactory, Statement.Factory statementFactory, Config config, Map<String, List<Object>> userDefinedFormClauses) {
       this.driver = requireNonNull(config.getDriverObject());
-      this.funcFactory = funcFactory;
+      this.formFactory = formFactory;
       this.statementFactory = statementFactory;
       this.clauseMap = requireNonNull(userDefinedFormClauses);
     }
 
-    @SuppressWarnings("WeakerAccess")
-    public FormCall create(String name) {
+    public FormHandle create(String name) {
       if ("lambda".equals(name))
-        return new Lambda();
+        return new Lambda(name);
       return Factory.this.getObjectMethodFromDriver(name).map(
-          (Function<ObjectMethod, FormCall>) MethodBasedImpl::new
+          (Function<ObjectMethod, FormHandle>) MethodBasedImpl::new
       ).orElseGet(
           () -> createUserForm(name)
       );
     }
 
-    private FormCall createUserForm(String name) {
-      return new UserFormCall(
+    private FormHandle createUserForm(String name) {
+      return new UserFormHandle(
+          name,
           () -> statementFactory.create(
               getUserDefinedFormClauseFromSessionByName(name).orElseThrow(
                   () -> new NullPointerException(format("Undefined form '%s' was referenced.", name))
@@ -99,7 +109,7 @@ interface FormCall {
     }
 
     private Optional<ObjectMethod> getObjectMethodFromDriver(String methodName) {
-      for (ObjectMethod each : ScriptiveUnit.getObjectMethodsFromImportedFieldsInObject(this.driver)) {
+      for (ObjectMethod each : DriverUtils.getObjectMethodsFromImportedFieldsInObject(this.driver)) {
         if (getMethodName(each).equals(methodName))
           return Optional.of(each);
       }
@@ -126,6 +136,7 @@ interface FormCall {
       final ObjectMethod objectMethod;
 
       private MethodBasedImpl(ObjectMethod objectMethod) {
+        super(objectMethod.getName());
         this.objectMethod = objectMethod;
       }
 
@@ -145,6 +156,7 @@ interface FormCall {
             toFuncs(formInvoker, arguments),
             Form.class
         );
+        // TODO a form doesn't need to know a FormInvoker with which it will be invoked.
         return createForm(formInvoker, args);
       }
 
@@ -155,14 +167,15 @@ interface FormCall {
           argValues = Factory.this.shrinkTo(objectMethod.getParameterTypes()[parameterCount - 1].getComponentType(), parameterCount, args);
         } else
           argValues = args;
-        return funcFactory.create(formInvoker, objectMethod, argValues);
+        return formFactory.create(formInvoker, objectMethod, argValues);
       }
     }
 
-    private static class UserFormCall extends Base {
+    private static class UserFormHandle extends Base {
       private final Supplier<Statement> userDefinedFormStatementSupplier;
 
-      UserFormCall(Supplier<Statement> userDefinedFormStatementSupplier) {
+      UserFormHandle(String name, Supplier<Statement> userDefinedFormStatementSupplier) {
+        super(name);
         this.userDefinedFormStatementSupplier = userDefinedFormStatementSupplier;
       }
 
@@ -195,7 +208,9 @@ interface FormCall {
     }
 
     private static class Lambda extends Base {
-      private Lambda() {
+      private Lambda(String name) {
+        // TODO: need to consider how we should define a name for a lambda object
+        super(name);
       }
 
       @SuppressWarnings("unchecked")

@@ -1,8 +1,8 @@
 package com.github.dakusui.scriptiveunit.model.session;
 
-import com.github.dakusui.scriptiveunit.core.Utils;
 import com.github.dakusui.scriptiveunit.exceptions.ScriptiveUnitException;
 import com.github.dakusui.scriptiveunit.model.desc.testitem.TestItem;
+import com.github.dakusui.scriptiveunit.utils.Checks;
 import org.codehaus.jackson.map.ObjectMapper;
 
 import java.io.File;
@@ -51,10 +51,10 @@ public interface Report extends Map<String, Object> {
 
       private File ensureDirectoryExists(File dir) {
         if (!dir.exists()) {
-          Utils.check(dir.mkdirs(), () -> new ScriptiveUnitException(format("Failed to create a directory '%s'.", dir)));
+          Checks.check(dir.mkdirs(), () -> new ScriptiveUnitException(format("Failed to create a directory '%s'.", dir)));
           return dir;
         }
-        return Utils.check(dir, File::isDirectory, () -> new ScriptiveUnitException(format("'%s' exists, but not a directory.", dir)));
+        return Checks.check(dir, File::isDirectory, () -> new ScriptiveUnitException(format("'%s' exists, but not a directory.", dir)));
       }
     };
   }

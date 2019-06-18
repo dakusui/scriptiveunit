@@ -5,7 +5,6 @@ import com.github.dakusui.actionunit.Actions;
 import com.github.dakusui.actionunit.Context;
 import com.github.dakusui.actionunit.connectors.Sink;
 import com.github.dakusui.jcunit.core.tuples.Tuple;
-import com.github.dakusui.scriptiveunit.core.Utils;
 import com.github.dakusui.scriptiveunit.model.desc.TestSuiteDescriptor;
 import com.github.dakusui.scriptiveunit.model.desc.testitem.TestItem;
 import com.github.dakusui.scriptiveunit.model.desc.testitem.TestOracle;
@@ -14,6 +13,7 @@ import com.github.dakusui.scriptiveunit.model.form.FormInvoker;
 import com.github.dakusui.scriptiveunit.model.session.Report;
 import com.github.dakusui.scriptiveunit.model.session.Stage;
 import com.github.dakusui.scriptiveunit.model.statement.Statement;
+import com.github.dakusui.scriptiveunit.utils.TupleUtils;
 import org.hamcrest.BaseMatcher;
 import org.hamcrest.Description;
 import org.hamcrest.Matcher;
@@ -23,7 +23,7 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 
 import static com.github.dakusui.actionunit.Actions.nop;
-import static com.github.dakusui.scriptiveunit.core.Utils.iterableToString;
+import static com.github.dakusui.scriptiveunit.utils.StringUtils.iterableToString;
 import static com.github.dakusui.scriptiveunit.model.form.FormInvoker.createMemo;
 import static com.github.dakusui.scriptiveunit.model.session.Stage.ExecutionLevel.ORACLE;
 import static java.lang.String.format;
@@ -186,7 +186,7 @@ public abstract class TestOracleBean {
 
       @Override
       public String describeTestCase(Tuple testCaseTuple) {
-        return "Verify with: " + Utils.filterSimpleSingleLevelParametersOut(
+        return "Verify with: " + TupleUtils.filterSimpleSingleLevelParametersOut(
             testCaseTuple,
             testSuiteDescriptor.getFactorSpaceDescriptor().getParameters()
         );

@@ -13,7 +13,7 @@ import java.util.Objects;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static com.github.dakusui.scriptiveunit.loaders.json.JsonUtils.*;
-import static com.github.dakusui.scriptiveunit.core.Utils.check;
+import static com.github.dakusui.scriptiveunit.utils.Checks.check;
 import static com.github.dakusui.scriptiveunit.exceptions.SyntaxException.*;
 import static java.util.Collections.singletonList;
 import static java.util.Objects.requireNonNull;

@@ -2,7 +2,6 @@ package com.github.dakusui.scriptiveunit.model.form;
 
 import com.github.dakusui.actionunit.visitors.ActionPrinter;
 import com.github.dakusui.jcunit.core.utils.StringUtils;
-import com.github.dakusui.scriptiveunit.core.Utils;
 import com.github.dakusui.scriptiveunit.model.session.Stage;
 import com.google.common.collect.Lists;
 
@@ -121,7 +120,7 @@ public interface FormInvoker {
     }
 
     private static Object[] prettify(Object... args) {
-      return Arrays.stream(args).map((Object in) -> in instanceof Iterable ? Utils.iterableToString(((Iterable) in)) : in).toArray();
+      return Arrays.stream(args).map((Object in) -> in instanceof Iterable ? com.github.dakusui.scriptiveunit.utils.StringUtils.iterableToString(((Iterable) in)) : in).toArray();
     }
   }
 

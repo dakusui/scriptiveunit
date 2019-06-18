@@ -9,8 +9,8 @@ import org.hamcrest.Matcher;
 
 import java.util.function.Function;
 
-import static com.github.dakusui.scriptiveunit.core.Utils.append;
-import static com.github.dakusui.scriptiveunit.core.Utils.template;
+import static com.github.dakusui.scriptiveunit.utils.TupleUtils.append;
+import static com.github.dakusui.scriptiveunit.utils.StringUtils.template;
 
 public interface TestOracle {
   static String templateTestOracleDescription(TestOracle testOracle, Tuple testCaseTuple, String testSuiteDescription) {

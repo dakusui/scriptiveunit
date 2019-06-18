@@ -4,6 +4,7 @@ import com.github.dakusui.scriptiveunit.loaders.TestSuiteDescriptorLoader;
 import com.github.dakusui.scriptiveunit.model.session.Session;
 import com.github.dakusui.scriptiveunit.core.Config;
 import com.github.dakusui.scriptiveunit.model.desc.TestSuiteDescriptor;
+import com.github.dakusui.scriptiveunit.utils.ReflectionUtils;
 import org.codehaus.jackson.JsonNode;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.node.JsonNodeFactory;
@@ -12,7 +13,6 @@ import org.codehaus.jackson.node.ObjectNode;
 import java.io.IOException;
 import java.util.List;
 
-import static com.github.dakusui.scriptiveunit.core.Utils.*;
 import static com.github.dakusui.scriptiveunit.exceptions.ScriptiveUnitException.wrap;
 import static com.github.dakusui.scriptiveunit.loaders.json.JsonPreprocessorUtils.checkObjectNode;
 import static com.github.dakusui.scriptiveunit.loaders.json.JsonPreprocessorUtils.getParentsOf;
@@ -43,7 +43,7 @@ public class JsonBasedTestSuiteDescriptorLoader extends TestSuiteDescriptorLoade
   }
 
   protected ObjectNode readObjectNodeWithMerging(String resourceName) {
-    ObjectNode child = checkObjectNode(preprocess(JsonUtils.readJsonNodeFromStream(openResourceAsStream(resourceName))));
+    ObjectNode child = checkObjectNode(preprocess(JsonUtils.readJsonNodeFromStream(ReflectionUtils.openResourceAsStream(resourceName))));
     ObjectNode work = JsonNodeFactory.instance.objectNode();
     if (child.has(EXTENDS_KEYWORD)) {
       getParentsOf(child, EXTENDS_KEYWORD)
@@ -59,7 +59,7 @@ public class JsonBasedTestSuiteDescriptorLoader extends TestSuiteDescriptorLoade
 
   protected ObjectNode readScript(String scriptResourceName) {
     ObjectNode work = readObjectNodeWithMerging(scriptResourceName);
-    ObjectNode ret = checkObjectNode(JsonUtils.readJsonNodeFromStream(openResourceAsStream(DEFAULTS_JSON)));
+    ObjectNode ret = checkObjectNode(JsonUtils.readJsonNodeFromStream(ReflectionUtils.openResourceAsStream(DEFAULTS_JSON)));
     JsonUtils.deepMerge(work, ret);
     ret.remove(EXTENDS_KEYWORD);
     return ret;

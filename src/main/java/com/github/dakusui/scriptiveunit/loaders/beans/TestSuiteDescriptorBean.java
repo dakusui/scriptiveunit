@@ -8,16 +8,16 @@ import com.github.dakusui.jcunit8.pipeline.Requirement;
 import com.github.dakusui.jcunit8.testsuite.TestCase;
 import com.github.dakusui.scriptiveunit.ScriptiveUnit;
 import com.github.dakusui.scriptiveunit.core.Config;
-import com.github.dakusui.scriptiveunit.core.Utils;
-import com.github.dakusui.scriptiveunit.model.desc.testitem.IndexedTestCase;
 import com.github.dakusui.scriptiveunit.model.desc.ParameterSpaceDescriptor;
-import com.github.dakusui.scriptiveunit.model.session.Session;
-import com.github.dakusui.scriptiveunit.model.desc.testitem.TestOracle;
 import com.github.dakusui.scriptiveunit.model.desc.TestSuiteDescriptor;
+import com.github.dakusui.scriptiveunit.model.desc.testitem.IndexedTestCase;
+import com.github.dakusui.scriptiveunit.model.desc.testitem.TestOracle;
 import com.github.dakusui.scriptiveunit.model.form.Form;
 import com.github.dakusui.scriptiveunit.model.form.FormInvoker;
+import com.github.dakusui.scriptiveunit.model.session.Session;
 import com.github.dakusui.scriptiveunit.model.session.Stage;
 import com.github.dakusui.scriptiveunit.model.statement.Statement;
+import com.github.dakusui.scriptiveunit.utils.StringUtils;
 
 import java.util.List;
 import java.util.Map;
@@ -34,15 +34,15 @@ import static java.util.Objects.requireNonNull;
 import static java.util.stream.Collectors.toList;
 
 public abstract class TestSuiteDescriptorBean {
-  private final FactorSpaceDescriptorBean      factorSpaceBean;
+  private final FactorSpaceDescriptorBean factorSpaceBean;
   private final List<? extends TestOracleBean> testOracleBeanList;
-  private final String                         description;
-  private final ScriptiveUnit.Mode             runnerMode;
-  private final Map<String, List<Object>>      userDefinedFormClauses;
-  private final List<Object>                   setUpClause;
-  private final List<Object>                   setUpBeforeAllClause;
-  private final List<Object>                   tearDownClause;
-  private final List<Object>                   tearDownAfterAllClause;
+  private final String description;
+  private final ScriptiveUnit.Mode runnerMode;
+  private final Map<String, List<Object>> userDefinedFormClauses;
+  private final List<Object> setUpClause;
+  private final List<Object> setUpBeforeAllClause;
+  private final List<Object> tearDownClause;
+  private final List<Object> tearDownAfterAllClause;
 
   public TestSuiteDescriptorBean(
       String description,
@@ -55,7 +55,7 @@ public abstract class TestSuiteDescriptorBean {
       List<Object> tearDownClause,
       List<Object> tearDownAfterAllClause) {
     this.description = description;
-    this.runnerMode = ScriptiveUnit.Mode.valueOf(Utils.toALL_CAPS(runnerType));
+    this.runnerMode = ScriptiveUnit.Mode.valueOf(StringUtils.toALL_CAPS(runnerType));
     this.factorSpaceBean = factorSpaceBean;
     this.userDefinedFormClauses = userDefinedFormClauses;
     this.setUpBeforeAllClause = setUpBeforeAllClause;
@@ -166,7 +166,7 @@ public abstract class TestSuiteDescriptorBean {
         }
 
         @Override
-        public ScriptiveUnit.Mode getRunnerType() {
+        public ScriptiveUnit.Mode getRunnerMode() {
           return runnerMode;
         }
 
@@ -206,5 +206,4 @@ public abstract class TestSuiteDescriptorBean {
       throw wrap(e);
     }
   }
-
 }

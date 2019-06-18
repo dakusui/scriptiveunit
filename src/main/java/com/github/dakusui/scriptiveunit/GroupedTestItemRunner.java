@@ -492,7 +492,7 @@ public final class GroupedTestItemRunner extends ParentRunner<Action> {
             Session session,
             TestSuiteDescriptor testSuiteDescriptor) {
       return testSuiteDescriptor
-          .getRunnerType()
+          .getRunnerMode()
           .orderBy()
           .buildSortedActionStreamOrderingBy(session, testCasesFilteredByFixture, testSuiteDescriptor.getTestOracles())
           .collect(toList());

@@ -4,6 +4,7 @@ import com.github.dakusui.scriptiveunit.annotations.Load;
 import com.github.dakusui.scriptiveunit.core.Config;
 import com.github.dakusui.scriptiveunit.loaders.json.JsonPreprocessorUtils;
 import com.github.dakusui.scriptiveunit.loaders.json.JsonUtils;
+import com.github.dakusui.scriptiveunit.utils.ReflectionUtils;
 import org.codehaus.jackson.node.JsonNodeFactory;
 import org.codehaus.jackson.node.ObjectNode;
 import org.junit.runner.JUnitCore;
@@ -13,8 +14,6 @@ import org.junit.runner.notification.Failure;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.nio.charset.Charset;
-
-import static com.github.dakusui.scriptiveunit.core.Utils.*;
 
 @Load(with = DryQapi.Loader.class)
 public class DryQapi extends Qapi {
@@ -33,7 +32,7 @@ public class DryQapi extends Qapi {
     protected ObjectNode readScript(String resourceName) {
       System.out.println("<" + resourceName + ">");
       ObjectNode work = readObjectNodeDirectlyWithMerging(resourceName);
-      ObjectNode ret = JsonPreprocessorUtils.checkObjectNode(JsonUtils.readJsonNodeFromStream(openResourceAsStream(DEFAULTS_JSON)));
+      ObjectNode ret = JsonPreprocessorUtils.checkObjectNode(JsonUtils.readJsonNodeFromStream(ReflectionUtils.openResourceAsStream(DEFAULTS_JSON)));
       ret = JsonUtils.deepMerge(work, ret);
       ret.remove(EXTENDS_KEYWORD);
       return ret;

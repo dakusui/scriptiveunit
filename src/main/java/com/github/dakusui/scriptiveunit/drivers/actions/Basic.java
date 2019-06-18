@@ -18,7 +18,7 @@ import java.util.Objects;
 import java.util.function.Consumer;
 
 import static com.github.dakusui.actionunit.Actions.simple;
-import static com.github.dakusui.scriptiveunit.core.Utils.prettify;
+import static com.github.dakusui.scriptiveunit.utils.StringUtils.prettify;
 import static com.github.dakusui.scriptiveunit.model.form.Func.createFunc;
 import static com.github.dakusui.scriptiveunit.model.form.Func.funcId;
 import static com.github.dakusui.scriptiveunit.model.form.Func.memoize;

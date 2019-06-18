@@ -14,7 +14,7 @@ import java.util.Map;
 public interface TestSuiteDescriptor {
   String getDescription();
 
-  ScriptiveUnit.Mode getRunnerType();
+  ScriptiveUnit.Mode getRunnerMode();
 
   ParameterSpaceDescriptor getFactorSpaceDescriptor();
 

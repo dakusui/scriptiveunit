@@ -1,8 +1,8 @@
 package com.github.dakusui.scriptiveunit;
 
 import com.github.dakusui.scriptiveunit.core.Config;
-import com.github.dakusui.scriptiveunit.core.Utils;
 import com.github.dakusui.scriptiveunit.exceptions.ScriptiveUnitException;
+import com.github.dakusui.scriptiveunit.utils.ReflectionUtils;
 import org.junit.runner.Description;
 import org.junit.runner.Runner;
 import org.junit.runner.notification.RunNotifier;
@@ -58,7 +58,7 @@ public class ScriptiveSuiteSet extends ParentRunner<Runner> {
       }
 
       private static Stream<String> targetScripts(SuiteScripts suiteScripts) {
-        return Utils.allScriptsUnder(suiteScripts.prefix())
+        return ReflectionUtils.allScriptsUnder(suiteScripts.prefix())
             .filter(matchesAnyOf(toPatterns(suiteScripts.includes())))
             .filter(not(matchesAnyOf(toPatterns(suiteScripts.excludes()))))
             .filter(isInTargetPartition())

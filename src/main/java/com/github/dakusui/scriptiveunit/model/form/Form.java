@@ -12,7 +12,7 @@ import java.util.Formattable;
 import java.util.Formatter;
 import java.util.function.Function;
 
-import static com.github.dakusui.scriptiveunit.core.Utils.check;
+import static com.github.dakusui.scriptiveunit.utils.Checks.check;
 import static com.github.dakusui.scriptiveunit.exceptions.ScriptiveUnitException.fail;
 import static com.github.dakusui.scriptiveunit.exceptions.ScriptiveUnitException.wrap;
 import static com.github.dakusui.scriptiveunit.exceptions.TypeMismatch.valueReturnedByScriptableMethodMustBeFunc;

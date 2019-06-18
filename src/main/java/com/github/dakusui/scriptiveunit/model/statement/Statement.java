@@ -28,18 +28,18 @@ public interface Statement {
   }
 
   interface Nested extends Statement {
-    FormCall getFormCall();
+    FormHandle getFormHandle();
 
     Arguments getArguments();
   }
 
   class Factory {
-    private final FormCall.Factory formCallFactory;
+    private final FormHandle.Factory formCallFactory;
     private final Form.Factory     formFactory;
 
     public Factory(Config config, Map<String, List<Object>> userDefinedFormClauses) {
       this.formFactory = new Form.Factory();
-      this.formCallFactory = new FormCall.Factory(
+      this.formCallFactory = new FormHandle.Factory(
           formFactory,
           this,
           config,
@@ -53,11 +53,11 @@ public interface Statement {
       Object car = Utils.car(raw);
       if (car instanceof String) {
         Arguments arguments = Arguments.create(this, Utils.cdr(raw));
-        FormCall formCall = this.formCallFactory.create((String) car);
+        FormHandle formHandle = this.formCallFactory.create((String) car);
         return new Nested() {
           @Override
-          public FormCall getFormCall() {
-            return formCall;
+          public FormHandle getFormHandle() {
+            return formHandle;
           }
 
           @Override
@@ -67,7 +67,7 @@ public interface Statement {
 
           @Override
           public Form<?> compile(FormInvoker invoker) {
-            return (Form<?>) getFormCall().apply(invoker, arguments);
+            return (Form<?>) getFormHandle().apply(invoker, arguments);
           }
         };
       } else if (car instanceof Integer) {
@@ -99,7 +99,7 @@ public interface Statement {
       if (statement instanceof Atom)
         return work;
       if (statement instanceof Nested) {
-        if (((Nested) statement).getFormCall().isAccessor()) {
+        if (((Nested) statement).getFormHandle().isAccessor()) {
           for (Statement each : ((Nested) statement).getArguments()) {
             if (each instanceof Atom) {
               /*

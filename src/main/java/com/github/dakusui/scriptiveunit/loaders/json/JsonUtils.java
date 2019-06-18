@@ -2,6 +2,7 @@ package com.github.dakusui.scriptiveunit.loaders.json;
 
 import com.github.dakusui.scriptiveunit.core.Utils;
 import com.github.dakusui.scriptiveunit.exceptions.ScriptiveUnitException;
+import com.github.dakusui.scriptiveunit.utils.Checks;
 import org.codehaus.jackson.JsonNode;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.node.ArrayNode;
@@ -54,7 +55,7 @@ public enum JsonUtils {
         if (sourceValue.isObject()) {
           ObjectNode sourceObject = (ObjectNode) sourceValue;
           JsonNode targetValue = target.get(key);
-          Utils.check(targetValue.isObject(), () -> mergeFailed(source, target, key));
+          Checks.check(targetValue.isObject(), () -> mergeFailed(source, target, key));
           deepMerge(sourceObject, (ObjectNode) targetValue);
         } else {
           target.put(key, sourceValue);

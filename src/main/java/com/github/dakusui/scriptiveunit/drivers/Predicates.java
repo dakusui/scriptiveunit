@@ -85,7 +85,7 @@ public class Predicates {
   public <U> Form<Boolean> equals(
       @Doc("A value to be checked") Form<U> a,
       @Doc("A value to be checked") Form<U> b) {
-    return input -> requireNonNull(Objects.equals(a.apply(input), b.apply(input)));
+    return input -> Objects.equals(a.apply(input), b.apply(input));
   }
 
   @SuppressWarnings("unused")
@@ -124,7 +124,7 @@ public class Predicates {
     return input -> requireNonNull(requireNonNull(compare(a, b)).apply(input)) == 0;
   }
 
-  @SuppressWarnings("unused")
+  @SuppressWarnings({"unused", "WeakerAccess"})
   @Scriptable
   public <U> Form<Integer> compare(Form<Comparable<U>> a, Form<U> b) {
     return (Stage input) -> {

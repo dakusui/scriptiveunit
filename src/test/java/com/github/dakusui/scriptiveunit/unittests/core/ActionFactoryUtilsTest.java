@@ -1,6 +1,6 @@
 package com.github.dakusui.scriptiveunit.unittests.core;
 
-import com.github.dakusui.scriptiveunit.core.Utils;
+import com.github.dakusui.scriptiveunit.utils.ReflectionUtils;
 import org.codehaus.jackson.node.JsonNodeFactory;
 import org.codehaus.jackson.node.ObjectNode;
 import org.junit.Test;
@@ -31,7 +31,7 @@ public class ActionFactoryUtilsTest {
   @Test
   public void whenAllTypesAnnotatedWith$thenThisClassIsFound() {
     assertTrue(
-        Utils.allTypesAnnotatedWith("com.github.dakusui.scriptiveunit", RunWith.class)
+        ReflectionUtils.allTypesAnnotatedWith("com.github.dakusui.scriptiveunit", RunWith.class)
             .anyMatch(ActionFactoryUtilsTest.class::equals)
     );
   }
@@ -39,7 +39,7 @@ public class ActionFactoryUtilsTest {
   @Test
   public void whenAllTypesAnnotatedWith$thenDummyClassIsNotFound() {
     assertTrue(
-        Utils.allTypesAnnotatedWith("com.github.dakusui.scriptiveunit", RunWith.class)
+        ReflectionUtils.allTypesAnnotatedWith("com.github.dakusui.scriptiveunit", RunWith.class)
             .noneMatch(DummyClassNotAnnotatedWithRunWith.class::equals)
     );
   }
@@ -47,18 +47,18 @@ public class ActionFactoryUtilsTest {
   @Test
   public void whenAllTypesUnderNonExistingPackageAnnotatedWith() {
     assertTrue(
-        Utils.allTypesAnnotatedWith("com.github.dakusui.non.existing", RunWith.class)
+        ReflectionUtils.allTypesAnnotatedWith("com.github.dakusui.non.existing", RunWith.class)
             .noneMatch(ActionFactoryUtilsTest.class::equals)
     );
   }
 
   @Test
   public void whenTryToFindExistingTestScript$thenFound() {
-    assertTrue(Utils.allScriptsUnder("tests").anyMatch((String s) -> s.equals("tests/testbase.json")));
+    assertTrue(ReflectionUtils.allScriptsUnder("tests").anyMatch((String s) -> s.equals("tests/testbase.json")));
   }
 
   @Test
   public void whenTryToFindNonExistingTestScript$thenNotFound() {
-    assertTrue(Utils.allScriptsUnder("tests").noneMatch((String s) -> s.equals("tests/non-existing.json")));
+    assertTrue(ReflectionUtils.allScriptsUnder("tests").noneMatch((String s) -> s.equals("tests/non-existing.json")));
   }
 }
