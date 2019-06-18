@@ -1,10 +1,12 @@
 package com.github.dakusui.scriptiveunit;
 
-import com.github.dakusui.scriptiveunit.ScriptiveSuiteSet.SuiteScripts;
-import com.github.dakusui.scriptiveunit.ScriptiveSuiteSet.SuiteScripts.Streamer;
+import com.github.dakusui.scriptiveunit.utils.ScriptiveSuiteSet;
+import com.github.dakusui.scriptiveunit.utils.ScriptiveSuiteSet.SuiteScripts;
+import com.github.dakusui.scriptiveunit.utils.ScriptiveSuiteSet.SuiteScripts.Streamer;
 import com.github.dakusui.scriptiveunit.core.Config;
 import com.github.dakusui.scriptiveunit.core.Description;
 import com.github.dakusui.scriptiveunit.exceptions.ScriptiveUnitException;
+import com.github.dakusui.scriptiveunit.runners.ScriptiveUnit;
 import com.github.dakusui.scriptiveunit.utils.ReflectionUtils;
 import com.github.dakusui.scriptiveunit.utils.StringUtils;
 import org.junit.runner.JUnitCore;
@@ -82,5 +84,9 @@ public class ScriptiveCore {
     } catch (Throwable throwable) {
       throw ScriptiveUnitException.wrap(throwable);
     }
+  }
+
+  enum Utils {
+    ;
   }
 }

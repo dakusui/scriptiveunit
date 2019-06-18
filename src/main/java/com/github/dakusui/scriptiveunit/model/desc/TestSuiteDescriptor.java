@@ -1,7 +1,7 @@
 package com.github.dakusui.scriptiveunit.model.desc;
 
 import com.github.dakusui.actionunit.Action;
-import com.github.dakusui.scriptiveunit.ScriptiveUnit;
+import com.github.dakusui.scriptiveunit.runners.ScriptiveUnit;
 import com.github.dakusui.scriptiveunit.core.Config;
 import com.github.dakusui.scriptiveunit.model.desc.testitem.IndexedTestCase;
 import com.github.dakusui.scriptiveunit.model.desc.testitem.TestOracle;

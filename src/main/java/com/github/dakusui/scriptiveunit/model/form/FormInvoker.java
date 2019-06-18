@@ -12,7 +12,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 
-import static com.github.dakusui.scriptiveunit.core.Utils.toBigDecimalIfPossible;
+import static com.github.dakusui.scriptiveunit.utils.CoreUtils.toBigDecimalIfPossible;
 import static java.lang.String.format;
 import static java.util.Arrays.stream;
 

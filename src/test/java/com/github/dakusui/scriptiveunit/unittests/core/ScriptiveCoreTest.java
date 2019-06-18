@@ -1,7 +1,7 @@
 package com.github.dakusui.scriptiveunit.unittests.core;
 
 import com.github.dakusui.scriptiveunit.ScriptiveCore;
-import com.github.dakusui.scriptiveunit.ScriptiveSuiteSet;
+import com.github.dakusui.scriptiveunit.utils.ScriptiveSuiteSet;
 import com.github.dakusui.scriptiveunit.core.Description;
 import com.github.dakusui.scriptiveunit.examples.Qapi;
 import com.github.dakusui.scriptiveunit.exceptions.FacadeException;

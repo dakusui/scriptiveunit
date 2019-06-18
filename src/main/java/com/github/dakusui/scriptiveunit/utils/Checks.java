@@ -27,4 +27,10 @@ public enum Checks {
       throw new ScriptiveUnitException(String.format(fmt, args));
     return target;
   }
+
+  // safe because both Long.class and long.class are of type Class<Long>
+  @SuppressWarnings("unchecked")
+  public static <T> Class<T> wrap(Class<T> c) {
+    return c.isPrimitive() ? (Class<T>) CoreUtils.PRIMITIVES_TO_WRAPPERS.get(c) : c;
+  }
 }

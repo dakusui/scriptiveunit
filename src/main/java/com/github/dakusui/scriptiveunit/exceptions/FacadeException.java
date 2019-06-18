@@ -1,8 +1,8 @@
 package com.github.dakusui.scriptiveunit.exceptions;
 
-import com.github.dakusui.scriptiveunit.ScriptiveSuiteSet;
-import com.github.dakusui.scriptiveunit.ScriptiveSuiteSet.SuiteScripts;
-import com.github.dakusui.scriptiveunit.ScriptiveUnit;
+import com.github.dakusui.scriptiveunit.utils.ScriptiveSuiteSet;
+import com.github.dakusui.scriptiveunit.utils.ScriptiveSuiteSet.SuiteScripts;
+import com.github.dakusui.scriptiveunit.runners.ScriptiveUnit;
 import org.junit.runner.RunWith;
 
 import java.util.Objects;

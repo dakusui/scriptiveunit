@@ -1,6 +1,6 @@
 package com.github.dakusui.scriptiveunit.testassets;
 
-import com.github.dakusui.scriptiveunit.ScriptiveUnit;
+import com.github.dakusui.scriptiveunit.runners.ScriptiveUnit;
 import com.github.dakusui.scriptiveunit.annotations.Doc;
 import com.github.dakusui.scriptiveunit.annotations.Import;
 import com.github.dakusui.scriptiveunit.annotations.Scriptable;

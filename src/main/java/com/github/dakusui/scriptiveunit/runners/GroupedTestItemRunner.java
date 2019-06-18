@@ -1,4 +1,4 @@
-package com.github.dakusui.scriptiveunit;
+package com.github.dakusui.scriptiveunit.runners;
 
 import com.github.dakusui.actionunit.Action;
 import com.github.dakusui.actionunit.Actions;
@@ -33,9 +33,9 @@ import java.util.stream.Stream;
 
 import static com.github.dakusui.actionunit.Actions.attempt;
 import static com.github.dakusui.actionunit.Actions.nop;
-import static com.github.dakusui.scriptiveunit.GroupedTestItemRunner.Utils.createMainActionsForTestCase;
-import static com.github.dakusui.scriptiveunit.GroupedTestItemRunner.Utils.createMainActionsForTestFixture;
-import static com.github.dakusui.scriptiveunit.core.Utils.performActionWithLogging;
+import static com.github.dakusui.scriptiveunit.runners.GroupedTestItemRunner.Utils.createMainActionsForTestCase;
+import static com.github.dakusui.scriptiveunit.runners.GroupedTestItemRunner.Utils.createMainActionsForTestFixture;
+import static com.github.dakusui.scriptiveunit.utils.ActionUtils.performActionWithLogging;
 import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
 import static java.util.stream.Collectors.toCollection;

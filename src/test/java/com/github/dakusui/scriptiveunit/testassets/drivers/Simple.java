@@ -1,7 +1,7 @@
 package com.github.dakusui.scriptiveunit.testassets.drivers;
 
-import com.github.dakusui.scriptiveunit.ScriptiveSuiteSet;
-import com.github.dakusui.scriptiveunit.ScriptiveUnit;
+import com.github.dakusui.scriptiveunit.utils.ScriptiveSuiteSet;
+import com.github.dakusui.scriptiveunit.runners.ScriptiveUnit;
 import com.github.dakusui.scriptiveunit.annotations.Import;
 import com.github.dakusui.scriptiveunit.annotations.Import.Alias;
 import com.github.dakusui.scriptiveunit.annotations.Load;

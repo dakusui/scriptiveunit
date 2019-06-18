@@ -6,7 +6,7 @@ import com.github.dakusui.jcunit8.runners.junit4.annotations.Condition;
 import com.github.dakusui.jcunit8.runners.junit4.annotations.From;
 import com.github.dakusui.jcunit8.runners.junit4.annotations.Given;
 import com.github.dakusui.jcunit8.runners.junit4.annotations.ParameterSource;
-import com.github.dakusui.scriptiveunit.ScriptiveUnit;
+import com.github.dakusui.scriptiveunit.runners.ScriptiveUnit;
 import com.github.dakusui.scriptiveunit.core.Config;
 import com.github.dakusui.scriptiveunit.loaders.json.JsonUtils;
 import com.github.dakusui.scriptiveunit.testassets.drivers.Loader;

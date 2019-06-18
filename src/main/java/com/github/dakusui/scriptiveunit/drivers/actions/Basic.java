@@ -4,10 +4,10 @@ import com.github.dakusui.actionunit.Action;
 import com.github.dakusui.actionunit.Actions;
 import com.github.dakusui.scriptiveunit.annotations.Doc;
 import com.github.dakusui.scriptiveunit.annotations.Scriptable;
-import com.github.dakusui.scriptiveunit.core.Utils;
 import com.github.dakusui.scriptiveunit.model.form.Form;
 import com.github.dakusui.scriptiveunit.model.form.Func;
 import com.github.dakusui.scriptiveunit.model.session.Stage;
+import com.github.dakusui.scriptiveunit.utils.ActionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -121,7 +121,7 @@ public class Basic {
   @Scriptable
   public final Form<Boolean> perform(Form<Action>... actions) {
     return input -> {
-      Utils.performActionWithLogging(
+      ActionUtils.performActionWithLogging(
           Actions.sequential(Arrays
               .stream(actions)
               .map(actionFunc -> actionFunc.apply(input))

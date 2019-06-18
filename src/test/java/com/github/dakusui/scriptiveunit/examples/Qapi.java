@@ -1,7 +1,7 @@
 package com.github.dakusui.scriptiveunit.examples;
 
 
-import com.github.dakusui.scriptiveunit.ScriptiveUnit;
+import com.github.dakusui.scriptiveunit.runners.ScriptiveUnit;
 import com.github.dakusui.scriptiveunit.annotations.Import;
 import com.github.dakusui.scriptiveunit.annotations.Import.Alias;
 import com.github.dakusui.scriptiveunit.annotations.Load;

@@ -1,8 +1,8 @@
 package com.github.dakusui.scriptiveunit.loaders.json;
 
-import com.github.dakusui.scriptiveunit.core.Utils;
 import com.github.dakusui.scriptiveunit.exceptions.ScriptiveUnitException;
 import com.github.dakusui.scriptiveunit.utils.Checks;
+import com.github.dakusui.scriptiveunit.utils.CoreUtils;
 import org.codehaus.jackson.JsonNode;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.node.ArrayNode;
@@ -114,7 +114,7 @@ public enum JsonUtils {
   }
 
   public static NumericNode numeric(Number v) {
-    return JsonNodeFactory.instance.numberNode(Utils.toBigDecimal(v));
+    return JsonNodeFactory.instance.numberNode(CoreUtils.toBigDecimal(v));
   }
 
   public static TextNode text(String text) {

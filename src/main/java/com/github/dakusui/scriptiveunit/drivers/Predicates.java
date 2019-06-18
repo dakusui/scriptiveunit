@@ -7,7 +7,7 @@ import com.github.dakusui.scriptiveunit.model.form.Form;
 
 import java.util.Objects;
 
-import static com.github.dakusui.scriptiveunit.core.Utils.toBigDecimalIfPossible;
+import static com.github.dakusui.scriptiveunit.utils.CoreUtils.toBigDecimalIfPossible;
 import static java.util.Objects.requireNonNull;
 
 public class Predicates {

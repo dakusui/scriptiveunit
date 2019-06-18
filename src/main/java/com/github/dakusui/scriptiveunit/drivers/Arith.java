@@ -1,9 +1,9 @@
 package com.github.dakusui.scriptiveunit.drivers;
 
 import com.github.dakusui.scriptiveunit.annotations.Scriptable;
-import com.github.dakusui.scriptiveunit.core.Utils;
 import com.github.dakusui.scriptiveunit.model.session.Stage;
 import com.github.dakusui.scriptiveunit.model.form.Form;
+import com.github.dakusui.scriptiveunit.utils.CoreUtils;
 
 import java.math.BigDecimal;
 import java.util.function.Function;
@@ -50,11 +50,11 @@ public class Arith {
   private final BigDecimal calc(Stage stage, Function<BigDecimal, Function<BigDecimal, BigDecimal>> op, Form<Number>... numbers) {
     BigDecimal ret = null;
     for (Form<Number> eachNumber : numbers) {
-      BigDecimal each = Utils.toBigDecimal(eachNumber.apply(stage));
+      BigDecimal each = CoreUtils.toBigDecimal(eachNumber.apply(stage));
       if (ret == null) {
-        ret = requireNonNull(Utils.toBigDecimal(each));
+        ret = requireNonNull(CoreUtils.toBigDecimal(each));
       } else {
-        ret = op.apply(ret).apply(Utils.toBigDecimal(each));
+        ret = op.apply(ret).apply(CoreUtils.toBigDecimal(each));
       }
     }
     return ret;

@@ -1,8 +1,8 @@
 package com.github.dakusui.scriptiveunit.testassets;
 
 
-import com.github.dakusui.scriptiveunit.ScriptiveSuiteSet;
-import com.github.dakusui.scriptiveunit.ScriptiveSuiteSet.SuiteScripts;
+import com.github.dakusui.scriptiveunit.utils.ScriptiveSuiteSet;
+import com.github.dakusui.scriptiveunit.utils.ScriptiveSuiteSet.SuiteScripts;
 import org.junit.runner.RunWith;
 
 @RunWith(ScriptiveSuiteSet.class)

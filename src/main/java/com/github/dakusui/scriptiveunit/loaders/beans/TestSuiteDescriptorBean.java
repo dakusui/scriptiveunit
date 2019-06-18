@@ -6,7 +6,7 @@ import com.github.dakusui.jcunit8.factorspace.ParameterSpace;
 import com.github.dakusui.jcunit8.pipeline.Pipeline;
 import com.github.dakusui.jcunit8.pipeline.Requirement;
 import com.github.dakusui.jcunit8.testsuite.TestCase;
-import com.github.dakusui.scriptiveunit.ScriptiveUnit;
+import com.github.dakusui.scriptiveunit.runners.ScriptiveUnit;
 import com.github.dakusui.scriptiveunit.core.Config;
 import com.github.dakusui.scriptiveunit.model.desc.ParameterSpaceDescriptor;
 import com.github.dakusui.scriptiveunit.model.desc.TestSuiteDescriptor;

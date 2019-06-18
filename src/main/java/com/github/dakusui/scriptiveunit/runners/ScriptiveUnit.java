@@ -1,4 +1,4 @@
-package com.github.dakusui.scriptiveunit;
+package com.github.dakusui.scriptiveunit.runners;
 
 import com.github.dakusui.actionunit.Action;
 import com.github.dakusui.jcunit.core.tuples.Tuple;
@@ -7,10 +7,10 @@ import com.github.dakusui.scriptiveunit.core.Config;
 import com.github.dakusui.scriptiveunit.core.Description;
 import com.github.dakusui.scriptiveunit.core.ObjectMethod;
 import com.github.dakusui.scriptiveunit.loaders.TestSuiteDescriptorLoader;
-import com.github.dakusui.scriptiveunit.model.desc.testitem.IndexedTestCase;
-import com.github.dakusui.scriptiveunit.model.session.Session;
-import com.github.dakusui.scriptiveunit.model.desc.testitem.TestOracle;
 import com.github.dakusui.scriptiveunit.model.desc.TestSuiteDescriptor;
+import com.github.dakusui.scriptiveunit.model.desc.testitem.IndexedTestCase;
+import com.github.dakusui.scriptiveunit.model.desc.testitem.TestOracle;
+import com.github.dakusui.scriptiveunit.model.session.Session;
 import com.github.dakusui.scriptiveunit.utils.DriverUtils;
 import com.github.dakusui.scriptiveunit.utils.ReflectionUtils;
 import com.github.dakusui.scriptiveunit.utils.TupleUtils;
@@ -28,12 +28,10 @@ import java.util.Optional;
 import java.util.stream.Stream;
 
 import static com.github.dakusui.actionunit.Utils.createTestClassMock;
-import static com.github.dakusui.scriptiveunit.core.Utils.performActionWithLogging;
 import static com.github.dakusui.scriptiveunit.exceptions.ResourceException.functionNotFound;
+import static com.github.dakusui.scriptiveunit.utils.ActionUtils.performActionWithLogging;
 import static com.google.common.collect.Lists.newLinkedList;
-import static java.util.Objects.requireNonNull;
 import static java.util.stream.Collectors.toList;
-import static java.util.stream.Collectors.toMap;
 
 /**
  * A createAction test runner class of ScriptiveUnit.
@@ -124,7 +122,7 @@ public class ScriptiveUnit extends Parameterized {
     );
   }
 
-  Description describeFunction(Object driverObject, String functionName) {
+  public Description describeFunction(Object driverObject, String functionName) {
     Optional<Description> value =
         Stream.concat(
             DriverUtils.getObjectMethodsFromImportedFieldsInObject(driverObject).stream().map(ObjectMethod::describe),
@@ -135,7 +133,7 @@ public class ScriptiveUnit extends Parameterized {
     throw functionNotFound(functionName);
   }
 
-  List<String> getFormNames(Object driverObject) {
+  public List<String> getFormNames(Object driverObject) {
     return Stream.concat(
         DriverUtils.getObjectMethodsFromImportedFieldsInObject(driverObject)
             .stream()

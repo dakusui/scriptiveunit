@@ -49,14 +49,14 @@ public enum ReflectionUtils {
    * @param defaultInstance  An annotation object to be returned in the {@code annotatedElement} doesn't have it.
    */
   public static <T extends Annotation> T getAnnotation(AnnotatedElement annotatedElement, Class<T> annotationClass,
-                                                       T defaultInstance) {
+      T defaultInstance) {
     return annotatedElement.isAnnotationPresent(annotationClass) ?
         annotatedElement.getAnnotation(annotationClass) :
         defaultInstance;
   }
 
   public static List<ObjectMethod> getAnnotatedMethods(Object object, Class<? extends Annotation> annotationClass,
-                                                       Map<String, String> aliases) {
+      Map<String, String> aliases) {
     return Arrays.stream(object.getClass().getMethods()).filter(each -> each.isAnnotationPresent(annotationClass))
         .map(each -> ObjectMethod.create(object, each, aliases)).collect(toList());
   }
