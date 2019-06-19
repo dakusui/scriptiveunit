@@ -24,8 +24,8 @@ import static java.util.Objects.requireNonNull;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.StreamSupport.stream;
 
-interface FormHandle {
-  static List<Form> toFuncs(FormInvoker formInvoker, Iterable<Statement> arguments) {
+public interface FormHandle {
+  static List<Form> toForms(FormInvoker formInvoker, Iterable<Statement> arguments) {
     return stream(arguments.spliterator(), false)
         .map(statement -> statement.compile(formInvoker))
         .collect(toList());
@@ -153,7 +153,7 @@ interface FormHandle {
       @Override
       public Form apply(FormInvoker formInvoker, Arguments arguments) {
         Form[] args = toArray(
-            toFuncs(formInvoker, arguments),
+            toForms(formInvoker, arguments),
             Form.class
         );
         // TODO a form doesn't need to know a FormInvoker with which it will be invoked.
@@ -185,7 +185,7 @@ interface FormHandle {
             toArray(
                 Stream.concat(
                     Stream.of((Form<Statement>) input -> userDefinedFormStatementSupplier.get()),
-                    toFuncs(formInvoker, arguments).stream()
+                    toForms(formInvoker, arguments).stream()
                 ).collect(toList()),
                 Form.class
             )
@@ -216,7 +216,7 @@ interface FormHandle {
       @SuppressWarnings("unchecked")
       @Override
       public Form<Form<Object>> apply(FormInvoker formInvoker, Arguments arguments) {
-        return (Stage ii) -> getOnlyElement(toFuncs(formInvoker, arguments));
+        return (Stage ii) -> getOnlyElement(toForms(formInvoker, arguments));
       }
 
       @Override

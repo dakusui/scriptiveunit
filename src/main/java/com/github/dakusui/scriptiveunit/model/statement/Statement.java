@@ -24,6 +24,7 @@ public interface Statement {
 
   Form compile(FormInvoker invoker);
 
+
   interface Atom extends Statement {
   }
 
@@ -31,6 +32,10 @@ public interface Statement {
     FormHandle getFormHandle();
 
     Arguments getArguments();
+
+    default Form compile() {
+      return getFormHandle().apply(null, getArguments());
+    }
   }
 
   class Factory {
@@ -68,6 +73,11 @@ public interface Statement {
           @Override
           public Form<?> compile(FormInvoker invoker) {
             return (Form<?>) getFormHandle().apply(invoker, arguments);
+          }
+
+          @Override
+          public Form compile() {
+            return null;
           }
         };
       } else if (car instanceof Integer) {
