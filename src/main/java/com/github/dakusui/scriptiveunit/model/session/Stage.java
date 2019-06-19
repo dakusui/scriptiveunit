@@ -4,13 +4,14 @@ import com.github.dakusui.jcunit.core.tuples.Tuple;
 import com.github.dakusui.scriptiveunit.core.Config;
 import com.github.dakusui.scriptiveunit.model.desc.testitem.TestItem;
 import com.github.dakusui.scriptiveunit.model.form.Form;
+import com.github.dakusui.scriptiveunit.model.form.FormRegistry;
+import com.github.dakusui.scriptiveunit.model.statement.Statement;
 
-import java.util.List;
 import java.util.Optional;
-import java.util.function.Function;
 
-import static com.github.dakusui.scriptiveunit.utils.Checks.check;
 import static com.github.dakusui.scriptiveunit.exceptions.ScriptiveUnitException.indexOutOfBounds;
+import static com.github.dakusui.scriptiveunit.utils.Checks.check;
+import static java.util.Objects.requireNonNull;
 
 /**
  * A stage is a part of session, where various activities defined as Funcs are
@@ -40,7 +41,36 @@ public interface Stage {
 
   Optional<TestItem> getTestItem();
 
-  <T> T eval(String name, Function<List<Object>, T> def, Form... args);
+  @SuppressWarnings("unchecked")
+  default <T> Form<T> compile() {
+    if (ongoingStatement() instanceof Statement.Atom)
+      return null; //((Statement.Atom)statement);//
+    return formRegistry().lookUp(((Statement.Nested) ongoingStatement()).getFormHandle())
+        .orElseThrow(RuntimeException::new);
+  }
+
+  default FormRegistry formRegistry() {
+    return null;
+  }
+
+  default Statement ongoingStatement() {
+    return null;
+  }
+
+  default Stage createChild(Statement statement) {
+    requireNonNull(statement);
+    return new Delegating(this) {
+      @Override
+      public Optional<Tuple> getTestCaseTuple() {
+        return Stage.this.getTestCaseTuple();
+      }
+
+      @Override
+      public Statement ongoingStatement() {
+        return statement;
+      }
+    };
+  }
 
   enum ExecutionLevel {
     SUITE,

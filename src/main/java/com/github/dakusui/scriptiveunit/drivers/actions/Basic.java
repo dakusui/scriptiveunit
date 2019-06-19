@@ -109,9 +109,9 @@ public class Basic {
 
   @SuppressWarnings("unused")
   @Scriptable
-  public final Form<Action> tag(Form<String> s) {
+  public final Form<Action> tag(Form<String> string) {
     return input -> simple(prettify(
-        Objects.toString(s.apply(input)),
+        Objects.toString(string.apply(input)),
         () -> {
         }));
   }
