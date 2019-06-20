@@ -5,6 +5,7 @@ import com.github.dakusui.scriptiveunit.exceptions.SyntaxException;
 import com.github.dakusui.scriptiveunit.exceptions.TypeMismatch;
 import com.github.dakusui.scriptiveunit.model.form.Form;
 import com.github.dakusui.scriptiveunit.model.form.FormInvoker;
+import com.github.dakusui.scriptiveunit.model.form.FormRegistry;
 import com.github.dakusui.scriptiveunit.model.session.Stage;
 import com.google.common.collect.Lists;
 
@@ -28,9 +29,6 @@ public interface Statement {
   Form compile(FormInvoker invoker);
 
   interface Atom extends Statement {
-    default <V> V evaluate(Stage stage) {
-      return null;
-    }
   }
 
   interface Nested extends Statement {
@@ -38,14 +36,18 @@ public interface Statement {
 
     Arguments getArguments();
 
+    @SuppressWarnings("unchecked")
     default <V> V evaluate(Stage stage) {
-      return null;
+      return (V) stage.formRegistry()
+          .lookUp(this.getFormHandle())
+          .orElseThrow(FormRegistry.Utils.undefinedFormError(this))
+          .apply(stage.createChild(this));
     }
   }
 
   class Factory {
     private final FormHandle.Factory formCallFactory;
-    private final Form.Factory formFactory;
+    private final Form.Factory       formFactory;
 
     public Factory(Config config, Map<String, List<Object>> userDefinedFormClauses) {
       this.formFactory = new Form.Factory();
@@ -58,7 +60,18 @@ public interface Statement {
 
     public Statement create(Object object) throws TypeMismatch {
       if (Utils.isAtom(object))
-        return (Atom) invoker -> (Form<Object>) formFactory.createConst(invoker, object);
+        return new Atom() {
+          @SuppressWarnings("unchecked")
+          @Override
+          public <V> V evaluate(Stage stage) {
+            return (V) object;
+          }
+
+          @Override
+          public Form compile(FormInvoker invoker) {
+            return formFactory.createConst(invoker, object);
+          }
+        };
       @SuppressWarnings("unchecked") List<Form> raw = (List<Form>) object;
       Object car = Utils.car(raw);
       if (car instanceof String) {
@@ -81,7 +94,17 @@ public interface Statement {
           }
         };
       } else if (car instanceof Integer) {
-        return (Atom) invoker -> (Form<Object>) input -> input.getArgument((Integer) car);
+        return new Atom() {
+          @Override
+          public <V> V evaluate(Stage stage) {
+            return stage.getArgument((Integer) car);
+          }
+
+          @Override
+          public Form compile(FormInvoker invoker) {
+            return (Form<Object>) input -> input.getArgument((Integer) car);
+          }
+        };
       }
       throw headOfCallMustBeString(car);
     }

@@ -14,99 +14,102 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.function.BiFunction;
 import java.util.function.Predicate;
+import java.util.function.Supplier;
 
+import static com.github.dakusui.scriptiveunit.model.form.FormRegistry.Utils.toArgs;
 import static java.lang.String.format;
 
-public class FormRegistry {
-  private final Map<FormHandle, Form> formMap = new HashMap<>();
+public interface FormRegistry {
+  Optional<Form> lookUp(FormHandle handle);
 
-  public void register(FormHandle handle, Form form) {
-    if (formMap.containsKey(handle))
-      throw new IllegalStateException(
-          format("Tried to register:%s with the key:%s, but %s was already registered.", form, form.name(), formMap.get(form)));
-    formMap.put(handle, form);
-  }
+  class Loader {
+    private final Map<FormHandle, Form> formMap = new HashMap<>();
 
-  public Optional<Form> lookUp(FormHandle handle) {
-    return Optional.ofNullable(formMap.get(handle));
-  }
-
-  public class Loader {
-    Loader() {
+    public void register(FormHandle handle, Form form) {
+      if (formMap.containsKey(handle))
+        throw new IllegalStateException(
+            format("Tried to register:%s with the key:%s, but %s was already registered.", form, form.name(), formMap.get(form)));
+      formMap.put(handle, form);
     }
-
 
     FormRegistry load() {
-      FormRegistry ret = new FormRegistry();
-
-      return ret;
+      return handle -> Optional.ofNullable(formMap.get(handle));
     }
-  }
 
+    /**
+     * @param object The object to which a method {@code m} belongs.
+     * @param m      A method
+     * @return A created form created from the given method object.
+     */
+    public Form loadForm(Object object, Method m) {
+      Class<Form>[] params = Utils.ensureAllFormClasses(m.getParameterTypes());
+      Object[] args = toArgs(params);
 
-  /**
-   * @param object The object to which a method {@code m} belongs.
-   * @param m      A method
-   * @return A created form created from the given method object.
-   */
-  public Form loadForm(Object object, Method m) {
-    Class<Form>[] params = ensureAllFormClasses(m.getParameterTypes());
-    Object[] args = toArgs(params);
-
-    try {
-      return (Form) m.invoke(object, args);
-    } catch (IllegalAccessException | InvocationTargetException e) {
-      throw new RuntimeException(e);
-    }
-  }
-
-  private static Form[] toArgs(Class<Form>[] params) {
-    return new ArrayList<Form>(params.length) {
-      {
-        for (int i = 0; i < params.length; i++) {
-          this.add(createProxiedFormForArgumentOf(this.size()));
-        }
+      try {
+        return (Form) m.invoke(object, args);
+      } catch (IllegalAccessException | InvocationTargetException e) {
+        throw new RuntimeException(e);
       }
-    }.toArray(new Form[params.length]);
+    }
   }
 
-  private static Form createProxiedFormForArgumentOf(int i) {
-    return (Form) Proxy.newProxyInstance(
-        Form.class.getClassLoader(),
-        new Class[] { Form.class },
-        (proxy, method, args) -> {
-          Stage stage = (Stage) requireThat(args, arrayLengthIsOneAndTheElementIsStage(), otherwiseThrowRuntimeException())[0];
-          Arguments arguments = stage.ongoingStatement().getArguments();
-          Statement statement = arguments.get(i);
-          return statement.evaluate(stage);
-        });
-  }
+  enum Utils {
+    ;
 
-  @SuppressWarnings("unchecked")
-  private Class<Form>[] ensureAllFormClasses(Class<?>[] parameterTypes) {
-    for (Class<?> each : parameterTypes)
-      requireThat(each, isAssignableFrom(Form.class), otherwiseThrowRuntimeException());
-    return (Class<Form>[]) parameterTypes;
-  }
+    static Form[] toArgs(Class<Form>[] params) {
+      return new ArrayList<Form>(params.length) {
+        {
+          for (int i = 0; i < params.length; i++) {
+            this.add(createProxiedFormForArgumentAt(this.size()));
+          }
+        }
+      }.toArray(new Form[params.length]);
+    }
 
-  @SuppressWarnings("SameParameterValue")
-  private static <T> Predicate<Class<?>> isAssignableFrom(Class<T> formClass) {
-    return formClass::isAssignableFrom;
-  }
+    private static Form createProxiedFormForArgumentAt(int i) {
+      return (Form) Proxy.newProxyInstance(
+          Form.class.getClassLoader(),
+          new Class[] { Form.class },
+          (proxy, method, args) -> {
+            Stage stage = (Stage) requireThat(args, arrayLengthIsOneAndTheElementIsStage(), otherwiseThrowRuntimeException())[0];
+            Arguments arguments = stage.ongoingStatement().getArguments();
+            Statement statement = arguments.get(i);
+            return statement.evaluate(stage);
+          });
+    }
 
-  private static Predicate<Object[]> arrayLengthIsOneAndTheElementIsStage() {
-    return args -> args.length == 1 && args[0] instanceof Stage;
-  }
+    @SuppressWarnings("unchecked")
+    private static Class<Form>[] ensureAllFormClasses(Class<?>[] parameterTypes) {
+      for (Class<?> each : parameterTypes)
+        requireThat(each, isAssignableFrom(Form.class), otherwiseThrowRuntimeException());
+      return (Class<Form>[]) parameterTypes;
+    }
 
-  private static <V> BiFunction<V, Predicate<V>, RuntimeException> otherwiseThrowRuntimeException() {
-    return (V v, Predicate<V> requirement) -> {
-      throw new RuntimeException(String.format("Given value:'%s' did not satisfy the requirement:'%s'", v, requirement));
-    };
-  }
+    @SuppressWarnings("SameParameterValue")
+    private static <T> Predicate<Class<?>> isAssignableFrom(Class<T> formClass) {
+      return formClass::isAssignableFrom;
+    }
 
-  private static <V> V requireThat(V value, Predicate<V> requirement, BiFunction<V, Predicate<V>, RuntimeException> otherwiseThrow) {
-    if (requirement.test(value))
-      return value;
-    throw otherwiseThrow.apply(value, requirement);
+    private static Predicate<Object[]> arrayLengthIsOneAndTheElementIsStage() {
+      return args -> args.length == 1 && args[0] instanceof Stage;
+    }
+
+    private static <V> BiFunction<V, Predicate<V>, RuntimeException> otherwiseThrowRuntimeException() {
+      return (V v, Predicate<V> requirement) -> {
+        throw new RuntimeException(format("Given value:'%s' did not satisfy the requirement:'%s'", v, requirement));
+      };
+    }
+
+    private static <V> V requireThat(V value, Predicate<V> requirement, BiFunction<V, Predicate<V>, RuntimeException> otherwiseThrow) {
+      if (requirement.test(value))
+        return value;
+      throw otherwiseThrow.apply(value, requirement);
+    }
+
+    public static Supplier<RuntimeException> undefinedFormError(Statement.Nested nestedStatement) {
+      return () -> {
+        throw new UnsupportedOperationException(format("Undefined form:'%s' was requested", nestedStatement.getFormHandle()));
+      };
+    }
   }
 }

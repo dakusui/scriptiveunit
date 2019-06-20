@@ -41,12 +41,6 @@ public interface Stage {
 
   Optional<TestItem> getTestItem();
 
-  @SuppressWarnings("unchecked")
-  default <T> Form<T> compile() {
-    return formRegistry().lookUp(ongoingStatement().getFormHandle())
-        .orElseThrow(RuntimeException::new);
-  }
-
   default FormRegistry formRegistry() {
     return null;
   }
