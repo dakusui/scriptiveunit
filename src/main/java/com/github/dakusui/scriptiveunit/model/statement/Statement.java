@@ -5,6 +5,7 @@ import com.github.dakusui.scriptiveunit.exceptions.SyntaxException;
 import com.github.dakusui.scriptiveunit.exceptions.TypeMismatch;
 import com.github.dakusui.scriptiveunit.model.form.Form;
 import com.github.dakusui.scriptiveunit.model.form.FormInvoker;
+import com.github.dakusui.scriptiveunit.model.session.Stage;
 import com.google.common.collect.Lists;
 
 import java.util.List;
@@ -22,20 +23,29 @@ public interface Statement {
     return new Factory(config, userDefinedFormClauses);
   }
 
+  <V> V evaluate(Stage stage);
+
   Form compile(FormInvoker invoker);
 
   interface Atom extends Statement {
+    default Form evaluate(Stage stage) {
+      return null;
+    }
   }
 
   interface Nested extends Statement {
     FormHandle getFormHandle();
 
     Arguments getArguments();
+
+    default Form evaluate(Stage stage) {
+      return null;
+    }
   }
 
   class Factory {
     private final FormHandle.Factory formCallFactory;
-    private final Form.Factory     formFactory;
+    private final Form.Factory formFactory;
 
     public Factory(Config config, Map<String, List<Object>> userDefinedFormClauses) {
       this.formFactory = new Form.Factory();

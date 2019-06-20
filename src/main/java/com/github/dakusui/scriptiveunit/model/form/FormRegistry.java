@@ -2,6 +2,7 @@ package com.github.dakusui.scriptiveunit.model.form;
 
 import com.github.dakusui.scriptiveunit.model.session.Stage;
 import com.github.dakusui.scriptiveunit.model.statement.FormHandle;
+import com.github.dakusui.scriptiveunit.model.statement.Statement;
 
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.InvocationTargetException;
@@ -42,7 +43,25 @@ public class FormRegistry {
   }
 
 
-  public Form loadForm(Method m) {
+  /**
+   * @param object The object to which a method {@code m} belongs.
+   * @param m      A method
+   * @return A created form created from the given method object.
+   */
+  public Form loadForm(Object object, Method m) {
+    Class<Form>[] params = ensureAllFormClasses(m.getParameterTypes());
+    Form[] args = new Form[params.length];
+    for (int i = 0; i < params.length; i++) {
+      args[i] = (Form) Proxy.newProxyInstance(Form.class.getClassLoader(), new Class[]{Form.class}, new InvocationHandler() {
+        @Override
+        public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
+          Stage stage = (Stage) requireThat(args, arrayLengthIsOneAndTheElementIsStage(), throwRuntimeException())[0];
+          return stage.ongoingStatement().evaluate(stage);
+        }
+      });
+    }
+
+    /*
     Form target = null;
     Form arg = (Form) Proxy.newProxyInstance(
         Form.class.getClassLoader(),
@@ -60,11 +79,16 @@ public class FormRegistry {
           }
         }
     );
+    */
     try {
-      return (Form) m.invoke(null, arg);
+      return (Form) m.invoke(object, args);
     } catch (IllegalAccessException | InvocationTargetException e) {
       throw new RuntimeException(e);
     }
+  }
+
+  private Class<Form>[] ensureAllFormClasses(Class<?>[] parameterTypes) {
+    return new Class[]{};
   }
 
   private static Predicate<Object[]> arrayLengthIsOneAndTheElementIsStage() {
