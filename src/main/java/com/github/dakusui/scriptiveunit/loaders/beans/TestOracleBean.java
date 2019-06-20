@@ -97,9 +97,9 @@ public abstract class TestOracleBean {
       return TestOracle.templateTestOracleDescription(this, testCaseTuple, testSuiteDescription);
     }
 
-    class MyDefinition implements Definition {
+    class DefinitionImpl implements Definition {
       private final TestItem         testItem;
-      MyDefinition(TestItem testItem) {
+      DefinitionImpl(TestItem testItem) {
         this.testItem = testItem;
       }
 
@@ -211,7 +211,7 @@ public abstract class TestOracleBean {
     }
 
     public Definition definitionFor(TestItem testItem) {
-      return new MyDefinition(testItem) {
+      return new DefinitionImpl(testItem) {
       };
     }
 

@@ -7,7 +7,6 @@ import com.github.dakusui.scriptiveunit.model.session.Stage;
 
 import java.util.List;
 
-import static com.github.dakusui.scriptiveunit.model.form.FormInvoker.createMemo;
 import static java.util.Objects.requireNonNull;
 
 public class ConstraintDefinitionImpl implements ConstraintDefinition {
@@ -22,7 +21,7 @@ public class ConstraintDefinitionImpl implements ConstraintDefinition {
     return requireNonNull(
         BeanUtils.<Boolean>toForm(
             statement,
-            FormInvoker.create(createMemo()))
+            FormInvoker.create())
             .apply(stage));
   }
 

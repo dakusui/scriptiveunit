@@ -117,7 +117,7 @@ public interface Statement {
                * the statement by evaluating it, it is valid to pass a fresh
                * memo object to an invoker.
                */
-              work.add(Objects.toString(each.compile(FormInvoker.create(FormInvoker.createMemo()))));
+              work.add(Objects.toString(each.compile(FormInvoker.create())));
             } else {
               throw SyntaxException.parameterNameShouldBeSpecifiedWithConstant((Nested) statement);
             }

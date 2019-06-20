@@ -99,7 +99,7 @@ public interface FormHandle {
     }
 
     private static Form compile(Statement statement) {
-      return statement.compile(FormInvoker.create(FormInvoker.createMemo()));
+      return statement.compile(FormInvoker.create());
     }
 
     private Optional<Supplier<List<Object>>> getUserDefinedFormClauseFromSessionByName(String name) {

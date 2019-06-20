@@ -6,7 +6,6 @@ import com.github.dakusui.jcunit8.factorspace.ParameterSpace;
 import com.github.dakusui.jcunit8.pipeline.Pipeline;
 import com.github.dakusui.jcunit8.pipeline.Requirement;
 import com.github.dakusui.jcunit8.testsuite.TestCase;
-import com.github.dakusui.scriptiveunit.runners.ScriptiveUnit;
 import com.github.dakusui.scriptiveunit.core.Config;
 import com.github.dakusui.scriptiveunit.model.desc.ParameterSpaceDescriptor;
 import com.github.dakusui.scriptiveunit.model.desc.TestSuiteDescriptor;
@@ -17,6 +16,7 @@ import com.github.dakusui.scriptiveunit.model.form.FormInvoker;
 import com.github.dakusui.scriptiveunit.model.session.Session;
 import com.github.dakusui.scriptiveunit.model.session.Stage;
 import com.github.dakusui.scriptiveunit.model.statement.Statement;
+import com.github.dakusui.scriptiveunit.runners.ScriptiveUnit;
 import com.github.dakusui.scriptiveunit.utils.StringUtils;
 
 import java.util.List;
@@ -26,7 +26,6 @@ import java.util.function.Function;
 
 import static com.github.dakusui.actionunit.Actions.nop;
 import static com.github.dakusui.scriptiveunit.exceptions.ScriptiveUnitException.wrap;
-import static com.github.dakusui.scriptiveunit.model.form.FormInvoker.createMemo;
 import static com.github.dakusui.scriptiveunit.model.statement.Statement.createStatementFactory;
 import static java.lang.String.format;
 import static java.util.Collections.singletonList;
@@ -157,7 +156,7 @@ public abstract class TestSuiteDescriptorBean {
             Object result =
                 statement == null ?
                     nop() :
-                    BeanUtils.toForm(statement, FormInvoker.create(createMemo())).apply(input);
+                    BeanUtils.toForm(statement, FormInvoker.create()).apply(input);
             return (Action) requireNonNull(
                 result,
                 String.format("statement for '%s' was not valid '%s'", actionName, statement)

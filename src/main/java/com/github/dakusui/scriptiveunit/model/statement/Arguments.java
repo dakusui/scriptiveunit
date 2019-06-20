@@ -6,14 +6,14 @@ import java.util.Iterator;
 import java.util.List;
 
 public interface Arguments extends Iterable<Statement> {
-  Form get(int i);
+  Statement get(int i);
 
   int size();
 
   static Arguments create(Statement.Factory statementFactory, List<Form> args) {
     return new Arguments() {
-      public Form get(int i) {
-        return args.get(i);
+      public Statement get(int i) {
+        return statementFactory.create(args.get(i));
       }
 
       @Override
