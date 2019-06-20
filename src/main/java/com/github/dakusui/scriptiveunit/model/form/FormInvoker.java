@@ -21,8 +21,6 @@ public interface FormInvoker {
 
   Object invokeForm(Form target, Stage stage, String alias);
 
-  Memo memo();
-
   String asString();
 
   interface Memo extends Map<List<Object>, Object> {
@@ -41,19 +39,17 @@ public interface FormInvoker {
     return new Memo.Impl();
   }
 
-  static FormInvoker create(Memo memo) {
-    return new Impl(0, memo);
+  static FormInvoker create() {
+    return new Impl(0);
   }
 
   class Impl implements FormInvoker {
     private final Writer                    writer;
-    private final Memo memo;
     private       int                       indent;
 
-    private Impl(int initialIndent, Memo memo) {
+    private Impl(int initialIndent) {
       this.indent = initialIndent;
       this.writer = new Writer();
-      this.memo = memo;
     }
 
     void enter() {
@@ -83,11 +79,6 @@ public interface FormInvoker {
         this.writeLine(") -> %s", ret);
         this.leave();
       }
-    }
-
-    @Override
-    public Memo memo() {
-      return memo;
     }
 
     public String asString() {
@@ -139,6 +130,7 @@ public interface FormInvoker {
       return StringUtils.join("\n", this.output.toArray());
     }
 
+    @SuppressWarnings("NullableProblems")
     @Override
     public Iterator<String> iterator() {
       return this.output.iterator();

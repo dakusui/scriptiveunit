@@ -43,9 +43,7 @@ public interface Stage {
 
   @SuppressWarnings("unchecked")
   default <T> Form<T> compile() {
-    if (ongoingStatement() instanceof Statement.Atom)
-      return null; //((Statement.Atom)statement);//
-    return formRegistry().lookUp(((Statement.Nested) ongoingStatement()).getFormHandle())
+    return formRegistry().lookUp(ongoingStatement().getFormHandle())
         .orElseThrow(RuntimeException::new);
   }
 
@@ -53,11 +51,11 @@ public interface Stage {
     return null;
   }
 
-  default Statement ongoingStatement() {
+  default Statement.Nested ongoingStatement() {
     return null;
   }
 
-  default Stage createChild(Statement statement) {
+  default Stage createChild(Statement.Nested statement) {
     requireNonNull(statement);
     return new Delegating(this) {
       @Override
@@ -66,7 +64,7 @@ public interface Stage {
       }
 
       @Override
-      public Statement ongoingStatement() {
+      public Statement.Nested ongoingStatement() {
         return statement;
       }
     };

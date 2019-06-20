@@ -2,17 +2,15 @@ package com.github.dakusui.scriptiveunit.model.form;
 
 import com.github.dakusui.scriptiveunit.model.session.Stage;
 import com.github.dakusui.scriptiveunit.model.statement.FormHandle;
-import com.github.dakusui.scriptiveunit.model.statement.Statement;
 
-import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
+import java.util.function.BiFunction;
 import java.util.function.Predicate;
-import java.util.function.Supplier;
 
 import static java.lang.String.format;
 
@@ -52,56 +50,44 @@ public class FormRegistry {
     Class<Form>[] params = ensureAllFormClasses(m.getParameterTypes());
     Form[] args = new Form[params.length];
     for (int i = 0; i < params.length; i++) {
-      args[i] = (Form) Proxy.newProxyInstance(Form.class.getClassLoader(), new Class[]{Form.class}, new InvocationHandler() {
-        @Override
-        public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
-          Stage stage = (Stage) requireThat(args, arrayLengthIsOneAndTheElementIsStage(), throwRuntimeException())[0];
-          return stage.ongoingStatement().evaluate(stage);
-        }
+      int finalI = i;
+      args[i] = (Form) Proxy.newProxyInstance(Form.class.getClassLoader(), new Class[] { Form.class }, (proxy, method, args1) -> {
+        Stage stage = (Stage) requireThat(args1, arrayLengthIsOneAndTheElementIsStage(), throwRuntimeException())[0];
+        return stage.ongoingStatement().getArguments().get(finalI);
       });
     }
 
-    /*
-    Form target = null;
-    Form arg = (Form) Proxy.newProxyInstance(
-        Form.class.getClassLoader(),
-        new Class[] { Form.class },
-        new InvocationHandler() {
-
-          @Override
-          public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
-            if (!"apply".equals(method.getName()))
-              return method.invoke(target, args);
-            Stage stage = (Stage) requireThat(args, arrayLengthIsOneAndTheElementIsStage(), throwRuntimeException())[0];
-            return null;
-            //return invoker.invokeForm(target, stage, name);
-            //return formHandler.handleForm(invoker, target, (Stage) args[0], name);
-          }
-        }
-    );
-    */
     try {
-      return (Form) m.invoke(object, args);
+      return (Form) m.invoke(object, (Object[]) args);
     } catch (IllegalAccessException | InvocationTargetException e) {
       throw new RuntimeException(e);
     }
   }
 
+  @SuppressWarnings("unchecked")
   private Class<Form>[] ensureAllFormClasses(Class<?>[] parameterTypes) {
-    return new Class[]{};
+    for (Class<?> each : parameterTypes)
+      requireThat(each, isAssignableFrom(Form.class), throwRuntimeException());
+    return (Class<Form>[]) parameterTypes;
+  }
+
+  private Predicate<Class<?>> isAssignableFrom(Class<Form> formClass) {
+    return null;
   }
 
   private static Predicate<Object[]> arrayLengthIsOneAndTheElementIsStage() {
     return args -> args.length == 1 && args[0] instanceof Stage;
   }
 
-  private static Supplier<RuntimeException> throwRuntimeException() {
-    throw new RuntimeException();
+  private static <V> BiFunction<V, Predicate<V>, RuntimeException> throwRuntimeException() {
+    return  (V v, Predicate<V> requirement) -> {
+      throw new RuntimeException(String.format("Given value:'%s' did not satisfy the requirement:'%s'", v, requirement));
+    };
   }
 
-  private static <V> V requireThat(V value, Predicate<V> requirement, Supplier<RuntimeException> otherwiseThrow) {
+  private static <V> V requireThat(V value, Predicate<V> requirement, BiFunction<V, Predicate<V>, RuntimeException> otherwiseThrow) {
     if (requirement.test(value))
       return value;
-    throw otherwiseThrow.get();
+    throw otherwiseThrow.apply(value, requirement);
   }
 }

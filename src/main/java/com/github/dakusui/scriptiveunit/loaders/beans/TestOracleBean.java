@@ -23,9 +23,8 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 
 import static com.github.dakusui.actionunit.Actions.nop;
-import static com.github.dakusui.scriptiveunit.utils.StringUtils.iterableToString;
-import static com.github.dakusui.scriptiveunit.model.form.FormInvoker.createMemo;
 import static com.github.dakusui.scriptiveunit.model.session.Stage.ExecutionLevel.ORACLE;
+import static com.github.dakusui.scriptiveunit.utils.StringUtils.iterableToString;
 import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
 
@@ -100,8 +99,6 @@ public abstract class TestOracleBean {
 
     class MyDefinition implements Definition {
       private final TestItem         testItem;
-      private       FormInvoker.Memo memo = createMemo();
-
       MyDefinition(TestItem testItem) {
         this.testItem = testItem;
       }
@@ -111,7 +108,7 @@ public abstract class TestOracleBean {
         if (beforeClause == null)
           return s -> Actions.nop();
         Statement statement = statementFactory.create(beforeClause);
-        FormInvoker formInvoker = FormInvoker.create(memo);
+        FormInvoker formInvoker = FormInvoker.create();
         return s -> BeanUtils.<Action>toForm(statement, formInvoker).apply(s);
       }
 
@@ -119,7 +116,7 @@ public abstract class TestOracleBean {
       public Function<Stage, Matcher<Tuple>> givenFactory() {
         return (Stage s) -> new BaseMatcher<Tuple>() {
           private Statement givenStatement = statementFactory.create(givenClause);
-          private FormInvoker formInvoker = FormInvoker.create(memo);
+          private FormInvoker formInvoker = FormInvoker.create();
 
           @Override
           public boolean matches(Object item) {
@@ -140,7 +137,7 @@ public abstract class TestOracleBean {
       @Override
       public Function<Stage, Object> whenFactory() {
         return new Function<Stage, Object>() {
-          FormInvoker formInvoker = FormInvoker.create(memo);
+          FormInvoker formInvoker = FormInvoker.create();
 
           @Override
           public Object apply(Stage s) {
@@ -152,7 +149,7 @@ public abstract class TestOracleBean {
       @Override
       public Function<Stage, Function<Object, Matcher<Stage>>> thenFactory() {
         Statement thenStatement = statementFactory.create(thenClause);
-        FormInvoker formInvoker = FormInvoker.create(memo);
+        FormInvoker formInvoker = FormInvoker.create();
         return stage -> out -> new BaseMatcher<Stage>() {
           Function<FormInvoker, Predicate<Stage>> p = fi -> s -> requireNonNull(
               BeanUtils.<Boolean>toForm(thenStatement, fi).apply(s));
@@ -195,7 +192,7 @@ public abstract class TestOracleBean {
       @Override
       public Function<Stage, Sink<AssertionError>> errorHandlerFactory(TestItem testItem, Report report) {
         Statement onFailureStatement = statementFactory.create(onFailureClause);
-        FormInvoker formInvoker = FormInvoker.create(memo);
+        FormInvoker formInvoker = FormInvoker.create();
         return (Stage s) -> (AssertionError input, Context context) -> requireNonNull(
             onFailureClause != null ?
                 BeanUtils.<Action>toForm(onFailureStatement, formInvoker) :
@@ -207,7 +204,7 @@ public abstract class TestOracleBean {
         if (afterClause == null)
           return s -> Actions.nop();
         Statement statement = statementFactory.create(afterClause);
-        FormInvoker formInvoker = FormInvoker.create(memo);
+        FormInvoker formInvoker = FormInvoker.create();
         return s -> BeanUtils.<Action>toForm(statement, formInvoker).apply(s);
       }
 

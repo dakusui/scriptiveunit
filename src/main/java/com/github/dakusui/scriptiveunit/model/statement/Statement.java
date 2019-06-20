@@ -28,7 +28,7 @@ public interface Statement {
   Form compile(FormInvoker invoker);
 
   interface Atom extends Statement {
-    default Form evaluate(Stage stage) {
+    default <V> V evaluate(Stage stage) {
       return null;
     }
   }
@@ -38,7 +38,7 @@ public interface Statement {
 
     Arguments getArguments();
 
-    default Form evaluate(Stage stage) {
+    default <V> V evaluate(Stage stage) {
       return null;
     }
   }
