@@ -1,14 +1,14 @@
-package com.github.dakusui.scriptiveunit.model.form;
+package com.github.dakusui.scriptiveunit.model.form.handle;
 
 import com.github.dakusui.jcunit.core.tuples.Tuple;
 import com.github.dakusui.scriptiveunit.core.Config;
 import com.github.dakusui.scriptiveunit.core.ObjectMethod;
 import com.github.dakusui.scriptiveunit.drivers.actions.Basic;
 import com.github.dakusui.scriptiveunit.model.desc.testitem.TestItem;
+import com.github.dakusui.scriptiveunit.model.form.Form;
 import com.github.dakusui.scriptiveunit.model.session.Report;
 import com.github.dakusui.scriptiveunit.model.session.Stage;
 import com.github.dakusui.scriptiveunit.model.statement.Arguments;
-import com.github.dakusui.scriptiveunit.model.statement.FormHandle;
 import com.github.dakusui.scriptiveunit.model.statement.Statement;
 import com.github.dakusui.scriptiveunit.utils.DriverUtils;
 
@@ -18,7 +18,7 @@ import java.util.function.BiFunction;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 
-import static com.github.dakusui.scriptiveunit.model.form.FormRegistry.Utils.toArgs;
+import static com.github.dakusui.scriptiveunit.model.form.handle.FormRegistry.Utils.toArgs;
 import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
 
@@ -29,11 +29,11 @@ public interface FormRegistry {
     private final Map<String, Form> formMap = new HashMap<>();
 
 
-    public Loader register(Object libraryObject) {
+    Loader register(Object libraryObject) {
       requireNonNull(libraryObject);
       List<ObjectMethod> methods = DriverUtils.getObjectMethodsFromImportedFieldsInObject(libraryObject);
       for (ObjectMethod each : methods) {
-        register(each, loadForm(libraryObject, each));
+        register(each, loadForm(each));
       }
       return this;
     }
@@ -50,11 +50,10 @@ public interface FormRegistry {
     }
 
     /**
-     * @param object The object to which a method {@code m} belongs.
      * @param method A method
      * @return A created form created from the given method object.
      */
-    Form loadForm(Object object, ObjectMethod method) {
+    Form loadForm(ObjectMethod method) {
       return (Form) method.invoke((Object[]) toArgs(Utils.ensureAllFormClasses(method.getParameterTypes())));
     }
 

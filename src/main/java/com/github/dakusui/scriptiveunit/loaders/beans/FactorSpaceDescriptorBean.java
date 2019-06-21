@@ -4,7 +4,6 @@ import com.github.dakusui.jcunit.fsm.spec.FsmSpec;
 import com.github.dakusui.jcunit8.factorspace.Constraint;
 import com.github.dakusui.jcunit8.factorspace.Parameter;
 import com.github.dakusui.scriptiveunit.exceptions.ScriptiveUnitException;
-import com.github.dakusui.scriptiveunit.model.statement.ConstraintDefinitionImpl;
 import com.github.dakusui.scriptiveunit.model.desc.ParameterSpaceDescriptor;
 import com.github.dakusui.scriptiveunit.model.session.Session;
 import com.github.dakusui.scriptiveunit.model.statement.Statement;

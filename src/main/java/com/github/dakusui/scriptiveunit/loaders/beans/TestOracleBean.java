@@ -117,7 +117,7 @@ public abstract class TestOracleBean {
       public Function<Stage, Matcher<Tuple>> givenFactory() {
         return (Stage s) -> new BaseMatcher<Tuple>() {
           private Statement givenStatement = statementFactory.create(givenClause);
-          private FormInvoker formInvoker = FormInvoker.create();
+          private FormInvoker formInvoker = FormInvokerImpl.create();
 
           @Override
           public boolean matches(Object item) {
@@ -143,7 +143,7 @@ public abstract class TestOracleBean {
       @Override
       public Function<Stage, Function<Object, Matcher<Stage>>> thenFactory() {
         Statement thenStatement = statementFactory.create(thenClause);
-        FormInvoker formInvoker = FormInvoker.create();
+        FormInvoker formInvoker = FormInvokerImpl.create();
         return stage -> out -> new BaseMatcher<Stage>() {
           Function<FormInvoker, Predicate<Stage>> p = fi -> s -> requireNonNull(
               FormUtils.<Boolean>toForm(thenStatement).apply(s));

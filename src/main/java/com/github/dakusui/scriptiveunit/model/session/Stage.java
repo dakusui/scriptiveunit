@@ -4,7 +4,7 @@ import com.github.dakusui.jcunit.core.tuples.Tuple;
 import com.github.dakusui.scriptiveunit.core.Config;
 import com.github.dakusui.scriptiveunit.model.desc.testitem.TestItem;
 import com.github.dakusui.scriptiveunit.model.form.Form;
-import com.github.dakusui.scriptiveunit.model.form.FormRegistry;
+import com.github.dakusui.scriptiveunit.model.form.handle.FormRegistry;
 import com.github.dakusui.scriptiveunit.model.statement.Statement;
 
 import java.util.HashMap;

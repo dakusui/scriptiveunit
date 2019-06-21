@@ -3,9 +3,12 @@ package com.github.dakusui.scriptiveunit.model.statement;
 import com.github.dakusui.scriptiveunit.core.Config;
 import com.github.dakusui.scriptiveunit.exceptions.SyntaxException;
 import com.github.dakusui.scriptiveunit.exceptions.TypeMismatch;
-import com.github.dakusui.scriptiveunit.model.form.FormRegistry;
+import com.github.dakusui.scriptiveunit.model.form.handle.FormHandle;
+import com.github.dakusui.scriptiveunit.model.form.handle.FormHandleFactory;
+import com.github.dakusui.scriptiveunit.model.form.handle.FormRegistry;
 import com.github.dakusui.scriptiveunit.model.form.FormUtils;
 import com.github.dakusui.scriptiveunit.model.session.Stage;
+import com.github.dakusui.scriptiveunit.utils.CoreUtils;
 import com.google.common.collect.Lists;
 
 import java.util.List;
@@ -50,22 +53,22 @@ public interface Statement {
   }
 
   class Factory {
-    private final FormHandle.Factory formHandleFactory;
+    private final FormHandleFactory formHandleFactory;
 
     public Factory(Config config, Map<String, List<Object>> userDefinedFormClauses) {
-      this.formHandleFactory = new FormHandle.Factory(
+      this.formHandleFactory = new FormHandleFactory(
           this,
           config,
           userDefinedFormClauses);
     }
 
     public Statement create(Object object) throws TypeMismatch {
-      if (Utils.isAtom(object))
+      if (CoreUtils.isAtom(object))
         return createAtom(object);
       @SuppressWarnings("unchecked") List<Object> raw = (List<Object>) object;
-      Object car = Utils.car(raw);
+      Object car = CoreUtils.car(raw);
       if (car instanceof String) {
-        Arguments arguments = Arguments.create(this, Utils.cdr(raw));
+        Arguments arguments = Arguments.create(this, CoreUtils.cdr(raw));
         FormHandle formHandle = this.formHandleFactory.create((String) car);
         return new Compound() {
           @Override
@@ -159,18 +162,6 @@ public interface Statement {
         }
       }
       return work;
-    }
-
-    static boolean isAtom(Object object) {
-      return !(object instanceof List) || ((List) object).isEmpty();
-    }
-
-    static Object car(List<Object> raw) {
-      return raw.get(0);
-    }
-
-    static List<Object> cdr(List<Object> raw) {
-      return raw.subList(1, raw.size());
     }
   }
 }

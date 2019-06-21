@@ -5,6 +5,7 @@ import com.google.common.collect.ImmutableMap;
 import java.lang.reflect.Array;
 import java.math.BigDecimal;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 
 import static com.github.dakusui.scriptiveunit.core.Exceptions.SCRIPTIVEUNIT;
@@ -52,5 +53,17 @@ public enum CoreUtils {
     System.arraycopy(args, ret.length - 1, var, 0, args.length - count + 1);
     ret[ret.length - 1] = var;
     return ret;
+  }
+
+  public static boolean isAtom(Object object) {
+    return !(object instanceof List) || ((List) object).isEmpty();
+  }
+
+  public static Object car(List<Object> raw) {
+    return raw.get(0);
+  }
+
+  public static List<Object> cdr(List<Object> raw) {
+    return raw.subList(1, raw.size());
   }
 }

@@ -1,8 +1,8 @@
 package com.github.dakusui.scriptiveunit.model.form;
 
 import com.github.dakusui.scriptiveunit.core.ObjectMethod;
+import com.github.dakusui.scriptiveunit.model.form.handle.FormHandle;
 import com.github.dakusui.scriptiveunit.model.session.Stage;
-import com.github.dakusui.scriptiveunit.model.statement.FormHandle;
 import com.github.dakusui.scriptiveunit.model.statement.Statement;
 import com.github.dakusui.scriptiveunit.utils.CoreUtils;
 
