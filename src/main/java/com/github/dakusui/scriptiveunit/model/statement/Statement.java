@@ -3,9 +3,8 @@ package com.github.dakusui.scriptiveunit.model.statement;
 import com.github.dakusui.scriptiveunit.core.Config;
 import com.github.dakusui.scriptiveunit.exceptions.SyntaxException;
 import com.github.dakusui.scriptiveunit.exceptions.TypeMismatch;
-import com.github.dakusui.scriptiveunit.model.form.FormUtils;
-import com.github.dakusui.scriptiveunit.model.form.Form;
 import com.github.dakusui.scriptiveunit.model.form.FormRegistry;
+import com.github.dakusui.scriptiveunit.model.form.FormUtils;
 import com.github.dakusui.scriptiveunit.model.session.Stage;
 import com.google.common.collect.Lists;
 
@@ -54,9 +53,7 @@ public interface Statement {
     private final FormHandle.Factory formHandleFactory;
 
     public Factory(Config config, Map<String, List<Object>> userDefinedFormClauses) {
-      Form.Factory formFactory = new Form.Factory();
       this.formHandleFactory = new FormHandle.Factory(
-          formFactory,
           this,
           config,
           userDefinedFormClauses);

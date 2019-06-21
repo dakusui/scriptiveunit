@@ -7,7 +7,6 @@ import com.github.dakusui.scriptiveunit.model.form.FormUtils;
 import com.github.dakusui.scriptiveunit.model.session.Stage;
 import com.github.dakusui.scriptiveunit.utils.DriverUtils;
 
-import java.lang.reflect.Array;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -47,13 +46,11 @@ public interface FormHandle {
 
   class Factory {
     private final Object driver;
-    private final Form.Factory formFactory;
     private final Statement.Factory statementFactory;
     private final Map<String, List<Object>> clauseMap;
 
-    Factory(Form.Factory formFactory, Statement.Factory statementFactory, Config config, Map<String, List<Object>> userDefinedFormClauses) {
+    Factory(Statement.Factory statementFactory, Config config, Map<String, List<Object>> userDefinedFormClauses) {
       this.driver = requireNonNull(config.getDriverObject());
-      this.formFactory = formFactory;
       this.statementFactory = statementFactory;
       this.clauseMap = requireNonNull(userDefinedFormClauses);
     }
@@ -62,14 +59,14 @@ public interface FormHandle {
       if ("lambda".equals(name))
         return new FormHandle.Lambda(name);
       return Factory.this.getObjectMethodFromDriver(name).map(
-          (Function<ObjectMethod, FormHandle>) objectMethod -> new FormHandle.MethodBasedImpl(objectMethod, this, formFactory)
+          (Function<ObjectMethod, FormHandle>) MethodBased::new
       ).orElseGet(
           () -> createUserForm(name)
       );
     }
 
     private FormHandle createUserForm(String name) {
-      return new FormHandle.UserFormHandle(
+      return new User(
           name,
           () -> statementFactory.create(
               getUserDefinedFormClauseFromSessionByName(name).orElseThrow(
@@ -97,34 +94,18 @@ public interface FormHandle {
       return Optional.empty();
     }
 
-    public Object[] shrinkTo(Class<?> componentType, int count, Object[] args) {
-      Object[] ret = new Object[count];
-      Object var = Array.newInstance(componentType, args.length - count + 1);
-      if (count > 1) {
-        System.arraycopy(args, 0, ret, 0, ret.length - 1);
-      }
-      //noinspection SuspiciousSystemArraycopy
-      System.arraycopy(args, ret.length - 1, var, 0, args.length - count + 1);
-      ret[ret.length - 1] = var;
-      return ret;
-    }
-
     private String getMethodName(ObjectMethod method) {
       return method.getName();
     }
 
   }
 
-  class MethodBasedImpl extends Base {
-    public final ObjectMethod objectMethod;
-    public final Factory formHandleFactory;
-    public final Form.Factory formFactory;
+  class MethodBased extends Base {
+    final ObjectMethod objectMethod;
 
-    private MethodBasedImpl(ObjectMethod objectMethod, Factory formFactory, Form.Factory formFactory1) {
+    private MethodBased(ObjectMethod objectMethod) {
       super(objectMethod.getName());
       this.objectMethod = objectMethod;
-      this.formHandleFactory = formFactory;
-      this.formFactory = formFactory1;
     }
 
     @Override
@@ -137,6 +118,9 @@ public interface FormHandle {
       return String.format("form:%s", this.objectMethod);
     }
 
+    public ObjectMethod objectMethod() {
+      return this.objectMethod;
+    }
   }
 
   class Lambda extends Base {
@@ -151,10 +135,10 @@ public interface FormHandle {
     }
   }
 
-  class UserFormHandle extends Base {
+  class User extends Base {
     public final Supplier<Statement> userDefinedFormStatementSupplier;
 
-    UserFormHandle(String name, Supplier<Statement> userDefinedFormStatementSupplier) {
+    User(String name, Supplier<Statement> userDefinedFormStatementSupplier) {
       super(name);
       this.userDefinedFormStatementSupplier = userDefinedFormStatementSupplier;
     }

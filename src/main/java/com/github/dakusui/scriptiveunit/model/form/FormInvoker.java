@@ -13,10 +13,6 @@ import static java.lang.String.format;
 import static java.util.Arrays.stream;
 
 public interface FormInvoker {
-  <T> T invokeConst(Object value);
-
-  Object invokeForm(Form target, Stage stage, String alias);
-
   String asString();
 
   interface Memo extends Map<List<Object>, Object> {
@@ -48,58 +44,8 @@ public interface FormInvoker {
       this.writer = new Writer();
     }
 
-    void enter() {
-      this.indent++;
-    }
-
-    @Override
-    public <T> T invokeConst(Object value) {
-      this.enter();
-      try {
-        this.writeLine("%s(const)", value);
-        //noinspection unchecked
-        return (T) value;
-      } finally {
-        this.leave();
-      }
-    }
-
-    @Override
-    public Object invokeForm(Form target, Stage stage, String alias) {
-      Object ret = "(N/A)";
-      this.enter();
-      try {
-        this.writeLine("%s(", alias);
-        return toBigDecimalIfPossible(target.apply(stage));
-      } finally {
-        this.writeLine(") -> %s", ret);
-        this.leave();
-      }
-    }
-
     public String asString() {
       return this.writer.asString();
-    }
-
-    void leave() {
-      --this.indent;
-    }
-
-    void writeLine(String format, Object... args) {
-      String s = format(format, prettify(args));
-      if (s.contains("\n")) {
-        stream(s.split("\\n")).forEach((String in) -> writer.writeLine(indent(this.indent) + in));
-      } else {
-        writer.writeLine(indent(this.indent) + s);
-      }
-    }
-
-    private String indent(int indent) {
-      StringBuilder ret = new StringBuilder();
-      for (int i = 0; i < indent; i++) {
-        ret.append(indent());
-      }
-      return ret.toString();
     }
 
     private String indent() {
