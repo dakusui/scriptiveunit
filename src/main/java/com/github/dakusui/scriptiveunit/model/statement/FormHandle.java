@@ -2,6 +2,7 @@ package com.github.dakusui.scriptiveunit.model.statement;
 
 import com.github.dakusui.scriptiveunit.core.Config;
 import com.github.dakusui.scriptiveunit.core.ObjectMethod;
+import com.github.dakusui.scriptiveunit.loaders.beans.BeanUtils;
 import com.github.dakusui.scriptiveunit.model.form.Form;
 import com.github.dakusui.scriptiveunit.model.session.Stage;
 import com.github.dakusui.scriptiveunit.utils.DriverUtils;
@@ -26,11 +27,11 @@ import static java.util.stream.StreamSupport.stream;
 public interface FormHandle {
   static List<Form> toForms(Iterable<Statement> arguments) {
     return stream(arguments.spliterator(), false)
-        .map(Statement::compile)
+        .map(BeanUtils::toForm)
         .collect(toList());
   }
 
-  Form apply(Arguments arguments);
+  <V> Form<V> apply(Arguments arguments);
 
   boolean isAccessor();
 
@@ -103,7 +104,7 @@ public interface FormHandle {
     }
 
     private static Form compile(Statement statement) {
-      return statement.compile();
+      return BeanUtils.toForm(statement);
     }
 
     private Optional<Supplier<List<Object>>> getUserDefinedFormClauseFromSessionByName(String name) {
