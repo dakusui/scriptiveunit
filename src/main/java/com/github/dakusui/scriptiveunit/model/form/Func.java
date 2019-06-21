@@ -96,7 +96,7 @@ public interface Func<O> extends Form<O> {
     }
 
     @SuppressWarnings("ConstantConditions")
-    public Builder<O> addParameters(Form... params) {
+    Builder<O> addParameters(Form... params) {
       Builder<O> ret = this;
       for (Form param : params)
         ret = ret.addParameter(requireNonNull(param));

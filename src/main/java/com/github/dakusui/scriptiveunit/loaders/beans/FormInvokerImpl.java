@@ -8,7 +8,7 @@ import com.google.common.collect.Lists;
 import java.util.Iterator;
 import java.util.List;
 
-public class FormInvokerImpl implements FormInvoker {
+class FormInvokerImpl implements FormInvoker {
   private final Writer writer;
 
   private FormInvokerImpl() {
@@ -26,7 +26,7 @@ public class FormInvokerImpl implements FormInvoker {
   public static class Writer implements ActionPrinter.Writer, Iterable<String> {
     List<String> output = Lists.newArrayList();
 
-    public Writer() {
+    Writer() {
     }
 
     @Override
