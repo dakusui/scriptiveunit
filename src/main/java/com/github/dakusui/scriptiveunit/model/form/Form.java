@@ -55,13 +55,12 @@ public interface Form<O> extends Function<Stage, O>, Formattable {
      * can become Form[] it is because only the last argument of a method can become
      * a varargs.
      */
-    public Form create(FormInvoker invoker, ObjectMethod objectMethod, Object[] args) {
+    public Form create(ObjectMethod objectMethod, Object[] args) {
       Object returnedValue;
       /*
        * By using dynamic proxy, we are making it possible to print structured pretty log.
        */
       return createForm(
-          invoker,
           objectMethod.getName(),
           (Form) check(
               returnedValue = objectMethod.invoke(args),
@@ -70,17 +69,17 @@ public interface Form<O> extends Function<Stage, O>, Formattable {
           ));
     }
 
-    public <T> Form<T> createConst(FormInvoker invoker, T value) {
+    public <T> Form<T> createConst(T value) {
       return createProxy(
           (proxy, method, args) -> FormInvoker.Utils.invokeConst(value),
           Const.class);
     }
 
-    private Form createForm(FormInvoker invoker, String name, Form target) {
-      return createProxy(createInvocationHandler(invoker, name, target), Form.class);
+    private Form createForm(String name, Form target) {
+      return createProxy(createInvocationHandler(name, target), Form.class);
     }
 
-    private InvocationHandler createInvocationHandler(FormInvoker invoker, String name, Form target) {
+    private InvocationHandler createInvocationHandler(String name, Form target) {
       return (Object proxy, Method method, Object[] args) -> {
         if (!"apply".equals(method.getName()))
           return method.invoke(target, args);

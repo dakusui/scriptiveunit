@@ -25,13 +25,13 @@ import static java.util.stream.Collectors.toList;
 import static java.util.stream.StreamSupport.stream;
 
 public interface FormHandle {
-  static List<Form> toForms(FormInvoker formInvoker, Iterable<Statement> arguments) {
+  static List<Form> toForms(Iterable<Statement> arguments) {
     return stream(arguments.spliterator(), false)
-        .map(statement -> statement.compile(formInvoker))
+        .map(Statement::compile)
         .collect(toList());
   }
 
-  Form apply(FormInvoker formInvoker, Arguments arguments);
+  Form apply(Arguments arguments);
 
   boolean isAccessor();
 
@@ -104,7 +104,7 @@ public interface FormHandle {
     }
 
     private static Form compile(Statement statement) {
-      return statement.compile(FormInvoker.create());
+      return statement.compile();
     }
 
     private Optional<Supplier<List<Object>>> getUserDefinedFormClauseFromSessionByName(String name) {
@@ -156,23 +156,23 @@ public interface FormHandle {
       }
 
       @Override
-      public Form apply(FormInvoker formInvoker, Arguments arguments) {
+      public Form apply(Arguments arguments) {
         Form[] args = toArray(
-            toForms(formInvoker, arguments),
+            toForms(arguments),
             Form.class
         );
         // TODO a form doesn't need to know a FormInvoker with which it will be invoked.
-        return createForm(formInvoker, args);
+        return createForm( args);
       }
 
-      Form createForm(FormInvoker formInvoker, Form[] args) {
+      Form createForm(Form[] args) {
         Object[] argValues;
         if (requireNonNull(objectMethod).isVarArgs()) {
           int parameterCount = objectMethod.getParameterCount();
           argValues = Factory.this.shrinkTo(objectMethod.getParameterTypes()[parameterCount - 1].getComponentType(), parameterCount, args);
         } else
           argValues = args;
-        return formFactory.create(formInvoker, objectMethod, argValues);
+        return formFactory.create(objectMethod, argValues);
       }
     }
 
@@ -185,12 +185,12 @@ public interface FormHandle {
       }
 
       @Override
-      public Form<Object> apply(FormInvoker formInvoker, Arguments arguments) {
+      public Form<Object> apply(Arguments arguments) {
         return createFunc(
             toArray(
                 Stream.concat(
                     Stream.of((Form<Statement>) input -> userDefinedFormStatementSupplier.get()),
-                    toForms(formInvoker, arguments).stream()
+                    toForms( arguments).stream()
                 ).collect(toList()),
                 Form.class
             )
@@ -220,8 +220,8 @@ public interface FormHandle {
 
       @SuppressWarnings("unchecked")
       @Override
-      public Form<Form<Object>> apply(FormInvoker formInvoker, Arguments arguments) {
-        return (Stage ii) -> getOnlyElement(toForms(formInvoker, arguments));
+      public Form<Form<Object>> apply(Arguments arguments) {
+        return (Stage ii) -> getOnlyElement(toForms( arguments));
       }
 
       @Override

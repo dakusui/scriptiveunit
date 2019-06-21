@@ -26,7 +26,7 @@ public interface Statement {
 
   <V> V evaluate(Stage stage);
 
-  Form compile(FormInvoker invoker);
+  Form compile();
 
   interface Atom extends Statement {
   }
@@ -68,8 +68,8 @@ public interface Statement {
           }
 
           @Override
-          public Form compile(FormInvoker invoker) {
-            return formFactory.createConst(invoker, object);
+          public Form compile() {
+            return formFactory.createConst(object);
           }
         };
       @SuppressWarnings("unchecked") List<Form> raw = (List<Form>) object;
@@ -89,8 +89,8 @@ public interface Statement {
           }
 
           @Override
-          public Form<?> compile(FormInvoker invoker) {
-            return (Form<?>) getFormHandle().apply(invoker, arguments);
+          public Form<?> compile() {
+            return (Form<?>) getFormHandle().apply(arguments);
           }
         };
       } else if (car instanceof Integer) {
@@ -101,7 +101,7 @@ public interface Statement {
           }
 
           @Override
-          public Form compile(FormInvoker invoker) {
+          public Form compile() {
             return (Form<Object>) input -> input.getArgument((Integer) car);
           }
         };
@@ -140,7 +140,7 @@ public interface Statement {
                * the statement by evaluating it, it is valid to pass a fresh
                * memo object to an invoker.
                */
-              work.add(Objects.toString(each.compile(FormInvoker.create())));
+              work.add(Objects.toString(each.compile()));
             } else {
               throw SyntaxException.parameterNameShouldBeSpecifiedWithConstant((Nested) statement);
             }

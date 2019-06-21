@@ -77,7 +77,7 @@ public interface FormRegistry {
         }
 
         @Override
-        public Form compile(FormInvoker invoker) {
+        public Form compile() {
           throw new UnsupportedOperationException();
         }
       };
