@@ -4,6 +4,8 @@ import com.github.dakusui.scriptiveunit.model.form.Form;
 import com.github.dakusui.scriptiveunit.model.statement.FormHandle;
 import com.github.dakusui.scriptiveunit.model.statement.Statement;
 
+import static com.google.common.collect.Iterables.toArray;
+
 public enum BeanUtils {
   ;
   private static final Form.Factory FORM_FACTORY = new Form.Factory();
@@ -20,13 +22,19 @@ public enum BeanUtils {
     if (statement instanceof Statement.Compound) {
       Statement.Compound compound = (Statement.Compound) statement;
       FormHandle formHandle = compound.getFormHandle();
-      if (formHandle instanceof FormHandle.Factory.MethodBasedImpl)
-        return ((FormHandle.Factory.MethodBasedImpl)formHandle).apply(compound.getArguments());
-      if (formHandle instanceof FormHandle.Factory.UserFormHandle)
-        return ((FormHandle.Factory.UserFormHandle)formHandle).apply(compound.getArguments());
-      if (formHandle instanceof FormHandle.Factory.Lambda)
+      if (formHandle instanceof FormHandle.MethodBasedImpl) {
+        Form[] args = toArray(
+            FormHandle.toForms(compound.getArguments()),
+            Form.class
+        );
+        // TODO a form doesn't need to know a FormInvoker with which it will be invoked.
+        return ((FormHandle.MethodBasedImpl)formHandle).createForm(args);
+      }
+      if (formHandle instanceof FormHandle.UserFormHandle)
+        return ((FormHandle.UserFormHandle)formHandle).apply(compound.getArguments());
+      if (formHandle instanceof FormHandle.Lambda)
         //noinspection unchecked
-        return (Form<U>) ((FormHandle.Factory.Lambda)formHandle).apply(compound.getArguments());
+        return (Form<U>) ((FormHandle.Lambda)formHandle).apply(compound.getArguments());
       throw new IllegalArgumentException();
     }
     throw new IllegalArgumentException();

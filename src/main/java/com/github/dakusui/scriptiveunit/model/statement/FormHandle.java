@@ -82,16 +82,16 @@ public interface FormHandle {
 
     public FormHandle create(String name) {
       if ("lambda".equals(name))
-        return new Lambda(name);
+        return new FormHandle.Lambda(name);
       return Factory.this.getObjectMethodFromDriver(name).map(
-          (Function<ObjectMethod, FormHandle>) objectMethod -> new MethodBasedImpl(objectMethod, this, formFactory)
+          (Function<ObjectMethod, FormHandle>) objectMethod -> new FormHandle.MethodBasedImpl(objectMethod, this, formFactory)
       ).orElseGet(
           () -> createUserForm(name)
       );
     }
 
     private FormHandle createUserForm(String name) {
-      return new UserFormHandle(
+      return new FormHandle.UserFormHandle(
           name,
           () -> statementFactory.create(
               getUserDefinedFormClauseFromSessionByName(name).orElseThrow(
@@ -135,100 +135,92 @@ public interface FormHandle {
       return method.getName();
     }
 
-    public static class MethodBasedImpl extends Base {
-      final ObjectMethod objectMethod;
-      private final Factory formHandleFactory;
-      private final Form.Factory formFactory;
+  }
 
-      private MethodBasedImpl(ObjectMethod objectMethod, Factory formFactory, Form.Factory formFactory1) {
-        super(objectMethod.getName());
-        this.objectMethod = objectMethod;
-        this.formHandleFactory = formFactory;
-        this.formFactory = formFactory1;
-      }
+  class MethodBasedImpl extends Base {
+    final ObjectMethod objectMethod;
+    private final Factory formHandleFactory;
+    private final Form.Factory formFactory;
 
-      @Override
-      public boolean isAccessor() {
-        return this.objectMethod.isAccessor();
-      }
-
-      @Override
-      public String toString() {
-        return String.format("form:%s", this.objectMethod);
-      }
-
-      public <V> Form<V> apply(Arguments arguments) {
-        Form[] args = toArray(
-            toForms(arguments),
-            Form.class
-        );
-        // TODO a form doesn't need to know a FormInvoker with which it will be invoked.
-        return createForm(args);
-      }
-
-      <V> Form<V> createForm(Form[] args) {
-        Object[] argValues;
-        if (requireNonNull(objectMethod).isVarArgs()) {
-          int parameterCount = objectMethod.getParameterCount();
-          argValues = formHandleFactory.shrinkTo(objectMethod.getParameterTypes()[parameterCount - 1].getComponentType(), parameterCount, args);
-        } else
-          argValues = args;
-        return formFactory.create(objectMethod, argValues);
-      }
+    private MethodBasedImpl(ObjectMethod objectMethod, Factory formFactory, Form.Factory formFactory1) {
+      super(objectMethod.getName());
+      this.objectMethod = objectMethod;
+      this.formHandleFactory = formFactory;
+      this.formFactory = formFactory1;
     }
 
-    public static class UserFormHandle extends Base {
-      private final Supplier<Statement> userDefinedFormStatementSupplier;
-
-      UserFormHandle(String name, Supplier<Statement> userDefinedFormStatementSupplier) {
-        super(name);
-        this.userDefinedFormStatementSupplier = userDefinedFormStatementSupplier;
-      }
-
-      @SuppressWarnings("unchecked")
-      public <V> Form<V> apply(Arguments arguments) {
-        return (Form<V>) createFunc(
-            toArray(
-                Stream.concat(
-                    Stream.of((Form<Statement>) input -> userDefinedFormStatementSupplier.get()),
-                    toForms(arguments).stream()
-                ).collect(toList()),
-                Form.class
-            )
-        );
-      }
-
-      @Override
-      public boolean isAccessor() {
-        return false;
-      }
-
-      @SuppressWarnings("unchecked")
-      Form<Object> createFunc(Form[] args) {
-        return userFunc(Utils.car(args), Utils.cdr(args));
-      }
-
-      private static Form<Object> userFunc(Form<Statement> statementForm, Form<?>... args) {
-        return (Stage input) -> compile(statementForm.apply(input)).apply(Stage.Factory.createWrappedStage(input, args));
-      }
+    @Override
+    public boolean isAccessor() {
+      return this.objectMethod.isAccessor();
     }
 
-    public static class Lambda extends Base {
-      private Lambda(String name) {
-        // TODO: need to consider how we should define a name for a lambda object
-        super(name);
-      }
+    @Override
+    public String toString() {
+      return String.format("form:%s", this.objectMethod);
+    }
 
-      @SuppressWarnings("unchecked")
-      public Form<Form<Object>> apply(Arguments arguments) {
-        // CAUTION: This method returns an instance of Form<Form<Object>>
-        return (Stage ii) -> getOnlyElement(toForms(arguments));
-      }
+    public <V> Form<V> createForm(Form[] args) {
+      Object[] argValues;
+      if (requireNonNull(objectMethod).isVarArgs()) {
+        int parameterCount = objectMethod.getParameterCount();
+        argValues = formHandleFactory.shrinkTo(objectMethod.getParameterTypes()[parameterCount - 1].getComponentType(), parameterCount, args);
+      } else
+        argValues = args;
+      return formFactory.create(objectMethod, argValues);
+    }
+  }
 
-      @Override
-      public boolean isAccessor() {
-        return false;
-      }
+  class Lambda extends Base {
+    private Lambda(String name) {
+      // TODO: need to consider how we should define a name for a lambda object
+      super(name);
+    }
+
+    @SuppressWarnings("unchecked")
+    public Form<Form<Object>> apply(Arguments arguments) {
+      // CAUTION: This method returns an instance of Form<Form<Object>>
+      return (Stage ii) -> getOnlyElement(toForms(arguments));
+    }
+
+    @Override
+    public boolean isAccessor() {
+      return false;
+    }
+  }
+
+  class UserFormHandle extends Base {
+    private final Supplier<Statement> userDefinedFormStatementSupplier;
+
+    UserFormHandle(String name, Supplier<Statement> userDefinedFormStatementSupplier) {
+      super(name);
+      this.userDefinedFormStatementSupplier = userDefinedFormStatementSupplier;
+    }
+
+    @SuppressWarnings("unchecked")
+    public <V> Form<V> apply(Arguments arguments) {
+      return (Form<V>) createFunc(
+          toArray(
+              Stream.concat(
+                  Stream.of((Form<Statement>) input -> userDefinedFormStatementSupplier.get()),
+                  toForms(arguments).stream()
+              ).collect(toList()),
+              Form.class
+          )
+      );
+    }
+
+    @Override
+    public boolean isAccessor() {
+      return false;
+    }
+
+    @SuppressWarnings("unchecked")
+    Form<Object> createFunc(Form[] args) {
+      return userFunc(Utils.car(args), Utils.cdr(args));
+    }
+
+    private static Form<Object> userFunc(Form<Statement> statementForm, Form<?>... args) {
+      return (Stage input) -> Factory.compile(statementForm.apply(input)).apply(Stage.Factory.createWrappedStage(input, args));
     }
   }
 }
