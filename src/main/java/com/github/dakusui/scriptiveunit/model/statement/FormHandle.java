@@ -3,7 +3,6 @@ package com.github.dakusui.scriptiveunit.model.statement;
 import com.github.dakusui.scriptiveunit.core.Config;
 import com.github.dakusui.scriptiveunit.core.ObjectMethod;
 import com.github.dakusui.scriptiveunit.model.form.Form;
-import com.github.dakusui.scriptiveunit.model.form.FormInvoker;
 import com.github.dakusui.scriptiveunit.model.session.Stage;
 import com.github.dakusui.scriptiveunit.utils.DriverUtils;
 
@@ -70,9 +69,9 @@ public interface FormHandle {
   }
 
   class Factory {
-    private final Object                    driver;
+    private final Object driver;
     private final Form.Factory formFactory;
-    private final Statement.Factory         statementFactory;
+    private final Statement.Factory statementFactory;
     private final Map<String, List<Object>> clauseMap;
 
     Factory(Form.Factory formFactory, Statement.Factory statementFactory, Config config, Map<String, List<Object>> userDefinedFormClauses) {
@@ -162,7 +161,7 @@ public interface FormHandle {
             Form.class
         );
         // TODO a form doesn't need to know a FormInvoker with which it will be invoked.
-        return createForm( args);
+        return createForm(args);
       }
 
       Form createForm(Form[] args) {
@@ -190,7 +189,7 @@ public interface FormHandle {
             toArray(
                 Stream.concat(
                     Stream.of((Form<Statement>) input -> userDefinedFormStatementSupplier.get()),
-                    toForms( arguments).stream()
+                    toForms(arguments).stream()
                 ).collect(toList()),
                 Form.class
             )
@@ -221,7 +220,7 @@ public interface FormHandle {
       @SuppressWarnings("unchecked")
       @Override
       public Form<Form<Object>> apply(Arguments arguments) {
-        return (Stage ii) -> getOnlyElement(toForms( arguments));
+        return (Stage ii) -> getOnlyElement(toForms(arguments));
       }
 
       @Override

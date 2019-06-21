@@ -29,7 +29,7 @@ import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
 
 public abstract class TestOracleBean {
-  private final String       description;
+  private final String description;
   private final List<Object> givenClause;
   private final List<Object> whenClause;
   private final List<Object> thenClause;
@@ -58,16 +58,16 @@ public abstract class TestOracleBean {
   }
 
   public static class TestOracleImpl implements TestOracle {
-    private final int                 index;
+    private final int index;
     private final TestSuiteDescriptor testSuiteDescriptor;
-    private final Statement.Factory   statementFactory;
-    private       List<Object>        afterClause;
-    private       List<Object>        beforeClause;
-    private       String              description;
-    private       List<Object>        givenClause;
-    private       List<Object>        onFailureClause;
-    private       List<Object>        thenClause;
-    private       List<Object>        whenClause;
+    private final Statement.Factory statementFactory;
+    private List<Object> afterClause;
+    private List<Object> beforeClause;
+    private String description;
+    private List<Object> givenClause;
+    private List<Object> onFailureClause;
+    private List<Object> thenClause;
+    private List<Object> whenClause;
 
     TestOracleImpl(int index, final String description, final List<Object> beforeClause, final List<Object> givenClause, final List<Object> whenClause, final List<Object> thenClause, final List<Object> onFailureClause, final List<Object> afterClause, TestSuiteDescriptor testSuiteDescriptor, Statement.Factory statementFactory) {
       this.index = index;
@@ -98,7 +98,8 @@ public abstract class TestOracleBean {
     }
 
     class DefinitionImpl implements Definition {
-      private final TestItem         testItem;
+      private final TestItem testItem;
+
       DefinitionImpl(TestItem testItem) {
         this.testItem = testItem;
       }
@@ -195,7 +196,6 @@ public abstract class TestOracleBean {
         if (afterClause == null)
           return s -> Actions.nop();
         Statement statement = statementFactory.create(afterClause);
-        FormInvoker formInvoker = FormInvoker.create();
         return s -> BeanUtils.<Action>toForm(statement).apply(s);
       }
 
