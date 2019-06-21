@@ -72,7 +72,7 @@ public interface Form<O> extends Function<Stage, O>, Formattable {
 
     public <T> Form<T> createConst(FormInvoker invoker, T value) {
       return createProxy(
-          (proxy, method, args) -> invoker.invokeConst(value),
+          (proxy, method, args) -> FormInvoker.Utils.invokeConst(value),
           Const.class);
     }
 
@@ -91,7 +91,7 @@ public interface Form<O> extends Function<Stage, O>, Formattable {
                 Arrays.toString(args)
             ));
         //MEMOIZATION SHOULD HAPPEN HERE
-        return invoker.invokeForm(target, (Stage) args[0], name);
+        return FormInvoker.Utils.invokeForm(target, (Stage) args[0], name);
         //return formHandler.handleForm(invoker, target, (Stage) args[0], name);
       };
     }

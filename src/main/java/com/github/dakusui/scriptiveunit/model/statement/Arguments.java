@@ -40,16 +40,4 @@ public interface Arguments extends Iterable<Statement> {
       }
     };
   }
-
-  class Factory {
-    private final Statement.Factory statementFactory;
-
-    public Factory(Statement.Factory statementFactory) {
-      this.statementFactory = statementFactory;
-    }
-
-    public Arguments create(List<Form> args) {
-      return Arguments.create(statementFactory, args);
-    }
-  }
 }
