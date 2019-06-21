@@ -10,14 +10,17 @@ import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.util.Arrays;
+import java.util.List;
 import java.util.stream.Stream;
 
 import static com.github.dakusui.scriptiveunit.exceptions.ScriptiveUnitException.fail;
 import static com.github.dakusui.scriptiveunit.exceptions.TypeMismatch.valueReturnedByScriptableMethodMustBeFunc;
 import static com.github.dakusui.scriptiveunit.utils.Checks.check;
+import static com.github.dakusui.scriptiveunit.utils.CoreUtils.toBigDecimalIfPossible;
 import static com.google.common.collect.Iterables.getOnlyElement;
 import static com.google.common.collect.Iterables.toArray;
 import static java.util.stream.Collectors.toList;
+import static java.util.stream.StreamSupport.stream;
 
 public enum FormUtils {
   ;
@@ -36,13 +39,11 @@ public enum FormUtils {
       FormHandle formHandle = compound.getFormHandle();
       if (formHandle instanceof FormHandle.MethodBased) {
         Form[] args = toArray(
-            FormHandle.toForms(compound.getArguments()),
+            toForms(compound.getArguments()),
             Form.class
         );
-        // TODO a form doesn't need to know a FormInvoker with which it will be invoked.
         Object[] argValues;
-        FormHandle.MethodBased methodBased = (FormHandle.MethodBased) formHandle;
-        ObjectMethod objectMethod = methodBased.objectMethod();
+        ObjectMethod objectMethod = ((FormHandle.MethodBased) formHandle).objectMethod();
         if (objectMethod.isVarArgs()) {
           int parameterCount = objectMethod.getParameterCount();
           argValues = CoreUtils.shrinkTo(objectMethod.getParameterTypes()[parameterCount - 1].getComponentType(), parameterCount, args);
@@ -52,21 +53,15 @@ public enum FormUtils {
       }
       if (formHandle instanceof FormHandle.User)
         //noinspection unchecked
-        return (Form<U>) createFunc(
-            toArray(
-                Stream.concat(
-                    Stream.of((Form<Statement>) input -> {
-                      FormHandle.User userFormHandle = (FormHandle.User) formHandle;
-                      return userFormHandle.userDefinedFormStatementSupplier.get();
-                    }),
-                    FormHandle.toForms(compound.getArguments()).stream()
-                ).collect(toList()),
-                Form.class
-            )
-        );
+        return (Form<U>) createFunc(toArray(
+            Stream.concat(
+                Stream.of((Form<Statement>) input -> ((FormHandle.User) formHandle).createStatement()),
+                toForms(compound.getArguments()).stream())
+                .collect(toList()),
+            Form.class));
       if (formHandle instanceof FormHandle.Lambda)
         //noinspection unchecked
-        return (Form<U>) (Form<Form<Object>>) (Stage ii) -> getOnlyElement(FormHandle.toForms(compound.getArguments()));
+        return (Form<U>) (Form<Form<Object>>) (Stage ii) -> getOnlyElement(toForms(compound.getArguments()));
       throw new IllegalArgumentException();
     }
     throw new IllegalArgumentException();
@@ -87,26 +82,24 @@ public enum FormUtils {
     /*
      * By using dynamic proxy, we are making it possible to print structured pretty log.
      */
-    return createForm(
-        objectMethod.getName(),
-        (Form) check(
-            returnedValue = objectMethod.invoke(args),
-            (Object o) -> o instanceof Form,
-            () -> valueReturnedByScriptableMethodMustBeFunc(objectMethod.getName(), returnedValue)
-        ));
+    return createForm((Form) check(
+        returnedValue = objectMethod.invoke(args),
+        (Object o) -> o instanceof Form,
+        () -> valueReturnedByScriptableMethodMustBeFunc(objectMethod.getName(), returnedValue)
+    ));
   }
 
   static <T> Form<T> createConst(T value) {
     return createProxy(
-        (proxy, method, args) -> FormInvoker.Utils.invokeConst(value),
+        (proxy, method, args) -> value,
         Form.Const.class);
   }
 
-  private static <V> Form<V> createForm(String name, Form target) {
-    return createProxy(createInvocationHandler(name, target), Form.class);
+  private static <V> Form<V> createForm(Form target) {
+    return createProxy(createInvocationHandler(target), Form.class);
   }
 
-  private static InvocationHandler createInvocationHandler(String name, Form target) {
+  private static InvocationHandler createInvocationHandler(Form target) {
     return (Object proxy, Method method, Object[] args) -> {
       if (!"apply".equals(method.getName()))
         return method.invoke(target, args);
@@ -117,7 +110,7 @@ public enum FormUtils {
               Arrays.toString(args)
           ));
       //MEMOIZATION SHOULD HAPPEN HERE
-      return FormInvoker.Utils.invokeForm(target, (Stage) args[0], name);
+      return toBigDecimalIfPossible(target.apply((Stage) args[0]));
       //return formHandler.handleForm(invoker, target, (Stage) args[0], name);
     };
   }
@@ -129,5 +122,11 @@ public enum FormUtils {
         new Class[]{interfaceClass},
         handler
     );
+  }
+
+  public static List<Form> toForms(Iterable<Statement> arguments) {
+    return stream(arguments.spliterator(), false)
+        .map(FormUtils::toForm)
+        .collect(toList());
   }
 }

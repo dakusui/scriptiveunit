@@ -1,7 +1,6 @@
 package com.github.dakusui.scriptiveunit.model.session;
 
 import com.github.dakusui.scriptiveunit.core.Config;
-import com.github.dakusui.scriptiveunit.model.form.FormInvoker;
 
 import java.util.Optional;
 
@@ -11,7 +10,7 @@ abstract class StageBase<RESPONSE> implements Stage {
   private final Throwable throwable;
   private final Config config;
   private final Report report;
-  private final FormInvoker.Memo memo;
+  private final Memo memo;
 
   StageBase(RESPONSE response, ExecutionLevel executionLevel, Throwable throwable, Config config, Report report) {
     this.response = response;
@@ -19,7 +18,7 @@ abstract class StageBase<RESPONSE> implements Stage {
     this.throwable = throwable;
     this.config = config;
     this.report = report;
-    this.memo = FormInvoker.createMemo();
+    this.memo = Stage.createMemo();
   }
 
   @SuppressWarnings("unchecked")

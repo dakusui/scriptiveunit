@@ -15,15 +15,8 @@ import java.util.function.Supplier;
 
 import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
-import static java.util.stream.Collectors.toList;
-import static java.util.stream.StreamSupport.stream;
 
 public interface FormHandle {
-  static List<Form> toForms(Iterable<Statement> arguments) {
-    return stream(arguments.spliterator(), false)
-        .map(FormUtils::toForm)
-        .collect(toList());
-  }
 
   boolean isAccessor();
 
@@ -147,6 +140,11 @@ public interface FormHandle {
     public boolean isAccessor() {
       return false;
     }
+
+    public Statement createStatement() {
+      return this.userDefinedFormStatementSupplier.get();
+    }
+
 
     public static Form<Object> userFunc(Form<Statement> statementForm, Form<?>... args) {
       return (Stage input) -> Factory.compile(statementForm.apply(input)).apply(Stage.Factory.createWrappedStage(input, args));

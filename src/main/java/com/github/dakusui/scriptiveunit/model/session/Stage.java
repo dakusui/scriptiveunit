@@ -7,7 +7,11 @@ import com.github.dakusui.scriptiveunit.model.form.Form;
 import com.github.dakusui.scriptiveunit.model.form.FormRegistry;
 import com.github.dakusui.scriptiveunit.model.statement.Statement;
 
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.function.Function;
 
 import static com.github.dakusui.scriptiveunit.exceptions.ScriptiveUnitException.indexOutOfBounds;
 import static com.github.dakusui.scriptiveunit.utils.Checks.check;
@@ -18,6 +22,10 @@ import static java.util.Objects.requireNonNull;
  * executed.
  */
 public interface Stage {
+  static Memo createMemo() {
+    return new Memo.Impl();
+  }
+
   /**
    * Reurns a type of this stage.
    *
@@ -94,6 +102,18 @@ public interface Stage {
           return args.length;
         }
       };
+    }
+  }
+
+  interface Memo extends Map<List<Object>, Object> {
+    class Impl extends HashMap<List<Object>, Object> implements Memo {
+      @Override
+      public Object computeIfAbsent(List<Object> key,
+                                    Function<? super List<Object>, ?> mappingFunction) {
+        Object ret = mappingFunction.apply(key);
+        put(key, ret);
+        return ret;
+      }
     }
   }
 }
