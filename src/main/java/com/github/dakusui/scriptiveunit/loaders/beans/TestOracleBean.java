@@ -108,7 +108,6 @@ public abstract class TestOracleBean {
         if (beforeClause == null)
           return s -> Actions.nop();
         Statement statement = statementFactory.create(beforeClause);
-        FormInvoker formInvoker = FormInvoker.create();
         return s -> BeanUtils.<Action>toForm(statement).apply(s);
       }
 
@@ -136,14 +135,7 @@ public abstract class TestOracleBean {
 
       @Override
       public Function<Stage, Object> whenFactory() {
-        return new Function<Stage, Object>() {
-          FormInvoker formInvoker = FormInvoker.create();
-
-          @Override
-          public Object apply(Stage s) {
-            return BeanUtils.<Boolean>toForm(statementFactory.create(whenClause)).apply(s);
-          }
-        };
+        return s -> BeanUtils.<Boolean>toForm(statementFactory.create(whenClause)).apply(s);
       }
 
       @Override
@@ -192,7 +184,6 @@ public abstract class TestOracleBean {
       @Override
       public Function<Stage, Sink<AssertionError>> errorHandlerFactory(TestItem testItem, Report report) {
         Statement onFailureStatement = statementFactory.create(onFailureClause);
-        FormInvoker formInvoker = FormInvoker.create();
         return (Stage s) -> (AssertionError input, Context context) -> requireNonNull(
             onFailureClause != null ?
                 BeanUtils.<Action>toForm(onFailureStatement) :

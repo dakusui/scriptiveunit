@@ -4,7 +4,6 @@ import com.github.dakusui.scriptiveunit.core.Config;
 import com.github.dakusui.scriptiveunit.exceptions.SyntaxException;
 import com.github.dakusui.scriptiveunit.exceptions.TypeMismatch;
 import com.github.dakusui.scriptiveunit.model.form.Form;
-import com.github.dakusui.scriptiveunit.model.form.FormInvoker;
 import com.github.dakusui.scriptiveunit.model.form.FormRegistry;
 import com.github.dakusui.scriptiveunit.model.session.Stage;
 import com.google.common.collect.Lists;
@@ -17,7 +16,7 @@ import static com.github.dakusui.scriptiveunit.exceptions.TypeMismatch.headOfCal
 import static java.util.Objects.requireNonNull;
 
 /**
- * An interface that represents a grammatical structure of a script element.
+ * An interface that represents a lexical structure of a script element.
  */
 public interface Statement {
   static Factory createStatementFactory(Config config, Map<String, List<Object>> userDefinedFormClauses) {
@@ -31,7 +30,7 @@ public interface Statement {
   interface Atom extends Statement {
   }
 
-  interface Nested extends Statement {
+  interface Compound extends Statement {
     FormHandle getFormHandle();
 
     Arguments getArguments();
@@ -46,12 +45,12 @@ public interface Statement {
   }
 
   class Factory {
-    private final FormHandle.Factory formCallFactory;
-    private final Form.Factory       formFactory;
+    private final FormHandle.Factory formHandleFactory;
+    private final Form.Factory formFactory;
 
     public Factory(Config config, Map<String, List<Object>> userDefinedFormClauses) {
       this.formFactory = new Form.Factory();
-      this.formCallFactory = new FormHandle.Factory(
+      this.formHandleFactory = new FormHandle.Factory(
           formFactory,
           this,
           config,
@@ -72,12 +71,12 @@ public interface Statement {
             return formFactory.createConst(object);
           }
         };
-      @SuppressWarnings("unchecked") List<Form> raw = (List<Form>) object;
+      @SuppressWarnings("unchecked") List<Object> raw = (List<Object>) object;
       Object car = Utils.car(raw);
       if (car instanceof String) {
         Arguments arguments = Arguments.create(this, Utils.cdr(raw));
-        FormHandle formHandle = this.formCallFactory.create((String) car);
-        return new Nested() {
+        FormHandle formHandle = this.formHandleFactory.create((String) car);
+        return new Compound() {
           @Override
           public FormHandle getFormHandle() {
             return formHandle;
@@ -131,9 +130,9 @@ public interface Statement {
     private static List<String> involvedParameters(Statement statement, List<String> work) {
       if (statement instanceof Atom)
         return work;
-      if (statement instanceof Nested) {
-        if (((Nested) statement).getFormHandle().isAccessor()) {
-          for (Statement each : ((Nested) statement).getArguments()) {
+      if (statement instanceof Compound) {
+        if (((Compound) statement).getFormHandle().isAccessor()) {
+          for (Statement each : ((Compound) statement).getArguments()) {
             if (each instanceof Atom) {
               /*
                * Since this method needs to look into the internal structure of
@@ -142,11 +141,11 @@ public interface Statement {
                */
               work.add(Objects.toString(each.compile()));
             } else {
-              throw SyntaxException.parameterNameShouldBeSpecifiedWithConstant((Nested) statement);
+              throw SyntaxException.parameterNameShouldBeSpecifiedWithConstant((Compound) statement);
             }
           }
         } else {
-          for (Statement each : ((Nested) statement).getArguments()) {
+          for (Statement each : ((Compound) statement).getArguments()) {
             work = involvedParameters(each, work);
           }
         }
@@ -158,11 +157,11 @@ public interface Statement {
       return !(object instanceof List) || ((List) object).isEmpty();
     }
 
-    static Object car(List<Form> raw) {
+    static Object car(List<Object> raw) {
       return raw.get(0);
     }
 
-    static List<Form> cdr(List<Form> raw) {
+    static List<Object> cdr(List<Object> raw) {
       return raw.subList(1, raw.size());
     }
   }

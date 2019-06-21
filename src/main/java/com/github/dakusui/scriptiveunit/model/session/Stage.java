@@ -45,11 +45,11 @@ public interface Stage {
     throw new UnsupportedOperationException();
   }
 
-  default Statement.Nested ongoingStatement() {
+  default Statement.Compound ongoingStatement() {
     throw new UnsupportedOperationException();
   }
 
-  default Stage createChild(Statement.Nested statement) {
+  default Stage createChild(Statement.Compound statement) {
     requireNonNull(statement);
     return new Delegating(this) {
       @Override
@@ -58,7 +58,7 @@ public interface Stage {
       }
 
       @Override
-      public Statement.Nested ongoingStatement() {
+      public Statement.Compound ongoingStatement() {
         return statement;
       }
     };

@@ -1,7 +1,5 @@
 package com.github.dakusui.scriptiveunit.model.statement;
 
-import com.github.dakusui.scriptiveunit.model.form.Form;
-
 import java.util.Iterator;
 import java.util.List;
 
@@ -10,7 +8,7 @@ public interface Arguments extends Iterable<Statement> {
 
   int size();
 
-  static Arguments create(Statement.Factory statementFactory, List<Form> args) {
+  static Arguments create(Statement.Factory statementFactory, List<Object> args) {
     return new Arguments() {
       public Statement get(int i) {
         return statementFactory.create(args.get(i));
@@ -25,7 +23,7 @@ public interface Arguments extends Iterable<Statement> {
       @Override
       public Iterator<Statement> iterator() {
         return new Iterator<Statement>() {
-          Iterator<Form> i = args.iterator();
+          Iterator<Object> i = args.iterator();
 
           @Override
           public boolean hasNext() {

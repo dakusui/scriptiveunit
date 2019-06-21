@@ -60,7 +60,7 @@ public interface FormRegistry {
 
     public static void main(String... args) {
       FormRegistry formRegistry = new FormRegistry.Loader().register(new Basic()).load();
-      Statement.Nested statement = new Statement.Nested() {
+      Statement.Compound statement = new Statement.Compound() {
         @Override
         public FormHandle getFormHandle() {
           return null;
@@ -84,7 +84,7 @@ public interface FormRegistry {
       Stage stage = createStage(formRegistry, statement);
     }
 
-    private static Stage createStage(FormRegistry formRegistry, Statement.Nested statement) {
+    private static Stage createStage(FormRegistry formRegistry, Statement.Compound statement) {
       return new Stage() {
         @Override
         public ExecutionLevel getExecutionLevel() {
@@ -137,7 +137,7 @@ public interface FormRegistry {
         }
 
         @Override
-        public Statement.Nested ongoingStatement() {
+        public Statement.Compound ongoingStatement() {
           if (statement == null)
             throw new IllegalStateException();
           return statement;
@@ -148,6 +148,7 @@ public interface FormRegistry {
 
   enum Utils {
     ;
+
     static Form[] toArgs(Class<Form>[] params) {
       return new ArrayList<Form>(params.length) {
         {
@@ -198,9 +199,9 @@ public interface FormRegistry {
       throw otherwiseThrow.apply(value, requirement);
     }
 
-    public static Supplier<RuntimeException> undefinedFormError(Statement.Nested nestedStatement) {
+    public static Supplier<RuntimeException> undefinedFormError(Statement.Compound compoundStatement) {
       return () -> {
-        throw new UnsupportedOperationException(format("Undefined form:'%s' was requested", nestedStatement.getFormHandle()));
+        throw new UnsupportedOperationException(format("Undefined form:'%s' was requested", compoundStatement.getFormHandle()));
       };
     }
   }

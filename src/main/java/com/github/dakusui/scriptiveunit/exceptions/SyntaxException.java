@@ -49,7 +49,7 @@ public class SyntaxException extends ScriptiveUnitException {
     throw new SyntaxException(format("A text node was expected but not. '%s'", jsonNode));
   }
 
-  public static SyntaxException parameterNameShouldBeSpecifiedWithConstant(Statement.Nested statement) {
+  public static SyntaxException parameterNameShouldBeSpecifiedWithConstant(Statement.Compound statement) {
     throw new SyntaxException(format("Parameter name must be constant but not when accessor is used. (%s %s)", statement.getFormHandle(), statement.getArguments()));
   }
 
