@@ -12,10 +12,10 @@ import java.util.Formattable;
 import java.util.Formatter;
 import java.util.function.Function;
 
-import static com.github.dakusui.scriptiveunit.utils.Checks.check;
 import static com.github.dakusui.scriptiveunit.exceptions.ScriptiveUnitException.fail;
 import static com.github.dakusui.scriptiveunit.exceptions.ScriptiveUnitException.wrap;
 import static com.github.dakusui.scriptiveunit.exceptions.TypeMismatch.valueReturnedByScriptableMethodMustBeFunc;
+import static com.github.dakusui.scriptiveunit.utils.Checks.check;
 
 @FunctionalInterface
 public interface Form<O> extends Function<Stage, O>, Formattable {
@@ -55,7 +55,7 @@ public interface Form<O> extends Function<Stage, O>, Formattable {
      * can become Form[] it is because only the last argument of a method can become
      * a varargs.
      */
-    public Form create(ObjectMethod objectMethod, Object[] args) {
+    public <V> Form<V> create(ObjectMethod objectMethod, Object[] args) {
       Object returnedValue;
       /*
        * By using dynamic proxy, we are making it possible to print structured pretty log.
@@ -75,7 +75,7 @@ public interface Form<O> extends Function<Stage, O>, Formattable {
           Const.class);
     }
 
-    private Form createForm(String name, Form target) {
+    private <V> Form<V> createForm(String name, Form target) {
       return createProxy(createInvocationHandler(name, target), Form.class);
     }
 
@@ -95,11 +95,11 @@ public interface Form<O> extends Function<Stage, O>, Formattable {
       };
     }
 
-    private static <O> Form<O> createProxy(InvocationHandler handler, Class<? extends Form> interfaceClass) {
+    public static <O> Form<O> createProxy(InvocationHandler handler, Class<? extends Form> interfaceClass) {
       //noinspection unchecked
       return (Form<O>) Proxy.newProxyInstance(
           Form.class.getClassLoader(),
-          new Class[] { interfaceClass },
+          new Class[]{interfaceClass},
           handler
       );
     }

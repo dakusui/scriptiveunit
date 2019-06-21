@@ -86,7 +86,7 @@ public interface FormHandle {
       if ("lambda".equals(name))
         return new Lambda(name);
       return Factory.this.getObjectMethodFromDriver(name).map(
-          (Function<ObjectMethod, FormHandle>) MethodBasedImpl::new
+          (Function<ObjectMethod, FormHandle>) objectMethod -> new MethodBasedImpl(objectMethod, this, formFactory)
       ).orElseGet(
           () -> createUserForm(name)
       );
@@ -137,12 +137,16 @@ public interface FormHandle {
       return method.getName();
     }
 
-    private class MethodBasedImpl extends Base {
+    public static class MethodBasedImpl extends Base {
       final ObjectMethod objectMethod;
+      private final Factory formHandleFactory;
+      private final Form.Factory formFactory;
 
-      private MethodBasedImpl(ObjectMethod objectMethod) {
+      private MethodBasedImpl(ObjectMethod objectMethod, Factory formFactory, Form.Factory formFactory1) {
         super(objectMethod.getName());
         this.objectMethod = objectMethod;
+        this.formHandleFactory = formFactory;
+        this.formFactory = formFactory1;
       }
 
       @Override
@@ -156,7 +160,7 @@ public interface FormHandle {
       }
 
       @Override
-      public Form apply(Arguments arguments) {
+      public <V> Form<V> apply(Arguments arguments) {
         Form[] args = toArray(
             toForms(arguments),
             Form.class
@@ -165,18 +169,18 @@ public interface FormHandle {
         return createForm(args);
       }
 
-      Form createForm(Form[] args) {
+      <V> Form<V> createForm(Form[] args) {
         Object[] argValues;
         if (requireNonNull(objectMethod).isVarArgs()) {
           int parameterCount = objectMethod.getParameterCount();
-          argValues = Factory.this.shrinkTo(objectMethod.getParameterTypes()[parameterCount - 1].getComponentType(), parameterCount, args);
+          argValues = formHandleFactory.shrinkTo(objectMethod.getParameterTypes()[parameterCount - 1].getComponentType(), parameterCount, args);
         } else
           argValues = args;
         return formFactory.create(objectMethod, argValues);
       }
     }
 
-    private static class UserFormHandle extends Base {
+    public static class UserFormHandle extends Base {
       private final Supplier<Statement> userDefinedFormStatementSupplier;
 
       UserFormHandle(String name, Supplier<Statement> userDefinedFormStatementSupplier) {
@@ -184,9 +188,10 @@ public interface FormHandle {
         this.userDefinedFormStatementSupplier = userDefinedFormStatementSupplier;
       }
 
+      @SuppressWarnings("unchecked")
       @Override
-      public Form<Object> apply(Arguments arguments) {
-        return createFunc(
+      public <V> Form<V> apply(Arguments arguments) {
+        return (Form<V>) createFunc(
             toArray(
                 Stream.concat(
                     Stream.of((Form<Statement>) input -> userDefinedFormStatementSupplier.get()),
@@ -212,7 +217,7 @@ public interface FormHandle {
       }
     }
 
-    private static class Lambda extends Base {
+    public static class Lambda extends Base {
       private Lambda(String name) {
         // TODO: need to consider how we should define a name for a lambda object
         super(name);

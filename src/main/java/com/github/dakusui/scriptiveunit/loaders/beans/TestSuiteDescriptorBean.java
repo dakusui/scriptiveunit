@@ -32,6 +32,7 @@ import static java.util.Objects.requireNonNull;
 import static java.util.stream.Collectors.toList;
 
 public abstract class TestSuiteDescriptorBean {
+  private static final Object NOP_CLAUSE = nop();
   private final FactorSpaceDescriptorBean factorSpaceBean;
   private final List<? extends TestOracleBean> testOracleBeanList;
   private final String description;
@@ -70,12 +71,12 @@ public abstract class TestSuiteDescriptorBean {
         private final Statement.Factory statementFactory =
             createStatementFactory(session.getConfig(), this.getUserDefinedFormClauses());
         private Statement setUpBeforeAllStatement =
-            statementFactory.create(setUpBeforeAllClause != null ? setUpBeforeAllClause : BeanUtils.NOP_CLAUSE);
+            statementFactory.create(setUpBeforeAllClause != null ? setUpBeforeAllClause : NOP_CLAUSE);
         private Statement setUpStatement =
-            statementFactory.create(setUpClause != null ? setUpClause : BeanUtils.NOP_CLAUSE);
+            statementFactory.create(setUpClause != null ? setUpClause : NOP_CLAUSE);
         private List<? extends TestOracle> testOracles = createTestOracles();
-        private Statement tearDownStatement = statementFactory.create(tearDownClause != null ? tearDownClause : BeanUtils.NOP_CLAUSE);
-        private Statement tearDownAfterAllStatement = statementFactory.create(tearDownAfterAllClause != null ? tearDownAfterAllClause : BeanUtils.NOP_CLAUSE);
+        private Statement tearDownStatement = statementFactory.create(tearDownClause != null ? tearDownClause : NOP_CLAUSE);
+        private Statement tearDownAfterAllStatement = statementFactory.create(tearDownAfterAllClause != null ? tearDownAfterAllClause : NOP_CLAUSE);
 
         List<IndexedTestCase> testCases = createTestCases(this);
 

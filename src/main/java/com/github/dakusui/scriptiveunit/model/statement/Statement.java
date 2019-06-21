@@ -26,9 +26,14 @@ public interface Statement {
 
   <V> V evaluate(Stage stage);
 
-  <V> Form<V> compile();
-
   interface Atom extends Statement {
+    default boolean isParameterAccessor() {
+      return false;
+    }
+
+    default <V> V value() {
+      throw new UnsupportedOperationException();
+    }
   }
 
   interface Compound extends Statement {
@@ -47,10 +52,9 @@ public interface Statement {
 
   class Factory {
     private final FormHandle.Factory formHandleFactory;
-    private final Form.Factory formFactory;
 
     public Factory(Config config, Map<String, List<Object>> userDefinedFormClauses) {
-      this.formFactory = new Form.Factory();
+      Form.Factory formFactory = new Form.Factory();
       this.formHandleFactory = new FormHandle.Factory(
           formFactory,
           this,
@@ -60,19 +64,7 @@ public interface Statement {
 
     public Statement create(Object object) throws TypeMismatch {
       if (Utils.isAtom(object))
-        return new Atom() {
-          @SuppressWarnings("unchecked")
-          @Override
-          public <V> V evaluate(Stage stage) {
-            return (V) object;
-          }
-
-          @SuppressWarnings("unchecked")
-          @Override
-          public <V> Form<V> compile() {
-            return formFactory.createConst((V) object);
-          }
-        };
+        return createAtom(object);
       @SuppressWarnings("unchecked") List<Object> raw = (List<Object>) object;
       Object car = Utils.car(raw);
       if (car instanceof String) {
@@ -88,11 +80,6 @@ public interface Statement {
           public Arguments getArguments() {
             return arguments;
           }
-
-          @Override
-          public <V> Form<V> compile() {
-            return getFormHandle().apply(arguments);
-          }
         };
       } else if (car instanceof Integer) {
         return new Atom() {
@@ -101,13 +88,35 @@ public interface Statement {
             return stage.getArgument((Integer) car);
           }
 
+          @SuppressWarnings("unchecked")
+          public <V> V value() {
+            return (V) car;
+          }
+
           @Override
-          public <V> Form<V> compile() {
-            return input -> input.getArgument((Integer) car);
+          public boolean isParameterAccessor() {
+            return true;
           }
         };
       }
       throw headOfCallMustBeString(car);
+    }
+
+    Atom createAtom(Object object) {
+      return new Atom() {
+        @SuppressWarnings("unchecked")
+        @Override
+        public <V> V evaluate(Stage stage) {
+          return (V) object;
+        }
+
+        @SuppressWarnings("unchecked")
+        public <V> V value() {
+          if (isParameterAccessor())
+            throw new IllegalStateException();
+          return (V) object;
+        }
+      };
     }
 
   }

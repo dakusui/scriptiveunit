@@ -75,11 +75,6 @@ public interface FormRegistry {
         public <V> V evaluate(Stage stage) {
           return null;
         }
-
-        @Override
-        public Form compile() {
-          throw new UnsupportedOperationException();
-        }
       };
       Stage stage = createStage(formRegistry, statement);
     }
