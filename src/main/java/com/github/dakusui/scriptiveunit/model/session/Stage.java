@@ -42,11 +42,11 @@ public interface Stage {
   Optional<TestItem> getTestItem();
 
   default FormRegistry formRegistry() {
-    return null;
+    throw new UnsupportedOperationException();
   }
 
   default Statement.Nested ongoingStatement() {
-    return null;
+    throw new UnsupportedOperationException();
   }
 
   default Stage createChild(Statement.Nested statement) {

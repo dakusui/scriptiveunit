@@ -35,6 +35,10 @@ public interface FormHandle {
 
   boolean isAccessor();
 
+  default String name() {
+    throw new UnsupportedOperationException();
+  }
+
   abstract class Base implements FormHandle {
     private final String name;
 
@@ -42,6 +46,7 @@ public interface FormHandle {
       this.name = name;
     }
 
+    @Override
     public String name() {
       return this.name;
     }

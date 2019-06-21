@@ -1,61 +1,153 @@
 package com.github.dakusui.scriptiveunit.model.form;
 
+import com.github.dakusui.jcunit.core.tuples.Tuple;
+import com.github.dakusui.scriptiveunit.core.Config;
+import com.github.dakusui.scriptiveunit.core.ObjectMethod;
+import com.github.dakusui.scriptiveunit.drivers.actions.Basic;
+import com.github.dakusui.scriptiveunit.model.desc.testitem.TestItem;
+import com.github.dakusui.scriptiveunit.model.session.Report;
 import com.github.dakusui.scriptiveunit.model.session.Stage;
 import com.github.dakusui.scriptiveunit.model.statement.Arguments;
 import com.github.dakusui.scriptiveunit.model.statement.FormHandle;
 import com.github.dakusui.scriptiveunit.model.statement.Statement;
+import com.github.dakusui.scriptiveunit.utils.DriverUtils;
 
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.function.BiFunction;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 
 import static com.github.dakusui.scriptiveunit.model.form.FormRegistry.Utils.toArgs;
 import static java.lang.String.format;
+import static java.util.Objects.requireNonNull;
 
 public interface FormRegistry {
   Optional<Form> lookUp(FormHandle handle);
 
   class Loader {
-    private final Map<FormHandle, Form> formMap = new HashMap<>();
+    private final Map<String, Form> formMap = new HashMap<>();
 
-    public void register(FormHandle handle, Form form) {
-      if (formMap.containsKey(handle))
+
+    public Loader register(Object libraryObject) {
+      requireNonNull(libraryObject);
+      List<ObjectMethod> methods = DriverUtils.getObjectMethodsFromImportedFieldsInObject(libraryObject);
+      for (ObjectMethod each : methods) {
+        register(each, loadForm(libraryObject, each));
+      }
+      return this;
+    }
+
+    void register(ObjectMethod method, Form form) {
+      if (formMap.containsKey(method.getName()))
         throw new IllegalStateException(
             format("Tried to register:%s with the key:%s, but %s was already registered.", form, form.name(), formMap.get(form)));
-      formMap.put(handle, form);
+      formMap.put(method.getName(), form);
     }
 
     FormRegistry load() {
-      return handle -> Optional.ofNullable(formMap.get(handle));
+      return (FormHandle handle) -> Optional.ofNullable(formMap.get(handle.name()));
     }
 
     /**
      * @param object The object to which a method {@code m} belongs.
-     * @param m      A method
+     * @param method A method
      * @return A created form created from the given method object.
      */
-    public Form loadForm(Object object, Method m) {
-      Class<Form>[] params = Utils.ensureAllFormClasses(m.getParameterTypes());
-      Object[] args = toArgs(params);
+    Form loadForm(Object object, ObjectMethod method) {
+      return (Form) method.invoke((Object[]) toArgs(Utils.ensureAllFormClasses(method.getParameterTypes())));
+    }
 
-      try {
-        return (Form) m.invoke(object, args);
-      } catch (IllegalAccessException | InvocationTargetException e) {
-        throw new RuntimeException(e);
-      }
+    public static void main(String... args) {
+      FormRegistry formRegistry = new FormRegistry.Loader().register(new Basic()).load();
+      Statement.Nested statement = new Statement.Nested() {
+        @Override
+        public FormHandle getFormHandle() {
+          return null;
+        }
+
+        @Override
+        public Arguments getArguments() {
+          return null;
+        }
+
+        @Override
+        public <V> V evaluate(Stage stage) {
+          return null;
+        }
+
+        @Override
+        public Form compile(FormInvoker invoker) {
+          throw new UnsupportedOperationException();
+        }
+      };
+      Stage stage = createStage(formRegistry, statement);
+    }
+
+    private static Stage createStage(FormRegistry formRegistry, Statement.Nested statement) {
+      return new Stage() {
+        @Override
+        public ExecutionLevel getExecutionLevel() {
+          return ExecutionLevel.ORACLE;
+        }
+
+        @Override
+        public Config getConfig() {
+          return new Config.Builder(Object.class, System.getProperties()).build();
+        }
+
+        @Override
+        public int sizeOfArguments() {
+          return 0;
+        }
+
+        @Override
+        public <T> T getArgument(int index) {
+          throw new ArrayIndexOutOfBoundsException();
+        }
+
+        @Override
+        public Optional<Throwable> getThrowable() {
+          return Optional.empty();
+        }
+
+        @Override
+        public Optional<Tuple> getTestCaseTuple() {
+          return Optional.empty();
+        }
+
+        @Override
+        public <RESPONSE> Optional<RESPONSE> response() {
+          return Optional.empty();
+        }
+
+        @Override
+        public Optional<Report> getReport() {
+          return Optional.empty();
+        }
+
+        @Override
+        public Optional<TestItem> getTestItem() {
+          return Optional.empty();
+        }
+
+        @Override
+        public FormRegistry formRegistry() {
+          return formRegistry;
+        }
+
+        @Override
+        public Statement.Nested ongoingStatement() {
+          if (statement == null)
+            throw new IllegalStateException();
+          return statement;
+        }
+      };
     }
   }
 
   enum Utils {
     ;
-
     static Form[] toArgs(Class<Form>[] params) {
       return new ArrayList<Form>(params.length) {
         {
@@ -69,7 +161,7 @@ public interface FormRegistry {
     private static Form createProxiedFormForArgumentAt(int i) {
       return (Form) Proxy.newProxyInstance(
           Form.class.getClassLoader(),
-          new Class[] { Form.class },
+          new Class[]{Form.class},
           (proxy, method, args) -> {
             Stage stage = (Stage) requireThat(args, arrayLengthIsOneAndTheElementIsStage(), otherwiseThrowRuntimeException())[0];
             Arguments arguments = stage.ongoingStatement().getArguments();
