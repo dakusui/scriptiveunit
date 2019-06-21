@@ -2,23 +2,18 @@ package com.github.dakusui.scriptiveunit.model.statement;
 
 import com.github.dakusui.scriptiveunit.core.Config;
 import com.github.dakusui.scriptiveunit.core.ObjectMethod;
-import com.github.dakusui.scriptiveunit.model.form.FormUtils;
 import com.github.dakusui.scriptiveunit.model.form.Form;
+import com.github.dakusui.scriptiveunit.model.form.FormUtils;
 import com.github.dakusui.scriptiveunit.model.session.Stage;
 import com.github.dakusui.scriptiveunit.utils.DriverUtils;
 
 import java.lang.reflect.Array;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Function;
 import java.util.function.Supplier;
-import java.util.stream.Stream;
 
-import static com.github.dakusui.scriptiveunit.core.Exceptions.SCRIPTIVEUNIT;
-import static com.google.common.collect.Iterables.getOnlyElement;
-import static com.google.common.collect.Iterables.toArray;
 import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
 import static java.util.stream.Collectors.toList;
@@ -48,23 +43,6 @@ public interface FormHandle {
     public String name() {
       return this.name;
     }
-  }
-
-  enum Utils {
-    ;
-
-    static <T> T car(T[] arr) {
-      return SCRIPTIVEUNIT.requireValue(v -> v.length > 0, SCRIPTIVEUNIT.requireNonNull(arr))[0];
-    }
-
-    static <T> T[] cdr(T[] arr) {
-      return Arrays.copyOfRange(
-          SCRIPTIVEUNIT.requireValue(v -> v.length > 0, SCRIPTIVEUNIT.requireNonNull(arr)),
-          1,
-          arr.length
-      );
-    }
-
   }
 
   class Factory {
@@ -119,7 +97,7 @@ public interface FormHandle {
       return Optional.empty();
     }
 
-    private Object[] shrinkTo(Class<?> componentType, int count, Object[] args) {
+    public Object[] shrinkTo(Class<?> componentType, int count, Object[] args) {
       Object[] ret = new Object[count];
       Object var = Array.newInstance(componentType, args.length - count + 1);
       if (count > 1) {
@@ -138,9 +116,9 @@ public interface FormHandle {
   }
 
   class MethodBasedImpl extends Base {
-    final ObjectMethod objectMethod;
-    private final Factory formHandleFactory;
-    private final Form.Factory formFactory;
+    public final ObjectMethod objectMethod;
+    public final Factory formHandleFactory;
+    public final Form.Factory formFactory;
 
     private MethodBasedImpl(ObjectMethod objectMethod, Factory formFactory, Form.Factory formFactory1) {
       super(objectMethod.getName());
@@ -159,27 +137,12 @@ public interface FormHandle {
       return String.format("form:%s", this.objectMethod);
     }
 
-    public <V> Form<V> createForm(Form[] args) {
-      Object[] argValues;
-      if (requireNonNull(objectMethod).isVarArgs()) {
-        int parameterCount = objectMethod.getParameterCount();
-        argValues = formHandleFactory.shrinkTo(objectMethod.getParameterTypes()[parameterCount - 1].getComponentType(), parameterCount, args);
-      } else
-        argValues = args;
-      return formFactory.create(objectMethod, argValues);
-    }
   }
 
   class Lambda extends Base {
     private Lambda(String name) {
       // TODO: need to consider how we should define a name for a lambda object
       super(name);
-    }
-
-    @SuppressWarnings("unchecked")
-    public Form<Form<Object>> apply(Arguments arguments) {
-      // CAUTION: This method returns an instance of Form<Form<Object>>
-      return (Stage ii) -> getOnlyElement(toForms(arguments));
     }
 
     @Override
@@ -201,12 +164,7 @@ public interface FormHandle {
       return false;
     }
 
-    @SuppressWarnings("unchecked")
-    public Form<Object> createFunc(Form[] args) {
-      return userFunc(Utils.car(args), Utils.cdr(args));
-    }
-
-    private static Form<Object> userFunc(Form<Statement> statementForm, Form<?>... args) {
+    public static Form<Object> userFunc(Form<Statement> statementForm, Form<?>... args) {
       return (Stage input) -> Factory.compile(statementForm.apply(input)).apply(Stage.Factory.createWrappedStage(input, args));
     }
   }
