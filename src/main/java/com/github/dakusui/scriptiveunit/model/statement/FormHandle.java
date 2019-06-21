@@ -2,7 +2,7 @@ package com.github.dakusui.scriptiveunit.model.statement;
 
 import com.github.dakusui.scriptiveunit.core.Config;
 import com.github.dakusui.scriptiveunit.core.ObjectMethod;
-import com.github.dakusui.scriptiveunit.loaders.beans.BeanUtils;
+import com.github.dakusui.scriptiveunit.model.form.FormUtils;
 import com.github.dakusui.scriptiveunit.model.form.Form;
 import com.github.dakusui.scriptiveunit.model.session.Stage;
 import com.github.dakusui.scriptiveunit.utils.DriverUtils;
@@ -27,7 +27,7 @@ import static java.util.stream.StreamSupport.stream;
 public interface FormHandle {
   static List<Form> toForms(Iterable<Statement> arguments) {
     return stream(arguments.spliterator(), false)
-        .map(BeanUtils::toForm)
+        .map(FormUtils::toForm)
         .collect(toList());
   }
 
@@ -102,7 +102,7 @@ public interface FormHandle {
     }
 
     private static Form compile(Statement statement) {
-      return BeanUtils.toForm(statement);
+      return FormUtils.toForm(statement);
     }
 
     private Optional<Supplier<List<Object>>> getUserDefinedFormClauseFromSessionByName(String name) {
@@ -189,24 +189,11 @@ public interface FormHandle {
   }
 
   class UserFormHandle extends Base {
-    private final Supplier<Statement> userDefinedFormStatementSupplier;
+    public final Supplier<Statement> userDefinedFormStatementSupplier;
 
     UserFormHandle(String name, Supplier<Statement> userDefinedFormStatementSupplier) {
       super(name);
       this.userDefinedFormStatementSupplier = userDefinedFormStatementSupplier;
-    }
-
-    @SuppressWarnings("unchecked")
-    public <V> Form<V> apply(Arguments arguments) {
-      return (Form<V>) createFunc(
-          toArray(
-              Stream.concat(
-                  Stream.of((Form<Statement>) input -> userDefinedFormStatementSupplier.get()),
-                  toForms(arguments).stream()
-              ).collect(toList()),
-              Form.class
-          )
-      );
     }
 
     @Override
@@ -215,7 +202,7 @@ public interface FormHandle {
     }
 
     @SuppressWarnings("unchecked")
-    Form<Object> createFunc(Form[] args) {
+    public Form<Object> createFunc(Form[] args) {
       return userFunc(Utils.car(args), Utils.cdr(args));
     }
 

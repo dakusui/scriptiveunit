@@ -69,7 +69,7 @@ public interface Form<O> extends Function<Stage, O>, Formattable {
           ));
     }
 
-    public <T> Form<T> createConst(T value) {
+    <T> Form<T> createConst(T value) {
       return createProxy(
           (proxy, method, args) -> FormInvoker.Utils.invokeConst(value),
           Const.class);
@@ -95,7 +95,7 @@ public interface Form<O> extends Function<Stage, O>, Formattable {
       };
     }
 
-    public static <O> Form<O> createProxy(InvocationHandler handler, Class<? extends Form> interfaceClass) {
+    static <O> Form<O> createProxy(InvocationHandler handler, Class<? extends Form> interfaceClass) {
       //noinspection unchecked
       return (Form<O>) Proxy.newProxyInstance(
           Form.class.getClassLoader(),

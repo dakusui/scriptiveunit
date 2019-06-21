@@ -1,6 +1,6 @@
 package com.github.dakusui.scriptiveunit.model.statement;
 
-import com.github.dakusui.scriptiveunit.loaders.beans.BeanUtils;
+import com.github.dakusui.scriptiveunit.model.form.FormUtils;
 import com.github.dakusui.scriptiveunit.model.desc.ConstraintDefinition;
 import com.github.dakusui.scriptiveunit.model.session.Stage;
 
@@ -17,7 +17,7 @@ public class ConstraintDefinitionImpl implements ConstraintDefinition {
 
   @Override
   public boolean test(Stage stage) {
-    return requireNonNull(BeanUtils.<Boolean>toForm(statement).apply(stage));
+    return requireNonNull(FormUtils.<Boolean>toForm(statement).apply(stage));
   }
 
   @Override

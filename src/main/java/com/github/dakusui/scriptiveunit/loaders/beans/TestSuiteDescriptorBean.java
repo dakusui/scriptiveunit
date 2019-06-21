@@ -11,6 +11,7 @@ import com.github.dakusui.scriptiveunit.model.desc.ParameterSpaceDescriptor;
 import com.github.dakusui.scriptiveunit.model.desc.TestSuiteDescriptor;
 import com.github.dakusui.scriptiveunit.model.desc.testitem.IndexedTestCase;
 import com.github.dakusui.scriptiveunit.model.desc.testitem.TestOracle;
+import com.github.dakusui.scriptiveunit.model.form.FormUtils;
 import com.github.dakusui.scriptiveunit.model.form.Form;
 import com.github.dakusui.scriptiveunit.model.session.Session;
 import com.github.dakusui.scriptiveunit.model.session.Stage;
@@ -156,7 +157,7 @@ public abstract class TestSuiteDescriptorBean {
             Object result =
                 statement == null ?
                     nop() :
-                    BeanUtils.toForm(statement).apply(input);
+                    FormUtils.toForm(statement).apply(input);
             return (Action) requireNonNull(
                 result,
                 String.format("statement for '%s' was not valid '%s'", actionName, statement)

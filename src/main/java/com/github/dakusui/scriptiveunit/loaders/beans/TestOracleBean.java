@@ -8,6 +8,7 @@ import com.github.dakusui.jcunit.core.tuples.Tuple;
 import com.github.dakusui.scriptiveunit.model.desc.TestSuiteDescriptor;
 import com.github.dakusui.scriptiveunit.model.desc.testitem.TestItem;
 import com.github.dakusui.scriptiveunit.model.desc.testitem.TestOracle;
+import com.github.dakusui.scriptiveunit.model.form.FormUtils;
 import com.github.dakusui.scriptiveunit.model.form.Form;
 import com.github.dakusui.scriptiveunit.model.form.FormInvoker;
 import com.github.dakusui.scriptiveunit.model.session.Report;
@@ -109,7 +110,7 @@ public abstract class TestOracleBean {
         if (beforeClause == null)
           return s -> Actions.nop();
         Statement statement = statementFactory.create(beforeClause);
-        return s -> BeanUtils.<Action>toForm(statement).apply(s);
+        return s -> FormUtils.<Action>toForm(statement).apply(s);
       }
 
       @Override
@@ -120,7 +121,7 @@ public abstract class TestOracleBean {
 
           @Override
           public boolean matches(Object item) {
-            return requireNonNull(BeanUtils.<Boolean>toForm(givenStatement).apply(s));
+            return requireNonNull(FormUtils.<Boolean>toForm(givenStatement).apply(s));
           }
 
           @Override
@@ -136,7 +137,7 @@ public abstract class TestOracleBean {
 
       @Override
       public Function<Stage, Object> whenFactory() {
-        return s -> BeanUtils.<Boolean>toForm(statementFactory.create(whenClause)).apply(s);
+        return s -> FormUtils.<Boolean>toForm(statementFactory.create(whenClause)).apply(s);
       }
 
       @Override
@@ -145,7 +146,7 @@ public abstract class TestOracleBean {
         FormInvoker formInvoker = FormInvoker.create();
         return stage -> out -> new BaseMatcher<Stage>() {
           Function<FormInvoker, Predicate<Stage>> p = fi -> s -> requireNonNull(
-              BeanUtils.<Boolean>toForm(thenStatement).apply(s));
+              FormUtils.<Boolean>toForm(thenStatement).apply(s));
           Function<FormInvoker, Function<Stage, String>> c = fi -> s -> fi.asString();
 
           @Override
@@ -187,7 +188,7 @@ public abstract class TestOracleBean {
         Statement onFailureStatement = statementFactory.create(onFailureClause);
         return (Stage s) -> (AssertionError input, Context context) -> requireNonNull(
             onFailureClause != null ?
-                BeanUtils.<Action>toForm(onFailureStatement) :
+                FormUtils.<Action>toForm(onFailureStatement) :
                 (Form<Action>) input1 -> nop()).apply(s);
       }
 
@@ -196,7 +197,7 @@ public abstract class TestOracleBean {
         if (afterClause == null)
           return s -> Actions.nop();
         Statement statement = statementFactory.create(afterClause);
-        return s -> BeanUtils.<Action>toForm(statement).apply(s);
+        return s -> FormUtils.<Action>toForm(statement).apply(s);
       }
 
     }

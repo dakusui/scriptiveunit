@@ -3,7 +3,7 @@ package com.github.dakusui.scriptiveunit.model.statement;
 import com.github.dakusui.scriptiveunit.core.Config;
 import com.github.dakusui.scriptiveunit.exceptions.SyntaxException;
 import com.github.dakusui.scriptiveunit.exceptions.TypeMismatch;
-import com.github.dakusui.scriptiveunit.loaders.beans.BeanUtils;
+import com.github.dakusui.scriptiveunit.model.form.FormUtils;
 import com.github.dakusui.scriptiveunit.model.form.Form;
 import com.github.dakusui.scriptiveunit.model.form.FormRegistry;
 import com.github.dakusui.scriptiveunit.model.session.Stage;
@@ -150,7 +150,7 @@ public interface Statement {
                * the statement by evaluating it, it is valid to pass a fresh
                * memo object to an invoker.
                */
-              work.add(Objects.toString(BeanUtils.toForm(each)));
+              work.add(Objects.toString(FormUtils.toForm(each)));
             } else {
               throw SyntaxException.parameterNameShouldBeSpecifiedWithConstant((Compound) statement);
             }
