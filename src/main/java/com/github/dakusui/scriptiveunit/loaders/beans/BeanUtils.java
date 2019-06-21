@@ -21,11 +21,12 @@ public enum BeanUtils {
       Statement.Compound compound = (Statement.Compound) statement;
       FormHandle formHandle = compound.getFormHandle();
       if (formHandle instanceof FormHandle.Factory.MethodBasedImpl)
-        return formHandle.apply(compound.getArguments());
+        return ((FormHandle.Factory.MethodBasedImpl)formHandle).apply(compound.getArguments());
       if (formHandle instanceof FormHandle.Factory.UserFormHandle)
-        return formHandle.apply(compound.getArguments());
+        return ((FormHandle.Factory.UserFormHandle)formHandle).apply(compound.getArguments());
       if (formHandle instanceof FormHandle.Factory.Lambda)
-        return formHandle.apply(compound.getArguments());
+        //noinspection unchecked
+        return (Form<U>) ((FormHandle.Factory.Lambda)formHandle).apply(compound.getArguments());
       throw new IllegalArgumentException();
     }
     throw new IllegalArgumentException();

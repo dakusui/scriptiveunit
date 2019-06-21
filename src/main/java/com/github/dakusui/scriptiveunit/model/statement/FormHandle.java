@@ -31,8 +31,6 @@ public interface FormHandle {
         .collect(toList());
   }
 
-  <V> Form<V> apply(Arguments arguments);
-
   boolean isAccessor();
 
   default String name() {
@@ -159,7 +157,6 @@ public interface FormHandle {
         return String.format("form:%s", this.objectMethod);
       }
 
-      @Override
       public <V> Form<V> apply(Arguments arguments) {
         Form[] args = toArray(
             toForms(arguments),
@@ -189,7 +186,6 @@ public interface FormHandle {
       }
 
       @SuppressWarnings("unchecked")
-      @Override
       public <V> Form<V> apply(Arguments arguments) {
         return (Form<V>) createFunc(
             toArray(
@@ -224,8 +220,8 @@ public interface FormHandle {
       }
 
       @SuppressWarnings("unchecked")
-      @Override
       public Form<Form<Object>> apply(Arguments arguments) {
+        // CAUTION: This method returns an instance of Form<Form<Object>>
         return (Stage ii) -> getOnlyElement(toForms(arguments));
       }
 
