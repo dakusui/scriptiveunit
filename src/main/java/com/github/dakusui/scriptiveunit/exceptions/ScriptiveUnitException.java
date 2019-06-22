@@ -44,14 +44,14 @@ public class ScriptiveUnitException extends RuntimeException {
     return new ScriptiveUnitException(format("%sth element was accessed but the container's length was %s", index, size));
   }
 
-  protected static <E extends ScriptiveUnitException, T> T validate(String format, Function<String, E> exceptionFactory, T target, Predicate/*<T>*/... predicates) {
-    Validator<T> validator = Validator.create(format, target, predicates);
+  static <E extends ScriptiveUnitException, T> T validate(String format, Function<String, E> exceptionFactory, T target, Predicate/*<T>*/... predicates) {
+    Validator validator = Validator.create(format, target, predicates);
     if (validator.getAsBoolean())
       return target;
     throw exceptionFactory.apply(validator.toString());
   }
 
-  interface Validator<T> extends BooleanSupplier {
+  interface Validator extends BooleanSupplier {
     /**
      * Creates and returns a validator for {@code target} object.
      *
@@ -60,8 +60,8 @@ public class ScriptiveUnitException extends RuntimeException {
      * @param predicates predicates used for validation.
      * @param <T>        Type of target
      */
-    static <T> Validator<T> create(String format, T target, Predicate/*<T>*/... predicates) {
-      return new Validator<T>() {
+    static <T> Validator create(String format, T target, Predicate/*<T>*/... predicates) {
+      return new Validator() {
         @Override
         public boolean getAsBoolean() {
           //noinspection unchecked

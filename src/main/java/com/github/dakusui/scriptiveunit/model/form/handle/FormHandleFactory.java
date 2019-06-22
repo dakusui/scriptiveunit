@@ -10,7 +10,6 @@ import com.github.dakusui.scriptiveunit.utils.DriverUtils;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.function.Function;
 import java.util.function.Supplier;
 
 import static java.lang.String.format;
@@ -28,24 +27,29 @@ public class FormHandleFactory {
   }
 
   public FormHandle create(String name) {
-    if ("lambda".equals(name))
-      return new FormHandle.Lambda(name);
-    return FormHandleFactory.this.getObjectMethodFromDriver(name).map(
-        (Function<ObjectMethod, FormHandle>) FormHandle.MethodBased::new
-    ).orElseGet(
-        () -> createUserForm(name)
-    );
+    return createLambdaFormHandle(name)
+        .orElseGet(() -> FormHandleFactory.this.createMethodBasedFormHandle(name)
+            .orElseGet(() -> FormHandleFactory.this.createUserDefinedFormHandle(name)
+                .orElseThrow(undefinedForm(name))));
   }
 
-  private FormHandle createUserForm(String name) {
-    return new FormHandle.User(
-        name,
-        () -> statementFactory.create(
-            getUserDefinedFormClauseFromSessionByName(name).orElseThrow(
-                () -> new NullPointerException(format("Undefined form '%s' was referenced.", name))
-            ).get()
-        )
-    );
+  private static Supplier<UnsupportedOperationException> undefinedForm(String name) {
+    return () -> new UnsupportedOperationException(format("Undefined form '%s' was referenced.", name));
+  }
+
+  private Optional<FormHandle> createLambdaFormHandle(String name) {
+    return "lambda".equals(name) ?
+        Optional.of(new FormHandle.Lambda(name)) :
+        Optional.empty();
+  }
+
+  private Optional<FormHandle> createMethodBasedFormHandle(String name) {
+    return this.getObjectMethodFromDriver(name).map(FormHandle.MethodBased::new);
+  }
+
+  private Optional<FormHandle> createUserDefinedFormHandle(String name) {
+    return getUserDefinedFormClauseFromSessionByName(name)
+        .map((Supplier<List<Object>> s) -> new FormHandle.User(name, () -> statementFactory.create(s.get())));
   }
 
   static Form compile(Statement statement) {
@@ -54,7 +58,7 @@ public class FormHandleFactory {
 
   private Optional<Supplier<List<Object>>> getUserDefinedFormClauseFromSessionByName(String name) {
     return clauseMap.containsKey(name) ?
-        Optional.of(() -> clauseMap.get(name)) :
+        Optional.of((Supplier<List<Object>>) () -> clauseMap.get(name)) :
         Optional.empty();
   }
 

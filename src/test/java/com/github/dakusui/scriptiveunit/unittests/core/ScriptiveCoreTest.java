@@ -1,7 +1,7 @@
 package com.github.dakusui.scriptiveunit.unittests.core;
 
+import com.github.dakusui.crest.Crest;
 import com.github.dakusui.scriptiveunit.ScriptiveCore;
-import com.github.dakusui.scriptiveunit.utils.ScriptiveSuiteSet;
 import com.github.dakusui.scriptiveunit.core.Description;
 import com.github.dakusui.scriptiveunit.examples.Qapi;
 import com.github.dakusui.scriptiveunit.exceptions.FacadeException;
@@ -14,9 +14,11 @@ import com.github.dakusui.scriptiveunit.testassets.drivers.ExampleSuiteSet;
 import com.github.dakusui.scriptiveunit.testassets.drivers.Simple;
 import com.github.dakusui.scriptiveunit.testutils.JUnitResultMatcher;
 import com.github.dakusui.scriptiveunit.testutils.TestBase;
+import com.github.dakusui.scriptiveunit.utils.ScriptiveSuiteSet;
 import org.junit.Ignore;
 import org.junit.Test;
 
+import static com.github.dakusui.crest.Crest.asListOf;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
@@ -64,15 +66,16 @@ public class ScriptiveCoreTest extends TestBase {
 
   @Test
   public void whenListFunctions$thenListed() {
-    assertEquals(
-        asList("empty", "helloWorld", "print", "print_twice"),
+    Crest.assertThat(
         new ScriptiveCore().listFunctions(
             Driver1.class,
-            "tests/regular/driver1.json"
-        ).stream()
+            "tests/regular/driver1.json")
+            .stream()
             .sorted()
-            .collect(toList())
-    );
+            .collect(toList()),
+        asListOf(String.class)
+            .containsAll(asList("empty", "helloWorld", "print", "print_twice"))
+            .$());
   }
 
   @Test
