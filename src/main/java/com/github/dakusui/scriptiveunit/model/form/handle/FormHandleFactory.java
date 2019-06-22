@@ -28,8 +28,8 @@ public class FormHandleFactory {
 
   public FormHandle create(String name) {
     return createLambdaFormHandle(name)
-        .orElseGet(() -> FormHandleFactory.this.createMethodBasedFormHandle(name)
-            .orElseGet(() -> FormHandleFactory.this.createUserDefinedFormHandle(name)
+        .orElseGet(() -> FormHandleFactory.this.createUserDefinedFormHandle(name)
+            .orElseGet(() -> FormHandleFactory.this.createMethodBasedFormHandle(name)
                 .orElseThrow(undefinedForm(name))));
   }
 
