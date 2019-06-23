@@ -11,8 +11,8 @@ import com.github.dakusui.scriptiveunit.model.desc.ParameterSpaceDescriptor;
 import com.github.dakusui.scriptiveunit.model.desc.TestSuiteDescriptor;
 import com.github.dakusui.scriptiveunit.model.desc.testitem.IndexedTestCase;
 import com.github.dakusui.scriptiveunit.model.desc.testitem.TestOracle;
-import com.github.dakusui.scriptiveunit.model.form.handle.FormUtils;
 import com.github.dakusui.scriptiveunit.model.form.Form;
+import com.github.dakusui.scriptiveunit.model.form.handle.FormUtils;
 import com.github.dakusui.scriptiveunit.model.session.Session;
 import com.github.dakusui.scriptiveunit.model.session.Stage;
 import com.github.dakusui.scriptiveunit.model.statement.Statement;
@@ -21,19 +21,19 @@ import com.github.dakusui.scriptiveunit.utils.StringUtils;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
 
 import static com.github.dakusui.actionunit.Actions.nop;
 import static com.github.dakusui.scriptiveunit.exceptions.ScriptiveUnitException.wrap;
 import static com.github.dakusui.scriptiveunit.model.statement.Statement.createStatementFactory;
-import static java.lang.String.format;
 import static java.util.Collections.singletonList;
 import static java.util.Objects.requireNonNull;
 import static java.util.stream.Collectors.toList;
 
 public abstract class TestSuiteDescriptorBean {
-  private static final Object NOP_CLAUSE = nop();
+  public static final Object NOP_CLAUSE = nop();
   private final FactorSpaceDescriptorBean factorSpaceBean;
   private final List<? extends TestOracleBean> testOracleBeanList;
   private final String description;
@@ -71,8 +71,9 @@ public abstract class TestSuiteDescriptorBean {
       return new TestSuiteDescriptor() {
         private final Statement.Factory statementFactory =
             createStatementFactory(session.getConfig(), this.getUserDefinedFormClauses());
-        private Statement setUpBeforeAllStatement =
-            statementFactory.create(setUpBeforeAllClause != null ? setUpBeforeAllClause : NOP_CLAUSE);
+        private Statement setUpBeforeAllStatement = setUpBeforeAllClause != null ?
+            statementFactory.create(setUpBeforeAllClause) :
+            null;
         private Statement setUpStatement =
             statementFactory.create(setUpClause != null ? setUpClause : NOP_CLAUSE);
         private List<? extends TestOracle> testOracles = createTestOracles();
@@ -107,39 +108,33 @@ public abstract class TestSuiteDescriptorBean {
         }
 
         @Override
+        public Optional<Statement> setUpBeforeAll() {
+          return Optional.ofNullable(setUpBeforeAllStatement);
+        }
+
+        @Override
+        public Statement setUp() {
+          return setUpStatement;
+        }
+
+        @Override
+        public Statement tearDown() {
+          return tearDownStatement;
+        }
+
+        @Override
+        public Statement tearDownAfterAll() {
+          return tearDownAfterAllStatement;
+        }
+
+        @Override
         public Map<String, List<Object>> getUserDefinedFormClauses() {
           return userDefinedFormClauses;
         }
 
         @Override
-        public Form<Action> getSetUpBeforeAllActionFactory() {
-          return createActionFactory(
-              format("Suite level set up: %s", description),
-              setUpBeforeAllStatement
-          );
-        }
-
-        @Override
-        public Form<Action> getSetUpActionFactory() {
-          return createActionFactory("Fixture set up", setUpStatement);
-        }
-
-        @Override
-        public Form<Action> getTearDownActionFactory() {
-          return createActionFactory("Fixture tear down", tearDownStatement);
-        }
-
-        @Override
-        public Form<Action> getTearDownAfterAllActionFactory() {
-          return createActionFactory(
-              format("Suite level tear down: %s", description),
-              tearDownAfterAllStatement
-          );
-        }
-
-        @Override
         public List<String> getInvolvedParameterNamesInSetUpAction() {
-          return Statement.Utils.involvedParameters(setUpStatement);
+          return Statement.Utils.involvedParameters(setUp());
         }
 
         @Override
@@ -150,19 +145,6 @@ public abstract class TestSuiteDescriptorBean {
         @Override
         public Statement.Factory statementFactory() {
           return statementFactory;
-        }
-
-        private Form<Action> createActionFactory(String actionName, Statement statement) {
-          return (Stage input) -> {
-            Object result =
-                statement == null ?
-                    nop() :
-                    FormUtils.INSTANCE.toForm(statement).apply(input);
-            return (Action) requireNonNull(
-                result,
-                String.format("statement for '%s' was not valid '%s'", actionName, statement)
-            );
-          };
         }
 
         @Override
@@ -205,5 +187,18 @@ public abstract class TestSuiteDescriptorBean {
     } catch (Exception e) {
       throw wrap(e);
     }
+  }
+
+  public static Form<Action> createActionFactory(String actionName, Statement statement) {
+    return (Stage input) -> {
+      Object result =
+          statement == null ?
+              nop() :
+              FormUtils.INSTANCE.toForm(statement).apply(input);
+      return (Action) requireNonNull(
+          result,
+          String.format("statement for '%s' was not valid '%s'", actionName, statement)
+      );
+    };
   }
 }

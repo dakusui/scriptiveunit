@@ -10,6 +10,7 @@ import com.github.dakusui.scriptiveunit.model.statement.Statement;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 public interface TestSuiteDescriptor {
   String getDescription();
@@ -24,13 +25,13 @@ public interface TestSuiteDescriptor {
 
   List<IndexedTestCase> getTestCases();
 
-  Form<Action> getSetUpBeforeAllActionFactory();
+  Optional<Statement> setUpBeforeAll();
 
-  Form<Action> getSetUpActionFactory();
+  Statement setUp();
 
-  Form<Action> getTearDownActionFactory();
+  Statement tearDown();
 
-  Form<Action> getTearDownAfterAllActionFactory();
+  Statement tearDownAfterAll();
 
   List<String> getInvolvedParameterNamesInSetUpAction();
 

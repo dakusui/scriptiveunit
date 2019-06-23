@@ -8,9 +8,9 @@ import com.github.dakusui.jcunit.core.tuples.Tuple;
 import com.github.dakusui.scriptiveunit.model.desc.TestSuiteDescriptor;
 import com.github.dakusui.scriptiveunit.model.desc.testitem.TestItem;
 import com.github.dakusui.scriptiveunit.model.desc.testitem.TestOracle;
-import com.github.dakusui.scriptiveunit.model.form.handle.FormUtils;
 import com.github.dakusui.scriptiveunit.model.form.Form;
 import com.github.dakusui.scriptiveunit.model.form.FormInvoker;
+import com.github.dakusui.scriptiveunit.model.form.handle.FormUtils;
 import com.github.dakusui.scriptiveunit.model.session.Report;
 import com.github.dakusui.scriptiveunit.model.session.Stage;
 import com.github.dakusui.scriptiveunit.model.statement.Statement;
@@ -20,6 +20,7 @@ import org.hamcrest.Description;
 import org.hamcrest.Matcher;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.function.Function;
 import java.util.function.Predicate;
 
@@ -107,10 +108,14 @@ public abstract class TestOracleBean {
 
       @Override
       public Function<Stage, Action> beforeFactory(TestItem testItem, Report report) {
-        if (beforeClause == null)
-          return s -> Actions.nop();
-        Statement statement = statementFactory.create(beforeClause);
-        return s -> FormUtils.INSTANCE.<Action>toForm(statement).apply(s);
+        return before()
+            .map(FormUtils.INSTANCE::<Action>toForm)
+            .orElse((Stage s) -> nop());
+      }
+
+      public Optional<Statement> before() {
+        return Optional.ofNullable(beforeClause)
+            .map(statementFactory::create);
       }
 
       @Override
