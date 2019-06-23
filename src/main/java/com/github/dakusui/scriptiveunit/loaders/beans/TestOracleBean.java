@@ -8,6 +8,7 @@ import com.github.dakusui.jcunit.core.tuples.Tuple;
 import com.github.dakusui.scriptiveunit.model.desc.TestSuiteDescriptor;
 import com.github.dakusui.scriptiveunit.model.desc.testitem.TestItem;
 import com.github.dakusui.scriptiveunit.model.desc.testitem.TestOracle;
+import com.github.dakusui.scriptiveunit.model.desc.testitem.TestOracleActionFactory;
 import com.github.dakusui.scriptiveunit.model.form.Form;
 import com.github.dakusui.scriptiveunit.model.form.FormInvoker;
 import com.github.dakusui.scriptiveunit.model.form.handle.FormUtils;
@@ -99,10 +100,10 @@ public abstract class TestOracleBean {
       return TestOracle.templateTestOracleDescription(this, testCaseTuple, testSuiteDescription);
     }
 
-    class DefinitionImpl implements Definition {
+    class TestOracleActionFactoryImpl implements TestOracleActionFactory {
       private final TestItem testItem;
 
-      DefinitionImpl(TestItem testItem) {
+      TestOracleActionFactoryImpl(TestItem testItem) {
         this.testItem = testItem;
       }
 
@@ -207,10 +208,8 @@ public abstract class TestOracleBean {
 
     }
 
-    public Definition definitionFor(TestItem testItem) {
-      return new DefinitionImpl(testItem) {
-      };
+    public TestOracleActionFactory testOracleActionFactoryFor(TestItem testItem) {
+      return new TestOracleActionFactoryImpl(testItem);
     }
-
   }
 }

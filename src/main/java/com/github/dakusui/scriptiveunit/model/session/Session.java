@@ -9,12 +9,12 @@ import com.github.dakusui.jcunit.core.tuples.Tuple;
 import com.github.dakusui.jcunit8.factorspace.Constraint;
 import com.github.dakusui.scriptiveunit.core.Config;
 import com.github.dakusui.scriptiveunit.loaders.TestSuiteDescriptorLoader;
-import com.github.dakusui.scriptiveunit.loaders.beans.TestSuiteDescriptorBean;
 import com.github.dakusui.scriptiveunit.model.desc.ConstraintDefinition;
 import com.github.dakusui.scriptiveunit.model.desc.TestSuiteDescriptor;
 import com.github.dakusui.scriptiveunit.model.desc.testitem.IndexedTestCase;
 import com.github.dakusui.scriptiveunit.model.desc.testitem.TestItem;
 import com.github.dakusui.scriptiveunit.model.desc.testitem.TestOracle;
+import com.github.dakusui.scriptiveunit.model.desc.testitem.TestOracleActionFactory;
 import com.github.dakusui.scriptiveunit.model.form.handle.FormUtils;
 import org.hamcrest.Matcher;
 
@@ -86,7 +86,7 @@ public interface Session {
     @Override
     public Action createSetUpBeforeAllAction(Tuple commonFixtureTuple) {
       return Actions.named(
-          format("Suite level tear down: %s", testSuiteDescriptor.getDescription()),
+          format("Suite level set up: %s", testSuiteDescriptor.getDescription()),
           testSuiteDescriptor
               .setUpBeforeAll()
               .map(FormUtils.INSTANCE::<Action>toForm)
@@ -96,17 +96,19 @@ public interface Session {
 
     @Override
     public Action createSetUpActionForFixture(TestSuiteDescriptor testSuiteDescriptor, Tuple fixtureTuple) {
-      return TestSuiteDescriptorBean.createActionFactory(
+      return Actions.named(
           "Fixture set up",
           testSuiteDescriptor
-              .setUp())
-          .apply(createFixtureLevelStage(fixtureTuple));
+              .setUp()
+              .map(FormUtils.INSTANCE::<Action>toForm)
+              .map(f -> f.apply(this.createFixtureLevelStage(fixtureTuple)))
+              .orElse(nop()));
     }
 
     @Override
     public Action createMainAction(TestOracle testOracle, IndexedTestCase indexedTestCase) {
       TestItem testItem = TestItem.create(indexedTestCase, testOracle);
-      TestOracle.Definition definition = testItem.oracleDefinition();
+      TestOracleActionFactory definition = testItem.testOracleActionFactory();
       Tuple testCaseTuple = testItem.getTestCaseTuple();
       Report report = createReport(testItem);
       return sequential(
@@ -126,21 +128,27 @@ public interface Session {
 
     @Override
     public Action createTearDownActionForFixture(TestSuiteDescriptor testSuiteDescriptor, Tuple fixtureTuple) {
-      return TestSuiteDescriptorBean.createActionFactory(
-          "Fixture tear down", testSuiteDescriptor
-              .tearDown())
-          .apply(createFixtureLevelStage(fixtureTuple));
+      return Actions.named(
+          "Fixture tear down",
+          testSuiteDescriptor
+              .tearDown()
+              .map(FormUtils.INSTANCE::<Action>toForm)
+              .map(f -> f.apply(this.createSuiteLevelStage(fixtureTuple)))
+              .orElse(nop()));
     }
 
     @Override
     public Action createTearDownAfterAllAction(Tuple commonFixtureTuple) {
-      return TestSuiteDescriptorBean.createActionFactory(
+      return Actions.named(
           format("Suite level tear down: %s", testSuiteDescriptor.getDescription()),
-          testSuiteDescriptor.tearDownAfterAll()
-      ).apply(this.createSuiteLevelStage(commonFixtureTuple));
+          testSuiteDescriptor
+              .tearDownAfterAll()
+              .map(FormUtils.INSTANCE::<Action>toForm)
+              .map(f -> f.apply(this.createSuiteLevelStage(commonFixtureTuple)))
+              .orElse(nop()));
     }
 
-    Action createBefore(TestItem testItem, TestOracle.Definition definition, Report report) {
+    Action createBefore(TestItem testItem, TestOracleActionFactory definition, Report report) {
       Stage beforeStage = this.createOracleLevelStage(testItem, report);
       return definition.beforeFactory(testItem, report).apply(beforeStage);
     }
@@ -177,7 +185,7 @@ public interface Session {
       return this.reportCreator.apply(testItem);
     }
 
-    Sink<AssertionError> createErrorHandler(TestItem testItem, TestOracle.Definition definition, Report report) {
+    Sink<AssertionError> createErrorHandler(TestItem testItem, TestOracleActionFactory definition, Report report) {
       return (input, context) -> {
         Stage onFailureStage = createOracleFailureHandlingStage(testItem, input, report);
         definition.errorHandlerFactory(testItem, report).apply(onFailureStage);
@@ -185,7 +193,7 @@ public interface Session {
       };
     }
 
-    Action createAfter(TestItem testItem, TestOracle.Definition definition, Report report) {
+    Action createAfter(TestItem testItem, TestOracleActionFactory definition, Report report) {
       Stage afterStage = this.createOracleLevelStage(testItem, report);
       return definition.afterFactory(testItem, report).apply(afterStage);
     }

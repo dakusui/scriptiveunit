@@ -19,6 +19,7 @@ import com.github.dakusui.scriptiveunit.model.statement.Statement;
 import com.github.dakusui.scriptiveunit.runners.ScriptiveUnit;
 import com.github.dakusui.scriptiveunit.utils.StringUtils;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -33,7 +34,6 @@ import static java.util.Objects.requireNonNull;
 import static java.util.stream.Collectors.toList;
 
 public abstract class TestSuiteDescriptorBean {
-  public static final Object NOP_CLAUSE = nop();
   private final FactorSpaceDescriptorBean factorSpaceBean;
   private final List<? extends TestOracleBean> testOracleBeanList;
   private final String description;
@@ -74,11 +74,16 @@ public abstract class TestSuiteDescriptorBean {
         private Statement setUpBeforeAllStatement = setUpBeforeAllClause != null ?
             statementFactory.create(setUpBeforeAllClause) :
             null;
-        private Statement setUpStatement =
-            statementFactory.create(setUpClause != null ? setUpClause : NOP_CLAUSE);
+        private Statement setUpStatement = setUpClause != null ?
+            statementFactory.create(setUpClause) :
+            null;
         private List<? extends TestOracle> testOracles = createTestOracles();
-        private Statement tearDownStatement = statementFactory.create(tearDownClause != null ? tearDownClause : NOP_CLAUSE);
-        private Statement tearDownAfterAllStatement = statementFactory.create(tearDownAfterAllClause != null ? tearDownAfterAllClause : NOP_CLAUSE);
+        private Statement tearDownStatement = tearDownClause != null ?
+            statementFactory.create(tearDownClause) :
+            null;
+        private Statement tearDownAfterAllStatement = tearDownAfterAllClause != null ?
+            statementFactory.create(tearDownAfterAllClause) :
+            null;
 
         List<IndexedTestCase> testCases = createTestCases(this);
 
@@ -113,18 +118,18 @@ public abstract class TestSuiteDescriptorBean {
         }
 
         @Override
-        public Statement setUp() {
-          return setUpStatement;
+        public Optional<Statement> setUp() {
+          return Optional.ofNullable(setUpStatement);
         }
 
         @Override
-        public Statement tearDown() {
-          return tearDownStatement;
+        public Optional<Statement> tearDown() {
+          return Optional.ofNullable(tearDownStatement);
         }
 
         @Override
-        public Statement tearDownAfterAll() {
-          return tearDownAfterAllStatement;
+        public Optional<Statement> tearDownAfterAll() {
+          return Optional.ofNullable(tearDownAfterAllStatement);
         }
 
         @Override
@@ -134,7 +139,9 @@ public abstract class TestSuiteDescriptorBean {
 
         @Override
         public List<String> getInvolvedParameterNamesInSetUpAction() {
-          return Statement.Utils.involvedParameters(setUp());
+          return setUp()
+              .map(Statement.Utils::involvedParameters)
+              .orElse(Collections.emptyList());
         }
 
         @Override
@@ -187,18 +194,5 @@ public abstract class TestSuiteDescriptorBean {
     } catch (Exception e) {
       throw wrap(e);
     }
-  }
-
-  public static Form<Action> createActionFactory(String actionName, Statement statement) {
-    return (Stage input) -> {
-      Object result =
-          statement == null ?
-              nop() :
-              FormUtils.INSTANCE.toForm(statement).apply(input);
-      return (Action) requireNonNull(
-          result,
-          String.format("statement for '%s' was not valid '%s'", actionName, statement)
-      );
-    };
   }
 }

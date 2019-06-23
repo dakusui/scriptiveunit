@@ -27,16 +27,15 @@ public interface TestSuiteDescriptor {
 
   Optional<Statement> setUpBeforeAll();
 
-  Statement setUp();
+  Optional<Statement> setUp();
 
-  Statement tearDown();
+  Optional<Statement> tearDown();
 
-  Statement tearDownAfterAll();
+  Optional<Statement> tearDownAfterAll();
 
   List<String> getInvolvedParameterNamesInSetUpAction();
 
   Config getConfig();
 
   Statement.Factory statementFactory();
-
 }
