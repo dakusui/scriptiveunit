@@ -5,6 +5,7 @@ import com.github.dakusui.scriptiveunit.annotations.Doc;
 import com.github.dakusui.scriptiveunit.annotations.Import;
 import com.github.dakusui.scriptiveunit.core.Description;
 import com.github.dakusui.scriptiveunit.model.form.Form;
+import com.github.dakusui.scriptiveunit.model.form.FormList;
 import com.github.dakusui.scriptiveunit.model.session.Stage;
 import com.github.dakusui.scriptiveunit.utils.CoreUtils;
 
@@ -24,7 +25,6 @@ import static com.github.dakusui.scriptiveunit.utils.CoreUtils.toBigDecimalIfPos
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
 import static java.util.Arrays.stream;
-import static java.util.Collections.singletonList;
 import static java.util.Objects.requireNonNull;
 
 /**
@@ -142,22 +142,22 @@ public interface ObjectMethod {
       }
 
       boolean isVarArgs() {
-        //return method.isVarArgs();
-        return method.isVarArgs() || isLastParameterList();
+        return method.isVarArgs() || isLastParameterFormList();
       }
 
-      boolean isLastParameterList() {
-        return parameterTypes.length > 0 && List.class.isAssignableFrom(parameterTypes[parameterTypes.length - 1]);
+      boolean isLastParameterFormList() {
+        return parameterTypes.length > 0 && FormList.class.isAssignableFrom(parameterTypes[parameterTypes.length - 1]);
       }
 
+      @SuppressWarnings("unchecked")
       Object[] composeArgs(Form[] args) {
         Object[] argValues;
         if (this.isVarArgs()) {
           int parameterCount = this.getParameterCount();
-          if (isLastParameterList())
-            argValues = new Object[]{singletonList(args)};
+          if (isLastParameterFormList())
+            argValues = new Object[]{FormList.create(args)};
           else
-          argValues = CoreUtils.shirinkArrayTo(this.getParameterTypes()[parameterCount - 1].getComponentType(), parameterCount, args);
+            argValues = CoreUtils.shirinkArrayTo(this.getParameterTypes()[parameterCount - 1].getComponentType(), parameterCount, args);
         } else
           argValues = args;
         return argValues;
