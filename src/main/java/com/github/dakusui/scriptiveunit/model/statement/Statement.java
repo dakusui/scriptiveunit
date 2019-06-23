@@ -150,7 +150,7 @@ public interface Statement {
                * the statement by evaluating it, it is valid to pass a fresh
                * memo object to an invoker.
                */
-              work.add(Objects.toString(FormUtils.toForm(each)));
+              work.add(Objects.toString(FormUtils.INSTANCE.toForm(each)));
             } else {
               throw SyntaxException.parameterNameShouldBeSpecifiedWithConstant((Compound) statement);
             }

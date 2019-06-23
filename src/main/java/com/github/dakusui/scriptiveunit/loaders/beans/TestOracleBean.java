@@ -110,7 +110,7 @@ public abstract class TestOracleBean {
         if (beforeClause == null)
           return s -> Actions.nop();
         Statement statement = statementFactory.create(beforeClause);
-        return s -> FormUtils.<Action>toForm(statement).apply(s);
+        return s -> FormUtils.INSTANCE.<Action>toForm(statement).apply(s);
       }
 
       @Override
@@ -121,7 +121,7 @@ public abstract class TestOracleBean {
 
           @Override
           public boolean matches(Object item) {
-            return requireNonNull(FormUtils.<Boolean>toForm(givenStatement).apply(s));
+            return requireNonNull(FormUtils.INSTANCE.<Boolean>toForm(givenStatement).apply(s));
           }
 
           @Override
@@ -137,7 +137,7 @@ public abstract class TestOracleBean {
 
       @Override
       public Function<Stage, Object> whenFactory() {
-        return s -> FormUtils.<Boolean>toForm(statementFactory.create(whenClause)).apply(s);
+        return s -> FormUtils.INSTANCE.<Boolean>toForm(statementFactory.create(whenClause)).apply(s);
       }
 
       @Override
@@ -146,7 +146,7 @@ public abstract class TestOracleBean {
         FormInvoker formInvoker = FormInvokerImpl.create();
         return stage -> out -> new BaseMatcher<Stage>() {
           Function<FormInvoker, Predicate<Stage>> p = fi -> s -> requireNonNull(
-              FormUtils.<Boolean>toForm(thenStatement).apply(s));
+              FormUtils.INSTANCE.<Boolean>toForm(thenStatement).apply(s));
           Function<FormInvoker, Function<Stage, String>> c = fi -> s -> fi.asString();
 
           @Override
@@ -188,7 +188,7 @@ public abstract class TestOracleBean {
         Statement onFailureStatement = statementFactory.create(onFailureClause);
         return (Stage s) -> (AssertionError input, Context context) -> requireNonNull(
             onFailureClause != null ?
-                FormUtils.<Action>toForm(onFailureStatement) :
+                FormUtils.INSTANCE.<Action>toForm(onFailureStatement) :
                 (Form<Action>) input1 -> nop()).apply(s);
       }
 
@@ -197,7 +197,7 @@ public abstract class TestOracleBean {
         if (afterClause == null)
           return s -> Actions.nop();
         Statement statement = statementFactory.create(afterClause);
-        return s -> FormUtils.<Action>toForm(statement).apply(s);
+        return s -> FormUtils.INSTANCE.<Action>toForm(statement).apply(s);
       }
 
     }

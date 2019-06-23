@@ -51,7 +51,7 @@ public class FormHandleFactory {
   }
 
   static Form compile(Statement statement) {
-    return FormUtils.toForm(statement);
+    return FormUtils.INSTANCE.toForm(statement);
   }
 
   private Optional<Supplier<List<Object>>> getUserDefinedFormClauseFromSessionByName(String name) {

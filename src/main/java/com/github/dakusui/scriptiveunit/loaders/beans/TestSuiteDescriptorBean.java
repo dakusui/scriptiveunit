@@ -157,7 +157,7 @@ public abstract class TestSuiteDescriptorBean {
             Object result =
                 statement == null ?
                     nop() :
-                    FormUtils.toForm(statement).apply(input);
+                    FormUtils.INSTANCE.toForm(statement).apply(input);
             return (Action) requireNonNull(
                 result,
                 String.format("statement for '%s' was not valid '%s'", actionName, statement)

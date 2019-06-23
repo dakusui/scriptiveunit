@@ -91,15 +91,15 @@ public interface ObjectMethod {
        * can become Form[] it is because only the last argument of a method can become
        * a varargs.
        */
+      @SuppressWarnings("unchecked")
       @Override
-      public <V> Form<V> createFormForCompoundStatement(Form[] args_) {
-        Object[] args = composeArgs(args_);
+      public <V> Form<V> createFormForCompoundStatement(Form[] args) {
         Object returnedValue;
         /*
          * By using dynamic proxy, we are making it possible to print structured pretty log.
          */
         return createForm((Form) check(
-            returnedValue = this.invoke(args),
+            returnedValue = this.invoke(composeArgs(args)),
             (Object o) -> o instanceof Form,
             () -> valueReturnedByScriptableMethodMustBeFunc(this.getName(), returnedValue)
         ));
@@ -137,18 +137,14 @@ public interface ObjectMethod {
         return String.format("%s(%s of %s)", method.getName(), method, driverObject);
       }
 
-      boolean isVarArgs() {
-        return isLastParameterFormList();
-      }
-
-      boolean isLastParameterFormList() {
+      boolean isVarargs() {
         return parameterTypes.length > 0 && FormList.class.isAssignableFrom(parameterTypes[parameterTypes.length - 1]);
       }
 
       <T> Object[] composeArgs(Form<T>[] args) {
         Object[] argValues;
-        int parameterCount = this.getParameterCount();
-        if (isVarArgs()) {
+        if (isVarargs()) {
+          int parameterCount = this.getParameterCount();
           List<Object> work = new ArrayList<>(args.length);
           work.addAll(asList(args).subList(0, parameterCount - 1));
           work.add(FormList.create(asList(args).subList(parameterCount - 1, args.length)));

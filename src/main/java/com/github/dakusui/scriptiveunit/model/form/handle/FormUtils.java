@@ -16,9 +16,10 @@ import static java.util.stream.Collectors.toList;
 import static java.util.stream.StreamSupport.stream;
 
 public enum FormUtils {
+  INSTANCE
   ;
 
-  public static <U> Form<U> toForm(Statement statement) {
+  public <U> Form<U> toForm(Statement statement) {
     if (statement instanceof Statement.Atom) {
       Statement.Atom atom = (Statement.Atom) statement;
       if (atom.isParameterAccessor()) {
@@ -66,7 +67,7 @@ public enum FormUtils {
 
   public static List<Form> toForms(Iterable<Statement> arguments) {
     return stream(arguments.spliterator(), false)
-        .map(FormUtils::toForm)
+        .map(FormUtils.INSTANCE::toForm)
         .collect(toList());
   }
 
