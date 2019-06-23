@@ -7,7 +7,6 @@ import com.github.dakusui.scriptiveunit.core.Description;
 import com.github.dakusui.scriptiveunit.model.form.Form;
 import com.github.dakusui.scriptiveunit.model.form.FormList;
 import com.github.dakusui.scriptiveunit.model.session.Stage;
-import com.github.dakusui.scriptiveunit.utils.CoreUtils;
 
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.InvocationTargetException;
@@ -139,7 +138,7 @@ public interface ObjectMethod {
       }
 
       boolean isVarArgs() {
-        return method.isVarArgs() || isLastParameterFormList();
+        return isLastParameterFormList();
       }
 
       boolean isLastParameterFormList() {
@@ -148,15 +147,12 @@ public interface ObjectMethod {
 
       <T> Object[] composeArgs(Form<T>[] args) {
         Object[] argValues;
-        if (this.isVarArgs()) {
-          int parameterCount = this.getParameterCount();
-          if (isLastParameterFormList()) {
-            List<Object> work = new ArrayList<>(args.length);
-            work.addAll(asList(args).subList(0, parameterCount - 1));
-            work.add(FormList.create(asList(args).subList(parameterCount - 1, args.length)));
-            argValues = work.toArray();
-          } else
-            argValues = CoreUtils.shirinkArrayTo(this.getParameterTypes()[parameterCount - 1].getComponentType(), parameterCount, args);
+        int parameterCount = this.getParameterCount();
+        if (isVarArgs()) {
+          List<Object> work = new ArrayList<>(args.length);
+          work.addAll(asList(args).subList(0, parameterCount - 1));
+          work.add(FormList.create(asList(args).subList(parameterCount - 1, args.length)));
+          argValues = work.toArray();
         } else
           argValues = args;
         return argValues;
