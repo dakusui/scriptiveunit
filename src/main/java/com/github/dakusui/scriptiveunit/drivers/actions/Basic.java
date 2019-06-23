@@ -5,6 +5,7 @@ import com.github.dakusui.actionunit.Actions;
 import com.github.dakusui.scriptiveunit.annotations.Doc;
 import com.github.dakusui.scriptiveunit.annotations.Scriptable;
 import com.github.dakusui.scriptiveunit.model.form.Form;
+import com.github.dakusui.scriptiveunit.model.form.FormList;
 import com.github.dakusui.scriptiveunit.model.form.Func;
 import com.github.dakusui.scriptiveunit.model.session.Stage;
 import com.github.dakusui.scriptiveunit.utils.ActionUtils;
@@ -20,7 +21,6 @@ import java.util.function.Consumer;
 import static com.github.dakusui.actionunit.Actions.simple;
 import static com.github.dakusui.scriptiveunit.model.form.Func.*;
 import static com.github.dakusui.scriptiveunit.utils.StringUtils.prettify;
-import static java.util.Arrays.stream;
 import static java.util.Objects.requireNonNull;
 import static java.util.stream.Collectors.toList;
 
@@ -41,26 +41,24 @@ public class Basic {
     return input -> Actions.nop();
   }
 
-  @SafeVarargs
   @SuppressWarnings("unused")
   @Scriptable
-  public final Form<Action> sequential(Form<Action>... actions) {
+  public final Form<Action> sequential(FormList<Action> actions) {
     return (Stage input) -> Actions.sequential(
-        stream(actions)
+        actions.stream()
             .map(each -> each.apply(input))
             .collect(toList())
-            .toArray(new Action[actions.length]));
+            .toArray(new Action[actions.size()]));
   }
 
-  @SafeVarargs
   @SuppressWarnings("unused")
   @Scriptable
-  public final Form<Action> concurrent(Form<Action>... actions) {
+  public final Form<Action> concurrent(FormList<Action> actions) {
     return (Stage input) -> Actions.concurrent(
-        stream(actions)
+        actions.stream()
             .map(each -> each.apply(input))
             .collect(toList())
-            .toArray(new Action[actions.length]));
+            .toArray(new Action[actions.size()]));
   }
 
   @SuppressWarnings("unused")
@@ -114,14 +112,13 @@ public class Basic {
         }));
   }
 
-  @SafeVarargs
   @SuppressWarnings("unused")
   @Scriptable
-  public final Form<Boolean> perform(Form<Action>... actions) {
+  public final Form<Boolean> perform(FormList<Action> actions) {
     return input -> {
       ActionUtils.performActionWithLogging(
-          Actions.sequential(Arrays
-              .stream(actions)
+          Actions.sequential(
+              actions.stream()
               .map(actionFunc -> actionFunc.apply(input))
               .collect(toList()))
       );

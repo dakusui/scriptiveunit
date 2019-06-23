@@ -3,9 +3,9 @@ package com.github.dakusui.scriptiveunit.drivers;
 import com.github.dakusui.scriptiveunit.annotations.Scriptable;
 import com.github.dakusui.scriptiveunit.model.form.Form;
 
+import java.util.Arrays;
 import java.util.stream.Collectors;
 
-import static java.util.Arrays.stream;
 import static java.util.Objects.requireNonNull;
 
 public class Strings {
@@ -42,11 +42,10 @@ public class Strings {
   }
 
   @SafeVarargs
-  @SuppressWarnings("unused")
   @Scriptable
   public final Form<String> format(Form<String> in, Form<Object>... args) {
     return input -> String.format(requireNonNull(in.apply(input)),
-        stream(args)
+        Arrays.stream(args)
             .map(each -> each.apply(input))
             .collect(Collectors.toList())
             .toArray()

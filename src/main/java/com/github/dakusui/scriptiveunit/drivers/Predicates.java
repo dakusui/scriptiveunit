@@ -2,6 +2,7 @@ package com.github.dakusui.scriptiveunit.drivers;
 
 import com.github.dakusui.scriptiveunit.annotations.Doc;
 import com.github.dakusui.scriptiveunit.annotations.Scriptable;
+import com.github.dakusui.scriptiveunit.model.form.FormList;
 import com.github.dakusui.scriptiveunit.model.session.Stage;
 import com.github.dakusui.scriptiveunit.model.form.Form;
 
@@ -12,7 +13,6 @@ import static java.util.Objects.requireNonNull;
 
 public class Predicates {
   @SuppressWarnings("unused")
-  @SafeVarargs
   @Scriptable
   @Doc({
       "Returns true if and only if all the given predicates return true.",
@@ -21,7 +21,7 @@ public class Predicates {
           "and false will be returned immediately."
   })
   public final Form<Boolean> and(
-      @Doc("Predicates to be evaluated.") Form<Boolean>... predicates) {
+      @Doc("Predicates to be evaluated.") FormList<Boolean> predicates) {
     return (Stage input) -> {
       for (Form<Boolean> each : predicates) {
         if (!(requireNonNull(each.apply(input)))) {
@@ -33,7 +33,6 @@ public class Predicates {
   }
 
   @SuppressWarnings("unused")
-  @SafeVarargs
   @Scriptable
   @Doc({
       "Returns true if any of the given predicates return true.",
@@ -42,7 +41,7 @@ public class Predicates {
           "and true will be returned immediately."
   })
   public final Form<Boolean> or(
-      @Doc("Predicates to be evaluated.") Form<Boolean>... predicates) {
+      @Doc("Predicates to be evaluated.") FormList<Boolean> predicates) {
     return (Stage input) -> {
       for (Form<Boolean> each : predicates) {
         if (requireNonNull(each.apply(input))) {

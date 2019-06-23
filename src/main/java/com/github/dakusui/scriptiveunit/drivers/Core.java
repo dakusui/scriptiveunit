@@ -6,6 +6,7 @@ import com.github.dakusui.scriptiveunit.annotations.Scriptable;
 import com.github.dakusui.scriptiveunit.core.Config;
 import com.github.dakusui.scriptiveunit.exceptions.ScriptiveUnitException;
 import com.github.dakusui.scriptiveunit.exceptions.SyntaxException;
+import com.github.dakusui.scriptiveunit.model.form.FormList;
 import com.github.dakusui.scriptiveunit.model.session.Stage;
 import com.github.dakusui.scriptiveunit.model.desc.testitem.TestItem;
 import com.github.dakusui.scriptiveunit.model.form.Form;
@@ -85,9 +86,9 @@ public class Core {
 
   @SuppressWarnings("unused")
   @Scriptable
-  public final Form<List<?>> quote(Form<?>... values) {
-    return (Stage input) -> Arrays
-        .stream(values)
+  public final Form<List<?>> quote(FormList<?> values) {
+    return (Stage input) -> values
+        .stream()
         .map((Form<?> each) -> each instanceof Form.Const ? each.apply(input) : each)
         .collect(toList());
   }
