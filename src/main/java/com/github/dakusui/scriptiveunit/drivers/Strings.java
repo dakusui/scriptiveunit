@@ -2,6 +2,7 @@ package com.github.dakusui.scriptiveunit.drivers;
 
 import com.github.dakusui.scriptiveunit.annotations.Scriptable;
 import com.github.dakusui.scriptiveunit.model.form.Form;
+import com.github.dakusui.scriptiveunit.model.form.FormList;
 
 import java.util.Arrays;
 import java.util.stream.Collectors;
@@ -41,11 +42,10 @@ public class Strings {
     return input -> requireNonNull(str.apply(input)).matches(requireNonNull(regex.apply(input)));
   }
 
-  @SafeVarargs
   @Scriptable
-  public final Form<String> format(Form<String> in, Form<Object>... args) {
+  public final Form<String> format(Form<String> in, FormList<Object> args) {
     return input -> String.format(requireNonNull(in.apply(input)),
-        Arrays.stream(args)
+        args.stream()
             .map(each -> each.apply(input))
             .collect(Collectors.toList())
             .toArray()

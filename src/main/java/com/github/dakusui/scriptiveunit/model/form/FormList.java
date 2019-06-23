@@ -1,6 +1,7 @@
 package com.github.dakusui.scriptiveunit.model.form;
 
 import java.util.Iterator;
+import java.util.List;
 import java.util.function.IntFunction;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
@@ -14,8 +15,8 @@ public interface FormList<T> extends Iterable<Form<T>> {
     return StreamSupport.stream(this.spliterator(), false);
   }
 
-  static <T> FormList<T> create(Form<T>[] args) {
-    return create(args.length, i -> args[i]);
+  static <T> FormList<T> create(List<Form<T>> args) {
+    return create(args.size(), args::get);
   }
 
   static <T> FormList<T> create(int size, IntFunction<Form<T>> formCreator) {

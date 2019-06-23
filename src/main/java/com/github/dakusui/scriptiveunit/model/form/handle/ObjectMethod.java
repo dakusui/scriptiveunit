@@ -12,10 +12,7 @@ import com.github.dakusui.scriptiveunit.utils.CoreUtils;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.util.AbstractList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import static com.github.dakusui.scriptiveunit.exceptions.ScriptiveUnitException.fail;
 import static com.github.dakusui.scriptiveunit.exceptions.ScriptiveUnitException.wrap;
@@ -149,14 +146,16 @@ public interface ObjectMethod {
         return parameterTypes.length > 0 && FormList.class.isAssignableFrom(parameterTypes[parameterTypes.length - 1]);
       }
 
-      @SuppressWarnings("unchecked")
-      Object[] composeArgs(Form[] args) {
+      <T> Object[] composeArgs(Form<T>[] args) {
         Object[] argValues;
         if (this.isVarArgs()) {
           int parameterCount = this.getParameterCount();
-          if (isLastParameterFormList())
-            argValues = new Object[]{FormList.create(args)};
-          else
+          if (isLastParameterFormList()) {
+            List<Object> work = new ArrayList<>(args.length);
+            work.addAll(asList(args).subList(0, parameterCount - 1));
+            work.add(FormList.create(asList(args).subList(parameterCount - 1, args.length)));
+            argValues = work.toArray();
+          } else
             argValues = CoreUtils.shirinkArrayTo(this.getParameterTypes()[parameterCount - 1].getComponentType(), parameterCount, args);
         } else
           argValues = args;
