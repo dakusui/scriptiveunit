@@ -1,20 +1,13 @@
 package com.github.dakusui.scriptiveunit.model.form;
 
-import com.github.dakusui.scriptiveunit.core.ObjectMethod;
 import com.github.dakusui.scriptiveunit.model.session.Stage;
 
 import java.io.IOException;
-import java.lang.reflect.InvocationHandler;
-import java.lang.reflect.Method;
-import java.lang.reflect.Proxy;
-import java.util.Arrays;
 import java.util.Formattable;
 import java.util.Formatter;
 import java.util.function.Function;
 
-import static com.github.dakusui.scriptiveunit.exceptions.ScriptiveUnitException.fail;
 import static com.github.dakusui.scriptiveunit.exceptions.ScriptiveUnitException.wrap;
-import static com.github.dakusui.scriptiveunit.exceptions.TypeMismatch.valueReturnedByScriptableMethodMustBeFunc;
 import static com.github.dakusui.scriptiveunit.utils.Checks.check;
 
 @FunctionalInterface

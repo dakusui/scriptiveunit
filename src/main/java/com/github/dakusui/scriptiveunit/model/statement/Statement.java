@@ -6,7 +6,7 @@ import com.github.dakusui.scriptiveunit.exceptions.TypeMismatch;
 import com.github.dakusui.scriptiveunit.model.form.handle.FormHandle;
 import com.github.dakusui.scriptiveunit.model.form.handle.FormHandleFactory;
 import com.github.dakusui.scriptiveunit.model.form.handle.FormRegistry;
-import com.github.dakusui.scriptiveunit.model.form.FormUtils;
+import com.github.dakusui.scriptiveunit.model.form.handle.FormUtils;
 import com.github.dakusui.scriptiveunit.model.session.Stage;
 import com.github.dakusui.scriptiveunit.utils.CoreUtils;
 import com.google.common.collect.Lists;

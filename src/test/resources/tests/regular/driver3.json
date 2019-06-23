@@ -1,0 +1,15 @@
+{
+  "description":"Suite 1",
+  "factorSpace": {
+    "factors":{"f":[50]}
+  },
+  "testOracles": [
+    {
+      "description": "{{@TESTSUITE}}: {{f}}",
+      "given": ["always"],
+      "when": ["add", 50, ["attr", "f"]],
+      "then": ["<", 100, ["response"]]
+    }
+  ],
+  "tearDownAfterAll": ["nop"]
+}

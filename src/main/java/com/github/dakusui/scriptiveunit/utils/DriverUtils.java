@@ -2,7 +2,7 @@ package com.github.dakusui.scriptiveunit.utils;
 
 import com.github.dakusui.scriptiveunit.annotations.Import;
 import com.github.dakusui.scriptiveunit.annotations.Scriptable;
-import com.github.dakusui.scriptiveunit.core.ObjectMethod;
+import com.github.dakusui.scriptiveunit.model.form.handle.ObjectMethod;
 
 import java.util.Arrays;
 import java.util.List;

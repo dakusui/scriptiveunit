@@ -43,7 +43,7 @@ public enum CoreUtils {
     );
   }
 
-  public static Object[] shrinkTo(Class<?> componentType, int count, Object[] args) {
+  public static Object[] shirinkArrayTo(Class<?> componentType, int count, Object[] args) {
     Object[] ret = new Object[count];
     Object var = Array.newInstance(componentType, args.length - count + 1);
     if (count > 1) {

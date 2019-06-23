@@ -1,7 +1,7 @@
 package com.github.dakusui.scriptiveunit.utils;
 
 import com.github.dakusui.scriptiveunit.core.ObjectField;
-import com.github.dakusui.scriptiveunit.core.ObjectMethod;
+import com.github.dakusui.scriptiveunit.model.form.handle.ObjectMethod;
 import com.github.dakusui.scriptiveunit.exceptions.ResourceException;
 import com.github.dakusui.scriptiveunit.exceptions.ScriptiveUnitException;
 import org.reflections.Reflections;

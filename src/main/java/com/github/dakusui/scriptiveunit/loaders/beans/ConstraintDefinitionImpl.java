@@ -1,6 +1,6 @@
 package com.github.dakusui.scriptiveunit.loaders.beans;
 
-import com.github.dakusui.scriptiveunit.model.form.FormUtils;
+import com.github.dakusui.scriptiveunit.model.form.handle.FormUtils;
 import com.github.dakusui.scriptiveunit.model.desc.ConstraintDefinition;
 import com.github.dakusui.scriptiveunit.model.session.Stage;
 import com.github.dakusui.scriptiveunit.model.statement.Statement;

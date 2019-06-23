@@ -1,9 +1,14 @@
-package com.github.dakusui.scriptiveunit.core;
+package com.github.dakusui.scriptiveunit.model.form.handle;
 
 import com.github.dakusui.scriptiveunit.annotations.AccessesTestParameter;
 import com.github.dakusui.scriptiveunit.annotations.Doc;
 import com.github.dakusui.scriptiveunit.annotations.Import;
+import com.github.dakusui.scriptiveunit.core.Description;
+import com.github.dakusui.scriptiveunit.model.form.Form;
+import com.github.dakusui.scriptiveunit.model.session.Stage;
+import com.github.dakusui.scriptiveunit.utils.CoreUtils;
 
+import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.AbstractList;
@@ -11,10 +16,15 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
+import static com.github.dakusui.scriptiveunit.exceptions.ScriptiveUnitException.fail;
 import static com.github.dakusui.scriptiveunit.exceptions.ScriptiveUnitException.wrap;
+import static com.github.dakusui.scriptiveunit.exceptions.TypeMismatch.valueReturnedByScriptableMethodMustBeFunc;
+import static com.github.dakusui.scriptiveunit.utils.Checks.check;
+import static com.github.dakusui.scriptiveunit.utils.CoreUtils.toBigDecimalIfPossible;
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
 import static java.util.Arrays.stream;
+import static java.util.Collections.singletonList;
 import static java.util.Objects.requireNonNull;
 
 /**
@@ -22,6 +32,13 @@ import static java.util.Objects.requireNonNull;
  * be invoked.
  */
 public interface ObjectMethod {
+  /*
+   * args is an array can only contain Form or Form[]. Only the last element in it
+   * can become Form[] it is because only the last argument of a method can become
+   * a varargs.
+   */
+  <V> Form<V> createFormForCompoundStatement(Form[] args);
+
   String getName();
 
   int getParameterCount();
@@ -32,14 +49,14 @@ public interface ObjectMethod {
 
   Doc doc();
 
-  boolean isVarArgs();
-
   boolean isAccessor();
 
   Object invoke(Object... args);
 
   static ObjectMethod create(Object driverObject, Method method, Map<String, String> aliases) {
     return new ObjectMethod() {
+      private final Class<?>[] parameterTypes = method.getParameterTypes();
+
       @Override
       public String getName() {
         String baseName = method.getName();
@@ -57,7 +74,7 @@ public interface ObjectMethod {
 
       @Override
       public Class<?>[] getParameterTypes() {
-        return method.getParameterTypes();
+        return parameterTypes;
       }
 
       @Override
@@ -73,9 +90,23 @@ public interface ObjectMethod {
         );
       }
 
+      /*
+       * args is an array can only contain Form or Form[]. Only the last element in it
+       * can become Form[] it is because only the last argument of a method can become
+       * a varargs.
+       */
       @Override
-      public boolean isVarArgs() {
-        return method.isVarArgs();
+      public <V> Form<V> createFormForCompoundStatement(Form[] args_) {
+        Object[] args = composeArgs(args_);
+        Object returnedValue;
+        /*
+         * By using dynamic proxy, we are making it possible to print structured pretty log.
+         */
+        return createForm((Form) check(
+            returnedValue = this.invoke(args),
+            (Object o) -> o instanceof Form,
+            () -> valueReturnedByScriptableMethodMustBeFunc(this.getName(), returnedValue)
+        ));
       }
 
       @Override
@@ -91,17 +122,9 @@ public interface ObjectMethod {
           String message = format("Failed to invoke %s#%s(%s) with %s",
               method.getDeclaringClass().getCanonicalName(),
               method.getName(),
-              arrayToString(method.getParameterTypes()),
+              arrayToString(parameterTypes),
               arrayToString(args));
           throw wrap(e, message);
-        }
-      }
-
-      String arrayToString(Object[] args) {
-        try {
-          return Arrays.toString(args);
-        } catch (Exception e) {
-          return "(N/A)";
         }
       }
 
@@ -116,6 +139,40 @@ public interface ObjectMethod {
       @Override
       public String toString() {
         return String.format("%s(%s of %s)", method.getName(), method, driverObject);
+      }
+
+      boolean isVarArgs() {
+        //return method.isVarArgs();
+        return method.isVarArgs() || isLastParameterList();
+      }
+
+      boolean isLastParameterList() {
+        return parameterTypes.length > 0 && List.class.isAssignableFrom(parameterTypes[parameterTypes.length - 1]);
+      }
+
+      Object[] composeArgs(Form[] args) {
+        Object[] argValues;
+        if (this.isVarArgs()) {
+          int parameterCount = this.getParameterCount();
+          if (isLastParameterList())
+            argValues = new Object[]{singletonList(args)};
+          else
+          argValues = CoreUtils.shirinkArrayTo(this.getParameterTypes()[parameterCount - 1].getComponentType(), parameterCount, args);
+        } else
+          argValues = args;
+        return argValues;
+      }
+
+      <V> Form<V> createForm(Form target) {
+        return FormUtils.createProxy(createInvocationHandler(target), Form.class);
+      }
+
+      String arrayToString(Object[] args) {
+        try {
+          return Arrays.toString(args);
+        } catch (Exception e) {
+          return "(N/A)";
+        }
       }
     };
   }
@@ -170,4 +227,19 @@ public interface ObjectMethod {
     };
   }
 
+  static InvocationHandler createInvocationHandler(Form target) {
+    return (Object proxy, Method method, Object[] args) -> {
+      if (!"apply".equals(method.getName()))
+        return method.invoke(target, args);
+      //MEMOIZATION SHOULD HAPPEN HERE
+      check(args.length == 1 && args[0] instanceof Stage,
+          fail("The argument should be an array of length 1 and its first element should be an instance of %s, but it was: %s",
+              Stage.class.getCanonicalName(),
+              Arrays.toString(args)
+          ));
+      //MEMOIZATION SHOULD HAPPEN HERE
+      return toBigDecimalIfPossible(target.apply((Stage) args[0]));
+      //return formHandler.handleForm(invoker, target, (Stage) args[0], name);
+    };
+  }
 }
