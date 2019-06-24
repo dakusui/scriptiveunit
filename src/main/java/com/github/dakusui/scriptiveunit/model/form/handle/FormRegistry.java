@@ -70,6 +70,11 @@ public interface FormRegistry {
         }
 
         @Override
+        public <U> Form<U> toForm() {
+          return null;
+        }
+
+        @Override
         public <V> V evaluate(Stage stage) {
           return null;
         }

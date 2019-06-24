@@ -2,6 +2,7 @@ package com.github.dakusui.scriptiveunit.model.statement;
 
 import com.github.dakusui.scriptiveunit.core.Config;
 import com.github.dakusui.scriptiveunit.exceptions.TypeMismatch;
+import com.github.dakusui.scriptiveunit.model.form.Form;
 import com.github.dakusui.scriptiveunit.model.form.handle.FormHandle;
 import com.github.dakusui.scriptiveunit.model.form.handle.FormHandleFactory;
 import com.github.dakusui.scriptiveunit.model.form.handle.FormRegistry;
@@ -12,6 +13,7 @@ import java.util.List;
 import java.util.Map;
 
 import static com.github.dakusui.scriptiveunit.exceptions.TypeMismatch.headOfCallMustBeString;
+import static com.github.dakusui.scriptiveunit.model.form.handle.FormUtils.createConst;
 
 /**
  * An interface that represents a lexical structure of a script element.
@@ -20,6 +22,8 @@ public interface Statement {
   static Factory createStatementFactory(Config config, Map<String, List<Object>> userDefinedFormClauses) {
     return new Factory(config, userDefinedFormClauses);
   }
+
+  <U> Form<U> toForm();
 
   <V> V evaluate(Stage stage);
 
@@ -66,6 +70,11 @@ public interface Statement {
         FormHandle formHandle = this.formHandleFactory.create((String) car);
         return new Compound() {
           @Override
+          public <U> Form<U> toForm() {
+            return getFormHandle().toForm(this);
+          }
+
+          @Override
           public FormHandle getFormHandle() {
             return formHandle;
           }
@@ -88,6 +97,11 @@ public interface Statement {
           }
 
           @Override
+          public <U> Form<U> toForm() {
+            return input -> input.getArgument((this.value()));
+          }
+
+          @Override
           public boolean isParameterAccessor() {
             return true;
           }
@@ -102,6 +116,11 @@ public interface Statement {
         @Override
         public <V> V evaluate(Stage stage) {
           return (V) object;
+        }
+
+        @Override
+        public <U> Form<U> toForm() {
+          return createConst(this.value());
         }
 
         @SuppressWarnings("unchecked")
