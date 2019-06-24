@@ -8,15 +8,11 @@ import com.google.common.collect.Lists;
 import java.util.Iterator;
 import java.util.List;
 
-class FormInvokerImpl implements FormInvoker {
+public class FormInvokerImpl implements FormInvoker {
   private final Writer writer;
 
-  private FormInvokerImpl() {
+  public FormInvokerImpl() {
     this.writer = new Writer();
-  }
-
-  public static FormInvoker create() {
-    return new FormInvokerImpl();
   }
 
   public String asString() {

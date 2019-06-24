@@ -14,7 +14,7 @@ import com.github.dakusui.scriptiveunit.model.desc.TestSuiteDescriptor;
 import com.github.dakusui.scriptiveunit.model.desc.testitem.IndexedTestCase;
 import com.github.dakusui.scriptiveunit.model.desc.testitem.TestItem;
 import com.github.dakusui.scriptiveunit.model.desc.testitem.TestOracle;
-import com.github.dakusui.scriptiveunit.model.desc.testitem.TestOracleActionFactory;
+import com.github.dakusui.scriptiveunit.model.desc.testitem.TestOracleFormFactory;
 import com.github.dakusui.scriptiveunit.model.form.handle.FormUtils;
 import org.hamcrest.Matcher;
 
@@ -108,7 +108,7 @@ public interface Session {
     @Override
     public Action createMainAction(TestOracle testOracle, IndexedTestCase indexedTestCase) {
       TestItem testItem = TestItem.create(indexedTestCase, testOracle);
-      TestOracleActionFactory definition = testItem.testOracleActionFactory();
+      TestOracleFormFactory definition = testItem.testOracleActionFactory();
       Tuple testCaseTuple = testItem.getTestCaseTuple();
       Report report = createReport(testItem);
       return sequential(
@@ -148,9 +148,9 @@ public interface Session {
               .orElse(nop()));
     }
 
-    Action createBefore(TestItem testItem, TestOracleActionFactory definition, Report report) {
+    Action createBefore(TestItem testItem, TestOracleFormFactory testOracleFormFactory, Report report) {
       Stage beforeStage = this.createOracleLevelStage(testItem, report);
-      return definition.beforeFactory(testItem, report).apply(beforeStage);
+      return testOracleFormFactory.beforeFactory(testItem, report).apply(beforeStage);
     }
 
     Source<Tuple> createGiven(
@@ -185,7 +185,7 @@ public interface Session {
       return this.reportCreator.apply(testItem);
     }
 
-    Sink<AssertionError> createErrorHandler(TestItem testItem, TestOracleActionFactory definition, Report report) {
+    Sink<AssertionError> createErrorHandler(TestItem testItem, TestOracleFormFactory definition, Report report) {
       return (input, context) -> {
         Stage onFailureStage = createOracleFailureHandlingStage(testItem, input, report);
         definition.errorHandlerFactory(testItem, report).apply(onFailureStage);
@@ -193,7 +193,7 @@ public interface Session {
       };
     }
 
-    Action createAfter(TestItem testItem, TestOracleActionFactory definition, Report report) {
+    Action createAfter(TestItem testItem, TestOracleFormFactory definition, Report report) {
       Stage afterStage = this.createOracleLevelStage(testItem, report);
       return definition.afterFactory(testItem, report).apply(afterStage);
     }

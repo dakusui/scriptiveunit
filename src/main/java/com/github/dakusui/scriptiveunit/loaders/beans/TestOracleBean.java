@@ -8,7 +8,7 @@ import com.github.dakusui.jcunit.core.tuples.Tuple;
 import com.github.dakusui.scriptiveunit.model.desc.TestSuiteDescriptor;
 import com.github.dakusui.scriptiveunit.model.desc.testitem.TestItem;
 import com.github.dakusui.scriptiveunit.model.desc.testitem.TestOracle;
-import com.github.dakusui.scriptiveunit.model.desc.testitem.TestOracleActionFactory;
+import com.github.dakusui.scriptiveunit.model.desc.testitem.TestOracleFormFactory;
 import com.github.dakusui.scriptiveunit.model.form.Form;
 import com.github.dakusui.scriptiveunit.model.form.FormInvoker;
 import com.github.dakusui.scriptiveunit.model.form.handle.FormUtils;
@@ -32,7 +32,7 @@ import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
 
 public abstract class TestOracleBean {
-  private final String description;
+  private final String       description;
   private final List<Object> givenClause;
   private final List<Object> whenClause;
   private final List<Object> thenClause;
@@ -61,16 +61,16 @@ public abstract class TestOracleBean {
   }
 
   public static class TestOracleImpl implements TestOracle {
-    private final int index;
+    private final int                 index;
     private final TestSuiteDescriptor testSuiteDescriptor;
-    private final Statement.Factory statementFactory;
-    private List<Object> afterClause;
-    private List<Object> beforeClause;
-    private String description;
-    private List<Object> givenClause;
-    private List<Object> onFailureClause;
-    private List<Object> thenClause;
-    private List<Object> whenClause;
+    private final Statement.Factory   statementFactory;
+    private       List<Object>        afterClause;
+    private       List<Object>        beforeClause;
+    private       String              description;
+    private       List<Object>        givenClause;
+    private       List<Object>        onFailureClause;
+    private       List<Object>        thenClause;
+    private       List<Object>        whenClause;
 
     TestOracleImpl(int index, final String description, final List<Object> beforeClause, final List<Object> givenClause, final List<Object> whenClause, final List<Object> thenClause, final List<Object> onFailureClause, final List<Object> afterClause, TestSuiteDescriptor testSuiteDescriptor, Statement.Factory statementFactory) {
       this.index = index;
@@ -100,7 +100,7 @@ public abstract class TestOracleBean {
       return TestOracle.templateTestOracleDescription(this, testCaseTuple, testSuiteDescription);
     }
 
-    class TestOracleActionFactoryImpl implements TestOracleActionFactory {
+    class TestOracleActionFactoryImpl implements TestOracleFormFactory {
       private final TestItem testItem;
 
       TestOracleActionFactoryImpl(TestItem testItem) {
@@ -108,7 +108,7 @@ public abstract class TestOracleBean {
       }
 
       @Override
-      public Function<Stage, Action> beforeFactory(TestItem testItem, Report report) {
+      public Form<Action> beforeFactory(TestItem testItem, Report report) {
         return before()
             .map(FormUtils.INSTANCE::<Action>toForm)
             .orElse((Stage s) -> nop());
@@ -120,10 +120,10 @@ public abstract class TestOracleBean {
       }
 
       @Override
-      public Function<Stage, Matcher<Tuple>> givenFactory() {
+      public Form<Matcher<Tuple>> givenFactory() {
         return (Stage s) -> new BaseMatcher<Tuple>() {
           private Statement givenStatement = statementFactory.create(givenClause);
-          private FormInvoker formInvoker = FormInvokerImpl.create();
+          private FormInvoker formInvoker = FormInvoker.create();
 
           @Override
           public boolean matches(Object item) {
@@ -142,14 +142,14 @@ public abstract class TestOracleBean {
       }
 
       @Override
-      public Function<Stage, Object> whenFactory() {
+      public Form<Object> whenFactory() {
         return (Stage s) -> FormUtils.INSTANCE.toForm(statementFactory.create(whenClause)).apply(s);
       }
 
       @Override
-      public Function<Stage, Function<Object, Matcher<Stage>>> thenFactory() {
+      public Form<Function<Object, Matcher<Stage>>> thenFactory() {
         Statement thenStatement = statementFactory.create(thenClause);
-        FormInvoker formInvoker = FormInvokerImpl.create();
+        FormInvoker formInvoker = FormInvoker.create();
         return stage -> out -> new BaseMatcher<Stage>() {
           Function<FormInvoker, Predicate<Stage>> p = fi -> s -> (Boolean) requireNonNull(
               FormUtils.INSTANCE.toForm(thenStatement).apply(s));
@@ -190,7 +190,7 @@ public abstract class TestOracleBean {
       }
 
       @Override
-      public Function<Stage, Sink<AssertionError>> errorHandlerFactory(TestItem testItem, Report report) {
+      public Form<Sink<AssertionError>> errorHandlerFactory(TestItem testItem, Report report) {
         Statement onFailureStatement = statementFactory.create(onFailureClause);
         return (Stage s) -> (AssertionError input, Context context) -> requireNonNull(
             onFailureClause != null ?
@@ -199,7 +199,7 @@ public abstract class TestOracleBean {
       }
 
       @Override
-      public Function<Stage, Action> afterFactory(TestItem testItem, Report report) {
+      public Form<Action> afterFactory(TestItem testItem, Report report) {
         if (afterClause == null)
           return s -> Actions.nop();
         Statement statement = statementFactory.create(afterClause);
@@ -208,8 +208,21 @@ public abstract class TestOracleBean {
 
     }
 
-    public TestOracleActionFactory testOracleActionFactoryFor(TestItem testItem) {
-      return new TestOracleActionFactoryImpl(testItem);
+    public TestOracleFormFactory testOracleActionFactoryFor(TestItem testItem) {
+      return TestOracle.createTestOracleFormFactory(testItem,
+          TestOracle.Definition.create(
+              statementFactory,
+              this.beforeClause,
+              this.givenClause,
+              this.whenClause,
+              this.thenClause,
+              this.onFailureClause,
+              this.afterClause),
+          tuple -> "Verify with: " + TupleUtils.filterSimpleSingleLevelParametersOut(
+              tuple,
+              testSuiteDescriptor.getFactorSpaceDescriptor().getParameters()
+          ));
+      //return new TestOracleActionFactoryImpl(testItem);
     }
   }
 }

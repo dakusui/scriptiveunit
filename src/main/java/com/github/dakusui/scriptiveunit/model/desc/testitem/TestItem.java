@@ -9,7 +9,7 @@ public interface TestItem {
 
   int getTestOracleId();
 
-  TestOracleActionFactory testOracleActionFactory();
+  TestOracleFormFactory testOracleActionFactory();
 
   class Impl implements TestItem {
     private final IndexedTestCase indexedTestCase;
@@ -36,7 +36,7 @@ public interface TestItem {
     }
 
     @Override
-    public TestOracleActionFactory testOracleActionFactory() {
+    public TestOracleFormFactory testOracleActionFactory() {
       return this.testOracle.testOracleActionFactoryFor(this);
     }
   }
