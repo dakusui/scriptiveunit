@@ -43,7 +43,7 @@ public interface TestOracle {
 
   String templateDescription(Tuple testCaseTuple, String testSuiteDescription);
 
-  TestOracleFormFactory testOracleActionFactoryFor(TestItem testItem);
+  Definition definitionFor(TestItem testItem);
 
   interface Definition {
     Optional<Statement> before();

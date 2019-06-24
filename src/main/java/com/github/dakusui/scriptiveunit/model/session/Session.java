@@ -16,11 +16,14 @@ import com.github.dakusui.scriptiveunit.model.desc.testitem.TestItem;
 import com.github.dakusui.scriptiveunit.model.desc.testitem.TestOracle;
 import com.github.dakusui.scriptiveunit.model.desc.testitem.TestOracleFormFactory;
 import com.github.dakusui.scriptiveunit.model.form.handle.FormUtils;
+import com.github.dakusui.scriptiveunit.utils.TupleUtils;
 import org.hamcrest.Matcher;
 
 import java.util.function.Function;
 
-import static com.github.dakusui.actionunit.Actions.*;
+import static com.github.dakusui.actionunit.Actions.attempt;
+import static com.github.dakusui.actionunit.Actions.nop;
+import static com.github.dakusui.actionunit.Actions.sequential;
 import static com.github.dakusui.scriptiveunit.model.session.Stage.ExecutionLevel.FIXTURE;
 import static com.github.dakusui.scriptiveunit.model.session.Stage.ExecutionLevel.SUITE;
 import static java.lang.String.format;
@@ -108,7 +111,10 @@ public interface Session {
     @Override
     public Action createMainAction(TestOracle testOracle, IndexedTestCase indexedTestCase) {
       TestItem testItem = TestItem.create(indexedTestCase, testOracle);
-      TestOracleFormFactory definition = testItem.testOracleActionFactory();
+      TestOracleFormFactory definition = testItem.testOracleActionFactory(tuple -> "Verify with: " + TupleUtils.filterSimpleSingleLevelParametersOut(
+          tuple,
+          testSuiteDescriptor.getFactorSpaceDescriptor().getParameters()
+      ));
       Tuple testCaseTuple = testItem.getTestCaseTuple();
       Report report = createReport(testItem);
       return sequential(

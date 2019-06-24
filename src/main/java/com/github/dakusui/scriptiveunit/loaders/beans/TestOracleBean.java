@@ -1,35 +1,12 @@
 package com.github.dakusui.scriptiveunit.loaders.beans;
 
-import com.github.dakusui.actionunit.Action;
-import com.github.dakusui.actionunit.Actions;
-import com.github.dakusui.actionunit.Context;
-import com.github.dakusui.actionunit.connectors.Sink;
 import com.github.dakusui.jcunit.core.tuples.Tuple;
 import com.github.dakusui.scriptiveunit.model.desc.TestSuiteDescriptor;
 import com.github.dakusui.scriptiveunit.model.desc.testitem.TestItem;
 import com.github.dakusui.scriptiveunit.model.desc.testitem.TestOracle;
-import com.github.dakusui.scriptiveunit.model.desc.testitem.TestOracleFormFactory;
-import com.github.dakusui.scriptiveunit.model.form.Form;
-import com.github.dakusui.scriptiveunit.model.form.FormInvoker;
-import com.github.dakusui.scriptiveunit.model.form.handle.FormUtils;
-import com.github.dakusui.scriptiveunit.model.session.Report;
-import com.github.dakusui.scriptiveunit.model.session.Stage;
 import com.github.dakusui.scriptiveunit.model.statement.Statement;
-import com.github.dakusui.scriptiveunit.utils.TupleUtils;
-import org.hamcrest.BaseMatcher;
-import org.hamcrest.Description;
-import org.hamcrest.Matcher;
 
 import java.util.List;
-import java.util.Optional;
-import java.util.function.Function;
-import java.util.function.Predicate;
-
-import static com.github.dakusui.actionunit.Actions.nop;
-import static com.github.dakusui.scriptiveunit.model.session.Stage.ExecutionLevel.ORACLE;
-import static com.github.dakusui.scriptiveunit.utils.StringUtils.iterableToString;
-import static java.lang.String.format;
-import static java.util.Objects.requireNonNull;
 
 public abstract class TestOracleBean {
   private final String       description;
@@ -100,129 +77,15 @@ public abstract class TestOracleBean {
       return TestOracle.templateTestOracleDescription(this, testCaseTuple, testSuiteDescription);
     }
 
-    class TestOracleActionFactoryImpl implements TestOracleFormFactory {
-      private final TestItem testItem;
-
-      TestOracleActionFactoryImpl(TestItem testItem) {
-        this.testItem = testItem;
-      }
-
-      @Override
-      public Form<Action> beforeFactory(TestItem testItem, Report report) {
-        return before()
-            .map(FormUtils.INSTANCE::<Action>toForm)
-            .orElse((Stage s) -> nop());
-      }
-
-      public Optional<Statement> before() {
-        return Optional.ofNullable(beforeClause)
-            .map(statementFactory::create);
-      }
-
-      @Override
-      public Form<Matcher<Tuple>> givenFactory() {
-        return (Stage s) -> new BaseMatcher<Tuple>() {
-          private Statement givenStatement = statementFactory.create(givenClause);
-          private FormInvoker formInvoker = FormInvoker.create();
-
-          @Override
-          public boolean matches(Object item) {
-            return requireNonNull(FormUtils.INSTANCE.<Boolean>toForm(givenStatement).apply(s));
-          }
-
-          @Override
-          public void describeTo(Description description) {
-            description.appendText(
-                format("input (%s) should have made true following criterion but not.:%n'%s' defined in stage:%s",
-                    testItem.getTestCaseTuple(),
-                    formInvoker.asString(),
-                    ORACLE));
-          }
-        };
-      }
-
-      @Override
-      public Form<Object> whenFactory() {
-        return (Stage s) -> FormUtils.INSTANCE.toForm(statementFactory.create(whenClause)).apply(s);
-      }
-
-      @Override
-      public Form<Function<Object, Matcher<Stage>>> thenFactory() {
-        Statement thenStatement = statementFactory.create(thenClause);
-        FormInvoker formInvoker = FormInvoker.create();
-        return stage -> out -> new BaseMatcher<Stage>() {
-          Function<FormInvoker, Predicate<Stage>> p = fi -> s -> (Boolean) requireNonNull(
-              FormUtils.INSTANCE.toForm(thenStatement).apply(s));
-          Function<FormInvoker, Function<Stage, String>> c = fi -> s -> fi.asString();
-
-          @Override
-          public boolean matches(Object item) {
-            return p.apply(formInvoker).test(stage);
-          }
-
-          @Override
-          public void describeTo(Description description) {
-            description.appendText(format("output should have made true the criterion defined in stage:%s", stage.getExecutionLevel()));
-          }
-
-          @Override
-          public void describeMismatch(Object item, Description description) {
-            Object output = out instanceof Iterable ?
-                iterableToString((Iterable<?>) out) :
-                out;
-            description.appendText(format("output '%s'", output));
-            description.appendText(" ");
-            if (!testItem.getTestCaseTuple().isEmpty()) {
-              description.appendText(format("created from '%s'", testItem.getTestCaseTuple()));
-              description.appendText(" ");
-            }
-            description.appendText(format("did not satisfy it.:%n'%s'", c.apply(formInvoker).apply(stage)));
-          }
-        };
-      }
-
-      @Override
-      public String describeTestCase(Tuple testCaseTuple) {
-        return "Verify with: " + TupleUtils.filterSimpleSingleLevelParametersOut(
-            testCaseTuple,
-            testSuiteDescriptor.getFactorSpaceDescriptor().getParameters()
-        );
-      }
-
-      @Override
-      public Form<Sink<AssertionError>> errorHandlerFactory(TestItem testItem, Report report) {
-        Statement onFailureStatement = statementFactory.create(onFailureClause);
-        return (Stage s) -> (AssertionError input, Context context) -> requireNonNull(
-            onFailureClause != null ?
-                FormUtils.INSTANCE.<Action>toForm(onFailureStatement) :
-                (Form<Action>) input1 -> nop()).apply(s);
-      }
-
-      @Override
-      public Form<Action> afterFactory(TestItem testItem, Report report) {
-        if (afterClause == null)
-          return s -> Actions.nop();
-        Statement statement = statementFactory.create(afterClause);
-        return s -> FormUtils.INSTANCE.<Action>toForm(statement).apply(s);
-      }
-
-    }
-
-    public TestOracleFormFactory testOracleActionFactoryFor(TestItem testItem) {
-      return TestOracle.createTestOracleFormFactory(testItem,
-          TestOracle.Definition.create(
-              statementFactory,
-              this.beforeClause,
-              this.givenClause,
-              this.whenClause,
-              this.thenClause,
-              this.onFailureClause,
-              this.afterClause),
-          tuple -> "Verify with: " + TupleUtils.filterSimpleSingleLevelParametersOut(
-              tuple,
-              testSuiteDescriptor.getFactorSpaceDescriptor().getParameters()
-          ));
-      //return new TestOracleActionFactoryImpl(testItem);
+    public Definition definitionFor(TestItem testItem) {
+      return TestOracle.Definition.create(
+          statementFactory,
+          this.beforeClause,
+          this.givenClause,
+          this.whenClause,
+          this.thenClause,
+          this.onFailureClause,
+          this.afterClause);
     }
   }
 }
