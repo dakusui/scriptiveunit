@@ -33,8 +33,4 @@ public enum Checks {
   public static <T> Class<T> wrap(Class<T> c) {
     return c.isPrimitive() ? (Class<T>) CoreUtils.PRIMITIVES_TO_WRAPPERS.get(c) : c;
   }
-
-  public static Object[] check(Object[] args, Predicate<Object[]> isCond, Object o) {
-    return new Object[0];
-  }
 }

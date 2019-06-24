@@ -40,13 +40,14 @@ public class JsonTestSuiteDescriptorBean extends TestSuiteDescriptorBean {
       super(convertMapToParameterDefinitionMap(parameterMap), constraintList);
     }
 
+    @SuppressWarnings("unchecked")
     private static Map<String, ParameterDefinition> convertMapToParameterDefinitionMap(Map<String, Map<String, Object>> parameterMap) {
       return new HashMap<String, ParameterDefinition>() {{
         parameterMap.keySet()
             .forEach(
                 s -> put(s, new ParameterDefinition(
                     Objects.toString(parameterMap.get(s).get("type")),
-                    List.class.<Object>cast(parameterMap.get(s).get("args"))
+                    (List) parameterMap.get(s).get("args")
                 )));
       }};
     }

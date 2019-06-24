@@ -8,7 +8,6 @@ import java.util.Formatter;
 import java.util.function.Function;
 
 import static com.github.dakusui.scriptiveunit.exceptions.ScriptiveUnitException.wrap;
-import static com.github.dakusui.scriptiveunit.utils.Checks.check;
 
 @FunctionalInterface
 public interface Form<O> extends Function<Stage, O>, Formattable {

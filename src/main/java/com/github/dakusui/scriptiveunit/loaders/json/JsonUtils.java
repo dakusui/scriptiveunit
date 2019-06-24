@@ -42,6 +42,7 @@ public enum JsonUtils {
    * @param target An object node to be put attributes in {@code source}
    * @return {@code target} object node
    */
+  @SuppressWarnings("NullableProblems")
   public static ObjectNode deepMerge(ObjectNode source, ObjectNode target) {
     requireNonNull(source);
     requireNonNull(target);

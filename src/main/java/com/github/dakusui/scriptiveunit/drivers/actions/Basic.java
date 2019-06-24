@@ -12,14 +12,15 @@ import com.github.dakusui.scriptiveunit.utils.ActionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.function.Consumer;
 
 import static com.github.dakusui.actionunit.Actions.simple;
-import static com.github.dakusui.scriptiveunit.model.form.Func.*;
+import static com.github.dakusui.scriptiveunit.model.form.Func.createFunc;
+import static com.github.dakusui.scriptiveunit.model.form.Func.funcId;
+import static com.github.dakusui.scriptiveunit.model.form.Func.memoize;
 import static com.github.dakusui.scriptiveunit.utils.StringUtils.prettify;
 import static java.util.Objects.requireNonNull;
 import static java.util.stream.Collectors.toList;
@@ -28,8 +29,8 @@ import static java.util.stream.Collectors.toList;
 public class Basic {
   private static final Logger LOGGER = LoggerFactory.getLogger(Basic.class);
 
-  private static Consumer<String> out = System.err::println;//LOGGER::debug;
-  private Map<Func.Call, Object> memo = new HashMap<>();
+  private static Consumer<String>       out  = System.err::println;//LOGGER::debug;
+  private        Map<Func.Call, Object> memo = new HashMap<>();
 
   public static void setOut(Consumer<String> out) {
     Basic.out = requireNonNull(out);
@@ -119,8 +120,8 @@ public class Basic {
       ActionUtils.performActionWithLogging(
           Actions.sequential(
               actions.stream()
-              .map(actionFunc -> actionFunc.apply(input))
-              .collect(toList()))
+                  .map(actionFunc -> actionFunc.apply(input))
+                  .collect(toList()))
       );
       return true;
     };

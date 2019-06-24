@@ -1,6 +1,5 @@
 package com.github.dakusui.scriptiveunit.loaders.beans;
 
-import com.github.dakusui.actionunit.Action;
 import com.github.dakusui.jcunit.core.tuples.Tuple;
 import com.github.dakusui.jcunit8.factorspace.ParameterSpace;
 import com.github.dakusui.jcunit8.pipeline.Pipeline;
@@ -11,10 +10,7 @@ import com.github.dakusui.scriptiveunit.model.desc.ParameterSpaceDescriptor;
 import com.github.dakusui.scriptiveunit.model.desc.TestSuiteDescriptor;
 import com.github.dakusui.scriptiveunit.model.desc.testitem.IndexedTestCase;
 import com.github.dakusui.scriptiveunit.model.desc.testitem.TestOracle;
-import com.github.dakusui.scriptiveunit.model.form.Form;
-import com.github.dakusui.scriptiveunit.model.form.handle.FormUtils;
 import com.github.dakusui.scriptiveunit.model.session.Session;
-import com.github.dakusui.scriptiveunit.model.session.Stage;
 import com.github.dakusui.scriptiveunit.model.statement.Statement;
 import com.github.dakusui.scriptiveunit.runners.ScriptiveUnit;
 import com.github.dakusui.scriptiveunit.utils.StringUtils;
@@ -26,23 +22,21 @@ import java.util.Optional;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
 
-import static com.github.dakusui.actionunit.Actions.nop;
 import static com.github.dakusui.scriptiveunit.exceptions.ScriptiveUnitException.wrap;
 import static com.github.dakusui.scriptiveunit.model.statement.Statement.createStatementFactory;
 import static java.util.Collections.singletonList;
-import static java.util.Objects.requireNonNull;
 import static java.util.stream.Collectors.toList;
 
 public abstract class TestSuiteDescriptorBean {
-  private final FactorSpaceDescriptorBean factorSpaceBean;
+  private final FactorSpaceDescriptorBean      factorSpaceBean;
   private final List<? extends TestOracleBean> testOracleBeanList;
-  private final String description;
-  private final ScriptiveUnit.Mode runnerMode;
-  private final Map<String, List<Object>> userDefinedFormClauses;
-  private final List<Object> setUpClause;
-  private final List<Object> setUpBeforeAllClause;
-  private final List<Object> tearDownClause;
-  private final List<Object> tearDownAfterAllClause;
+  private final String                         description;
+  private final ScriptiveUnit.Mode             runnerMode;
+  private final Map<String, List<Object>>      userDefinedFormClauses;
+  private final List<Object>                   setUpClause;
+  private final List<Object>                   setUpBeforeAllClause;
+  private final List<Object>                   tearDownClause;
+  private final List<Object>                   tearDownAfterAllClause;
 
   public TestSuiteDescriptorBean(
       String description,

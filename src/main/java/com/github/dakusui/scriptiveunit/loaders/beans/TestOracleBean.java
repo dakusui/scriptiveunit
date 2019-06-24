@@ -1,6 +1,5 @@
 package com.github.dakusui.scriptiveunit.loaders.beans;
 
-import com.github.dakusui.jcunit.core.tuples.Tuple;
 import com.github.dakusui.scriptiveunit.model.desc.TestSuiteDescriptor;
 import com.github.dakusui.scriptiveunit.model.desc.testitem.TestItem;
 import com.github.dakusui.scriptiveunit.model.desc.testitem.TestOracle;
@@ -34,12 +33,11 @@ public abstract class TestOracleBean {
    */
   public TestOracle create(int index, TestSuiteDescriptor testSuiteDescriptor) {
     Statement.Factory statementFactory = testSuiteDescriptor.statementFactory();
-    return new TestOracleImpl(index, description, beforeClause, givenClause, whenClause, thenClause, onFailureClause, afterClause, testSuiteDescriptor, statementFactory);
+    return new TestOracleImpl(index, description, beforeClause, givenClause, whenClause, thenClause, onFailureClause, afterClause, statementFactory);
   }
 
   public static class TestOracleImpl implements TestOracle {
     private final int                 index;
-    private final TestSuiteDescriptor testSuiteDescriptor;
     private final Statement.Factory   statementFactory;
     private       List<Object>        afterClause;
     private       List<Object>        beforeClause;
@@ -49,9 +47,8 @@ public abstract class TestOracleBean {
     private       List<Object>        thenClause;
     private       List<Object>        whenClause;
 
-    TestOracleImpl(int index, final String description, final List<Object> beforeClause, final List<Object> givenClause, final List<Object> whenClause, final List<Object> thenClause, final List<Object> onFailureClause, final List<Object> afterClause, TestSuiteDescriptor testSuiteDescriptor, Statement.Factory statementFactory) {
+    TestOracleImpl(int index, final String description, final List<Object> beforeClause, final List<Object> givenClause, final List<Object> whenClause, final List<Object> thenClause, final List<Object> onFailureClause, final List<Object> afterClause, Statement.Factory statementFactory) {
       this.index = index;
-      this.testSuiteDescriptor = testSuiteDescriptor;
       this.statementFactory = statementFactory;
       this.afterClause = afterClause;
       this.beforeClause = beforeClause;
@@ -70,11 +67,6 @@ public abstract class TestOracleBean {
     @Override
     public String getDescription() {
       return description;
-    }
-
-    @Override
-    public String templateDescription(Tuple testCaseTuple, String testSuiteDescription) {
-      return TestOracle.templateTestOracleDescription(this, testCaseTuple, testSuiteDescription);
     }
 
     public Definition definitionFor(TestItem testItem) {

@@ -45,7 +45,7 @@ public interface FormHandle {
       return String.format("form:%s", this.objectMethod);
     }
 
-    public ObjectMethod objectMethod() {
+    ObjectMethod objectMethod() {
       return this.objectMethod;
     }
   }
@@ -75,12 +75,12 @@ public interface FormHandle {
       return false;
     }
 
-    public Statement createStatement() {
+    Statement createStatement() {
       return this.userDefinedFormStatementSupplier.get();
     }
 
 
-    public static Form<Object> userFunc(Form<Statement> statementForm, Form<?>... args) {
+    static Form<Object> userFunc(Form<Statement> statementForm, Form<?>... args) {
       return (Stage input) -> FormHandleFactory.compile(statementForm.apply(input)).apply(Stage.Factory.createWrappedStage(input, args));
     }
   }

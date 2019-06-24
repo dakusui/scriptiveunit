@@ -85,8 +85,4 @@ public class ScriptiveCore {
       throw ScriptiveUnitException.wrap(throwable);
     }
   }
-
-  enum Utils {
-    ;
-  }
 }

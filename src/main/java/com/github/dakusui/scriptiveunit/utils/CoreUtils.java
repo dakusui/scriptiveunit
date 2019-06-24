@@ -2,7 +2,6 @@ package com.github.dakusui.scriptiveunit.utils;
 
 import com.google.common.collect.ImmutableMap;
 
-import java.lang.reflect.Array;
 import java.math.BigDecimal;
 import java.util.Arrays;
 import java.util.List;
@@ -41,18 +40,6 @@ public enum CoreUtils {
         1,
         arr.length
     );
-  }
-
-  public static Object[] shirinkArrayTo(Class<?> componentType, int count, Object[] args) {
-    Object[] ret = new Object[count];
-    Object var = Array.newInstance(componentType, args.length - count + 1);
-    if (count > 1) {
-      System.arraycopy(args, 0, ret, 0, ret.length - 1);
-    }
-    //noinspection SuspiciousSystemArraycopy
-    System.arraycopy(args, ret.length - 1, var, 0, args.length - count + 1);
-    ret[ret.length - 1] = var;
-    return ret;
   }
 
   public static boolean isAtom(Object object) {

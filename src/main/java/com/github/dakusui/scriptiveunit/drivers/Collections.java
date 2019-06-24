@@ -29,33 +29,27 @@ public class Collections {
   @SuppressWarnings("unused")
   @Scriptable
   public <E> Form<Iterable<? extends E>> compatFilter(Form<Iterable<? extends E>> iterable, Form<Function<E, Boolean>> predicate) {
-    return (Stage i) -> {
-      //noinspection unchecked
-      return (Iterable<? extends E>) stream(
-          requireNonNull(iterable.apply(i)).spliterator(),
-          false
-      ).filter(
-          input -> requireNonNull(requireNonNull(predicate.apply(i)).apply(input))
-      ).collect(
-          Collectors.<E>toList()
-      );
-    };
+    return (Stage i) -> (Iterable<? extends E>) stream(
+        requireNonNull(iterable.apply(i)).spliterator(),
+        false
+    ).filter(
+        input -> requireNonNull(requireNonNull(predicate.apply(i)).apply(input))
+    ).collect(
+        Collectors.<E>toList()
+    );
   }
 
   @SuppressWarnings("unused")
   @Scriptable
   public <E> Form<Iterable<? extends E>> filter(Form<Iterable<? extends E>> iterable, Form<Form<Boolean>> predicate) {
-    return (Stage i) -> {
-      //noinspection unchecked
-      return (Iterable<? extends E>) stream(
-          requireNonNull(iterable.apply(i)).spliterator(),
-          false
-      ).filter(
-          (E entry) -> predicate.apply(i).apply(wrapValueAsArgumentInStage(i, toFunc(entry)))
-      ).collect(
-          Collectors.<E>toList()
-      );
-    };
+    return (Stage i) -> (Iterable<? extends E>) stream(
+        requireNonNull(iterable.apply(i)).spliterator(),
+        false
+    ).filter(
+        (E entry) -> predicate.apply(i).apply(wrapValueAsArgumentInStage(i, toFunc(entry)))
+    ).collect(
+        Collectors.<E>toList()
+    );
   }
 
   private static <F> Form<F> toFunc(F entry) {

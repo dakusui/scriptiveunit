@@ -6,10 +6,10 @@ import com.github.dakusui.jcunit.core.tuples.Tuple;
 import com.github.dakusui.jcunit8.factorspace.Parameter;
 import com.github.dakusui.jcunit8.testsuite.TestCase;
 import com.github.dakusui.scriptiveunit.exceptions.ScriptiveUnitException;
-import com.github.dakusui.scriptiveunit.model.desc.testitem.IndexedTestCase;
-import com.github.dakusui.scriptiveunit.model.session.Session;
-import com.github.dakusui.scriptiveunit.model.desc.testitem.TestOracle;
 import com.github.dakusui.scriptiveunit.model.desc.TestSuiteDescriptor;
+import com.github.dakusui.scriptiveunit.model.desc.testitem.IndexedTestCase;
+import com.github.dakusui.scriptiveunit.model.desc.testitem.TestOracle;
+import com.github.dakusui.scriptiveunit.model.session.Session;
 import org.junit.internal.runners.statements.RunAfters;
 import org.junit.internal.runners.statements.RunBefores;
 import org.junit.runner.Description;
@@ -33,6 +33,7 @@ import java.util.stream.Stream;
 
 import static com.github.dakusui.actionunit.Actions.attempt;
 import static com.github.dakusui.actionunit.Actions.nop;
+import static com.github.dakusui.scriptiveunit.model.desc.testitem.TestItemUtils.templateTestOracleDescription;
 import static com.github.dakusui.scriptiveunit.runners.GroupedTestItemRunner.Utils.createMainActionsForTestCase;
 import static com.github.dakusui.scriptiveunit.runners.GroupedTestItemRunner.Utils.createMainActionsForTestFixture;
 import static com.github.dakusui.scriptiveunit.utils.ActionUtils.performActionWithLogging;
@@ -185,8 +186,7 @@ import static java.util.stream.Collectors.toList;
  * @see ScriptiveUnit.Mode
  */
 public final class GroupedTestItemRunner extends ParentRunner<Action> {
-  static Iterable<Runner> createRunnersGroupingByTestOracle(
-      final Session session) {
+  static Iterable<Runner> createRunnersGroupingByTestOracle(final Session session) {
     TestSuiteDescriptor testSuiteDescriptor = session.getTestSuiteDescriptor();
     AtomicInteger id = new AtomicInteger(0);
     return testSuiteDescriptor.getTestOracles()
@@ -387,7 +387,8 @@ public final class GroupedTestItemRunner extends ParentRunner<Action> {
           testOracleId,
           nop(),
           Utils.createMainActionsForTestOracle(
-              session, testOracle,
+              session,
+              testOracle,
               testSuiteDescriptor
           ),
           nop()
@@ -461,7 +462,7 @@ public final class GroupedTestItemRunner extends ParentRunner<Action> {
             public Action apply(IndexedTestCase input) {
               try {
                 return Actions.sequential(
-                    format("%03d: %s", i, testOracle.templateDescription(input.get(), testSuiteDescription)),
+                    format("%03d: %s", i, templateTestOracleDescription(input.get(), testSuiteDescription, testOracle.getDescription())),
                     session.createSetUpActionForFixture(testSuiteDescriptor, input.get()),
                     attempt(
                         session.createMainAction(
