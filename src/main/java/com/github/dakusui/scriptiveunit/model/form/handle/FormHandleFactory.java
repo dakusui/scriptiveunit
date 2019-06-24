@@ -1,7 +1,6 @@
 package com.github.dakusui.scriptiveunit.model.form.handle;
 
 import com.github.dakusui.scriptiveunit.core.Config;
-import com.github.dakusui.scriptiveunit.model.form.Form;
 import com.github.dakusui.scriptiveunit.model.statement.Statement;
 import com.github.dakusui.scriptiveunit.model.statement.StatementRegistry;
 import com.github.dakusui.scriptiveunit.utils.DriverUtils;
@@ -14,11 +13,11 @@ import static java.util.Objects.requireNonNull;
 
 public class FormHandleFactory {
   private final Object            driver;
-  private final StatementRegistry statementRegistry;
+  private final StatementRegistry statementRegistryForUserForms;
 
   public FormHandleFactory(Config config, StatementRegistry statementRegistryForUserForms) {
     this.driver = requireNonNull(config.getDriverObject());
-    this.statementRegistry = requireNonNull(statementRegistryForUserForms);
+    this.statementRegistryForUserForms = requireNonNull(statementRegistryForUserForms);
   }
 
   public FormHandle create(String name) {
@@ -48,7 +47,7 @@ public class FormHandleFactory {
   }
 
   private Optional<Statement> getUserDefinedStatementByName(String name) {
-    return statementRegistry.lookUp(name);
+    return statementRegistryForUserForms.lookUp(name);
   }
 
   private Optional<ObjectMethod> getObjectMethodFromDriver(String methodName) {

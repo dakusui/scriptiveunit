@@ -49,26 +49,40 @@ public enum FormUtils {
       Statement.Compound compound = (Statement.Compound) statement;
       FormHandle formHandle = compound.getFormHandle();
       if (formHandle instanceof FormHandle.MethodBased) {
-        ObjectMethod objectMethod = ((FormHandle.MethodBased) formHandle).objectMethod();
-        return objectMethod.createFormForCompoundStatement(toArray(
-            toForms(compound.getArguments()),
-            Form.class
-        ));
+        return methodBasedFormHandleToForm((FormHandle.MethodBased) formHandle, compound);
       }
-      if (formHandle instanceof FormHandle.User)
-        //noinspection unchecked
-        return (Form<U>) createUserFunc(toArray(
-            Stream.concat(
-                Stream.of((Form<Statement>) input -> ((FormHandle.User) formHandle).createStatement()),
-                toForms(compound.getArguments()).stream())
-                .collect(toList()),
-            Form.class));
-      if (formHandle instanceof FormHandle.Lambda)
-        //noinspection unchecked
-        return (Form<U>) (Form<Form<Object>>) (Stage ii) -> getOnlyElement(toForms(compound.getArguments()));
+      if (formHandle instanceof FormHandle.User) {
+        return userFormHandleToForm((FormHandle.User) formHandle, compound);
+      }
+      if (formHandle instanceof FormHandle.Lambda) {
+        return lambdaFormHandleToForm(compound);
+      }
       throw new IllegalArgumentException();
     }
     throw new IllegalArgumentException();
+  }
+
+  private static <U> Form<U> lambdaFormHandleToForm(Statement.Compound compound) {
+    //noinspection unchecked
+    return (Form<U>) (Form<Form<Object>>) (Stage ii) -> getOnlyElement(toForms(compound.getArguments()));
+  }
+
+  private static <U> Form<U> userFormHandleToForm(FormHandle.User formHandle, Statement.Compound compound) {
+    //noinspection unchecked
+    return (Form<U>) createUserFunc(toArray(
+        Stream.concat(
+            Stream.of((Form<Statement>) input -> formHandle.createStatement()),
+            toForms(compound.getArguments()).stream())
+            .collect(toList()),
+        Form.class));
+  }
+
+  private static <U> Form<U> methodBasedFormHandleToForm(FormHandle.MethodBased formHandle, Statement.Compound compound) {
+    ObjectMethod objectMethod = formHandle.objectMethod();
+    return objectMethod.createFormForCompoundStatement(toArray(
+        toForms(compound.getArguments()),
+        Form.class
+    ));
   }
 
   public static List<Form> toForms(Iterable<Statement> arguments) {
