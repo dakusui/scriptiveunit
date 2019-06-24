@@ -3,10 +3,9 @@ package com.github.dakusui.scriptiveunit.model.form.handle;
 import com.github.dakusui.scriptiveunit.core.Config;
 import com.github.dakusui.scriptiveunit.model.form.Form;
 import com.github.dakusui.scriptiveunit.model.statement.Statement;
+import com.github.dakusui.scriptiveunit.model.statement.StatementRegistry;
 import com.github.dakusui.scriptiveunit.utils.DriverUtils;
 
-import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.function.Supplier;
 
@@ -14,14 +13,12 @@ import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
 
 public class FormHandleFactory {
-  private final Object                    driver;
-  private final Statement.Factory         statementFactory;
-  private final Map<String, List<Object>> userDefinedClauseMap;
+  private final Object            driver;
+  private final StatementRegistry statementRegistry;
 
-  public FormHandleFactory(Statement.Factory statementFactory, Config config, Map<String, List<Object>> userDefinedFormClauses) {
+  public FormHandleFactory(Config config, StatementRegistry statementRegistryForUserForms) {
     this.driver = requireNonNull(config.getDriverObject());
-    this.statementFactory = statementFactory;
-    this.userDefinedClauseMap = requireNonNull(userDefinedFormClauses);
+    this.statementRegistry = requireNonNull(statementRegistryForUserForms);
   }
 
   public FormHandle create(String name) {
@@ -46,18 +43,12 @@ public class FormHandleFactory {
   }
 
   private Optional<FormHandle> createUserDefinedFormHandle(String name) {
-    return getUserDefinedFormClauseByName(name)
-        .map((Supplier<List<Object>> s) -> new FormHandle.User(name, () -> statementFactory.create(s.get())));
+    return getUserDefinedStatementByName(name)
+        .map(statement -> new FormHandle.User(name, statement));
   }
 
-  static Form compile(Statement statement) {
-    return FormUtils.INSTANCE.toForm(statement);
-  }
-
-  private Optional<Supplier<List<Object>>> getUserDefinedFormClauseByName(String name) {
-    return userDefinedClauseMap.containsKey(name) ?
-        Optional.of((Supplier<List<Object>>) () -> userDefinedClauseMap.get(name)) :
-        Optional.empty();
+  private Optional<Statement> getUserDefinedStatementByName(String name) {
+    return statementRegistry.lookUp(name);
   }
 
   private Optional<ObjectMethod> getObjectMethodFromDriver(String methodName) {

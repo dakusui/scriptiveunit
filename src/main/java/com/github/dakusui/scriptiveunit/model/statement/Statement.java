@@ -52,9 +52,8 @@ public interface Statement {
 
     public Factory(Config config, Map<String, List<Object>> userDefinedFormClauses) {
       this.formHandleFactory = new FormHandleFactory(
-          this,
           config,
-          userDefinedFormClauses);
+          StatementRegistry.create(this, userDefinedFormClauses));
     }
 
     public Statement create(Object object) throws TypeMismatch {

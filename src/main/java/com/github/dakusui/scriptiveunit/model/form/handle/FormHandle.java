@@ -4,7 +4,7 @@ import com.github.dakusui.scriptiveunit.model.form.Form;
 import com.github.dakusui.scriptiveunit.model.session.Stage;
 import com.github.dakusui.scriptiveunit.model.statement.Statement;
 
-import java.util.function.Supplier;
+import static java.util.Objects.requireNonNull;
 
 public interface FormHandle {
 
@@ -62,11 +62,11 @@ public interface FormHandle {
   }
 
   class User extends Base {
-    final Supplier<Statement> userDefinedFormStatementSupplier;
+    final Statement userDefinedStatement;
 
-    User(String name, Supplier<Statement> userDefinedFormStatementSupplier) {
+    User(String name, Statement userDefinedStatement) {
       super(name);
-      this.userDefinedFormStatementSupplier = userDefinedFormStatementSupplier;
+      this.userDefinedStatement = requireNonNull(userDefinedStatement);
     }
 
     @Override
@@ -75,11 +75,8 @@ public interface FormHandle {
     }
 
     Statement createStatement() {
-      return this.userDefinedFormStatementSupplier.get();
+      return this.userDefinedStatement;
     }
 
-    static Form<Object> userFunc(Form<Statement> statementForm, Form<?>... args) {
-      return (Stage input) -> FormHandleFactory.compile(statementForm.apply(input)).apply(Stage.Factory.createWrappedStage(input, args));
-    }
   }
 }
