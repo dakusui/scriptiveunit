@@ -1,14 +1,14 @@
 package com.github.dakusui.scriptiveunit.model.form.handle;
 
-import com.github.dakusui.scriptiveunit.model.form.Form;
-import com.github.dakusui.scriptiveunit.model.session.Stage;
 import com.github.dakusui.scriptiveunit.model.statement.Statement;
 
 import static java.util.Objects.requireNonNull;
 
 public interface FormHandle {
 
-  boolean isAccessor();
+  default boolean isAccessor() {
+    return false;
+  }
 
   default String name() {
     throw new UnsupportedOperationException();
@@ -54,11 +54,6 @@ public interface FormHandle {
     Lambda(String name) {
       super(name);
     }
-
-    @Override
-    public boolean isAccessor() {
-      return false;
-    }
   }
 
   class User extends Base {
@@ -69,14 +64,8 @@ public interface FormHandle {
       this.userDefinedStatement = requireNonNull(userDefinedStatement);
     }
 
-    @Override
-    public boolean isAccessor() {
-      return false;
-    }
-
     Statement createStatement() {
       return this.userDefinedStatement;
     }
-
   }
 }

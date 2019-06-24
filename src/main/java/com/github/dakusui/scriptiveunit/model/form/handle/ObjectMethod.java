@@ -11,7 +11,11 @@ import com.github.dakusui.scriptiveunit.model.session.Stage;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.util.*;
+import java.util.AbstractList;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
 
 import static com.github.dakusui.scriptiveunit.exceptions.ScriptiveUnitException.fail;
 import static com.github.dakusui.scriptiveunit.exceptions.ScriptiveUnitException.wrap;
@@ -75,15 +79,11 @@ public interface ObjectMethod {
 
       @Override
       public Doc getParameterDoc(int index) {
-        return stream(
-            method.getParameterAnnotations()[index]
-        ).filter(
-            input -> input instanceof Doc
-        ).findFirst().map(
-            annotation -> (Doc) annotation
-        ).orElse(
-            Doc.NOT_AVAILABLE
-        );
+        return stream(method.getParameterAnnotations()[index])
+            .filter(input -> input instanceof Doc)
+            .findFirst()
+            .map(annotation -> (Doc) annotation)
+            .orElse(Doc.NOT_AVAILABLE);
       }
 
       /*
@@ -128,8 +128,7 @@ public interface ObjectMethod {
       public Doc doc() {
         return method.isAnnotationPresent(Doc.class) ?
             method.getAnnotation(Doc.class) :
-            Doc.NOT_AVAILABLE
-            ;
+            Doc.NOT_AVAILABLE;
       }
 
       @Override
