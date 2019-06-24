@@ -7,7 +7,10 @@ import com.github.dakusui.scriptiveunit.utils.CoreUtils;
 
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Proxy;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Stream;
 
 import static com.google.common.collect.Iterables.getOnlyElement;
@@ -16,8 +19,7 @@ import static java.util.stream.Collectors.toList;
 import static java.util.stream.StreamSupport.stream;
 
 public enum FormUtils {
-  INSTANCE
-  ;
+  INSTANCE;
 
   public <U> Form<U> toForm(Statement statement) {
     if (statement instanceof Statement.Atom) {
@@ -54,6 +56,12 @@ public enum FormUtils {
     throw new IllegalArgumentException();
   }
 
+  public static List<Form> toForms(Iterable<Statement> arguments) {
+    return stream(arguments.spliterator(), false)
+        .map(FormUtils.INSTANCE::toForm)
+        .collect(toList());
+  }
+
   @SuppressWarnings("unchecked")
   private static Form<Object> createUserFunc(Form[] args) {
     return FormHandle.User.userFunc(CoreUtils.car(args), CoreUtils.cdr(args));
@@ -65,18 +73,13 @@ public enum FormUtils {
         Form.Const.class);
   }
 
-  public static List<Form> toForms(Iterable<Statement> arguments) {
-    return stream(arguments.spliterator(), false)
-        .map(FormUtils.INSTANCE::toForm)
-        .collect(toList());
-  }
-
   public static <O> Form<O> createProxy(InvocationHandler handler, Class<? extends Form> interfaceClass) {
     //noinspection unchecked
     return (Form<O>) Proxy.newProxyInstance(
         Form.class.getClassLoader(),
-        new Class[]{interfaceClass},
+        new Class[] { interfaceClass },
         handler
     );
   }
+
 }

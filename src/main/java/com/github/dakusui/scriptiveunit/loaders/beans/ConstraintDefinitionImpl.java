@@ -23,6 +23,6 @@ public class ConstraintDefinitionImpl implements ConstraintDefinition {
 
   @Override
   public List<String> involvedParameterNames() {
-    return Statement.Utils.involvedParameters(statement);
+    return SessionUtils.involvedParameters(statement);
   }
 }

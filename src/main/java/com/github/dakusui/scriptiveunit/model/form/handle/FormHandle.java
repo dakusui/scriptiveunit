@@ -52,7 +52,6 @@ public interface FormHandle {
 
   class Lambda extends Base {
     Lambda(String name) {
-      // TODO: need to consider how we should define a name for a lambda object
       super(name);
     }
 
@@ -78,7 +77,6 @@ public interface FormHandle {
     Statement createStatement() {
       return this.userDefinedFormStatementSupplier.get();
     }
-
 
     static Form<Object> userFunc(Form<Statement> statementForm, Form<?>... args) {
       return (Stage input) -> FormHandleFactory.compile(statementForm.apply(input)).apply(Stage.Factory.createWrappedStage(input, args));

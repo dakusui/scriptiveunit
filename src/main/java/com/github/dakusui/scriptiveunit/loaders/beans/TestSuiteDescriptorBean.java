@@ -134,7 +134,7 @@ public abstract class TestSuiteDescriptorBean {
         @Override
         public List<String> getInvolvedParameterNamesInSetUpAction() {
           return setUp()
-              .map(Statement.Utils::involvedParameters)
+              .map(SessionUtils::involvedParameters)
               .orElse(emptyList());
         }
 

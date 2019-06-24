@@ -14,14 +14,14 @@ import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
 
 public class FormHandleFactory {
-  private final Object driver;
-  private final Statement.Factory statementFactory;
-  private final Map<String, List<Object>> clauseMap;
+  private final Object                    driver;
+  private final Statement.Factory         statementFactory;
+  private final Map<String, List<Object>> userDefinedClauseMap;
 
   public FormHandleFactory(Statement.Factory statementFactory, Config config, Map<String, List<Object>> userDefinedFormClauses) {
     this.driver = requireNonNull(config.getDriverObject());
     this.statementFactory = statementFactory;
-    this.clauseMap = requireNonNull(userDefinedFormClauses);
+    this.userDefinedClauseMap = requireNonNull(userDefinedFormClauses);
   }
 
   public FormHandle create(String name) {
@@ -46,7 +46,7 @@ public class FormHandleFactory {
   }
 
   private Optional<FormHandle> createUserDefinedFormHandle(String name) {
-    return getUserDefinedFormClauseFromSessionByName(name)
+    return getUserDefinedFormClauseByName(name)
         .map((Supplier<List<Object>> s) -> new FormHandle.User(name, () -> statementFactory.create(s.get())));
   }
 
@@ -54,9 +54,9 @@ public class FormHandleFactory {
     return FormUtils.INSTANCE.toForm(statement);
   }
 
-  private Optional<Supplier<List<Object>>> getUserDefinedFormClauseFromSessionByName(String name) {
-    return clauseMap.containsKey(name) ?
-        Optional.of((Supplier<List<Object>>) () -> clauseMap.get(name)) :
+  private Optional<Supplier<List<Object>>> getUserDefinedFormClauseByName(String name) {
+    return userDefinedClauseMap.containsKey(name) ?
+        Optional.of((Supplier<List<Object>>) () -> userDefinedClauseMap.get(name)) :
         Optional.empty();
   }
 
