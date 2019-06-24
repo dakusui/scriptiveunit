@@ -1,7 +1,6 @@
 package com.github.dakusui.scriptiveunit.loaders.beans;
 
 import com.github.dakusui.scriptiveunit.model.desc.TestSuiteDescriptor;
-import com.github.dakusui.scriptiveunit.model.desc.testitem.TestItem;
 import com.github.dakusui.scriptiveunit.model.desc.testitem.TestOracle;
 import com.github.dakusui.scriptiveunit.model.statement.Statement;
 
@@ -31,53 +30,8 @@ public abstract class TestOracleBean {
    * objects) have their internal states and not created every time the oracles
    * are performed.
    */
-  public TestOracle create(int index, TestSuiteDescriptor testSuiteDescriptor) {
+  TestOracle createTestOracle(int index, TestSuiteDescriptor testSuiteDescriptor) {
     Statement.Factory statementFactory = testSuiteDescriptor.statementFactory();
-    return new TestOracleImpl(index, description, beforeClause, givenClause, whenClause, thenClause, onFailureClause, afterClause, statementFactory);
-  }
-
-  public static class TestOracleImpl implements TestOracle {
-    private final int                 index;
-    private final Statement.Factory   statementFactory;
-    private       List<Object>        afterClause;
-    private       List<Object>        beforeClause;
-    private       String              description;
-    private       List<Object>        givenClause;
-    private       List<Object>        onFailureClause;
-    private       List<Object>        thenClause;
-    private       List<Object>        whenClause;
-
-    TestOracleImpl(int index, final String description, final List<Object> beforeClause, final List<Object> givenClause, final List<Object> whenClause, final List<Object> thenClause, final List<Object> onFailureClause, final List<Object> afterClause, Statement.Factory statementFactory) {
-      this.index = index;
-      this.statementFactory = statementFactory;
-      this.afterClause = afterClause;
-      this.beforeClause = beforeClause;
-      this.description = description;
-      this.givenClause = givenClause;
-      this.onFailureClause = onFailureClause;
-      this.thenClause = thenClause;
-      this.whenClause = whenClause;
-    }
-
-    @Override
-    public int getIndex() {
-      return index;
-    }
-
-    @Override
-    public String getDescription() {
-      return description;
-    }
-
-    public Definition definitionFor(TestItem testItem) {
-      return TestOracle.Definition.create(
-          statementFactory,
-          this.beforeClause,
-          this.givenClause,
-          this.whenClause,
-          this.thenClause,
-          this.onFailureClause,
-          this.afterClause);
-    }
+    return new TestOracle.Impl(index, description, beforeClause, givenClause, whenClause, thenClause, onFailureClause, afterClause, statementFactory);
   }
 }

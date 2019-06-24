@@ -15,7 +15,6 @@ import com.github.dakusui.scriptiveunit.model.statement.Statement;
 import com.github.dakusui.scriptiveunit.runners.ScriptiveUnit;
 import com.github.dakusui.scriptiveunit.utils.StringUtils;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -24,6 +23,7 @@ import java.util.function.Function;
 
 import static com.github.dakusui.scriptiveunit.exceptions.ScriptiveUnitException.wrap;
 import static com.github.dakusui.scriptiveunit.model.statement.Statement.createStatementFactory;
+import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.toList;
 
@@ -83,7 +83,7 @@ public abstract class TestSuiteDescriptorBean {
 
         private List<TestOracle> createTestOracles() {
           AtomicInteger i = new AtomicInteger(0);
-          return testOracleBeanList.stream().map((TestOracleBean each) -> each.create(i.getAndIncrement(), this)).collect(toList());
+          return testOracleBeanList.stream().map((TestOracleBean each) -> each.createTestOracle(i.getAndIncrement(), this)).collect(toList());
         }
 
         @Override
@@ -135,7 +135,7 @@ public abstract class TestSuiteDescriptorBean {
         public List<String> getInvolvedParameterNamesInSetUpAction() {
           return setUp()
               .map(Statement.Utils::involvedParameters)
-              .orElse(Collections.emptyList());
+              .orElse(emptyList());
         }
 
         @Override

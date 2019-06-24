@@ -42,7 +42,7 @@ public interface TestItem {
     public TestOracleFormFactory testOracleActionFactory(Function<Tuple, String> testCaseFormatter) {
       return TestOracleFormFactory.createTestOracleFormFactory(
           this,
-          this.testOracle.definitionFor(this),
+          this.testOracle.definition(),
           testCaseFormatter
           );
     }

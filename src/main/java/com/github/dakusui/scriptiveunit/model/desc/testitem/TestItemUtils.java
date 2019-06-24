@@ -8,7 +8,7 @@ import static com.github.dakusui.scriptiveunit.utils.TupleUtils.append;
 public enum TestItemUtils {
   ;
 
-  public static String templateTestOracleDescription(Tuple testCaseTuple, String testSuiteDescription, String description) {
-    return template(description, append(testCaseTuple, "@TESTSUITE", testSuiteDescription));
+  public static String templateTestOracleDescription(Tuple testCaseTuple, String testSuiteDescription, String testOracleDescription) {
+    return template(testOracleDescription, append(testCaseTuple, "@TESTSUITE", testSuiteDescription));
   }
 }

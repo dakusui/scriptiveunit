@@ -18,7 +18,7 @@ public interface TestOracle {
    */
   String getDescription();
 
-  Definition definitionFor(TestItem testItem);
+  Definition definition();
 
   interface Definition {
     Optional<Statement> before();
@@ -72,6 +72,40 @@ public interface TestOracle {
               .map(statementFactory::create);
         }
       };
+    }
+  }
+
+  class Impl implements TestOracle {
+    private final int        index;
+    private       String     description;
+    private       Definition definition;
+
+    public Impl(int index, final String description, final List<Object> beforeClause, final List<Object> givenClause, final List<Object> whenClause, final List<Object> thenClause, final List<Object> onFailureClause, final List<Object> afterClause, Statement.Factory statementFactory) {
+      this.index = index;
+      this.description = description;
+      this.definition = Definition.create(
+          statementFactory,
+          beforeClause,
+          givenClause,
+          whenClause,
+          thenClause,
+          onFailureClause,
+          afterClause);
+    }
+
+    @Override
+    public int getIndex() {
+      return index;
+    }
+
+    @Override
+    public String getDescription() {
+      return description;
+    }
+
+    @Override
+    public Definition definition() {
+      return definition;
     }
   }
 }
