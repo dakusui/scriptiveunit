@@ -143,7 +143,7 @@ public abstract class TestOracleBean {
 
       @Override
       public Function<Stage, Object> whenFactory() {
-        return s -> FormUtils.INSTANCE.<Boolean>toForm(statementFactory.create(whenClause)).apply(s);
+        return (Stage s) -> FormUtils.INSTANCE.toForm(statementFactory.create(whenClause)).apply(s);
       }
 
       @Override
@@ -151,8 +151,8 @@ public abstract class TestOracleBean {
         Statement thenStatement = statementFactory.create(thenClause);
         FormInvoker formInvoker = FormInvokerImpl.create();
         return stage -> out -> new BaseMatcher<Stage>() {
-          Function<FormInvoker, Predicate<Stage>> p = fi -> s -> requireNonNull(
-              FormUtils.INSTANCE.<Boolean>toForm(thenStatement).apply(s));
+          Function<FormInvoker, Predicate<Stage>> p = fi -> s -> (Boolean) requireNonNull(
+              FormUtils.INSTANCE.toForm(thenStatement).apply(s));
           Function<FormInvoker, Function<Stage, String>> c = fi -> s -> fi.asString();
 
           @Override
