@@ -12,7 +12,7 @@ import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
 
 public class FormHandleFactory {
-  private final Object            driver;
+  private final Object driver;
   private final StatementRegistry statementRegistryForUserForms;
 
   public FormHandleFactory(Config config, StatementRegistry statementRegistryForUserForms) {
@@ -33,17 +33,18 @@ public class FormHandleFactory {
 
   private Optional<FormHandle> createLambdaFormHandle(String name) {
     return "lambda".equals(name) ?
-        Optional.of(new FormHandle.Lambda(name)) :
+        Optional.of(new FormHandle.Lambda()) :
         Optional.empty();
   }
 
   private Optional<FormHandle> createMethodBasedFormHandle(String name) {
-    return this.getObjectMethodFromDriver(name).map(FormHandle.MethodBased::new);
+    return this.getObjectMethodFromDriver(name)
+        .map(FormHandle.MethodBased::new);
   }
 
   private Optional<FormHandle> createUserDefinedFormHandle(String name) {
     return getUserDefinedStatementByName(name)
-        .map(statement -> new FormHandle.User(name, statement));
+        .map(FormHandle.User::new);
   }
 
   private Optional<Statement> getUserDefinedStatementByName(String name) {

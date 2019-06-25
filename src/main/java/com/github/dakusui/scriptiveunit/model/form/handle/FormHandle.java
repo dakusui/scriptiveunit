@@ -7,6 +7,7 @@ import com.github.dakusui.scriptiveunit.utils.CoreUtils;
 
 import java.util.stream.Stream;
 
+import static com.github.dakusui.scriptiveunit.model.session.Stage.Factory.createWrappedStage;
 import static com.google.common.collect.Iterables.getOnlyElement;
 import static com.google.common.collect.Iterables.toArray;
 import static java.util.Objects.requireNonNull;
@@ -19,28 +20,13 @@ public interface FormHandle {
     return false;
   }
 
-  default String name() {
-    throw new UnsupportedOperationException();
-  }
-
   abstract class Base implements FormHandle {
-    private final String name;
-
-    Base(String name) {
-      this.name = name;
-    }
-
-    @Override
-    public String name() {
-      return this.name;
-    }
   }
 
   class MethodBased extends Base {
     final ObjectMethod objectMethod;
 
     MethodBased(ObjectMethod objectMethod) {
-      super(objectMethod.getName());
       this.objectMethod = objectMethod;
     }
 
@@ -73,8 +59,7 @@ public interface FormHandle {
   }
 
   class Lambda extends Base {
-    Lambda(String name) {
-      super(name);
+    Lambda() {
     }
 
     @Override
@@ -92,8 +77,7 @@ public interface FormHandle {
   class User extends Base {
     final Statement userDefinedStatement;
 
-    User(String name, Statement userDefinedStatement) {
-      super(name);
+    User(Statement userDefinedStatement) {
       this.userDefinedStatement = requireNonNull(userDefinedStatement);
     }
 
@@ -106,13 +90,13 @@ public interface FormHandle {
       //noinspection unchecked
       return (Form<U>) createUserFunc(toArray(
           Stream.concat(
-              Stream.of((Form<Statement>) input -> formHandle.createStatement()),
+              Stream.of((Form<Statement>) input -> formHandle.statement()),
               FormUtils.toForms(compound.getArguments()).stream())
               .collect(toList()),
           Form.class));
     }
 
-    Statement createStatement() {
+    private Statement statement() {
       return this.userDefinedStatement;
     }
 
@@ -122,12 +106,10 @@ public interface FormHandle {
     }
 
     private static Form<Object> userFunc(Form<Statement> statementForm, Form<?>... args) {
-      return (Stage input) -> compile(statementForm.apply(input)).apply(Stage.Factory.createWrappedStage(input, args));
+      return (Stage input) -> statementForm
+          .apply(input)
+          .toForm()
+          .apply(createWrappedStage(input, args));
     }
-
-    private static Form compile(Statement statement) {
-      return FormUtils.INSTANCE.toForm(statement);
-    }
-
   }
 }

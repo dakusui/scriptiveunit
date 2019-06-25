@@ -25,7 +25,7 @@ public interface FormRegistry {
   Optional<Form> lookUp(FormHandle handle);
 
   class Loader {
-    private final Map<String, Form> formMap = new HashMap<>();
+    private final Map<FormHandle, Form> formMap = new HashMap<>();
 
 
     Loader register(Object libraryObject) {
@@ -41,11 +41,11 @@ public interface FormRegistry {
       if (formMap.containsKey(method.getName()))
         throw new IllegalStateException(
             format("Tried to register:%s with the key:%s, but %s was already registered.", form, form.name(), formMap.get(form)));
-      formMap.put(method.getName(), form);
+      //formMap.put(method.getName(), form);
     }
 
     FormRegistry load() {
-      return (FormHandle handle) -> Optional.ofNullable(formMap.get(handle.name()));
+      return (FormHandle handle) -> Optional.ofNullable(formMap.get(handle));
     }
 
     /**
