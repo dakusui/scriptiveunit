@@ -51,20 +51,20 @@ public interface ObjectMethod {
 
   boolean isAccessor();
 
-  Object invoke(Object... args);
-
   static ObjectMethod create(Object driverObject, Method method, Map<String, String> aliases) {
+    String baseName = method.getName();
+    String methodName = aliases.containsKey(baseName) ?
+        aliases.get(baseName) :
+        aliases.containsKey(Import.Alias.ALL) ?
+            baseName :
+            null;
+
     return new ObjectMethod() {
       private final Class<?>[] parameterTypes = method.getParameterTypes();
 
       @Override
       public String getName() {
-        String baseName = method.getName();
-        return aliases.containsKey(baseName) ?
-            aliases.get(baseName) :
-            aliases.containsKey(Import.Alias.ALL) ?
-                baseName :
-                null;
+        return methodName;
       }
 
       @Override
@@ -99,7 +99,7 @@ public interface ObjectMethod {
          * By using dynamic proxy, we are making it possible to print structured pretty log.
          */
         return createForm((Form) check(
-            returnedValue = this.invoke(composeArgs(args)),
+            returnedValue = this.invokeMethod(composeArgs(args)),
             (Object o) -> o instanceof Form,
             () -> valueReturnedByScriptableMethodMustBeFunc(this.getName(), returnedValue)
         ));
@@ -108,20 +108,6 @@ public interface ObjectMethod {
       @Override
       public boolean isAccessor() {
         return method.isAnnotationPresent(AccessesTestParameter.class);
-      }
-
-      @Override
-      public Object invoke(Object... args) {
-        try {
-          return method.invoke(driverObject, args);
-        } catch (IllegalAccessException | InvocationTargetException | IllegalArgumentException e) {
-          String message = format("Failed to invoke %s#%s(%s) with %s",
-              method.getDeclaringClass().getCanonicalName(),
-              method.getName(),
-              arrayToString(parameterTypes),
-              arrayToString(args));
-          throw wrap(e, message);
-        }
       }
 
       @Override
@@ -134,6 +120,19 @@ public interface ObjectMethod {
       @Override
       public String toString() {
         return String.format("%s(%s of %s)", method.getName(), method, driverObject);
+      }
+
+      Object invokeMethod(Object... args) {
+        try {
+          return method.invoke(driverObject, args);
+        } catch (IllegalAccessException | InvocationTargetException | IllegalArgumentException e) {
+          String message = format("Failed to invoke %s#%s(%s) with %s",
+              method.getDeclaringClass().getCanonicalName(),
+              method.getName(),
+              arrayToString(parameterTypes),
+              arrayToString(args));
+          throw wrap(e, message);
+        }
       }
 
       boolean isVarargs() {

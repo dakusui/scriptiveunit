@@ -57,7 +57,8 @@ public enum ReflectionUtils {
 
   public static List<ObjectMethod> getAnnotatedMethods(Object object, Class<? extends Annotation> annotationClass,
       Map<String, String> aliases) {
-    return Arrays.stream(object.getClass().getMethods()).filter(each -> each.isAnnotationPresent(annotationClass))
+    return Arrays.stream(object.getClass().getMethods())
+        .filter(each -> each.isAnnotationPresent(annotationClass))
         .map(each -> ObjectMethod.create(object, each, aliases)).collect(toList());
   }
 

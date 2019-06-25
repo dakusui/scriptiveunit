@@ -1,7 +1,6 @@
 package com.github.dakusui.scriptiveunit.examples;
 
 
-import com.github.dakusui.scriptiveunit.runners.ScriptiveUnit;
 import com.github.dakusui.scriptiveunit.annotations.Import;
 import com.github.dakusui.scriptiveunit.annotations.Import.Alias;
 import com.github.dakusui.scriptiveunit.annotations.Load;
@@ -9,7 +8,6 @@ import com.github.dakusui.scriptiveunit.annotations.Scriptable;
 import com.github.dakusui.scriptiveunit.core.Config;
 import com.github.dakusui.scriptiveunit.drivers.Arith;
 import com.github.dakusui.scriptiveunit.drivers.Collections;
-import com.github.dakusui.scriptiveunit.drivers.Core;
 import com.github.dakusui.scriptiveunit.drivers.Predicates;
 import com.github.dakusui.scriptiveunit.drivers.QueryApi;
 import com.github.dakusui.scriptiveunit.drivers.Strings;
@@ -17,6 +15,7 @@ import com.github.dakusui.scriptiveunit.drivers.actions.Basic;
 import com.github.dakusui.scriptiveunit.loaders.json.JsonBasedTestSuiteDescriptorLoader;
 import com.github.dakusui.scriptiveunit.loaders.json.JsonPreprocessor;
 import com.github.dakusui.scriptiveunit.model.form.Form;
+import com.github.dakusui.scriptiveunit.runners.ScriptiveUnit;
 import com.google.common.collect.Maps;
 import org.codehaus.jackson.JsonNode;
 import org.codehaus.jackson.node.ObjectNode;
@@ -108,13 +107,13 @@ public class Qapi {
   @Import
   public Object collections = new Collections();
 
-  @SuppressWarnings("unused")
-  @Import({
-      @Alias(value = "*"),
-      @Alias(value = "configAttr", as = "config_attr"),
-      @Alias(value = "systemProperty", as = "system_property"),
-  })
-  public Object core = new Core();
+//  @SuppressWarnings("unused")
+//  @Import({
+//      @Alias(value = "*"),
+//      @Alias(value = "configAttr", as = "config_attr"),
+//      @Alias(value = "systemProperty", as = "system_property"),
+//  })
+//  public Object core = new Core();
 
   @SuppressWarnings("unused")
   @Import
@@ -129,7 +128,9 @@ public class Qapi {
       @Alias(value = "*"),
       @Alias(value = "request", as = "query"),
       @Alias(value = "response", as = "result"),
-      @Alias(value = "service", as = "issue")
+      @Alias(value = "service", as = "issue"),
+      @Alias(value = "configAttr", as = "config_attr"),
+      @Alias(value = "systemProperty", as = "system_property"),
   })
   public QueryApi<Request, Response, Entry> queryApi = new QueryApi<Request, Response, Entry>() {
     @Override

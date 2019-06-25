@@ -5,6 +5,7 @@ import com.github.dakusui.scriptiveunit.exceptions.TypeMismatch;
 import com.github.dakusui.scriptiveunit.model.form.Form;
 import com.github.dakusui.scriptiveunit.model.form.handle.FormHandle;
 import com.github.dakusui.scriptiveunit.model.form.handle.FormHandleFactory;
+import com.github.dakusui.scriptiveunit.model.form.handle.ObjectMethodRegistry;
 import com.github.dakusui.scriptiveunit.utils.CoreUtils;
 
 import java.util.List;
@@ -18,7 +19,7 @@ import static com.github.dakusui.scriptiveunit.model.form.handle.FormUtils.creat
  */
 public interface Statement {
   static Factory createStatementFactory(Config config, Map<String, List<Object>> userDefinedFormClauses) {
-    return new Factory(config, userDefinedFormClauses);
+    return new Factory(ObjectMethodRegistry.load(config.getDriverObject()), userDefinedFormClauses);
   }
 
   <U> Form<U> toForm();
@@ -42,9 +43,10 @@ public interface Statement {
   class Factory {
     private final FormHandleFactory formHandleFactory;
 
-    public Factory(Config config, Map<String, List<Object>> userDefinedFormClauses) {
+    public Factory(ObjectMethodRegistry objectMethodRegistry, Map<String, List<Object>> userDefinedFormClauses) {
+
       this.formHandleFactory = new FormHandleFactory(
-          config,
+          objectMethodRegistry,
           StatementRegistry.create(this, userDefinedFormClauses));
     }
 

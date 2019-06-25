@@ -50,7 +50,7 @@ public class Driver1 {
 
     @SuppressWarnings("unused")
     @Scriptable
-    public Form<String> print(Form<String> s) {
+    public Form<String> printString(Form<String> s) {
       return (Stage input) -> {
         System.out.println(s.apply(input));
         return s.apply(input);

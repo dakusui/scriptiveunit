@@ -5,7 +5,6 @@ import com.github.dakusui.scriptiveunit.model.session.Stage;
 import com.github.dakusui.scriptiveunit.model.form.Form;
 
 import java.util.Map;
-
 public abstract class Service<REQUEST, RESPONSE> extends Core {
   @SuppressWarnings("unused")
   @Scriptable

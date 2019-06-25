@@ -1,9 +1,7 @@
 package com.github.dakusui.scriptiveunit.model.form.handle;
 
-import com.github.dakusui.scriptiveunit.core.Config;
 import com.github.dakusui.scriptiveunit.model.statement.Statement;
 import com.github.dakusui.scriptiveunit.model.statement.StatementRegistry;
-import com.github.dakusui.scriptiveunit.utils.DriverUtils;
 
 import java.util.Optional;
 import java.util.function.Supplier;
@@ -12,11 +10,11 @@ import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
 
 public class FormHandleFactory {
-  private final Object driver;
   private final StatementRegistry statementRegistryForUserForms;
+  private final ObjectMethodRegistry objectMethodRegistry;
 
-  public FormHandleFactory(Config config, StatementRegistry statementRegistryForUserForms) {
-    this.driver = requireNonNull(config.getDriverObject());
+  public FormHandleFactory(ObjectMethodRegistry objectMethodRegistry, StatementRegistry statementRegistryForUserForms) {
+    this.objectMethodRegistry = objectMethodRegistry;
     this.statementRegistryForUserForms = requireNonNull(statementRegistryForUserForms);
   }
 
@@ -48,19 +46,10 @@ public class FormHandleFactory {
   }
 
   private Optional<Statement> getUserDefinedStatementByName(String name) {
-    return statementRegistryForUserForms.lookUp(name);
+    return this.statementRegistryForUserForms.lookUp(name);
   }
 
   private Optional<ObjectMethod> getObjectMethodFromDriver(String methodName) {
-    for (ObjectMethod each : DriverUtils.getObjectMethodsFromImportedFieldsInObject(this.driver)) {
-      if (getMethodName(each).equals(methodName))
-        return Optional.of(each);
-    }
-    return Optional.empty();
+    return this.objectMethodRegistry.lookUp(methodName);
   }
-
-  private String getMethodName(ObjectMethod method) {
-    return method.getName();
-  }
-
 }
