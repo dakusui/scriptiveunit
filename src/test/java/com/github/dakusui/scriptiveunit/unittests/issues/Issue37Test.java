@@ -12,14 +12,21 @@ import org.junit.experimental.runners.Enclosed;
 import org.junit.runner.JUnitCore;
 import org.junit.runner.Result;
 import org.junit.runner.RunWith;
-import org.junit.runner.notification.Failure;
 
 import java.util.LinkedList;
 import java.util.List;
-import java.util.function.Consumer;
 
-import static com.github.dakusui.crest.Crest.*;
-import static com.github.dakusui.crest.utils.printable.Predicates.*;
+import static com.github.dakusui.crest.Crest.allOf;
+import static com.github.dakusui.crest.Crest.asListOf;
+import static com.github.dakusui.crest.Crest.asObject;
+import static com.github.dakusui.crest.Crest.assertThat;
+import static com.github.dakusui.crest.Crest.call;
+import static com.github.dakusui.crest.Crest.sublistAfter;
+import static com.github.dakusui.crest.utils.printable.Predicates.equalTo;
+import static com.github.dakusui.crest.utils.printable.Predicates.isEmpty;
+import static com.github.dakusui.crest.utils.printable.Predicates.isFalse;
+import static com.github.dakusui.crest.utils.printable.Predicates.isTrue;
+import static com.github.dakusui.crest.utils.printable.Predicates.startsWith;
 import static java.util.Arrays.asList;
 
 @RunWith(Enclosed.class)
@@ -59,14 +66,11 @@ public class Issue37Test {
 
     private void assertTestResult(TestResult actual) {
       actual.getOutput().forEach(System.out::println);
-      actual.getJunitResult().getFailures().forEach(new Consumer<Failure>() {
-        @Override
-        public void accept(Failure failure) {
-          System.out.println(failure.getTestHeader());
-          System.out.println(failure.getDescription());
-          System.out.println(failure.getMessage());
-          failure.getException().printStackTrace(System.out);
-        }
+      actual.getJunitResult().getFailures().forEach(failure -> {
+        System.out.println(failure.getTestHeader());
+        System.out.println(failure.getDescription());
+        System.out.println(failure.getMessage());
+        failure.getException().printStackTrace(System.out);
       });
       assertThat(
           actual,

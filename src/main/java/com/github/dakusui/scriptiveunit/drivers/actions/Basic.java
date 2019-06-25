@@ -20,7 +20,6 @@ import java.util.function.Consumer;
 import static com.github.dakusui.actionunit.Actions.simple;
 import static com.github.dakusui.scriptiveunit.model.form.Func.createFunc;
 import static com.github.dakusui.scriptiveunit.model.form.Func.funcId;
-import static com.github.dakusui.scriptiveunit.model.form.Func.memoize;
 import static com.github.dakusui.scriptiveunit.utils.StringUtils.prettify;
 import static java.util.Objects.requireNonNull;
 import static java.util.stream.Collectors.toList;
@@ -131,19 +130,16 @@ public class Basic {
 
   @Scriptable
   public final Func<Integer> increment() {
-    return memoize(
-        createFunc(funcId(), input -> i++)
-    );
+    return createFunc(funcId(), input -> i++);
   }
 
   @Scriptable
   public final Func<Integer> op(Form<Integer> a, Form<Integer> b) {
-    return Func.memoize(
-        new Func.Builder<Integer>(Func.funcId())
-            .func(objects -> (Integer) objects[0] + (Integer) objects[1] + i++)
-            .addParameter(a)
-            .addParameter(b)
-            .build()
-    );
+    return new Func.Builder<Integer>(Func.funcId())
+        .func(objects -> (Integer) objects[0] + (Integer) objects[1] + i++)
+        .addParameter(a)
+        .addParameter(b)
+        .memoize()
+        .build();
   }
 }

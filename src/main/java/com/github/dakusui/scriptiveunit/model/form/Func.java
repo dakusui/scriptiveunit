@@ -113,24 +113,12 @@ public interface Func<O> extends Form<O> {
     }
 
     public Builder<O> func(Function<Object[], O> body) {
-      this.body = memoizeIfRequested(requireNonNull(body));
+      this.body = requireNonNull(body);
       return this;
     }
 
-    private Function<Object[], O> memoizeIfRequested(Function<Object[], O> body) {
-      if (memoized)
-        return new Function<Object[], O>() {
-          Map<List<Object>, O> memo = new HashMap<>();
-
-          @Override
-          public O apply(Object[] objects) {
-            return memo.computeIfAbsent(asList(objects), args -> body.apply(args.toArray()));
-          }
-        };
-      return body;
-    }
-
     public Func<O> build() {
+      Function<Object[], O> body = memoize(this.body);
       return new Func<O>() {
         @Override
         public List<Form> parameters() {
@@ -158,29 +146,16 @@ public interface Func<O> extends Form<O> {
         }
       };
     }
-  }
 
-  static <T> Func<T> memoize(Func<T> func) {
-    return new Func<T>() {
-      @Override
-      public List<Form> parameters() {
-        return func.parameters();
-      }
+    private static <O> Function<Object[], O> memoize(Function<Object[], O> body) {
+      return new Function<Object[], O>() {
+        Map<List<Object>, O> memo = new HashMap<>();
 
-      @Override
-      public Function<Object[], T> body() {
-        return func.body();
-      }
-
-      public T apply(Stage input) {
-        Call<T> call = call(input);
-        return call.get();
-      }
-
-      @Override
-      public String id() {
-        return func.id();
-      }
-    };
+        @Override
+        public O apply(Object[] objects) {
+          return memo.computeIfAbsent(asList(objects), args -> body.apply(args.toArray()));
+        }
+      };
+    }
   }
 }
