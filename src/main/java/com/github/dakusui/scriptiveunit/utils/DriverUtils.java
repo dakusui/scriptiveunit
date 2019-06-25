@@ -2,6 +2,7 @@ package com.github.dakusui.scriptiveunit.utils;
 
 import com.github.dakusui.scriptiveunit.annotations.Import;
 import com.github.dakusui.scriptiveunit.annotations.Scriptable;
+import com.github.dakusui.scriptiveunit.drivers.Predicates;
 import com.github.dakusui.scriptiveunit.model.form.handle.ObjectMethod;
 
 import java.util.Arrays;
@@ -33,5 +34,23 @@ public enum DriverUtils {
         aliases
     ).collect(toMap(alias -> requireNonNull(alias).value(), alias -> !"".equals(requireNonNull(alias).as()) ? alias.as() : ""
     ));
+  }
+
+  public static void main(String... args) {
+    getObjectMethodsFromImportedFieldsInObject(new DriverExample())
+        .forEach(System.out::println);
+  }
+
+  public static class DriverExample {
+    @Import({
+        @Import.Alias(value = "*"),
+        @Import.Alias(value = "gt", as = ">"),
+        @Import.Alias(value = "ge", as = ">="),
+        @Import.Alias(value = "lt", as = "<"),
+        @Import.Alias(value = "le", as = "<="),
+        @Import.Alias(value = "eq", as = "=="),
+        @Import.Alias(value = "ifthen", as = "if_then")
+    })
+    public final Object predicates = new Predicates();
   }
 }

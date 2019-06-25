@@ -5,8 +5,6 @@ import com.github.dakusui.scriptiveunit.exceptions.TypeMismatch;
 import com.github.dakusui.scriptiveunit.model.form.Form;
 import com.github.dakusui.scriptiveunit.model.form.handle.FormHandle;
 import com.github.dakusui.scriptiveunit.model.form.handle.FormHandleFactory;
-import com.github.dakusui.scriptiveunit.model.form.handle.FormRegistry;
-import com.github.dakusui.scriptiveunit.model.session.Stage;
 import com.github.dakusui.scriptiveunit.utils.CoreUtils;
 
 import java.util.List;
@@ -25,8 +23,6 @@ public interface Statement {
 
   <U> Form<U> toForm();
 
-  <V> V evaluate(Stage stage);
-
   interface Atom extends Statement {
     default boolean isParameterAccessor() {
       return false;
@@ -41,14 +37,6 @@ public interface Statement {
     FormHandle getFormHandle();
 
     Arguments getArguments();
-
-    @SuppressWarnings("unchecked")
-    default <V> V evaluate(Stage stage) {
-      return (V) stage.formRegistry()
-          .lookUp(this.getFormHandle())
-          .orElseThrow(FormRegistry.Utils.undefinedFormError(this))
-          .apply(stage.createChild(this));
-    }
   }
 
   class Factory {
@@ -86,11 +74,6 @@ public interface Statement {
         };
       } else if (car instanceof Integer) {
         return new Atom() {
-          @Override
-          public <V> V evaluate(Stage stage) {
-            return stage.getArgument((Integer) car);
-          }
-
           @SuppressWarnings("unchecked")
           public <V> V value() {
             return (V) car;
@@ -112,12 +95,6 @@ public interface Statement {
 
     Atom createAtom(Object object) {
       return new Atom() {
-        @SuppressWarnings("unchecked")
-        @Override
-        public <V> V evaluate(Stage stage) {
-          return (V) object;
-        }
-
         @Override
         public <U> Form<U> toForm() {
           return createConst(this.value());

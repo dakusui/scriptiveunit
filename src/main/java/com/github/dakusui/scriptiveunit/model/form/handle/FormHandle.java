@@ -22,6 +22,7 @@ public interface FormHandle {
   }
 
   abstract class Base implements FormHandle {
+    public abstract String toString();
   }
 
   class MethodBased extends Base {
@@ -76,6 +77,10 @@ public interface FormHandle {
               .collect(toList()));
     }
 
+    @Override
+    public String toString() {
+      return "lambda";
+    }
   }
 
   class User extends Base {
@@ -114,6 +119,11 @@ public interface FormHandle {
           .apply(input)
           .toForm()
           .apply(createWrappedStage(input, args));
+    }
+
+    @Override
+    public String toString() {
+      return "user:" + userDefinedStatement;
     }
   }
 }

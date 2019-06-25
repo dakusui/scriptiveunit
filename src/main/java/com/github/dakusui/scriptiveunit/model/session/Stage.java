@@ -4,8 +4,6 @@ import com.github.dakusui.jcunit.core.tuples.Tuple;
 import com.github.dakusui.scriptiveunit.core.Config;
 import com.github.dakusui.scriptiveunit.model.desc.testitem.TestItem;
 import com.github.dakusui.scriptiveunit.model.form.Form;
-import com.github.dakusui.scriptiveunit.model.form.handle.FormRegistry;
-import com.github.dakusui.scriptiveunit.model.statement.Statement;
 
 import java.util.HashMap;
 import java.util.List;
@@ -15,7 +13,6 @@ import java.util.function.Function;
 
 import static com.github.dakusui.scriptiveunit.exceptions.ScriptiveUnitException.indexOutOfBounds;
 import static com.github.dakusui.scriptiveunit.utils.Checks.check;
-import static java.util.Objects.requireNonNull;
 
 /**
  * A stage is a part of session, where various activities defined as Funcs are
@@ -48,29 +45,6 @@ public interface Stage {
   Optional<Report> getReport();
 
   Optional<TestItem> getTestItem();
-
-  default FormRegistry formRegistry() {
-    throw new UnsupportedOperationException();
-  }
-
-  default Statement.Compound ongoingStatement() {
-    throw new UnsupportedOperationException();
-  }
-
-  default Stage createChild(Statement.Compound statement) {
-    requireNonNull(statement);
-    return new Delegating(this) {
-      @Override
-      public Optional<Tuple> getTestCaseTuple() {
-        return Stage.this.getTestCaseTuple();
-      }
-
-      @Override
-      public Statement.Compound ongoingStatement() {
-        return statement;
-      }
-    };
-  }
 
   enum ExecutionLevel {
     SUITE,
