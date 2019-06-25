@@ -11,8 +11,6 @@ import java.util.List;
 import java.util.Objects;
 
 import static java.util.Objects.requireNonNull;
-import static java.util.stream.Collectors.toList;
-import static java.util.stream.StreamSupport.stream;
 
 public enum FormUtils {
   INSTANCE;
@@ -35,17 +33,11 @@ public enum FormUtils {
     return statement.toForm();
   }
 
-  public static List<Form> toForms(Iterable<Statement> arguments) {
-    return stream(arguments.spliterator(), false)
-        .map(FormUtils.INSTANCE::toForm)
-        .collect(toList());
-  }
-
   static <O> Form<O> createProxy(InvocationHandler handler, Class<? extends Form> interfaceClass) {
     //noinspection unchecked
     return (Form<O>) Proxy.newProxyInstance(
         Form.class.getClassLoader(),
-        new Class[] { interfaceClass },
+        new Class[]{interfaceClass},
         handler
     );
   }
@@ -68,7 +60,7 @@ public enum FormUtils {
              * the statement by evaluating it, it is valid to pass a fresh
              * memo object to an invoker.
              */
-            work.add(Objects.toString(INSTANCE.toForm(each)));
+            work.add(Objects.toString(each.toForm()));
           } else {
             throw SyntaxException.parameterNameShouldBeSpecifiedWithConstant((Statement.Compound) statement);
           }

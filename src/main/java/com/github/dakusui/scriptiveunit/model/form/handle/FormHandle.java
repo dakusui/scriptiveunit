@@ -8,6 +8,7 @@ import com.github.dakusui.scriptiveunit.utils.CoreUtils;
 import java.util.stream.Stream;
 
 import static com.github.dakusui.scriptiveunit.model.session.Stage.Factory.createWrappedStage;
+import static com.github.dakusui.scriptiveunit.utils.CoreUtils.iterableToStream;
 import static com.google.common.collect.Iterables.getOnlyElement;
 import static com.google.common.collect.Iterables.toArray;
 import static java.util.Objects.requireNonNull;
@@ -32,10 +33,10 @@ public interface FormHandle {
 
     static <U> Form<U> methodBasedFormHandleToForm(MethodBased formHandle, Statement.Compound compound) {
       ObjectMethod objectMethod = formHandle.objectMethod();
-      return objectMethod.createFormForCompoundStatement(toArray(
-          FormUtils.toForms(compound.getArguments()),
-          Form.class
-      ));
+      return objectMethod.createFormForCompoundStatement(
+          iterableToStream(compound.getArguments())
+              .map(Statement::toForm)
+              .toArray(Form[]::new));
     }
 
     @Override
@@ -69,7 +70,10 @@ public interface FormHandle {
 
     static <U> Form<U> lambdaFormHandleToForm(Statement.Compound compound) {
       //noinspection unchecked
-      return (Form<U>) (Form<Form<Object>>) (Stage ii) -> getOnlyElement(FormUtils.toForms(compound.getArguments()));
+      return (Form<U>) (Form<Form<Object>>) (Stage ii) ->
+          getOnlyElement(iterableToStream(compound.getArguments())
+              .map(Statement::toForm)
+              .collect(toList()));
     }
 
   }
@@ -91,7 +95,7 @@ public interface FormHandle {
       return (Form<U>) createUserFunc(toArray(
           Stream.concat(
               Stream.of((Form<Statement>) input -> formHandle.statement()),
-              FormUtils.toForms(compound.getArguments()).stream())
+              iterableToStream(compound.getArguments()).map(Statement::toForm))
               .collect(toList()),
           Form.class));
     }

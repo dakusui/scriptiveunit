@@ -6,6 +6,8 @@ import java.math.BigDecimal;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
 
 import static com.github.dakusui.scriptiveunit.core.Exceptions.SCRIPTIVEUNIT;
 import static java.math.MathContext.DECIMAL128;
@@ -17,6 +19,9 @@ public enum CoreUtils {
       .put(double.class, Double.class).put(float.class, Float.class).put(int.class, Integer.class)
       .put(long.class, Long.class).put(short.class, Short.class).put(void.class, Void.class).build();
 
+  public static <V> Stream<V> iterableToStream(Iterable<V> iterable) {
+    return StreamSupport.stream(iterable.spliterator(), false);
+  }
   public static BigDecimal toBigDecimal(Number number) {
     if (number instanceof BigDecimal)
       return (BigDecimal) number;

@@ -27,18 +27,17 @@ public interface FormRegistry {
   class Loader {
     private final Map<FormHandle, Form> formMap = new HashMap<>();
 
-
     Loader register(Object libraryObject) {
       requireNonNull(libraryObject);
       List<ObjectMethod> methods = DriverUtils.getObjectMethodsFromImportedFieldsInObject(libraryObject);
       for (ObjectMethod each : methods) {
-        register(each, loadForm(each));
+        //register(each, loadForm(each));
       }
       return this;
     }
 
-    void register(ObjectMethod method, Form form) {
-      if (formMap.containsKey(method.getName()))
+    void register(FormHandle handle, Form form) {
+      if (formMap.containsKey(handle))
         throw new IllegalStateException(
             format("Tried to register:%s with the key:%s, but %s was already registered.", form, form.name(), formMap.get(form)));
       //formMap.put(method.getName(), form);
