@@ -107,14 +107,6 @@ public class Qapi {
   @Import
   public Object collections = new Collections();
 
-//  @SuppressWarnings("unused")
-//  @Import({
-//      @Alias(value = "*"),
-//      @Alias(value = "configAttr", as = "config_attr"),
-//      @Alias(value = "systemProperty", as = "system_property"),
-//  })
-//  public Object core = new Core();
-
   @SuppressWarnings("unused")
   @Import
   public Object basicActions = new Basic();

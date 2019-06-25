@@ -3,12 +3,15 @@ package com.github.dakusui.scriptiveunit.model.form;
 import com.github.dakusui.scriptiveunit.model.session.Stage;
 
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
+import static java.util.Arrays.asList;
 import static java.util.Objects.requireNonNull;
 
 public interface Func<O> extends Form<O> {
@@ -84,6 +87,7 @@ public interface Func<O> extends Form<O> {
     private final String                id;
     private final List<Form>            parameters;
     private       Function<Object[], O> body;
+    private       boolean               memoized = false;
 
     public Builder(String id) {
       this.id = requireNonNull(id);
@@ -92,6 +96,11 @@ public interface Func<O> extends Form<O> {
 
     public Builder<O> addParameter(Form param) {
       this.parameters.add(requireNonNull(param));
+      return this;
+    }
+
+    public Builder<O> memoize() {
+      this.memoized = true;
       return this;
     }
 
@@ -104,8 +113,21 @@ public interface Func<O> extends Form<O> {
     }
 
     public Builder<O> func(Function<Object[], O> body) {
-      this.body = requireNonNull(body);
+      this.body = memoizeIfRequested(requireNonNull(body));
       return this;
+    }
+
+    private Function<Object[], O> memoizeIfRequested(Function<Object[], O> body) {
+      if (memoized)
+        return new Function<Object[], O>() {
+          Map<List<Object>, O> memo = new HashMap<>();
+
+          @Override
+          public O apply(Object[] objects) {
+            return memo.computeIfAbsent(asList(objects), args -> body.apply(args.toArray()));
+          }
+        };
+      return body;
     }
 
     public Func<O> build() {
