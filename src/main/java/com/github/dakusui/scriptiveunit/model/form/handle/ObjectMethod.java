@@ -3,9 +3,11 @@ package com.github.dakusui.scriptiveunit.model.form.handle;
 import com.github.dakusui.scriptiveunit.annotations.AccessesTestParameter;
 import com.github.dakusui.scriptiveunit.annotations.Doc;
 import com.github.dakusui.scriptiveunit.annotations.Import;
+import com.github.dakusui.scriptiveunit.annotations.Memoized;
 import com.github.dakusui.scriptiveunit.core.Description;
 import com.github.dakusui.scriptiveunit.model.form.Form;
 import com.github.dakusui.scriptiveunit.model.form.FormList;
+import com.github.dakusui.scriptiveunit.model.form.Func;
 import com.github.dakusui.scriptiveunit.model.session.Stage;
 
 import java.lang.reflect.InvocationHandler;
@@ -14,8 +16,10 @@ import java.lang.reflect.Method;
 import java.util.AbstractList;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
 
 import static com.github.dakusui.scriptiveunit.exceptions.ScriptiveUnitException.fail;
 import static com.github.dakusui.scriptiveunit.exceptions.ScriptiveUnitException.wrap;
@@ -58,6 +62,12 @@ public interface ObjectMethod {
         aliases.containsKey(Import.Alias.ALL) ?
             baseName :
             null;
+    Map<List<Object>, Object> memo;
+    if (method.isAnnotationPresent(Memoized.class)) {
+      requireReturnedValueAssignableToFunc(method);
+      memo = new HashMap<>();
+    } else
+      memo = null;
 
     return new ObjectMethod() {
       private final Class<?>[] parameterTypes = method.getParameterTypes();
@@ -94,15 +104,19 @@ public interface ObjectMethod {
       @SuppressWarnings("unchecked")
       @Override
       public <V> Form<V> createFormForCompoundStatement(Form[] args) {
-        Object returnedValue;
+        Object returnedValue = this.invokeMethod(composeArgs(args));
         /*
          * By using dynamic proxy, we are making it possible to print structured pretty log.
          */
-        return createForm((Form) check(
-            returnedValue = this.invokeMethod(composeArgs(args)),
+        return createForm(requireValueIsForm(returnedValue));
+      }
+
+      private Form requireValueIsForm(Object returnedValue) {
+        return (Form) check(
+            returnedValue,
             (Object o) -> o instanceof Form,
             () -> valueReturnedByScriptableMethodMustBeFunc(this.getName(), returnedValue)
-        ));
+        );
       }
 
       @Override
@@ -124,6 +138,7 @@ public interface ObjectMethod {
 
       Object invokeMethod(Object... args) {
         try {
+          // MEMOIZE!
           return method.invoke(driverObject, args);
         } catch (IllegalAccessException | InvocationTargetException | IllegalArgumentException e) {
           String message = format("Failed to invoke %s#%s(%s) with %s",
@@ -152,8 +167,46 @@ public interface ObjectMethod {
         return argValues;
       }
 
-      <V> Form<V> createForm(Form target) {
-        return FormUtils.createProxy(createInvocationHandler(target), Form.class);
+      <V> Form<V> createForm(Form<V> target_) {
+        if (memo == null)
+          return target_;
+        return new Func<V>() {
+          Func<V> target = (Func<V>) target_;
+
+          @Override
+          public List<Form> parameters() {
+            return target.parameters();
+          }
+
+          @Override
+          public V apply(Stage input) {
+            return body().apply(parameters()
+                .stream()
+                .map(param -> param.apply(input))
+                .toArray());
+          }
+
+          @Override
+          public String id() {
+            return target.id();
+          }
+
+          @SuppressWarnings("unchecked")
+          @Override
+          public Function<Object[], V> body() {
+            return (Object[] args) -> (V) memo.computeIfAbsent(
+                asList(args),
+                objects -> target.body().apply(objects.toArray()));
+          }
+        };
+      }
+
+      private <V> Object invokeMethod(Form<V> target, Method m, Object[] args) {
+        try {
+          return toBigDecimalIfPossible(m.invoke(target, args));
+        } catch (IllegalAccessException | InvocationTargetException e) {
+          throw new RuntimeException(e);
+        }
       }
 
       String arrayToString(Object[] args) {
@@ -164,6 +217,14 @@ public interface ObjectMethod {
         }
       }
     };
+  }
+
+  static void requireReturnedValueAssignableToFunc(Method method) {
+    check(
+        method,
+        m -> Func.class.isAssignableFrom(m.getReturnType()),
+        "'%s' is expected to return a class assignable to '%s'", method,
+        Func.class.getCanonicalName());
   }
 
   static Description describe(ObjectMethod objectMethod) {

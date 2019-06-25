@@ -3,6 +3,7 @@ package com.github.dakusui.scriptiveunit.drivers.actions;
 import com.github.dakusui.actionunit.Action;
 import com.github.dakusui.actionunit.Actions;
 import com.github.dakusui.scriptiveunit.annotations.Doc;
+import com.github.dakusui.scriptiveunit.annotations.Memoized;
 import com.github.dakusui.scriptiveunit.annotations.Scriptable;
 import com.github.dakusui.scriptiveunit.model.form.Form;
 import com.github.dakusui.scriptiveunit.model.form.FormList;
@@ -12,8 +13,6 @@ import com.github.dakusui.scriptiveunit.utils.ActionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Objects;
 import java.util.function.Consumer;
 
@@ -29,7 +28,6 @@ public class Basic {
   private static final Logger LOGGER = LoggerFactory.getLogger(Basic.class);
 
   private static Consumer<String>       out  = System.err::println;//LOGGER::debug;
-  private        Map<Func.Call, Object> memo = new HashMap<>();
 
   public static void setOut(Consumer<String> out) {
     Basic.out = requireNonNull(out);
@@ -133,13 +131,13 @@ public class Basic {
     return createFunc(funcId(), input -> i++);
   }
 
+  @Memoized
   @Scriptable
   public final Func<Integer> op(Form<Integer> a, Form<Integer> b) {
     return new Func.Builder<Integer>(Func.funcId())
         .func(objects -> (Integer) objects[0] + (Integer) objects[1] + i++)
         .addParameter(a)
         .addParameter(b)
-        .memoize()
         .build();
   }
 }
