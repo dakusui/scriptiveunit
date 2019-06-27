@@ -8,6 +8,7 @@ import com.github.dakusui.scriptiveunit.model.session.Session;
 import com.github.dakusui.scriptiveunit.utils.ReflectionUtils;
 import org.codehaus.jackson.JsonNode;
 import org.codehaus.jackson.map.ObjectMapper;
+import org.codehaus.jackson.node.ArrayNode;
 import org.codehaus.jackson.node.JsonNodeFactory;
 import org.codehaus.jackson.node.ObjectNode;
 
@@ -26,6 +27,8 @@ public class JsonBasedTestSuiteDescriptorLoader extends TestSuiteDescriptorLoade
    */
   protected static final String DEFAULTS_JSON   = "defaults/values.json";
 
+  private static final HostLanguage<ObjectNode, ArrayNode, JsonNode> hostLanguage = new HostLanguage.Json();
+
   @SuppressWarnings("unused")
   public JsonBasedTestSuiteDescriptorLoader(Config config) {
     super(config);
@@ -41,8 +44,8 @@ public class JsonBasedTestSuiteDescriptorLoader extends TestSuiteDescriptorLoade
   }
 
   protected ObjectNode readObjectNodeWithMerging(String resourceName) {
-    ObjectNode work = createObjectNode();
-    ObjectNode child = preprocess(readResource(resourceName), getPreprocessors());
+    ObjectNode work = newObjectNode();
+    ObjectNode child = preprocess(readObjectNode(resourceName), getPreprocessors());
     if (hasInheritanceDirective(child))
       getParents(child).forEach(s -> deepMerge(readObjectNodeWithMerging(s), work));
     return deepMerge(child, work);
@@ -67,18 +70,8 @@ public class JsonBasedTestSuiteDescriptorLoader extends TestSuiteDescriptorLoade
   }
 
   // CUSTOMIZATION POINT
-  private ObjectNode createObjectNode() {
+  private ObjectNode newObjectNode() {
     return JsonNodeFactory.instance.objectNode();
-  }
-
-  // CUSTOMIZATION POINT
-  private boolean hasInheritanceDirective(ObjectNode child) {
-    return child.has(EXTENDS_KEYWORD);
-  }
-
-  // CUSTOMIZATION POINT
-  private List<String> getParents(ObjectNode child) {
-    return getParentsOf(child, EXTENDS_KEYWORD);
   }
 
   // CUSTOMIZATION POINT
@@ -102,18 +95,28 @@ public class JsonBasedTestSuiteDescriptorLoader extends TestSuiteDescriptorLoade
   }
 
   // CUSTOMIZATION POINT
+  private boolean hasInheritanceDirective(ObjectNode child) {
+    return child.has(EXTENDS_KEYWORD);
+  }
+
+  // CUSTOMIZATION POINT
+  private List<String> getParents(ObjectNode child) {
+    return getParentsOf(child, EXTENDS_KEYWORD);
+  }
+
+  // CUSTOMIZATION POINT
   private ObjectNode removeInheritanceDirective(ObjectNode ret) {
     ret.remove(EXTENDS_KEYWORD);
     return ret;
   }
 
-  // CUSTOMIZATION POINT
+  // CUSTOMIZATION POINT; MODEL, HOST_LANGUAGE
   private ObjectNode readDefaultValues() {
-    return readResource(DEFAULTS_JSON);
+    return readObjectNode(DEFAULTS_JSON);
   }
 
   // CUSTOMIZATION POINT
-  private ObjectNode readResource(String resourceName) {
+  private ObjectNode readObjectNode(String resourceName) {
     return checkObjectNode(JsonUtils.readJsonNodeFromStream(ReflectionUtils.openResourceAsStream(resourceName)));
   }
 }
