@@ -31,16 +31,21 @@ public class JsonBasedTestSuiteDescriptorLoader extends TestSuiteDescriptorLoade
   // TEMPLATE
   @Override
   public TestSuiteDescriptor loadTestSuiteDescriptor(Session session) {
-    return mapObjectNode(readScriptHandlingInheritance(session), JsonTestSuiteDescriptorBean.class).create(session);
+    return hostLanguage.mapObjectNode(
+        readScriptHandlingInheritance(session.getConfig().getScriptResourceName()),
+        JsonTestSuiteDescriptorBean.class)
+        .create(session);
   }
 
   // TEMPLATE
   protected ObjectNode readObjectNodeWithMerging(String resourceName) {
     ObjectNode work = hostLanguage.newObjectNode();
-    ObjectNode child = preprocess(readObjectNode(resourceName), getPreprocessors());
-    if (hasInheritanceDirective(child))
-      getParents(child).forEach(s -> deepMerge(readObjectNodeWithMerging(s), work));
-    return deepMerge(child, work);
+    ObjectNode child = preprocess(hostLanguage.readObjectNode(resourceName), getPreprocessors());
+    if (hostLanguage.hasInheritanceDirective(child))
+      hostLanguage
+          .getParents(child)
+          .forEach(s -> hostLanguage.deepMerge(readObjectNodeWithMerging(s), work));
+    return hostLanguage.deepMerge(child, work);
   }
 
   // TEMPLATE
@@ -53,12 +58,7 @@ public class JsonBasedTestSuiteDescriptorLoader extends TestSuiteDescriptorLoade
   protected ObjectNode readScriptHandlingInheritance(String scriptResourceName) {
     ObjectNode work = readObjectNodeWithMerging(scriptResourceName);
     ObjectNode ret = hostLanguage.translate(modelSpec.createDefaultValues());
-    return hostLanguage.removeInheritanceDirective(deepMerge(work, ret));
-  }
-
-  // TEMPLATE
-  private ObjectNode readScriptHandlingInheritance(Session session) {
-    return readScriptHandlingInheritance(session.getConfig().getScriptResourceName());
+    return hostLanguage.removeInheritanceDirective(hostLanguage.deepMerge(work, ret));
   }
 
   // TEMPLATE
@@ -74,28 +74,4 @@ public class JsonBasedTestSuiteDescriptorLoader extends TestSuiteDescriptorLoade
     return (ObjectNode) JsonPreprocessorUtils.translate(jsonPreprocessor, inputNode);
   }
 
-  // CUSTOMIZATION POINT
-  private ObjectNode deepMerge(ObjectNode work, ObjectNode base) {
-    return hostLanguage.deepMerge(work, base);
-  }
-
-  // CUSTOMIZATION POINT
-  private <V> V mapObjectNode(ObjectNode rootNode, Class<V> valueType) {
-    return hostLanguage.mapObjectNode(rootNode, valueType);
-  }
-
-  // CUSTOMIZATION POINT
-  private boolean hasInheritanceDirective(ObjectNode child) {
-    return hostLanguage.hasInheritanceDirective(child);
-  }
-
-  // CUSTOMIZATION POINT
-  private List<String> getParents(ObjectNode child) {
-    return hostLanguage.getParents(child);
-  }
-
-  // CUSTOMIZATION POINT
-  private ObjectNode readObjectNode(String resourceName) {
-    return hostLanguage.readObjectNode(resourceName);
-  }
 }
