@@ -1,7 +1,6 @@
 package com.github.dakusui.scriptiveunit.unittests.preprocessing;
 
 import com.github.dakusui.scriptiveunit.loaders.Preprocessor;
-import com.github.dakusui.scriptiveunit.loaders.json.JsonPreprocessor;
 import com.github.dakusui.scriptiveunit.loaders.json.JsonPreprocessorUtils;
 import org.codehaus.jackson.JsonNode;
 import org.codehaus.jackson.map.ObjectMapper;
@@ -17,7 +16,7 @@ public class JsonPreprocessorTest {
   @Test
   public void whenPreprocessingOnArrayIsRequested() throws IOException {
     ObjectNode targetObject = (ObjectNode) new ObjectMapper().readTree("{\"a1\":[0,1,2]}");
-    JsonPreprocessor jsonPreprocessor = new JsonPreprocessor() {
+    Preprocessor<JsonNode> jsonPreprocessor = new Preprocessor<JsonNode>() {
       @Override
       public JsonNode translate(JsonNode targetElement) {
         ObjectNode ret = new ObjectNode(JsonNodeFactory.instance);
@@ -42,7 +41,7 @@ public class JsonPreprocessorTest {
   @Test
   public void whenPreprocessingOnMapIsRequested() throws IOException {
     ObjectNode targetObject = (ObjectNode) new ObjectMapper().readTree("{\"a1\":{\"c1\":100, \"c2\":200}}");
-    JsonPreprocessor jsonPreprocessor = new JsonPreprocessor() {
+    Preprocessor<JsonNode> jsonPreprocessor = new Preprocessor<JsonNode>() {
       @Override
       public JsonNode translate(JsonNode targetElement) {
         ObjectNode ret = new ObjectNode(JsonNodeFactory.instance);

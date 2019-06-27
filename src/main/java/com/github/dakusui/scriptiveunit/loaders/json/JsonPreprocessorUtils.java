@@ -8,14 +8,13 @@ import org.codehaus.jackson.node.ObjectNode;
 import org.codehaus.jackson.node.TextNode;
 
 import java.util.AbstractList;
-import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import static com.github.dakusui.scriptiveunit.loaders.json.JsonUtils.*;
+import static com.github.dakusui.scriptiveunit.exceptions.SyntaxException.nonArray;
+import static com.github.dakusui.scriptiveunit.exceptions.SyntaxException.nonObject;
+import static com.github.dakusui.scriptiveunit.exceptions.SyntaxException.nonText;
 import static com.github.dakusui.scriptiveunit.utils.Checks.check;
-import static com.github.dakusui.scriptiveunit.exceptions.SyntaxException.*;
-import static java.util.Collections.singletonList;
 import static java.util.Objects.requireNonNull;
 
 public enum JsonPreprocessorUtils {
@@ -31,27 +30,6 @@ public enum JsonPreprocessorUtils {
 
   private static ArrayNode checkArrayNode(JsonNode curr) {
     return (ArrayNode) check(curr, v -> curr.isArray(), () -> nonArray(curr));
-  }
-
-  static List<Preprocessor<JsonNode>> preprocessors() {
-    return singletonList(JsonPreprocessor.preprocessor(
-        JsonPreprocessorUtils::toUniformedObjectNode,
-        Preprocessor.Utils.pathMatcher("factorSpace", "factors", ".*")));
-  }
-
-  static JsonNode toUniformedObjectNode(JsonNode targetElement) {
-    return targetElement instanceof ObjectNode ?
-        targetElement :
-        object()
-            .$("type", "simple")
-            .$("args", toArrayNode(targetElement))
-            .build();
-  }
-
-  private static Object toArrayNode(JsonNode targetElement) {
-    return targetElement instanceof ArrayNode ?
-        targetElement :
-        array().$(targetElement).build();
   }
 
   public static AbstractList<String> getParentsOf(final ObjectNode child, final String parentAttributeName) {
@@ -70,11 +48,11 @@ public enum JsonPreprocessorUtils {
     };
   }
 
-  public static ObjectNode translate(JsonPreprocessor jsonPreprocessor, ObjectNode rootNode) {
+  public static ObjectNode translate(Preprocessor<JsonNode> jsonPreprocessor, ObjectNode rootNode) {
     return (ObjectNode) translate(jsonPreprocessor, Preprocessor.Path.createRoot(), rootNode);
   }
 
-  public static JsonNode translate(JsonPreprocessor jsonPreprocessor, JsonPreprocessor.Path pathToTarget, JsonNode targetElement) {
+  public static JsonNode translate(Preprocessor<JsonNode> jsonPreprocessor, Preprocessor.Path pathToTarget, JsonNode targetElement) {
     if (jsonPreprocessor.matches(pathToTarget)) {
       return jsonPreprocessor.translate(targetElement);
     }

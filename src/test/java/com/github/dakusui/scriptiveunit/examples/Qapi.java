@@ -14,12 +14,12 @@ import com.github.dakusui.scriptiveunit.drivers.Strings;
 import com.github.dakusui.scriptiveunit.drivers.actions.Basic;
 import com.github.dakusui.scriptiveunit.loaders.Preprocessor;
 import com.github.dakusui.scriptiveunit.loaders.json.JsonBasedTestSuiteDescriptorLoader;
-import com.github.dakusui.scriptiveunit.loaders.json.JsonPreprocessor;
 import com.github.dakusui.scriptiveunit.model.form.Form;
 import com.github.dakusui.scriptiveunit.runners.ScriptiveUnit;
 import com.github.dakusui.scriptiveunit.unittests.cli.MemoizationExample;
 import com.google.common.collect.Maps;
 import org.codehaus.jackson.JsonNode;
+import org.codehaus.jackson.node.ArrayNode;
 import org.codehaus.jackson.node.ObjectNode;
 import org.junit.runner.RunWith;
 
@@ -29,9 +29,6 @@ import java.util.List;
 import java.util.Map;
 
 import static com.github.dakusui.scriptiveunit.loaders.Preprocessor.Utils.pathMatcher;
-import static com.github.dakusui.scriptiveunit.loaders.json.JsonUtils.array;
-import static com.github.dakusui.scriptiveunit.loaders.json.JsonUtils.deepMerge;
-import static com.github.dakusui.scriptiveunit.loaders.json.JsonUtils.object;
 import static java.lang.String.format;
 import static java.util.Collections.unmodifiableMap;
 import static java.util.Objects.requireNonNull;
@@ -50,17 +47,21 @@ public class Qapi {
 
     @Override
     protected List<Preprocessor<JsonNode>> getPreprocessors() {
+
       return new LinkedList<Preprocessor<JsonNode>>() {{
         addAll(Loader.super.getPreprocessors());
-        add(JsonPreprocessor.preprocessor(
-            (JsonNode targetElement) ->
-                deepMerge(
-                    ((ObjectNode) targetElement),
-                    object().$(
-                        "after",
-                        array().$("nop").build()).build()),
-            pathMatcher("testOracles", ".*")
-        ));
+        add(hostLanguage().preprocessor(
+            (targetElement, hostLanguage) -> {
+              ObjectNode ret = (ObjectNode) targetElement;
+              ObjectNode nodeForAfter = hostLanguage.newObjectNode();
+              ArrayNode arr = hostLanguage.newArrayNode();
+              hostLanguage.addToArray(arr, hostLanguage.newAtomNode("nop"));
+              hostLanguage.putToObject(nodeForAfter, "after", arr);
+              return hostLanguage.deepMerge(
+                  ret,
+                  nodeForAfter
+              );
+            }, pathMatcher("testOracles", ".*")));
       }};
     }
   }

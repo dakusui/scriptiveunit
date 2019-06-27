@@ -1,7 +1,6 @@
 package com.github.dakusui.scriptiveunit.loaders.json;
 
 import com.github.dakusui.scriptiveunit.loaders.Preprocessor;
-import org.codehaus.jackson.JsonNode;
 
 import java.util.Iterator;
 import java.util.LinkedHashMap;
@@ -10,7 +9,6 @@ import java.util.Map;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
-import static com.github.dakusui.scriptiveunit.loaders.json.JsonPreprocessorUtils.toUniformedObjectNode;
 import static com.github.dakusui.scriptiveunit.utils.Checks.check;
 import static java.util.Collections.singletonList;
 import static java.util.Objects.requireNonNull;
@@ -20,7 +18,7 @@ public interface ModelSpec<T> {
 
   List<Preprocessor<T>> preprocessors(HostLanguage<T, ?, ?, ? extends T> hostLanguage);
 
-  class Standard implements ModelSpec<JsonNode> {
+  class Standard<T> implements ModelSpec<T> {
     @Override
     public Dictionary createDefaultValues() {
       return dict(
@@ -38,12 +36,22 @@ public interface ModelSpec<T> {
     }
 
     @Override
-    public List<Preprocessor<JsonNode>> preprocessors(HostLanguage<JsonNode, ?,  ? , ? extends JsonNode> hostLanguage) {
+    public List<Preprocessor<T>> preprocessors(HostLanguage<T, ?, ?, ? extends T> hostLanguage) {
       return singletonList(hostLanguage.preprocessor(
-          (jsonNode, lang) -> toUniformedObjectNode(jsonNode),
+          (jsonNode, lang) -> toUniformedObjectNode(jsonNode, lang),
           Preprocessor.Utils.pathMatcher("factorSpace", "factors", ".*")));
     }
+
+    static <T, O extends T, A extends T> T toUniformedObjectNode(T targetElement, HostLanguage<T, O, A, ? extends T> hostLanguage) {
+      if (hostLanguage.isObjectNode(targetElement))
+        return targetElement;
+      O ret = hostLanguage.newObjectNode();
+      hostLanguage.putToObject(ret, "type", hostLanguage.newAtomNode("simple"));
+      hostLanguage.putToObject(ret, "args", targetElement);
+      return ret;
+    }
   }
+
 
   static Atom atom(Object value) {
     check(value, v -> !(v instanceof Node), "Value must not be an instance of '%s' but was: %s", Node.class, value);

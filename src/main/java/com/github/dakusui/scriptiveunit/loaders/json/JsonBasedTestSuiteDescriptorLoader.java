@@ -70,11 +70,11 @@ public class JsonBasedTestSuiteDescriptorLoader extends TestSuiteDescriptorLoade
     return checkObjectNode(inputNode);
   }
 
-  private ModelSpec<JsonNode> modelSpec() {
-    return new ModelSpec.Standard();
+  protected ModelSpec<JsonNode> modelSpec() {
+    return new ModelSpec.Standard<>();
   }
 
-  private HostLanguage<JsonNode, ObjectNode, ArrayNode, JsonNode> hostLanguage() {
+  protected HostLanguage<JsonNode, ObjectNode, ArrayNode, JsonNode> hostLanguage() {
     return new HostLanguage.Json();
   }
 }
