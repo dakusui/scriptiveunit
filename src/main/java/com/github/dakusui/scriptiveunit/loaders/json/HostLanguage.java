@@ -87,6 +87,7 @@ public interface HostLanguage<NODE, OBJECT extends NODE, ARRAY extends NODE, ATO
     return nodeValue;
   }
 
+  @SuppressWarnings("unchecked")
   default NODE preprocess_(Preprocessor<NODE> preprocessor, Preprocessor.Path pathToTarget, NODE targetElement) {
     if (preprocessor.matches(pathToTarget)) {
       return preprocessor.translate(targetElement);

@@ -1,7 +1,11 @@
 package com.github.dakusui.scriptiveunit.loaders.json;
 
+import com.github.dakusui.scriptiveunit.loaders.Preprocessor;
+import org.codehaus.jackson.JsonNode;
+
 import java.util.Iterator;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
@@ -9,10 +13,12 @@ import java.util.stream.StreamSupport;
 import static com.github.dakusui.scriptiveunit.utils.Checks.check;
 import static java.util.Objects.requireNonNull;
 
-public interface ModelSpec {
+public interface ModelSpec<T> {
   Dictionary createDefaultValues();
 
-  class Standard implements ModelSpec {
+  List<Preprocessor<T>> preprocessors();
+
+  class Standard implements ModelSpec<JsonNode> {
     @Override
     public Dictionary createDefaultValues() {
       return dict(
@@ -27,6 +33,11 @@ public interface ModelSpec {
           $("tearDown", atom(null)),
           $("tearDownAfterAll", atom(null))
       );
+    }
+
+    @Override
+    public List<Preprocessor<JsonNode>> preprocessors() {
+      return JsonPreprocessorUtils.preprocessors();
     }
   }
 

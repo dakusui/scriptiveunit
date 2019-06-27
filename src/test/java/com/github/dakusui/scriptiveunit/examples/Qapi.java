@@ -12,6 +12,7 @@ import com.github.dakusui.scriptiveunit.drivers.Predicates;
 import com.github.dakusui.scriptiveunit.drivers.QueryApi;
 import com.github.dakusui.scriptiveunit.drivers.Strings;
 import com.github.dakusui.scriptiveunit.drivers.actions.Basic;
+import com.github.dakusui.scriptiveunit.loaders.Preprocessor;
 import com.github.dakusui.scriptiveunit.loaders.json.JsonBasedTestSuiteDescriptorLoader;
 import com.github.dakusui.scriptiveunit.loaders.json.JsonPreprocessor;
 import com.github.dakusui.scriptiveunit.model.form.Form;
@@ -48,8 +49,8 @@ public class Qapi {
     }
 
     @Override
-    protected List<JsonPreprocessor> getPreprocessors() {
-      return new LinkedList<JsonPreprocessor>() {{
+    protected List<Preprocessor<JsonNode>> getPreprocessors() {
+      return new LinkedList<Preprocessor<JsonNode>>() {{
         addAll(Loader.super.getPreprocessors());
         add(JsonPreprocessor.preprocessor(
             (JsonNode targetElement) ->

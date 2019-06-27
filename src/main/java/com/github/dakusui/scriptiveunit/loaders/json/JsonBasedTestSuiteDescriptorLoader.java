@@ -22,7 +22,7 @@ public class JsonBasedTestSuiteDescriptorLoader extends TestSuiteDescriptorLoade
 
   private final HostLanguage<JsonNode, ObjectNode, ArrayNode, JsonNode> hostLanguage = hostLanguage();
 
-  private final ModelSpec                                               modelSpec    = modelSpec();
+  private final ModelSpec<JsonNode> modelSpec = modelSpec();
 
   @SuppressWarnings("unused")
   public JsonBasedTestSuiteDescriptorLoader(Config config) {
@@ -50,9 +50,9 @@ public class JsonBasedTestSuiteDescriptorLoader extends TestSuiteDescriptorLoade
   }
 
   // TEMPLATE
-  protected List<JsonPreprocessor> getPreprocessors() {
+  protected List<Preprocessor<JsonNode>> getPreprocessors() {
     // TODO
-    return JsonPreprocessorUtils.preprocessors();
+    return modelSpec.preprocessors();
   }
 
   // TEMPLATE
@@ -63,14 +63,14 @@ public class JsonBasedTestSuiteDescriptorLoader extends TestSuiteDescriptorLoade
   }
 
   // TEMPLATE
-  protected ObjectNode preprocess(ObjectNode inputNode, List<? extends Preprocessor> preprocessors) {
-    for (Preprocessor each : preprocessors) {
+  protected ObjectNode preprocess(ObjectNode inputNode, List<Preprocessor<JsonNode>> preprocessors) {
+    for (Preprocessor<JsonNode> each : preprocessors) {
       inputNode = hostLanguage.preprocess(inputNode, each);
     }
     return checkObjectNode(inputNode);
   }
 
-  private ModelSpec modelSpec() {
+  private ModelSpec<JsonNode> modelSpec() {
     return new ModelSpec.Standard();
   }
 

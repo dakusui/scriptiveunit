@@ -33,7 +33,7 @@ public enum JsonPreprocessorUtils {
     return (ArrayNode) check(curr, v -> curr.isArray(), () -> nonArray(curr));
   }
 
-  static List<JsonPreprocessor> preprocessors() {
+  static List<Preprocessor<JsonNode>> preprocessors() {
     return singletonList(JsonPreprocessor.preprocessor(
         JsonPreprocessorUtils::toUniformedObjectNode,
         Preprocessor.Utils.pathMatcher("factorSpace", "factors", ".*")));
