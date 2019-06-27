@@ -70,13 +70,6 @@ public enum JsonPreprocessorUtils {
     };
   }
 
-  static ObjectNode preprocess(JsonNode ret, List<JsonPreprocessor> jsonPreprocessors) {
-    for (JsonPreprocessor each : jsonPreprocessors) {
-      ret = translate(each, ret);
-    }
-    return checkObjectNode(ret);
-  }
-
   public static JsonNode translate(JsonPreprocessor jsonPreprocessor, JsonNode rootNode) {
     return translate(jsonPreprocessor, Preprocessor.Path.createRoot(), rootNode);
   }

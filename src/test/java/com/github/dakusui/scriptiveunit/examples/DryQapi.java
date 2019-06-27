@@ -15,6 +15,8 @@ import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.nio.charset.Charset;
 
+import static com.github.dakusui.scriptiveunit.loaders.json.JsonPreprocessorUtils.checkObjectNode;
+
 @Load(with = DryQapi.Loader.class)
 public class DryQapi extends Qapi {
   public static class Loader extends Qapi.Loader {
@@ -32,17 +34,17 @@ public class DryQapi extends Qapi {
     protected ObjectNode readScriptHandlingInheritance(String resourceName) {
       System.out.println("<" + resourceName + ">");
       ObjectNode work = readObjectNodeDirectlyWithMerging(resourceName);
-      ObjectNode ret = JsonPreprocessorUtils.checkObjectNode(JsonUtils.readJsonNodeFromStream(ReflectionUtils.openResourceAsStream(DEFAULTS_JSON)));
+      ObjectNode ret = checkObjectNode(JsonUtils.readJsonNodeFromStream(ReflectionUtils.openResourceAsStream(DEFAULTS_JSON)));
       ret = JsonUtils.deepMerge(work, ret);
       ret.remove(EXTENDS_KEYWORD);
       return ret;
     }
 
     ObjectNode readObjectNodeDirectlyWithMerging(String script) {
-      ObjectNode child = JsonPreprocessorUtils.checkObjectNode(preprocess(JsonUtils.readJsonNodeFromStream(toInputStream(script))));
+      ObjectNode child = checkObjectNode(preprocess(checkObjectNode(JsonUtils.readJsonNodeFromStream(toInputStream(script))), getPreprocessors()));
       ObjectNode work = JsonNodeFactory.instance.objectNode();
       if (child.has(EXTENDS_KEYWORD)) {
-        JsonPreprocessorUtils.getParentsOf(child, EXTENDS_KEYWORD).forEach(s -> JsonUtils.deepMerge(JsonPreprocessorUtils.checkObjectNode(readObjectNodeWithMerging(s)), work));
+        JsonPreprocessorUtils.getParentsOf(child, EXTENDS_KEYWORD).forEach(s -> JsonUtils.deepMerge(checkObjectNode(readObjectNodeWithMerging(s)), work));
       }
       return JsonUtils.deepMerge(child, work);
     }

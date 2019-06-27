@@ -1,9 +1,10 @@
 package com.github.dakusui.scriptiveunit.loaders.json;
 
-import com.github.dakusui.scriptiveunit.loaders.TestSuiteDescriptorLoader;
-import com.github.dakusui.scriptiveunit.model.session.Session;
 import com.github.dakusui.scriptiveunit.core.Config;
+import com.github.dakusui.scriptiveunit.loaders.TestSuiteDescriptorLoader;
+import com.github.dakusui.scriptiveunit.loaders.beans.TestSuiteDescriptorBean;
 import com.github.dakusui.scriptiveunit.model.desc.TestSuiteDescriptor;
+import com.github.dakusui.scriptiveunit.model.session.Session;
 import com.github.dakusui.scriptiveunit.utils.ReflectionUtils;
 import org.codehaus.jackson.JsonNode;
 import org.codehaus.jackson.map.ObjectMapper;
@@ -33,52 +34,86 @@ public class JsonBasedTestSuiteDescriptorLoader extends TestSuiteDescriptorLoade
   @Override
   public TestSuiteDescriptor loadTestSuiteDescriptor(Session session) {
     try {
-      return new ObjectMapper().readValue(
-          readScriptHandlingInheritance(session),
-          JsonTestSuiteDescriptorBean.class)
-          .create(session);
+      return getJsonTestSuiteDescriptorBean(session).create(session);
     } catch (IOException e) {
       throw wrap(e);
     }
   }
 
   protected ObjectNode readObjectNodeWithMerging(String resourceName) {
-    ObjectNode child = checkObjectNode(preprocess(readResource(resourceName)));
-    ObjectNode work = JsonNodeFactory.instance.objectNode();
-    if (child.has(EXTENDS_KEYWORD)) {
-      getParentsOf(child, EXTENDS_KEYWORD)
-          .forEach(s -> JsonUtils.deepMerge(checkObjectNode(readObjectNodeWithMerging(s)), work));
-    }
-    JsonUtils.deepMerge(child, work);
-    return work;
+    ObjectNode work = createObjectNode();
+    ObjectNode child = preprocess(readResource(resourceName), getPreprocessors());
+    if (hasInheritanceDirective(child))
+      getParents(child).forEach(s -> deepMerge(readObjectNodeWithMerging(s), work));
+    return deepMerge(child, work);
   }
 
-
+  // TEMPLATE
   protected List<JsonPreprocessor> getPreprocessors() {
+    // TODO
     return JsonPreprocessorUtils.preprocessors();
   }
 
+  // TEMPLATE
   protected ObjectNode readScriptHandlingInheritance(String scriptResourceName) {
     ObjectNode work = readObjectNodeWithMerging(scriptResourceName);
-    ObjectNode ret = checkObjectNode(readDefaultValues());
-    JsonUtils.deepMerge(work, ret);
-    ret.remove(EXTENDS_KEYWORD);
-    return ret;
+    ObjectNode ret = readDefaultValues();
+    return removeInheritanceDirective(deepMerge(work, ret));
   }
 
-  protected JsonNode preprocess(JsonNode inputNode) {
-    return JsonPreprocessorUtils.preprocess(inputNode, getPreprocessors());
-  }
-
+  // TEMPLATE
   private ObjectNode readScriptHandlingInheritance(Session session) {
     return readScriptHandlingInheritance(session.getConfig().getScriptResourceName());
   }
 
-  private JsonNode readDefaultValues() {
+  // CUSTOMIZATION POINT
+  private ObjectNode createObjectNode() {
+    return JsonNodeFactory.instance.objectNode();
+  }
+
+  // CUSTOMIZATION POINT
+  private boolean hasInheritanceDirective(ObjectNode child) {
+    return child.has(EXTENDS_KEYWORD);
+  }
+
+  // CUSTOMIZATION POINT
+  private List<String> getParents(ObjectNode child) {
+    return getParentsOf(child, EXTENDS_KEYWORD);
+  }
+
+  // CUSTOMIZATION POINT
+  private ObjectNode deepMerge(ObjectNode work, ObjectNode base) {
+    return JsonUtils.deepMerge(work, base);
+  }
+
+  // CUSTOMIZATION POINT
+  protected ObjectNode preprocess(JsonNode inputNode, List<JsonPreprocessor> preprocessors) {
+    for (JsonPreprocessor each : preprocessors) {
+      inputNode = JsonPreprocessorUtils.translate(each, inputNode);
+    }
+    return checkObjectNode(inputNode);
+  }
+
+  // CUSTOMIZATION POINT
+  private TestSuiteDescriptorBean getJsonTestSuiteDescriptorBean(Session session) throws IOException {
+    return new ObjectMapper().readValue(
+        readScriptHandlingInheritance(session),
+        JsonTestSuiteDescriptorBean.class);
+  }
+
+  // CUSTOMIZATION POINT
+  private ObjectNode removeInheritanceDirective(ObjectNode ret) {
+    ret.remove(EXTENDS_KEYWORD);
+    return ret;
+  }
+
+  // CUSTOMIZATION POINT
+  private ObjectNode readDefaultValues() {
     return readResource(DEFAULTS_JSON);
   }
 
-  private JsonNode readResource(String resourceName) {
-    return JsonUtils.readJsonNodeFromStream(ReflectionUtils.openResourceAsStream(resourceName));
+  // CUSTOMIZATION POINT
+  private ObjectNode readResource(String resourceName) {
+    return checkObjectNode(JsonUtils.readJsonNodeFromStream(ReflectionUtils.openResourceAsStream(resourceName)));
   }
 }
