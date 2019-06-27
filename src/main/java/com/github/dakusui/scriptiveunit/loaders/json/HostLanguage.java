@@ -17,7 +17,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 import static com.github.dakusui.scriptiveunit.exceptions.ScriptiveUnitException.wrap;
 import static com.github.dakusui.scriptiveunit.loaders.json.JsonPreprocessorUtils.checkObjectNode;
 import static java.lang.String.format;
-import static java.util.Objects.requireNonNull;
 
 public interface HostLanguage<NODE, OBJECT extends NODE, ARRAY extends NODE, ATOM extends NODE> {
   OBJECT preprocess(OBJECT inputNode, Preprocessor<NODE> preprocessor);
@@ -33,6 +32,10 @@ public interface HostLanguage<NODE, OBJECT extends NODE, ARRAY extends NODE, ATO
   boolean isArrayNode(NODE node);
 
   boolean isAtomNode(NODE node);
+
+  Iterable<String> keysOf(OBJECT objectNode);
+
+  NODE valueOf(OBJECT object, String key);
 
   OBJECT readObjectNode(String resourceName);
 
@@ -59,7 +62,7 @@ public interface HostLanguage<NODE, OBJECT extends NODE, ARRAY extends NODE, ATO
 
   default ARRAY translate(ModelSpec.Array array) {
     ARRAY ret = newArrayNode();
-    array.stream().forEach(eachNode -> addToArray(ret, eachNode));
+    array.stream().forEach((ModelSpec.Node eachNode) -> addToArray(ret, translate(eachNode)));
     return ret;
   }
 
@@ -82,7 +85,7 @@ public interface HostLanguage<NODE, OBJECT extends NODE, ARRAY extends NODE, ATO
 
   void putToObject(OBJECT ret, String eachKey, NODE jsonNodeValue);
 
-  void addToArray(ARRAY ret, ModelSpec.Node eachNode);
+  void addToArray(ARRAY ret, NODE eachNode);
 
 
   class Json implements HostLanguage<JsonNode, ObjectNode, ArrayNode, JsonNode> {
@@ -90,27 +93,29 @@ public interface HostLanguage<NODE, OBJECT extends NODE, ARRAY extends NODE, ATO
 
     @Override
     public ObjectNode preprocess(ObjectNode inputNode, Preprocessor<JsonNode> preprocessor) {
-      return (ObjectNode) preprocess_((JsonPreprocessor) preprocessor, Preprocessor.Path.createRoot(), inputNode);
+      return (ObjectNode) preprocess_(preprocessor, Preprocessor.Path.createRoot(), inputNode);
     }
 
-    JsonNode preprocess_(JsonPreprocessor jsonPreprocessor, JsonPreprocessor.Path pathToTarget, JsonNode targetElement) {
+    JsonNode preprocess_(Preprocessor<JsonNode> jsonPreprocessor, Preprocessor.Path pathToTarget, JsonNode targetElement) {
       if (jsonPreprocessor.matches(pathToTarget)) {
         return jsonPreprocessor.translate(targetElement);
       }
       JsonNode work;
       if (isObjectNode(targetElement)) {
         work = targetElement;
-        ((Iterable<String>) () -> requireNonNull(targetElement.getFieldNames())).forEach(
-            (String attributeName) ->
-                ((ObjectNode) targetElement).put(
-                    attributeName,
-                    preprocess_(jsonPreprocessor, pathToTarget.createChild(attributeName), targetElement.get(attributeName))
-                ));
+        keysOf((ObjectNode) targetElement).forEach(
+            attributeName -> putToObject(
+                (ObjectNode) work,
+                attributeName,
+                Json.this.preprocess_(
+                    jsonPreprocessor,
+                    pathToTarget.createChild(attributeName),
+                    valueOf((ObjectNode) targetElement, attributeName))));
       } else if (isArrayNode(targetElement)) {
         AtomicInteger i = new AtomicInteger(0);
-        work = new ArrayNode(JsonNodeFactory.instance);
+        work = newArrayNode();
         targetElement.forEach(
-            (JsonNode jsonNode) -> ((ArrayNode) work).add(
+            (JsonNode jsonNode) -> addToArray((ArrayNode) work,
                 preprocess_(
                     jsonPreprocessor,
                     pathToTarget.createChild(i.getAndIncrement()),
@@ -160,6 +165,17 @@ public interface HostLanguage<NODE, OBJECT extends NODE, ARRAY extends NODE, ATO
       return !(jsonNode.isObject() || jsonNode.isArray());
     }
 
+    @SuppressWarnings("NullableProblems")
+    @Override
+    public Iterable<String> keysOf(ObjectNode objectNode) {
+      return objectNode::getFieldNames;
+    }
+
+    @Override
+    public JsonNode valueOf(ObjectNode object, String key) {
+      return object.get(key);
+    }
+
     @Override
     public ObjectNode readObjectNode(String resourceName) {
       return checkObjectNode(JsonUtils.readJsonNodeFromStream(ReflectionUtils.openResourceAsStream(resourceName)));
@@ -202,8 +218,8 @@ public interface HostLanguage<NODE, OBJECT extends NODE, ARRAY extends NODE, ATO
     }
 
     @Override
-    public void addToArray(ArrayNode ret, ModelSpec.Node eachNode) {
-      ret.add(translate(eachNode));
+    public void addToArray(ArrayNode ret, JsonNode eachNode) {
+      ret.add(eachNode);
     }
   }
 
