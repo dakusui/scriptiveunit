@@ -1,50 +1,42 @@
 package com.github.dakusui.scriptiveunit.loaders.json;
 
 import com.github.dakusui.scriptiveunit.core.Config;
+import com.github.dakusui.scriptiveunit.loaders.Preprocessor;
 import com.github.dakusui.scriptiveunit.loaders.TestSuiteDescriptorLoader;
-import com.github.dakusui.scriptiveunit.loaders.beans.TestSuiteDescriptorBean;
 import com.github.dakusui.scriptiveunit.model.desc.TestSuiteDescriptor;
 import com.github.dakusui.scriptiveunit.model.session.Session;
-import com.github.dakusui.scriptiveunit.utils.ReflectionUtils;
 import org.codehaus.jackson.JsonNode;
-import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.node.ArrayNode;
-import org.codehaus.jackson.node.JsonNodeFactory;
 import org.codehaus.jackson.node.ObjectNode;
 
-import java.io.IOException;
 import java.util.List;
 
-import static com.github.dakusui.scriptiveunit.exceptions.ScriptiveUnitException.wrap;
 import static com.github.dakusui.scriptiveunit.loaders.json.JsonPreprocessorUtils.checkObjectNode;
-import static com.github.dakusui.scriptiveunit.loaders.json.JsonPreprocessorUtils.getParentsOf;
 
 public class JsonBasedTestSuiteDescriptorLoader extends TestSuiteDescriptorLoader.Base {
 
-  protected static final String EXTENDS_KEYWORD = "$extends";
   /**
    * A resource that holds default values of ScriptiveUnit.
    */
-  protected static final String DEFAULTS_JSON   = "defaults/values.json";
+  protected static final String DEFAULTS_JSON = "defaults/values.json";
 
-  private static final HostLanguage<ObjectNode, ArrayNode, JsonNode> hostLanguage = new HostLanguage.Json();
+  private static final HostLanguage<JsonNode, ObjectNode, ArrayNode, JsonNode> hostLanguage = new HostLanguage.Json();
+  private static final ModelSpec                                               modelSpec    = new ModelSpec.Standard();
 
   @SuppressWarnings("unused")
   public JsonBasedTestSuiteDescriptorLoader(Config config) {
     super(config);
   }
 
+  // TEMPLATE
   @Override
   public TestSuiteDescriptor loadTestSuiteDescriptor(Session session) {
-    try {
-      return getJsonTestSuiteDescriptorBean(session).create(session);
-    } catch (IOException e) {
-      throw wrap(e);
-    }
+    return mapObjectNode(readScriptHandlingInheritance(session), JsonTestSuiteDescriptorBean.class).create(session);
   }
 
+  // TEMPLATE
   protected ObjectNode readObjectNodeWithMerging(String resourceName) {
-    ObjectNode work = newObjectNode();
+    ObjectNode work = hostLanguage.newObjectNode();
     ObjectNode child = preprocess(readObjectNode(resourceName), getPreprocessors());
     if (hasInheritanceDirective(child))
       getParents(child).forEach(s -> deepMerge(readObjectNodeWithMerging(s), work));
@@ -60,8 +52,8 @@ public class JsonBasedTestSuiteDescriptorLoader extends TestSuiteDescriptorLoade
   // TEMPLATE
   protected ObjectNode readScriptHandlingInheritance(String scriptResourceName) {
     ObjectNode work = readObjectNodeWithMerging(scriptResourceName);
-    ObjectNode ret = readDefaultValues();
-    return removeInheritanceDirective(deepMerge(work, ret));
+    ObjectNode ret = hostLanguage.translate(modelSpec.createDefaultValues());
+    return hostLanguage.removeInheritanceDirective(deepMerge(work, ret));
   }
 
   // TEMPLATE
@@ -69,54 +61,41 @@ public class JsonBasedTestSuiteDescriptorLoader extends TestSuiteDescriptorLoade
     return readScriptHandlingInheritance(session.getConfig().getScriptResourceName());
   }
 
-  // CUSTOMIZATION POINT
-  private ObjectNode newObjectNode() {
-    return JsonNodeFactory.instance.objectNode();
-  }
-
-  // CUSTOMIZATION POINT
-  private ObjectNode deepMerge(ObjectNode work, ObjectNode base) {
-    return JsonUtils.deepMerge(work, base);
-  }
-
-  // CUSTOMIZATION POINT
-  protected ObjectNode preprocess(JsonNode inputNode, List<JsonPreprocessor> preprocessors) {
-    for (JsonPreprocessor each : preprocessors) {
-      inputNode = JsonPreprocessorUtils.translate(each, inputNode);
+  // TEMPLATE
+  protected ObjectNode preprocess(ObjectNode inputNode, List<? extends Preprocessor> preprocessors) {
+    for (Preprocessor each : preprocessors) {
+      inputNode = performPreprocess(inputNode, (JsonPreprocessor) each);
     }
     return checkObjectNode(inputNode);
   }
 
   // CUSTOMIZATION POINT
-  private TestSuiteDescriptorBean getJsonTestSuiteDescriptorBean(Session session) throws IOException {
-    return new ObjectMapper().readValue(
-        readScriptHandlingInheritance(session),
-        JsonTestSuiteDescriptorBean.class);
+  private ObjectNode performPreprocess(ObjectNode inputNode, JsonPreprocessor jsonPreprocessor) {
+    return (ObjectNode) JsonPreprocessorUtils.translate(jsonPreprocessor, inputNode);
+  }
+
+  // CUSTOMIZATION POINT
+  private ObjectNode deepMerge(ObjectNode work, ObjectNode base) {
+    return hostLanguage.deepMerge(work, base);
+  }
+
+  // CUSTOMIZATION POINT
+  private <V> V mapObjectNode(ObjectNode rootNode, Class<V> valueType) {
+    return hostLanguage.mapObjectNode(rootNode, valueType);
   }
 
   // CUSTOMIZATION POINT
   private boolean hasInheritanceDirective(ObjectNode child) {
-    return child.has(EXTENDS_KEYWORD);
+    return hostLanguage.hasInheritanceDirective(child);
   }
 
   // CUSTOMIZATION POINT
   private List<String> getParents(ObjectNode child) {
-    return getParentsOf(child, EXTENDS_KEYWORD);
-  }
-
-  // CUSTOMIZATION POINT
-  private ObjectNode removeInheritanceDirective(ObjectNode ret) {
-    ret.remove(EXTENDS_KEYWORD);
-    return ret;
-  }
-
-  // CUSTOMIZATION POINT; MODEL, HOST_LANGUAGE
-  private ObjectNode readDefaultValues() {
-    return readObjectNode(DEFAULTS_JSON);
+    return hostLanguage.getParents(child);
   }
 
   // CUSTOMIZATION POINT
   private ObjectNode readObjectNode(String resourceName) {
-    return checkObjectNode(JsonUtils.readJsonNodeFromStream(ReflectionUtils.openResourceAsStream(resourceName)));
+    return hostLanguage.readObjectNode(resourceName);
   }
 }

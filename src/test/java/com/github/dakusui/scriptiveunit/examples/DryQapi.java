@@ -2,6 +2,7 @@ package com.github.dakusui.scriptiveunit.examples;
 
 import com.github.dakusui.scriptiveunit.annotations.Load;
 import com.github.dakusui.scriptiveunit.core.Config;
+import com.github.dakusui.scriptiveunit.loaders.json.HostLanguage;
 import com.github.dakusui.scriptiveunit.loaders.json.JsonPreprocessorUtils;
 import com.github.dakusui.scriptiveunit.loaders.json.JsonUtils;
 import com.github.dakusui.scriptiveunit.utils.ReflectionUtils;
@@ -36,15 +37,15 @@ public class DryQapi extends Qapi {
       ObjectNode work = readObjectNodeDirectlyWithMerging(resourceName);
       ObjectNode ret = checkObjectNode(JsonUtils.readJsonNodeFromStream(ReflectionUtils.openResourceAsStream(DEFAULTS_JSON)));
       ret = JsonUtils.deepMerge(work, ret);
-      ret.remove(EXTENDS_KEYWORD);
+      ret.remove(HostLanguage.Json.EXTENDS_KEYWORD);
       return ret;
     }
 
     ObjectNode readObjectNodeDirectlyWithMerging(String script) {
       ObjectNode child = checkObjectNode(preprocess(checkObjectNode(JsonUtils.readJsonNodeFromStream(toInputStream(script))), getPreprocessors()));
       ObjectNode work = JsonNodeFactory.instance.objectNode();
-      if (child.has(EXTENDS_KEYWORD)) {
-        JsonPreprocessorUtils.getParentsOf(child, EXTENDS_KEYWORD).forEach(s -> JsonUtils.deepMerge(checkObjectNode(readObjectNodeWithMerging(s)), work));
+      if (child.has(HostLanguage.Json.EXTENDS_KEYWORD)) {
+        JsonPreprocessorUtils.getParentsOf(child, HostLanguage.Json.EXTENDS_KEYWORD).forEach(s -> JsonUtils.deepMerge(checkObjectNode(readObjectNodeWithMerging(s)), work));
       }
       return JsonUtils.deepMerge(child, work);
     }
