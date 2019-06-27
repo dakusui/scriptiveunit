@@ -20,8 +20,9 @@ public class JsonBasedTestSuiteDescriptorLoader extends TestSuiteDescriptorLoade
    */
   protected static final String DEFAULTS_JSON = "defaults/values.json";
 
-  private static final HostLanguage<JsonNode, ObjectNode, ArrayNode, JsonNode> hostLanguage = new HostLanguage.Json();
-  private static final ModelSpec                                               modelSpec    = new ModelSpec.Standard();
+  private final HostLanguage<JsonNode, ObjectNode, ArrayNode, JsonNode> hostLanguage = hostLanguage();
+
+  private final ModelSpec                                               modelSpec    = modelSpec();
 
   @SuppressWarnings("unused")
   public JsonBasedTestSuiteDescriptorLoader(Config config) {
@@ -74,4 +75,11 @@ public class JsonBasedTestSuiteDescriptorLoader extends TestSuiteDescriptorLoade
     return (ObjectNode) JsonPreprocessorUtils.translate(jsonPreprocessor, inputNode);
   }
 
+  private ModelSpec modelSpec() {
+    return new ModelSpec.Standard();
+  }
+
+  private HostLanguage<JsonNode, ObjectNode, ArrayNode, JsonNode> hostLanguage() {
+    return new HostLanguage.Json();
+  }
 }
