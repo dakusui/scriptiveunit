@@ -13,6 +13,8 @@ import java.math.BigDecimal;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
 
 import static com.github.dakusui.scriptiveunit.exceptions.ScriptiveUnitException.wrap;
 import static com.github.dakusui.scriptiveunit.loaders.json.JsonPreprocessorUtils.checkObjectNode;
@@ -34,6 +36,8 @@ public interface HostLanguage<NODE, OBJECT extends NODE, ARRAY extends NODE, ATO
   boolean isAtomNode(NODE node);
 
   Iterable<String> keysOf(OBJECT objectNode);
+
+  Stream<NODE> elementsOf(ARRAY arrayNode);
 
   NODE valueOf(OBJECT object, String key);
 
@@ -83,6 +87,39 @@ public interface HostLanguage<NODE, OBJECT extends NODE, ARRAY extends NODE, ATO
     return nodeValue;
   }
 
+  default NODE preprocess_(Preprocessor<NODE> preprocessor, Preprocessor.Path pathToTarget, NODE targetElement) {
+    if (preprocessor.matches(pathToTarget)) {
+      return preprocessor.translate(targetElement);
+    }
+    NODE work;
+    if (isObjectNode(targetElement)) {
+      work = targetElement;
+      keysOf((OBJECT) targetElement).forEach(
+          attributeName -> putToObject(
+              (OBJECT) work,
+              attributeName,
+              this.preprocess_(
+                  preprocessor,
+                  pathToTarget.createChild(attributeName),
+                  valueOf((OBJECT) targetElement, attributeName))));
+    } else if (isArrayNode(targetElement)) {
+      AtomicInteger i = new AtomicInteger(0);
+      work = newArrayNode();
+      elementsOf((ARRAY)targetElement).forEach(
+          (NODE jsonNode) -> addToArray((ARRAY) work,
+              preprocess_(
+                  preprocessor,
+                  pathToTarget.createChild(i.getAndIncrement()),
+                  jsonNode
+              )));
+    } else {
+      work = targetElement;
+    }
+    return Objects.equals(targetElement, work) ?
+        targetElement :
+        work;
+  }
+
   void putToObject(OBJECT ret, String eachKey, NODE jsonNodeValue);
 
   void addToArray(ARRAY ret, NODE eachNode);
@@ -94,39 +131,6 @@ public interface HostLanguage<NODE, OBJECT extends NODE, ARRAY extends NODE, ATO
     @Override
     public ObjectNode preprocess(ObjectNode inputNode, Preprocessor<JsonNode> preprocessor) {
       return (ObjectNode) preprocess_(preprocessor, Preprocessor.Path.createRoot(), inputNode);
-    }
-
-    JsonNode preprocess_(Preprocessor<JsonNode> jsonPreprocessor, Preprocessor.Path pathToTarget, JsonNode targetElement) {
-      if (jsonPreprocessor.matches(pathToTarget)) {
-        return jsonPreprocessor.translate(targetElement);
-      }
-      JsonNode work;
-      if (isObjectNode(targetElement)) {
-        work = targetElement;
-        keysOf((ObjectNode) targetElement).forEach(
-            attributeName -> putToObject(
-                (ObjectNode) work,
-                attributeName,
-                Json.this.preprocess_(
-                    jsonPreprocessor,
-                    pathToTarget.createChild(attributeName),
-                    valueOf((ObjectNode) targetElement, attributeName))));
-      } else if (isArrayNode(targetElement)) {
-        AtomicInteger i = new AtomicInteger(0);
-        work = newArrayNode();
-        targetElement.forEach(
-            (JsonNode jsonNode) -> addToArray((ArrayNode) work,
-                preprocess_(
-                    jsonPreprocessor,
-                    pathToTarget.createChild(i.getAndIncrement()),
-                    jsonNode
-                )));
-      } else {
-        work = targetElement;
-      }
-      return Objects.equals(targetElement, work) ?
-          targetElement :
-          work;
     }
 
     @Override
@@ -169,6 +173,12 @@ public interface HostLanguage<NODE, OBJECT extends NODE, ARRAY extends NODE, ATO
     @Override
     public Iterable<String> keysOf(ObjectNode objectNode) {
       return objectNode::getFieldNames;
+    }
+
+    @SuppressWarnings("NullableProblems")
+    @Override
+    public Stream<JsonNode> elementsOf(ArrayNode arrayNode) {
+      return StreamSupport.stream(((Iterable<JsonNode>) arrayNode::getElements).spliterator(), false);
     }
 
     @Override
