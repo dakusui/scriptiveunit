@@ -70,8 +70,8 @@ public enum JsonPreprocessorUtils {
     };
   }
 
-  public static JsonNode translate(JsonPreprocessor jsonPreprocessor, ObjectNode rootNode) {
-    return translate(jsonPreprocessor, Preprocessor.Path.createRoot(), rootNode);
+  public static ObjectNode translate(JsonPreprocessor jsonPreprocessor, ObjectNode rootNode) {
+    return (ObjectNode) translate(jsonPreprocessor, Preprocessor.Path.createRoot(), rootNode);
   }
 
   public static JsonNode translate(JsonPreprocessor jsonPreprocessor, JsonPreprocessor.Path pathToTarget, JsonNode targetElement) {

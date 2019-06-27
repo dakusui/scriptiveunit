@@ -11,19 +11,28 @@ import org.codehaus.jackson.node.ObjectNode;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.Objects;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import static com.github.dakusui.scriptiveunit.exceptions.ScriptiveUnitException.wrap;
 import static com.github.dakusui.scriptiveunit.loaders.json.JsonPreprocessorUtils.checkObjectNode;
 import static java.lang.String.format;
+import static java.util.Objects.requireNonNull;
 
 public interface HostLanguage<NODE, OBJECT extends NODE, ARRAY extends NODE, ATOM extends NODE> {
-  NODE preprocess(OBJECT inputNode, Preprocessor preprocessor);
+  OBJECT preprocess(OBJECT inputNode, Preprocessor<NODE> preprocessor);
 
   OBJECT newObjectNode();
 
   ARRAY newArrayNode();
 
   ATOM newAtomNode(Object value);
+
+  boolean isObjectNode(NODE node);
+
+  boolean isArrayNode(NODE node);
+
+  boolean isAtomNode(NODE node);
 
   OBJECT readObjectNode(String resourceName);
 
@@ -80,9 +89,39 @@ public interface HostLanguage<NODE, OBJECT extends NODE, ARRAY extends NODE, ATO
     public static final String EXTENDS_KEYWORD = "$extends";
 
     @Override
-    public JsonNode preprocess(ObjectNode inputNode, Preprocessor preprocessor) {
-      // TODO
-      return JsonPreprocessorUtils.translate((JsonPreprocessor) preprocessor, inputNode);
+    public ObjectNode preprocess(ObjectNode inputNode, Preprocessor<JsonNode> preprocessor) {
+      return (ObjectNode) preprocess_((JsonPreprocessor) preprocessor, Preprocessor.Path.createRoot(), inputNode);
+    }
+
+    JsonNode preprocess_(JsonPreprocessor jsonPreprocessor, JsonPreprocessor.Path pathToTarget, JsonNode targetElement) {
+      if (jsonPreprocessor.matches(pathToTarget)) {
+        return jsonPreprocessor.translate(targetElement);
+      }
+      JsonNode work;
+      if (isObjectNode(targetElement)) {
+        work = targetElement;
+        ((Iterable<String>) () -> requireNonNull(targetElement.getFieldNames())).forEach(
+            (String attributeName) ->
+                ((ObjectNode) targetElement).put(
+                    attributeName,
+                    preprocess_(jsonPreprocessor, pathToTarget.createChild(attributeName), targetElement.get(attributeName))
+                ));
+      } else if (isArrayNode(targetElement)) {
+        AtomicInteger i = new AtomicInteger(0);
+        work = new ArrayNode(JsonNodeFactory.instance);
+        targetElement.forEach(
+            (JsonNode jsonNode) -> ((ArrayNode) work).add(
+                preprocess_(
+                    jsonPreprocessor,
+                    pathToTarget.createChild(i.getAndIncrement()),
+                    jsonNode
+                )));
+      } else {
+        work = targetElement;
+      }
+      return Objects.equals(targetElement, work) ?
+          targetElement :
+          work;
     }
 
     @Override
@@ -104,6 +143,21 @@ public interface HostLanguage<NODE, OBJECT extends NODE, ARRAY extends NODE, ATO
       if (value instanceof String)
         return JsonNodeFactory.instance.textNode((String) value);
       throw new RuntimeException(format("Unsupported value was given: '%s'", value));
+    }
+
+    @Override
+    public boolean isObjectNode(JsonNode jsonNode) {
+      return jsonNode.isObject();
+    }
+
+    @Override
+    public boolean isArrayNode(JsonNode jsonNode) {
+      return jsonNode.isArray();
+    }
+
+    @Override
+    public boolean isAtomNode(JsonNode jsonNode) {
+      return !(jsonNode.isObject() || jsonNode.isArray());
     }
 
     @Override

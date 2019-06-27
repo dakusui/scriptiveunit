@@ -65,17 +65,9 @@ public class JsonBasedTestSuiteDescriptorLoader extends TestSuiteDescriptorLoade
   // TEMPLATE
   protected ObjectNode preprocess(ObjectNode inputNode, List<? extends Preprocessor> preprocessors) {
     for (Preprocessor each : preprocessors) {
-      inputNode = performPreprocess(inputNode, (JsonPreprocessor) each);
+      inputNode = hostLanguage.preprocess(inputNode, each);
     }
     return checkObjectNode(inputNode);
-  }
-
-  // CUSTOMIZATION POINT
-  private ObjectNode performPreprocess(ObjectNode inputNode, JsonPreprocessor jsonPreprocessor) {
-    return (ObjectNode) JsonPreprocessorUtils.translate(
-        jsonPreprocessor,
-        Preprocessor.Path.createRoot(),
-        inputNode);
   }
 
   private ModelSpec modelSpec() {
