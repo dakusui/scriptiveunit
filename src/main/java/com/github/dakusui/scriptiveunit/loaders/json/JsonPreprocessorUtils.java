@@ -39,7 +39,7 @@ public enum JsonPreprocessorUtils {
         Preprocessor.Utils.pathMatcher("factorSpace", "factors", ".*")));
   }
 
-  private static JsonNode toUniformedObjectNode(JsonNode targetElement) {
+  static JsonNode toUniformedObjectNode(JsonNode targetElement) {
     return targetElement instanceof ObjectNode ?
         targetElement :
         object()

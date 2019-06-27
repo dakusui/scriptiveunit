@@ -52,7 +52,7 @@ public class JsonBasedTestSuiteDescriptorLoader extends TestSuiteDescriptorLoade
   // TEMPLATE
   protected List<Preprocessor<JsonNode>> getPreprocessors() {
     // TODO
-    return modelSpec.preprocessors();
+    return modelSpec.preprocessors(hostLanguage);
   }
 
   // TEMPLATE

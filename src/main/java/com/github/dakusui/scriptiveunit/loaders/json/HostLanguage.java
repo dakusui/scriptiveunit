@@ -13,6 +13,8 @@ import java.math.BigDecimal;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.BiFunction;
+import java.util.function.Predicate;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
@@ -21,6 +23,10 @@ import static com.github.dakusui.scriptiveunit.loaders.json.JsonPreprocessorUtil
 import static java.lang.String.format;
 
 public interface HostLanguage<NODE, OBJECT extends NODE, ARRAY extends NODE, ATOM extends NODE> {
+  Preprocessor<NODE> preprocessor(
+      BiFunction<NODE, HostLanguage<NODE, OBJECT, ARRAY, ATOM>, NODE> translator,
+      Predicate<Preprocessor.Path> pathMatcher);
+
   OBJECT preprocess(OBJECT inputNode, Preprocessor<NODE> preprocessor);
 
   OBJECT newObjectNode();
@@ -106,7 +112,7 @@ public interface HostLanguage<NODE, OBJECT extends NODE, ARRAY extends NODE, ATO
     } else if (isArrayNode(targetElement)) {
       AtomicInteger i = new AtomicInteger(0);
       work = newArrayNode();
-      elementsOf((ARRAY)targetElement).forEach(
+      elementsOf((ARRAY) targetElement).forEach(
           (NODE jsonNode) -> addToArray((ARRAY) work,
               preprocess_(
                   preprocessor,
@@ -128,6 +134,13 @@ public interface HostLanguage<NODE, OBJECT extends NODE, ARRAY extends NODE, ATO
 
   class Json implements HostLanguage<JsonNode, ObjectNode, ArrayNode, JsonNode> {
     public static final String EXTENDS_KEYWORD = "$extends";
+
+    @Override
+    public Preprocessor<JsonNode> preprocessor(
+        BiFunction<JsonNode, HostLanguage<JsonNode, ObjectNode, ArrayNode, JsonNode>, JsonNode> translator,
+        Predicate<Preprocessor.Path> pathMatcher) {
+      return Preprocessor.preprocessor(jsonNode -> translator.apply(jsonNode, Json.this), pathMatcher);
+    }
 
     @Override
     public ObjectNode preprocess(ObjectNode inputNode, Preprocessor<JsonNode> preprocessor) {

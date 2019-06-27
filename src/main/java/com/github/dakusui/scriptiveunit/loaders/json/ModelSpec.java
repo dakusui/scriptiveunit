@@ -10,13 +10,15 @@ import java.util.Map;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
+import static com.github.dakusui.scriptiveunit.loaders.json.JsonPreprocessorUtils.toUniformedObjectNode;
 import static com.github.dakusui.scriptiveunit.utils.Checks.check;
+import static java.util.Collections.singletonList;
 import static java.util.Objects.requireNonNull;
 
 public interface ModelSpec<T> {
   Dictionary createDefaultValues();
 
-  List<Preprocessor<T>> preprocessors();
+  List<Preprocessor<T>> preprocessors(HostLanguage<T, ?, ?, ? extends T> hostLanguage);
 
   class Standard implements ModelSpec<JsonNode> {
     @Override
@@ -36,8 +38,10 @@ public interface ModelSpec<T> {
     }
 
     @Override
-    public List<Preprocessor<JsonNode>> preprocessors() {
-      return JsonPreprocessorUtils.preprocessors();
+    public List<Preprocessor<JsonNode>> preprocessors(HostLanguage<JsonNode, ?,  ? , ? extends JsonNode> hostLanguage) {
+      return singletonList(hostLanguage.preprocessor(
+          (jsonNode, lang) -> toUniformedObjectNode(jsonNode),
+          Preprocessor.Utils.pathMatcher("factorSpace", "factors", ".*")));
     }
   }
 
