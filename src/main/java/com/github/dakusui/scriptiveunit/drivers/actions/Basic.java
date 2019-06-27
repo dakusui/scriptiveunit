@@ -17,8 +17,6 @@ import java.util.Objects;
 import java.util.function.Consumer;
 
 import static com.github.dakusui.actionunit.Actions.simple;
-import static com.github.dakusui.scriptiveunit.model.form.Func.createFunc;
-import static com.github.dakusui.scriptiveunit.model.form.Func.funcId;
 import static com.github.dakusui.scriptiveunit.utils.StringUtils.prettify;
 import static java.util.Objects.requireNonNull;
 import static java.util.stream.Collectors.toList;
@@ -27,7 +25,7 @@ import static java.util.stream.Collectors.toList;
 public class Basic {
   private static final Logger LOGGER = LoggerFactory.getLogger(Basic.class);
 
-  private static Consumer<String>       out  = System.err::println;//LOGGER::debug;
+  private static Consumer<String> out = System.err::println;//LOGGER::debug;
 
   public static void setOut(Consumer<String> out) {
     Basic.out = requireNonNull(out);
@@ -122,22 +120,5 @@ public class Basic {
       );
       return true;
     };
-  }
-
-  private int i = 0;
-
-  @Scriptable
-  public final Func<Integer> increment() {
-    return createFunc(funcId(), input -> i++);
-  }
-
-  @Memoized
-  @Scriptable
-  public final Func<Integer> op(Form<Integer> a, Form<Integer> b) {
-    return new Func.Builder<Integer>(Func.funcId())
-        .func(objects -> (Integer) objects[0] + (Integer) objects[1] + i++)
-        .addParameter(a)
-        .addParameter(b)
-        .build();
   }
 }

@@ -34,7 +34,7 @@ public class JsonBasedTestSuiteDescriptorLoader extends TestSuiteDescriptorLoade
   public TestSuiteDescriptor loadTestSuiteDescriptor(Session session) {
     try {
       return new ObjectMapper().readValue(
-          readScript(session.getConfig().getScriptResourceName()),
+          readScriptHandlingInheritance(session),
           JsonTestSuiteDescriptorBean.class)
           .create(session);
     } catch (IOException e) {
@@ -43,7 +43,7 @@ public class JsonBasedTestSuiteDescriptorLoader extends TestSuiteDescriptorLoade
   }
 
   protected ObjectNode readObjectNodeWithMerging(String resourceName) {
-    ObjectNode child = checkObjectNode(preprocess(JsonUtils.readJsonNodeFromStream(ReflectionUtils.openResourceAsStream(resourceName))));
+    ObjectNode child = checkObjectNode(preprocess(readResource(resourceName)));
     ObjectNode work = JsonNodeFactory.instance.objectNode();
     if (child.has(EXTENDS_KEYWORD)) {
       getParentsOf(child, EXTENDS_KEYWORD)
@@ -53,13 +53,14 @@ public class JsonBasedTestSuiteDescriptorLoader extends TestSuiteDescriptorLoade
     return work;
   }
 
+
   protected List<JsonPreprocessor> getPreprocessors() {
     return JsonPreprocessorUtils.preprocessors();
   }
 
-  protected ObjectNode readScript(String scriptResourceName) {
+  protected ObjectNode readScriptHandlingInheritance(String scriptResourceName) {
     ObjectNode work = readObjectNodeWithMerging(scriptResourceName);
-    ObjectNode ret = checkObjectNode(JsonUtils.readJsonNodeFromStream(ReflectionUtils.openResourceAsStream(DEFAULTS_JSON)));
+    ObjectNode ret = checkObjectNode(readDefaultValues());
     JsonUtils.deepMerge(work, ret);
     ret.remove(EXTENDS_KEYWORD);
     return ret;
@@ -67,5 +68,17 @@ public class JsonBasedTestSuiteDescriptorLoader extends TestSuiteDescriptorLoade
 
   protected JsonNode preprocess(JsonNode inputNode) {
     return JsonPreprocessorUtils.preprocess(inputNode, getPreprocessors());
+  }
+
+  private ObjectNode readScriptHandlingInheritance(Session session) {
+    return readScriptHandlingInheritance(session.getConfig().getScriptResourceName());
+  }
+
+  private JsonNode readDefaultValues() {
+    return readResource(DEFAULTS_JSON);
+  }
+
+  private JsonNode readResource(String resourceName) {
+    return JsonUtils.readJsonNodeFromStream(ReflectionUtils.openResourceAsStream(resourceName));
   }
 }

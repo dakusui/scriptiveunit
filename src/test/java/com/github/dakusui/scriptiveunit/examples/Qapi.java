@@ -16,6 +16,7 @@ import com.github.dakusui.scriptiveunit.loaders.json.JsonBasedTestSuiteDescripto
 import com.github.dakusui.scriptiveunit.loaders.json.JsonPreprocessor;
 import com.github.dakusui.scriptiveunit.model.form.Form;
 import com.github.dakusui.scriptiveunit.runners.ScriptiveUnit;
+import com.github.dakusui.scriptiveunit.unittests.cli.MemoizationExample;
 import com.google.common.collect.Maps;
 import org.codehaus.jackson.JsonNode;
 import org.codehaus.jackson.node.ObjectNode;
@@ -153,6 +154,10 @@ public class Qapi {
       return buildRequest(work);
     }
   };
+
+  @SuppressWarnings("unused")
+  @Import
+  public Object memoizationExample = new MemoizationExample();
 
   public static class Request {
     static class Term {

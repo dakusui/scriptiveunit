@@ -29,7 +29,7 @@ public class DryQapi extends Qapi {
      * @param resourceName A string that contains the script itself to be run.
      */
     @Override
-    protected ObjectNode readScript(String resourceName) {
+    protected ObjectNode readScriptHandlingInheritance(String resourceName) {
       System.out.println("<" + resourceName + ">");
       ObjectNode work = readObjectNodeDirectlyWithMerging(resourceName);
       ObjectNode ret = JsonPreprocessorUtils.checkObjectNode(JsonUtils.readJsonNodeFromStream(ReflectionUtils.openResourceAsStream(DEFAULTS_JSON)));

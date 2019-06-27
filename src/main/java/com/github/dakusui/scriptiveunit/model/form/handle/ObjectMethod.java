@@ -10,22 +10,14 @@ import com.github.dakusui.scriptiveunit.model.form.FormList;
 import com.github.dakusui.scriptiveunit.model.form.Func;
 import com.github.dakusui.scriptiveunit.model.session.Stage;
 
-import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.util.AbstractList;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.function.Function;
 
-import static com.github.dakusui.scriptiveunit.exceptions.ScriptiveUnitException.fail;
 import static com.github.dakusui.scriptiveunit.exceptions.ScriptiveUnitException.wrap;
 import static com.github.dakusui.scriptiveunit.exceptions.TypeMismatch.valueReturnedByScriptableMethodMustBeFunc;
 import static com.github.dakusui.scriptiveunit.utils.Checks.check;
-import static com.github.dakusui.scriptiveunit.utils.CoreUtils.toBigDecimalIfPossible;
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
 import static java.util.Arrays.stream;
@@ -41,7 +33,7 @@ public interface ObjectMethod {
    * can become Form[] it is because only the last argument of a method can become
    * a varargs.
    */
-  <V> Form<V> createFormForCompoundStatement(Form[] args);
+  <V> Form<V> createForm(Form[] args);
 
   String getName();
 
@@ -103,7 +95,7 @@ public interface ObjectMethod {
        */
       @SuppressWarnings("unchecked")
       @Override
-      public <V> Form<V> createFormForCompoundStatement(Form[] args) {
+      public <V> Form<V> createForm(Form[] args) {
         Object returnedValue = this.invokeMethod(composeArgs(args));
         /*
          * By using dynamic proxy, we are making it possible to print structured pretty log.
@@ -138,7 +130,6 @@ public interface ObjectMethod {
 
       Object invokeMethod(Object... args) {
         try {
-          // MEMOIZE!
           return method.invoke(driverObject, args);
         } catch (IllegalAccessException | InvocationTargetException | IllegalArgumentException e) {
           String message = format("Failed to invoke %s#%s(%s) with %s",
@@ -186,11 +177,6 @@ public interface ObjectMethod {
                 .toArray());
           }
 
-          @Override
-          public String id() {
-            return target.id();
-          }
-
           @SuppressWarnings("unchecked")
           @Override
           public Function<Object[], V> body() {
@@ -199,14 +185,6 @@ public interface ObjectMethod {
                 objects -> target.body().apply(objects.toArray()));
           }
         };
-      }
-
-      private <V> Object invokeMethod(Form<V> target, Method m, Object[] args) {
-        try {
-          return toBigDecimalIfPossible(m.invoke(target, args));
-        } catch (IllegalAccessException | InvocationTargetException e) {
-          throw new RuntimeException(e);
-        }
       }
 
       String arrayToString(Object[] args) {
@@ -274,22 +252,6 @@ public interface ObjectMethod {
       public String toString() {
         return name();
       }
-    };
-  }
-
-  static InvocationHandler createInvocationHandler(Form target) {
-    return (Object proxy, Method method, Object[] args) -> {
-      if (!"apply".equals(method.getName()))
-        return method.invoke(target, args);
-      //MEMOIZATION SHOULD HAPPEN HERE
-      check(args.length == 1 && args[0] instanceof Stage,
-          fail("The argument should be an array of length 1 and its first element should be an instance of %s, but it was: %s",
-              Stage.class.getCanonicalName(),
-              Arrays.toString(args)
-          ));
-      //MEMOIZATION SHOULD HAPPEN HERE
-      return toBigDecimalIfPossible(target.apply((Stage) args[0]));
-      //return formHandler.handleForm(invoker, target, (Stage) args[0], name);
     };
   }
 }

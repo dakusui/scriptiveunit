@@ -34,7 +34,7 @@ public interface FormHandle {
 
     static <U> Form<U> methodBasedFormHandleToForm(MethodBased formHandle, Statement.Compound compound) {
       ObjectMethod objectMethod = formHandle.objectMethod();
-      return objectMethod.createFormForCompoundStatement(
+      return objectMethod.createForm(
           iterableToStream(compound.getArguments())
               .map(Statement::toForm)
               .toArray(Form[]::new));
