@@ -72,7 +72,10 @@ public class JsonBasedTestSuiteDescriptorLoader extends TestSuiteDescriptorLoade
 
   // CUSTOMIZATION POINT
   private ObjectNode performPreprocess(ObjectNode inputNode, JsonPreprocessor jsonPreprocessor) {
-    return (ObjectNode) JsonPreprocessorUtils.translate(jsonPreprocessor, inputNode);
+    return (ObjectNode) JsonPreprocessorUtils.translate(
+        jsonPreprocessor,
+        Preprocessor.Path.createRoot(),
+        inputNode);
   }
 
   private ModelSpec modelSpec() {

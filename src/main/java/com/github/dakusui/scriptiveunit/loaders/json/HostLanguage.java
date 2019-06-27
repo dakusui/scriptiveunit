@@ -17,7 +17,7 @@ import static com.github.dakusui.scriptiveunit.loaders.json.JsonPreprocessorUtil
 import static java.lang.String.format;
 
 public interface HostLanguage<NODE, OBJECT extends NODE, ARRAY extends NODE, ATOM extends NODE> {
-  NODE preprocess(JsonNode inputNode, Preprocessor preprocessor);
+  NODE preprocess(OBJECT inputNode, Preprocessor preprocessor);
 
   OBJECT newObjectNode();
 
@@ -31,23 +31,56 @@ public interface HostLanguage<NODE, OBJECT extends NODE, ARRAY extends NODE, ATO
 
   boolean hasInheritanceDirective(OBJECT child);
 
-  List<String> getParents(ObjectNode child);
+  List<String> getParents(OBJECT child);
 
   OBJECT removeInheritanceDirective(OBJECT object);
 
   OBJECT deepMerge(OBJECT work, OBJECT base);
 
-  OBJECT translate(ModelSpec.Dictionary dictionary);
+  default OBJECT translate(ModelSpec.Dictionary dictionary) {
+    OBJECT ret = newObjectNode();
+    dictionary.streamKeys()
+        .forEach((String eachKey) -> {
+          ModelSpec.Node nodeValue = dictionary.valueOf(eachKey);
+          NODE jsonNodeValue = translate(nodeValue);
+          putToObject(ret, eachKey, jsonNodeValue);
+        });
+    return ret;
+  }
 
-  ARRAY translate(ModelSpec.Array array);
+  default ARRAY translate(ModelSpec.Array array) {
+    ARRAY ret = newArrayNode();
+    array.stream().forEach(eachNode -> addToArray(ret, eachNode));
+    return ret;
+  }
 
-  ATOM translate(ModelSpec.Atom atom);
+  default ATOM translate(ModelSpec.Atom atom) {
+    return newAtomNode(atom.get());
+  }
+
+  default NODE translate(ModelSpec.Node modelNode) {
+    NODE nodeValue;
+    if (isAtom(modelNode))
+      nodeValue = translate((ModelSpec.Atom) modelNode);
+    else if (isArray(modelNode))
+      nodeValue = translate((ModelSpec.Array) modelNode);
+    else if (isDictionary(modelNode))
+      nodeValue = translate((ModelSpec.Dictionary) modelNode);
+    else
+      throw new RuntimeException(format("Unsupported value was given: '%s'", modelNode));
+    return nodeValue;
+  }
+
+  void putToObject(OBJECT ret, String eachKey, NODE jsonNodeValue);
+
+  void addToArray(ARRAY ret, ModelSpec.Node eachNode);
+
 
   class Json implements HostLanguage<JsonNode, ObjectNode, ArrayNode, JsonNode> {
     public static final String EXTENDS_KEYWORD = "$extends";
 
     @Override
-    public JsonNode preprocess(JsonNode inputNode, Preprocessor preprocessor) {
+    public JsonNode preprocess(ObjectNode inputNode, Preprocessor preprocessor) {
       // TODO
       return JsonPreprocessorUtils.translate((JsonPreprocessor) preprocessor, inputNode);
     }
@@ -110,40 +143,25 @@ public interface HostLanguage<NODE, OBJECT extends NODE, ARRAY extends NODE, ATO
     }
 
     @Override
-    public ObjectNode translate(ModelSpec.Dictionary dictionary) {
-      ObjectNode ret = newObjectNode();
-      dictionary.streamKeys()
-          .forEach((String eachKey) -> {
-            ModelSpec.Node nodeValue = dictionary.valueOf(eachKey);
-            JsonNode jsonNodeValue = translate(nodeValue);
-            ret.put(eachKey, jsonNodeValue);
-          });
-      return ret;
-    }
-
-    JsonNode translate(ModelSpec.Node nodeValue) {
-      JsonNode jsonNodeValue;
-      if (nodeValue instanceof ModelSpec.Atom)
-        jsonNodeValue = translate((ModelSpec.Atom) nodeValue);
-      else if (nodeValue instanceof ModelSpec.Array)
-        jsonNodeValue = translate((ModelSpec.Array) nodeValue);
-      else if (nodeValue instanceof ModelSpec.Dictionary)
-        jsonNodeValue = translate((ModelSpec.Dictionary) nodeValue);
-      else
-        throw new RuntimeException(format("Unsupported value was given: '%s'", nodeValue));
-      return jsonNodeValue;
+    public void putToObject(ObjectNode ret, String eachKey, JsonNode jsonNodeValue) {
+      ret.put(eachKey, jsonNodeValue);
     }
 
     @Override
-    public ArrayNode translate(ModelSpec.Array array) {
-      ArrayNode ret = newArrayNode();
-      array.stream().forEach(eachNode -> ret.add(translate(eachNode)));
-      return ret;
+    public void addToArray(ArrayNode ret, ModelSpec.Node eachNode) {
+      ret.add(translate(eachNode));
     }
+  }
 
-    @Override
-    public JsonNode translate(ModelSpec.Atom atom) {
-      return newAtomNode(atom.get());
-    }
+  static boolean isDictionary(ModelSpec.Node nodeValue) {
+    return nodeValue instanceof ModelSpec.Dictionary;
+  }
+
+  static boolean isArray(ModelSpec.Node nodeValue) {
+    return nodeValue instanceof ModelSpec.Array;
+  }
+
+  static boolean isAtom(ModelSpec.Node nodeValue) {
+    return nodeValue instanceof ModelSpec.Atom;
   }
 }
