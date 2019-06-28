@@ -29,7 +29,7 @@ public interface Preprocessor {
    *                    where translations by {@code translator} are desired.
    * @return A new preprocessor.
    */
-  static <T> Preprocessor preprocessor(Function<ModelSpec.Node, ModelSpec.Node> translator, Predicate<Path> pathMatcher) {
+  static Preprocessor preprocessor(Function<ModelSpec.Node, ModelSpec.Node> translator, Predicate<Path> pathMatcher) {
     requireNonNull(translator);
     requireNonNull(pathMatcher);
     return new Preprocessor() {

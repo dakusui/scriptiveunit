@@ -46,22 +46,7 @@ public class JsonBasedTestSuiteDescriptorLoader extends TestSuiteDescriptorLoade
 
   // TEMPLATE
   protected List<Preprocessor> getPreprocessors() {
-    return modelSpec.preprocessors();/*
-        .stream()
-        .map((Function<Preprocessor<ModelSpec.Node>, Preprocessor<JsonNode>>) nodePreprocessor -> new Preprocessor<JsonNode>() {
-          @Override
-          public JsonNode translate(JsonNode targetElement) {
-            return hostLanguage.translate(nodePreprocessor.translate(hostLanguage.toModelNode(targetElement)));
-          }
-
-          @Override
-          public boolean matches(Path pathToTargetElement) {
-            return nodePreprocessor.matches(pathToTargetElement);
-          }
-        })
-        .collect(toList())
-        ;
-        */
+    return modelSpec.preprocessors();
   }
 
   // TEMPLATE

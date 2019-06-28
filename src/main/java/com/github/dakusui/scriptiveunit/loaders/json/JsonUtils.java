@@ -2,14 +2,10 @@ package com.github.dakusui.scriptiveunit.loaders.json;
 
 import com.github.dakusui.scriptiveunit.exceptions.ScriptiveUnitException;
 import com.github.dakusui.scriptiveunit.utils.Checks;
-import com.github.dakusui.scriptiveunit.utils.CoreUtils;
 import org.codehaus.jackson.JsonNode;
 import org.codehaus.jackson.map.ObjectMapper;
-import org.codehaus.jackson.node.ArrayNode;
 import org.codehaus.jackson.node.JsonNodeFactory;
-import org.codehaus.jackson.node.NumericNode;
 import org.codehaus.jackson.node.ObjectNode;
-import org.codehaus.jackson.node.TextNode;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -72,63 +68,5 @@ public enum JsonUtils {
     } catch (IOException e) {
       throw ScriptiveUnitException.wrap(e, "Non-welformed input is given.");
     }
-  }
-
-  public interface Builder<T extends JsonNode> {
-    T build();
-  }
-
-  public static class ObjectNodeBuilder implements Builder<ObjectNode> {
-    private ObjectNode value = JsonNodeFactory.instance.objectNode();
-
-    public ObjectNodeBuilder $(String fieldName, Object value) {
-      this.value.put(fieldName, toJsonNode(value));
-      return this;
-    }
-
-    @Override
-    public ObjectNode build() {
-      return value;
-    }
-  }
-
-  public static class ArrayNodeBuilder implements Builder<ArrayNode> {
-    private ArrayNode value = JsonNodeFactory.instance.arrayNode();
-
-    public ArrayNodeBuilder $(Object value) {
-      this.value.add(toJsonNode(value));
-      return this;
-    }
-
-    @Override
-    public ArrayNode build() {
-      return value;
-    }
-  }
-
-  public static ObjectNodeBuilder object() {
-    return new ObjectNodeBuilder();
-  }
-
-  public static ArrayNodeBuilder array() {
-    return new ArrayNodeBuilder();
-  }
-
-  public static NumericNode numeric(Number v) {
-    return JsonNodeFactory.instance.numberNode(CoreUtils.toBigDecimal(v));
-  }
-
-  public static TextNode text(String text) {
-    return JsonNodeFactory.instance.textNode(text);
-  }
-
-  public static JsonNode toJsonNode(Object value) {
-    if (value instanceof JsonNode)
-      return (JsonNode) value;
-    if (value instanceof String)
-      return text((String) value);
-    if (value instanceof Number)
-      return numeric((Number) value);
-    throw new UnsupportedOperationException();
   }
 }

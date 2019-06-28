@@ -23,10 +23,10 @@ import static java.util.Objects.requireNonNull;
 
 public interface ModelSpec {
   static ModelSpec.Dictionary preprocess(ModelSpec.Dictionary inputNode, Preprocessor preprocessor) {
-    return (Dictionary) preprocess__(preprocessor, Preprocessor.Path.createRoot(), inputNode);
+    return (Dictionary) preprocess(preprocessor, Preprocessor.Path.createRoot(), inputNode);
   }
 
-  static Node preprocess__(Preprocessor preprocessor, Preprocessor.Path pathToTarget, Node targetElement) {
+  static Node preprocess(Preprocessor preprocessor, Preprocessor.Path pathToTarget, Node targetElement) {
     if (preprocessor.matches(pathToTarget)) {
       return preprocessor.translate(targetElement);
     }
@@ -36,7 +36,7 @@ public interface ModelSpec {
       work = dict(((Dictionary) targetElement).streamKeys().map(
           (String attributeName) -> $(
               attributeName,
-              preprocess__(
+              preprocess(
                   preprocessor,
                   pathToTarget.createChild(attributeName),
                   ((Dictionary) targetElement).valueOf(attributeName)))).toArray(Dictionary.Entry[]::new));
@@ -44,7 +44,7 @@ public interface ModelSpec {
       AtomicInteger i = new AtomicInteger(0);
       work = array(((Array) targetElement)
           .stream()
-          .map((Node each) -> preprocess__(
+          .map((Node each) -> preprocess(
               preprocessor,
               pathToTarget.createChild(i.getAndIncrement()),
               each
