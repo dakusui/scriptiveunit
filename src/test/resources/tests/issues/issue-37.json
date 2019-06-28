@@ -1,0 +1,32 @@
+{
+  "$extends": [],
+  "description": "Lifecycle",
+  "factorSpace": {
+    "factors": {
+      "num": [2, 10],
+      "base":["a", "b"]
+    }
+  },
+  "setUpBeforeAll": ["dumb", ["debug", "setUpBeforeAll", null]],
+  "setUp": ["dumb", ["debug", "setUp",["format", "base=%s", ["attr", "base"]]]],
+  "testOracles": [
+    {
+      "description": "Oracle A",
+      "before": ["dumb",  ["debug", "beforeOracleA", ["format", "num=%s,base=%s", ["attr", "num"], ["attr", "base"]]]],
+      "given": ["debug", "givenOracleA", ["not", ["always"]]],
+      "when": ["debug", "whenOracleA", "HELLO"],
+      "then": ["debug", "thenOracleA",["always"]],
+      "after": ["dumb",  ["debug", "afterOracleA", ["format", "num=%s,base=%s", ["attr", "num"], ["attr", "base"]]]]
+    },
+    {
+      "description": "Oracle B",
+      "before": ["dumb",  ["debug", "beforeOracleB", ["format", "num=%s,base=%s", ["attr", "num"], ["attr", "base"]]]],
+      "given": ["debug", "givenOracleB", ["always"]],
+      "when": ["debug", "whenOracleB", "HELLO"],
+      "then": ["debug", "thenOracleB",["always"]],
+      "after": ["dumb",  ["debug", "afterOracleB", ["format", "num=%s,base=%s", ["attr", "num"], ["attr", "base"]]]]
+    }
+  ],
+  "tearDown": ["dumb", ["debug", "tearDown", ["format", "base=%s", ["attr", "base"]]]],
+  "tearDownAfterAll": ["dumb", ["debug", "tearDownAfterAll", null]]
+}

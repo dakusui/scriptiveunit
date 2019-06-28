@@ -2,6 +2,12 @@ package com.github.dakusui.scriptiveunit.examples;
 
 import com.github.dakusui.scriptiveunit.annotations.Load;
 import com.github.dakusui.scriptiveunit.core.Config;
+import com.github.dakusui.scriptiveunit.model.lang.HostSpec;
+import com.github.dakusui.scriptiveunit.loaders.json.JsonPreprocessorUtils;
+import com.github.dakusui.scriptiveunit.model.lang.json.JsonUtils;
+import com.github.dakusui.scriptiveunit.model.lang.ApplicationSpec;
+import com.github.dakusui.scriptiveunit.unittests.core.UtJsonUtils;
+import com.github.dakusui.scriptiveunit.utils.ReflectionUtils;
 import org.codehaus.jackson.node.JsonNodeFactory;
 import org.codehaus.jackson.node.ObjectNode;
 import org.junit.runner.JUnitCore;
@@ -12,10 +18,15 @@ import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.nio.charset.Charset;
 
-import static com.github.dakusui.scriptiveunit.core.Utils.*;
+import static com.github.dakusui.scriptiveunit.loaders.json.JsonPreprocessorUtils.requireObjectNode;
 
 @Load(with = DryQapi.Loader.class)
 public class DryQapi extends Qapi {
+  /**
+   * A resource that holds default values of ScriptiveUnit.
+   */
+  protected static final String DEFAULTS_JSON = "defaults/values.json";
+
   public static class Loader extends Qapi.Loader {
     public Loader(Config config) {
       super(config);
@@ -28,22 +39,28 @@ public class DryQapi extends Qapi {
      * @param resourceName A string that contains the script itself to be run.
      */
     @Override
-    protected ObjectNode readScript(String resourceName) {
+    protected ApplicationSpec.Dictionary readScriptHandlingInheritance(String resourceName) {
       System.out.println("<" + resourceName + ">");
       ObjectNode work = readObjectNodeDirectlyWithMerging(resourceName);
-      ObjectNode ret = checkObjectNode(readJsonNodeFromStream(openResourceAsStream(DEFAULTS_JSON)));
-      ret = deepMerge(work, ret);
-      ret.remove(EXTENDS_KEYWORD);
-      return ret;
+      ObjectNode ret = requireObjectNode(JsonUtils.readJsonNodeFromStream(ReflectionUtils.openResourceAsStream(DEFAULTS_JSON)));
+      ret = UtJsonUtils.deepMerge(work, ret);
+      ret.remove(HostSpec.Json.EXTENDS_KEYWORD);
+      return hostSpec.toApplicationDictionary(ret);
     }
 
     ObjectNode readObjectNodeDirectlyWithMerging(String script) {
-      ObjectNode child = checkObjectNode(preprocess(readJsonNodeFromStream(toInputStream(script))));
+      ObjectNode child = requireObjectNode(
+          hostSpec.toHostObject(
+              preprocess(
+                  hostSpec.toApplicationDictionary(
+                      requireObjectNode(JsonUtils.readJsonNodeFromStream(toInputStream(script)))),
+                  getPreprocessors())));
       ObjectNode work = JsonNodeFactory.instance.objectNode();
-      if (child.has(EXTENDS_KEYWORD)) {
-        getParentsOf(child).forEach(s -> deepMerge(checkObjectNode(readObjectNodeWithMerging(s)), work));
+      if (child.has(HostSpec.Json.EXTENDS_KEYWORD)) {
+        JsonPreprocessorUtils.getParentsOf(child, HostSpec.Json.EXTENDS_KEYWORD)
+            .forEach(s -> UtJsonUtils.deepMerge(requireObjectNode(hostSpec.toHostObject(readObjectNodeWithMerging(s))), work));
       }
-      return deepMerge(child, work);
+      return UtJsonUtils.deepMerge(child, work);
     }
 
     private InputStream toInputStream(String script) {
@@ -52,10 +69,10 @@ public class DryQapi extends Qapi {
   }
 
   public static void main(String... args) {
-    System.getProperties().put("scriptiveunit.target","{\"$extends\":[\"tests/issues/issue-28.json\"]}");
+    System.getProperties().put("scriptiveunit.target", "{\"$extends\":[\"tests/issues/issue-28.json\"]}");
     Result result = JUnitCore.runClasses(DryQapi.class);
     System.out.println("wasSuccessful:" + result.wasSuccessful());
-    for (Failure failure: result.getFailures()) {
+    for (Failure failure : result.getFailures()) {
       System.out.println(failure.getDescription().getMethodName());
     }
   }

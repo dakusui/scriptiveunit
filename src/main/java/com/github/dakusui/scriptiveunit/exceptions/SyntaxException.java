@@ -1,6 +1,7 @@
 package com.github.dakusui.scriptiveunit.exceptions;
 
-import com.github.dakusui.scriptiveunit.model.Stage;
+import com.github.dakusui.scriptiveunit.model.lang.ApplicationSpec;
+import com.github.dakusui.scriptiveunit.model.session.Stage;
 import com.github.dakusui.scriptiveunit.model.statement.Statement;
 import org.codehaus.jackson.JsonNode;
 import org.codehaus.jackson.node.ObjectNode;
@@ -20,7 +21,7 @@ public class SyntaxException extends ScriptiveUnitException {
       throw new SyntaxException(format(
           "Attribute '%s' is accessed in '%s', but not found in your test case. Known attribute names are %s'",
           attributeName,
-          context.getType().toString().toLowerCase(),
+          context.getExecutionLevel().toString().toLowerCase(),
           knownAttributeNames));
     };
   }
@@ -31,6 +32,10 @@ public class SyntaxException extends ScriptiveUnitException {
         input != null ? input.getClass().getCanonicalName() : "none",
         type.getCanonicalName()
     ));
+  }
+
+  public static SyntaxException mergeFailed(ApplicationSpec.Dictionary source, ApplicationSpec.Dictionary target, String key) {
+    throw new SyntaxException(format("Failed to merge '%s' and '%s' on '%s'", source, target, key));
   }
 
   public static SyntaxException mergeFailed(ObjectNode source, ObjectNode target, String key) {
@@ -49,8 +54,8 @@ public class SyntaxException extends ScriptiveUnitException {
     throw new SyntaxException(format("A text node was expected but not. '%s'", jsonNode));
   }
 
-  public static SyntaxException parameterNameShouldBeSpecifiedWithConstant(Statement.Nested statement) {
-    throw new SyntaxException(format("Parameter name must be constant but not when accessor is used. (%s %s)", statement.getForm(), statement.getArguments()));
+  public static SyntaxException parameterNameShouldBeSpecifiedWithConstant(Statement.Compound statement) {
+    throw new SyntaxException(format("Parameter name must be constant but not when accessor is used. (%s %s)", statement.getFormHandle(), statement.getArguments()));
   }
 
   public static SyntaxException cyclicTemplatingFound(String context, Map<String, Object> map) {
@@ -63,5 +68,9 @@ public class SyntaxException extends ScriptiveUnitException {
 
   public static SyntaxException systemAttributeNotFound(String attr, Stage input) {
     throw new SyntaxException(format("Unknown system attribute '%s' was accessed in '%s'", attr, input));
+  }
+
+  public static Supplier<ScriptiveUnitException> notDictionary() {
+    return () -> new SyntaxException("Non dictionary node was given");
   }
 }

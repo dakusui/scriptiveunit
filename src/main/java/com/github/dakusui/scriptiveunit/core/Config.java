@@ -1,6 +1,8 @@
 package com.github.dakusui.scriptiveunit.core;
 
 import com.github.dakusui.scriptiveunit.annotations.Load;
+import com.github.dakusui.scriptiveunit.utils.Checks;
+import com.github.dakusui.scriptiveunit.utils.ReflectionUtils;
 
 import java.io.File;
 import java.util.Properties;
@@ -36,7 +38,7 @@ public interface Config {
       this.driverClass = driverClass;
       this.properties = new Properties();
       this.properties.putAll(properties);
-      this.loadAnnotation = Utils.getAnnotation(driverClass, Load.class, Load.DEFAULT_INSTANCE);
+      this.loadAnnotation = ReflectionUtils.getAnnotation(driverClass, Load.class, Load.DEFAULT_INSTANCE);
     }
 
     public Builder withScriptResourceName(String scriptResourceName) {
@@ -62,7 +64,7 @@ public interface Config {
 
           @Override
           public String getScriptResourceName() {
-            return Utils.check(
+            return Checks.check(
                 properties.getProperty(getScriptResourceNameKey(), Builder.this.loadAnnotation.defaultScriptName()),
                 (in) -> !in.equals(Load.SCRIPT_NOT_SPECIFIED),
                 () -> scriptNotSpecified(getScriptResourceNameKey())

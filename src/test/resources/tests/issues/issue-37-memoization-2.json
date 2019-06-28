@@ -1,0 +1,33 @@
+{
+  "$extends": [],
+  "description": "Memoization",
+  "runnerType": "groupByTestCase",
+  "factorSpace": {
+    "factors": {
+      "num": [2, 10],
+      "base":["a", "b"]
+    }
+  },
+  "setUpBeforeAll": ["dumb", ["debug", ["format", "setUpBeforeAll:%s", ["op", 1, 2]], ["nop"]]],
+  "setUp": ["dumb", ["debug", ["format", "  setUp:%s:%s", ["op", 1, 2], ["attr", "base"]], ["nop"]]],
+  "testOracles": [
+    {
+      "description": "Oracle A",
+      "before": ["dumb",  ["debug", ["format", "    beforeOracleA:%s", ["op", 1, 2]], ["nop"]]],
+      "given": ["debug", ["format", "      givenOracleA:%s:%s", ["op", 1, 2], ["op", 1, 2]], ["always"]],
+      "when": ["debug", ["format", "      whenOracleA:%s", ["op", 1, 2]], "HELLO"],
+      "then": ["debug", ["format", "      thenOracleA:%s",["op", 1, 2]], ["always"]],
+      "after": ["dumb",  ["debug", ["format", "    afterOracleA:%s", ["op", 1, 2]], ["always"]]]
+    },
+    {
+      "description": "Oracle B",
+      "before": ["dumb",  ["debug", ["format", "    beforeOracleB:%s", ["op", 1, 2]], ["nop"]]],
+      "given": ["debug", ["format", "      givenOracleB:%s:%s", ["op", 1, 2], ["op", 1, 2]], ["always"]],
+      "when": ["debug", ["format", "      whenOracleB:%s", ["op", 1, 2]], "HELLO"],
+      "then": ["debug", ["format", "      thenOracleB:%s",["op", 1, 2]], ["always"]],
+      "after": ["dumb",  ["debug", ["format", "    afterOracleB:%s", ["op", 1, 2]], ["always"]]]
+    }
+  ],
+  "tearDown": ["dumb", ["debug", ["format", "  tearDown:%s", ["op", 1, 2]], ["nop"]]],
+  "tearDownAfterAll": ["dumb", ["debug", ["format", "tearDownAfterAll:%s", ["op", 1, 2]], ["nop"]]]
+}

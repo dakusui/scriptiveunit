@@ -1,117 +1,116 @@
 package com.github.dakusui.scriptiveunit.model.statement;
 
-import com.github.dakusui.scriptiveunit.Session;
-import com.github.dakusui.scriptiveunit.exceptions.SyntaxException;
+import com.github.dakusui.scriptiveunit.core.Config;
 import com.github.dakusui.scriptiveunit.exceptions.TypeMismatch;
-import com.github.dakusui.scriptiveunit.model.func.Func;
-import com.github.dakusui.scriptiveunit.model.func.FuncHandler;
-import com.github.dakusui.scriptiveunit.model.func.FuncInvoker;
-import com.google.common.collect.Lists;
+import com.github.dakusui.scriptiveunit.model.form.Form;
+import com.github.dakusui.scriptiveunit.model.form.handle.FormHandle;
+import com.github.dakusui.scriptiveunit.model.form.handle.FormHandleFactory;
+import com.github.dakusui.scriptiveunit.model.form.handle.ObjectMethodRegistry;
+import com.github.dakusui.scriptiveunit.utils.CoreUtils;
 
 import java.util.List;
-import java.util.Objects;
+import java.util.Map;
 
 import static com.github.dakusui.scriptiveunit.exceptions.TypeMismatch.headOfCallMustBeString;
-import static java.util.Objects.requireNonNull;
+import static com.github.dakusui.scriptiveunit.model.form.handle.FormUtils.createConst;
 
 /**
- * An interface that represents a grammatical structure of a script element.
+ * An interface that represents a lexical structure of a script element.
  */
 public interface Statement {
-  Func compile(FuncInvoker invoker);
-
-  interface Atom extends Statement {
+  static Factory createStatementFactory(Config config, Map<String, List<Object>> userDefinedFormClauses) {
+    return new Factory(ObjectMethodRegistry.load(config.getDriverObject()), userDefinedFormClauses);
   }
 
-  interface Nested extends Statement {
-    Form getForm();
+  <U> Form<U> toForm();
+
+  interface Atom extends Statement {
+    default boolean isParameterAccessor() {
+      return false;
+    }
+
+    default <V> V value() {
+      throw new UnsupportedOperationException();
+    }
+  }
+
+  interface Compound extends Statement {
+    FormHandle getFormHandle();
 
     Arguments getArguments();
   }
 
   class Factory {
-    private final Form.Factory formFactory;
-    private final Func.Factory funcFactory;
-    private final FuncHandler  funcHandler;
+    private final FormHandleFactory formHandleFactory;
 
-    public Factory(Session session) {
-      this.funcHandler = new FuncHandler();
-      this.funcFactory = new Func.Factory(funcHandler);
-      this.formFactory = new Form.Factory(session, funcFactory, this);
+    public Factory(ObjectMethodRegistry objectMethodRegistry, Map<String, List<Object>> userDefinedFormClauses) {
+
+      this.formHandleFactory = new FormHandleFactory(
+          objectMethodRegistry,
+          StatementRegistry.create(this, userDefinedFormClauses));
     }
 
     public Statement create(Object object) throws TypeMismatch {
-      if (Utils.isAtom(object))
-        return (Atom) invoker -> (Func<Object>) funcFactory.createConst(invoker, object);
-      @SuppressWarnings("unchecked") List<Func> raw = (List<Func>) object;
-      Object car = Utils.car(raw);
+      if (CoreUtils.isAtom(object))
+        return createAtom(object);
+      @SuppressWarnings("unchecked") List<Object> raw = (List<Object>) object;
+      Object car = CoreUtils.car(raw);
       if (car instanceof String) {
-        Arguments arguments = Arguments.create(this, Utils.cdr(raw));
-        Form form = this.formFactory.create(String.class.cast(car));
-        return new Nested() {
+        Arguments arguments = Arguments.create(this, CoreUtils.cdr(raw));
+        FormHandle formHandle = this.formHandleFactory.create((String) car);
+        return new Compound() {
           @Override
-          public Form getForm() {
-            return form;
+          public <U> Form<U> toForm() {
+            return getFormHandle().toForm(this);
+          }
+
+          @Override
+          public FormHandle getFormHandle() {
+            return formHandle;
           }
 
           @Override
           public Arguments getArguments() {
             return arguments;
           }
-
-          @Override
-          public Func<?> compile(FuncInvoker invoker) {
-            return (Func<?>) getForm().apply(invoker, arguments);
-          }
         };
       } else if (car instanceof Integer) {
-        return (Atom) invoker -> (Func<Object>) input -> input.getArgument((Integer) car);
+        return new Atom() {
+          @SuppressWarnings("unchecked")
+          public <V> V value() {
+            return (V) car;
+          }
+
+          @Override
+          public <U> Form<U> toForm() {
+            return input -> input.getArgument((this.value()));
+          }
+
+          @Override
+          public boolean isParameterAccessor() {
+            return true;
+          }
+        };
       }
       throw headOfCallMustBeString(car);
     }
 
-  }
-
-  enum Utils {
-    ;
-
-    public static List<String> involvedParameters(Statement statement) {
-      requireNonNull(statement);
-      List<String> ret = Lists.newLinkedList();
-      return involvedParameters(statement, ret);
-    }
-
-    private static List<String> involvedParameters(Statement statement, List<String> work) {
-      if (statement instanceof Atom)
-        return work;
-      if (statement instanceof Nested) {
-        if (((Nested) statement).getForm().isAccessor()) {
-          for (Statement each : ((Nested) statement).getArguments()) {
-            if (each instanceof Atom) {
-              work.add(Objects.toString(each.compile(FuncInvoker.create())));
-            } else {
-              throw SyntaxException.parameterNameShouldBeSpecifiedWithConstant((Nested) statement);
-            }
-          }
-        } else {
-          for (Statement each : ((Nested) statement).getArguments()) {
-            work = involvedParameters(each, work);
-          }
+    Atom createAtom(Object object) {
+      return new Atom() {
+        @Override
+        public <U> Form<U> toForm() {
+          return createConst(this.value());
         }
-      }
-      return work;
+
+        @SuppressWarnings("unchecked")
+        public <V> V value() {
+          if (isParameterAccessor())
+            throw new IllegalStateException();
+          return (V) object;
+        }
+      };
     }
 
-    static boolean isAtom(Object object) {
-      return !(object instanceof List) || ((List) object).isEmpty();
-    }
-
-    static Object car(List<Func> raw) {
-      return raw.get(0);
-    }
-
-    static List<Func> cdr(List<Func> raw) {
-      return raw.subList(1, raw.size());
-    }
   }
+
 }

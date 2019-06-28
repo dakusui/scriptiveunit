@@ -1,6 +1,6 @@
 package com.github.dakusui.scriptiveunit.unittests.issues;
 
-import com.github.dakusui.scriptiveunit.ScriptiveSuiteSet;
+import com.github.dakusui.scriptiveunit.utils.ScriptiveSuiteSet;
 import com.github.dakusui.scriptiveunit.examples.Qapi;
 import com.github.dakusui.scriptiveunit.testutils.TestBase;
 import org.junit.Test;

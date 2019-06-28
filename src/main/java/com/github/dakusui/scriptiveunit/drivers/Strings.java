@@ -1,17 +1,18 @@
 package com.github.dakusui.scriptiveunit.drivers;
 
 import com.github.dakusui.scriptiveunit.annotations.Scriptable;
-import com.github.dakusui.scriptiveunit.model.func.Func;
+import com.github.dakusui.scriptiveunit.model.form.Form;
+import com.github.dakusui.scriptiveunit.model.form.FormList;
 
+import java.util.Arrays;
 import java.util.stream.Collectors;
 
-import static java.util.Arrays.stream;
 import static java.util.Objects.requireNonNull;
 
 public class Strings {
   @SuppressWarnings("unused")
   @Scriptable
-  public Func<String> substr(Func<String> str, Func<Integer> begin, Func<Integer> end) {
+  public Form<String> substr(Form<String> str, Form<Integer> begin, Form<Integer> end) {
     return input -> requireNonNull(str.apply(input)).substring(
         requireNonNull(begin.apply(input)),
         requireNonNull(end.apply(input)));
@@ -19,34 +20,32 @@ public class Strings {
 
   @SuppressWarnings("unused")
   @Scriptable
-  public Func<Integer> length(Func<String> str) {
+  public Form<Integer> length(Form<String> str) {
     return input -> requireNonNull(str.apply(input)).length();
   }
 
   @SuppressWarnings("unused")
   @Scriptable
-  public Func<Boolean> endsWith(Func<String> str, Func<String> a) {
+  public Form<Boolean> endsWith(Form<String> str, Form<String> a) {
     return input -> requireNonNull(str.apply(input)).endsWith(requireNonNull(a.apply(input)));
   }
 
   @SuppressWarnings("unused")
   @Scriptable
-  public Func<Boolean> startsWith(Func<String> str, Func<String> a) {
+  public Form<Boolean> startsWith(Form<String> str, Form<String> a) {
     return input -> requireNonNull(str.apply(input)).startsWith(requireNonNull(a.apply(input)));
   }
 
   @SuppressWarnings("unused")
   @Scriptable
-  public Func<Boolean> matches(Func<String> str, Func<String> regex) {
+  public Form<Boolean> matches(Form<String> str, Form<String> regex) {
     return input -> requireNonNull(str.apply(input)).matches(requireNonNull(regex.apply(input)));
   }
 
-  @SafeVarargs
-  @SuppressWarnings("unused")
   @Scriptable
-  public final Func<String> format(Func<String> in, Func<Object>... args) {
+  public final Form<String> format(Form<String> in, FormList<Object> args) {
     return input -> String.format(requireNonNull(in.apply(input)),
-        stream(args)
+        args.stream()
             .map(each -> each.apply(input))
             .collect(Collectors.toList())
             .toArray()

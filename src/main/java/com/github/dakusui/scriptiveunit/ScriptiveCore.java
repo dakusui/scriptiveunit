@@ -1,11 +1,14 @@
 package com.github.dakusui.scriptiveunit;
 
-import com.github.dakusui.scriptiveunit.ScriptiveSuiteSet.SuiteScripts;
-import com.github.dakusui.scriptiveunit.ScriptiveSuiteSet.SuiteScripts.Streamer;
+import com.github.dakusui.scriptiveunit.utils.ScriptiveSuiteSet;
+import com.github.dakusui.scriptiveunit.utils.ScriptiveSuiteSet.SuiteScripts;
+import com.github.dakusui.scriptiveunit.utils.ScriptiveSuiteSet.SuiteScripts.Streamer;
 import com.github.dakusui.scriptiveunit.core.Config;
-import com.github.dakusui.scriptiveunit.core.Utils;
 import com.github.dakusui.scriptiveunit.core.Description;
 import com.github.dakusui.scriptiveunit.exceptions.ScriptiveUnitException;
+import com.github.dakusui.scriptiveunit.runners.ScriptiveUnit;
+import com.github.dakusui.scriptiveunit.utils.ReflectionUtils;
+import com.github.dakusui.scriptiveunit.utils.StringUtils;
 import org.junit.runner.JUnitCore;
 import org.junit.runner.Result;
 import org.junit.runner.RunWith;
@@ -19,7 +22,7 @@ import static com.github.dakusui.scriptiveunit.exceptions.FacadeException.valida
 import static java.util.stream.Collectors.toList;
 
 /**
- * A facade to ScriptiveUnit's functionalities.
+ * A facade to {@code ScriptiveUnit}'s functionalities.
  */
 public class ScriptiveCore {
   public ScriptiveCore() {
@@ -52,17 +55,17 @@ public class ScriptiveCore {
   }
 
   public List<Class<?>> listDrivers(String packagePrefix) {
-    return Utils.allTypesAnnotatedWith(packagePrefix, RunWith.class)
+    return ReflectionUtils.allTypesAnnotatedWith(packagePrefix, RunWith.class)
         .filter(aClass -> aClass.getAnnotation(RunWith.class).value().equals(ScriptiveUnit.class))
         .collect(toList());
   }
 
   public List<String> listRunners() {
-    return Arrays.stream(GroupedTestItemRunner.Type.values()).map((GroupedTestItemRunner.Type type) -> Utils.toCamelCase(type.name())).collect(toList());
+    return Arrays.stream(ScriptiveUnit.Mode.values()).map((ScriptiveUnit.Mode mode) -> StringUtils.toCamelCase(mode.name())).collect(toList());
   }
 
   public List<Class<?>> listSuiteSets(String packagePrefix) {
-    return Utils.allTypesAnnotatedWith(packagePrefix, RunWith.class)
+    return ReflectionUtils.allTypesAnnotatedWith(packagePrefix, RunWith.class)
         .filter(aClass -> aClass.getAnnotation(RunWith.class).value().equals(ScriptiveSuiteSet.class))
         .collect(toList());
   }

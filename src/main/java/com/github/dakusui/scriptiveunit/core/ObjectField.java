@@ -1,5 +1,7 @@
 package com.github.dakusui.scriptiveunit.core;
 
+import com.github.dakusui.scriptiveunit.utils.ReflectionUtils;
+
 import java.lang.reflect.Field;
 
 import static com.google.common.base.Preconditions.checkArgument;
@@ -21,7 +23,7 @@ public interface ObjectField {
     return new ObjectField() {
       @Override
       public Object get() {
-        return Utils.getFieldValue(object, field);
+        return ReflectionUtils.getFieldValue(object, field);
       }
 
       @Override

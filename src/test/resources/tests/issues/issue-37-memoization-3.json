@@ -1,0 +1,23 @@
+{
+  "$extends": [],
+  "description": "Memoization-3",
+  "runnerType": "groupByTestCase",
+  "factorSpace": {
+    "factors": {
+    }
+  },
+  "setUpBeforeAll": ["nop"],
+  "setUp": ["nop"],
+  "testOracles": [
+    {
+      "description": "Expected to fail: when(op 1 2) then= (== 3 (result))",
+      "before": ["nop"],
+      "given": ["always"],
+      "when": ["op" ,1, 2],
+      "then": ["==", 3.1, ["result"]],
+      "after": ["nop"]
+    }
+  ],
+  "tearDown": ["nop"],
+  "tearDownAfterAll": ["nop"]
+}

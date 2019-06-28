@@ -1,9 +1,10 @@
 package com.github.dakusui.scriptiveunit.drivers;
 
 import com.github.dakusui.scriptiveunit.annotations.Scriptable;
-import com.github.dakusui.scriptiveunit.core.Utils;
-import com.github.dakusui.scriptiveunit.model.Stage;
-import com.github.dakusui.scriptiveunit.model.func.Func;
+import com.github.dakusui.scriptiveunit.model.form.Form;
+import com.github.dakusui.scriptiveunit.model.form.FormList;
+import com.github.dakusui.scriptiveunit.model.session.Stage;
+import com.github.dakusui.scriptiveunit.utils.CoreUtils;
 
 import java.math.BigDecimal;
 import java.util.function.Function;
@@ -13,43 +14,44 @@ import static java.util.Objects.requireNonNull;
 
 public class Arith {
   @SuppressWarnings("unused")
-  @SafeVarargs
   @Scriptable
-  public final Func<BigDecimal> add(Func<Number>... numbers) {
-    return (Stage input) -> calc(input, (BigDecimal v) -> augend -> v.add(augend, DECIMAL128), numbers);
+  public final Form<BigDecimal> add(FormList<Number> numbers) {
+    return (Stage input) -> calc(
+        input,
+        (BigDecimal v) -> (BigDecimal augend) -> v.add(augend, DECIMAL128), numbers);
   }
 
   @SuppressWarnings("unused")
-  @SafeVarargs
   @Scriptable
-  public final Func<BigDecimal> sub(Func<Number>... numbers) {
-    return (Stage input) -> calc(input, (BigDecimal v) -> subtrahend -> v.subtract(subtrahend, DECIMAL128), numbers);
+  public final Form<BigDecimal> sub(FormList<Number> numbers) {
+    return (Stage input) -> calc(
+        input,
+        (BigDecimal v) -> (BigDecimal subtrahend) -> v.subtract(subtrahend, DECIMAL128), numbers
+    );
   }
 
   @SuppressWarnings("unused")
-  @SafeVarargs
   @Scriptable
-  public final Func<BigDecimal> mul(Func<Number>... numbers) {
+  public final Form<BigDecimal> mul(FormList<Number> numbers) {
     return (Stage input) -> calc(input, (BigDecimal v) -> multiplicand -> v.multiply(multiplicand, DECIMAL128), numbers);
   }
 
   @SuppressWarnings("unused")
-  @SafeVarargs
   @Scriptable
-  public final Func<BigDecimal> div(Func<Number>... numbers) {
+  public final Form<BigDecimal> div(FormList<Number> numbers) {
     return (Stage input) -> calc(input, (BigDecimal v) -> divisor -> v.divide(divisor, DECIMAL128), numbers);
   }
 
   @SuppressWarnings("unused")
-  @SafeVarargs
-  private final BigDecimal calc(Stage stage, Function<BigDecimal, Function<BigDecimal, BigDecimal>> op, Func<Number>... numbers) {
+  private BigDecimal calc(Stage stage, Function<BigDecimal, Function<BigDecimal, BigDecimal>> op, FormList<Number> numbers) {
     BigDecimal ret = null;
-    for (Func<Number> eachNumber : numbers) {
-      BigDecimal each = Utils.toBigDecimal(eachNumber.apply(stage));
+    for (Object eachNumber : numbers) {
+      BigDecimal each = CoreUtils.toBigDecimal((Number)
+          ((Form) eachNumber).apply(stage));
       if (ret == null) {
-        ret = requireNonNull(Utils.toBigDecimal(each));
+        ret = requireNonNull(CoreUtils.toBigDecimal(each));
       } else {
-        ret = op.apply(ret).apply(Utils.toBigDecimal(each));
+        ret = op.apply(ret).apply(CoreUtils.toBigDecimal(each));
       }
     }
     return ret;
