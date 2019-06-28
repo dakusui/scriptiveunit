@@ -1,6 +1,6 @@
 package com.github.dakusui.scriptiveunit.model.lang;
 
-import com.github.dakusui.scriptiveunit.loaders.json.JsonUtils;
+import com.github.dakusui.scriptiveunit.model.lang.json.JsonUtils;
 import com.github.dakusui.scriptiveunit.utils.ReflectionUtils;
 import org.codehaus.jackson.JsonNode;
 import org.codehaus.jackson.node.ArrayNode;

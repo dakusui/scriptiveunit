@@ -1,6 +1,5 @@
-package com.github.dakusui.scriptiveunit.loaders;
+package com.github.dakusui.scriptiveunit.model.lang;
 
-import com.github.dakusui.scriptiveunit.model.lang.ApplicationSpec;
 import com.google.common.collect.Lists;
 
 import java.util.ArrayList;

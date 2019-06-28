@@ -1,4 +1,4 @@
-package com.github.dakusui.scriptiveunit.model.desc.testitem;
+package com.github.dakusui.scriptiveunit.utils;
 
 import com.github.dakusui.jcunit.core.tuples.Tuple;
 

@@ -33,7 +33,7 @@ import java.util.stream.Stream;
 
 import static com.github.dakusui.actionunit.Actions.attempt;
 import static com.github.dakusui.actionunit.Actions.nop;
-import static com.github.dakusui.scriptiveunit.model.desc.testitem.TestItemUtils.templateTestOracleDescription;
+import static com.github.dakusui.scriptiveunit.utils.TestItemUtils.templateTestOracleDescription;
 import static com.github.dakusui.scriptiveunit.runners.GroupedTestItemRunner.Utils.createMainActionsForTestCase;
 import static com.github.dakusui.scriptiveunit.runners.GroupedTestItemRunner.Utils.createMainActionsForTestFixture;
 import static com.github.dakusui.scriptiveunit.utils.ActionUtils.performActionWithLogging;

@@ -4,7 +4,7 @@ import com.github.dakusui.scriptiveunit.annotations.Load;
 import com.github.dakusui.scriptiveunit.core.Config;
 import com.github.dakusui.scriptiveunit.model.lang.HostSpec;
 import com.github.dakusui.scriptiveunit.loaders.json.JsonPreprocessorUtils;
-import com.github.dakusui.scriptiveunit.loaders.json.JsonUtils;
+import com.github.dakusui.scriptiveunit.model.lang.json.JsonUtils;
 import com.github.dakusui.scriptiveunit.model.lang.ApplicationSpec;
 import com.github.dakusui.scriptiveunit.unittests.core.UtJsonUtils;
 import com.github.dakusui.scriptiveunit.utils.ReflectionUtils;

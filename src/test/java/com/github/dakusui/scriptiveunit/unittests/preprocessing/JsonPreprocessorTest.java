@@ -1,6 +1,6 @@
 package com.github.dakusui.scriptiveunit.unittests.preprocessing;
 
-import com.github.dakusui.scriptiveunit.loaders.Preprocessor;
+import com.github.dakusui.scriptiveunit.model.lang.Preprocessor;
 import com.github.dakusui.scriptiveunit.model.lang.HostSpec;
 import com.github.dakusui.scriptiveunit.model.lang.ApplicationSpec;
 import org.codehaus.jackson.map.ObjectMapper;

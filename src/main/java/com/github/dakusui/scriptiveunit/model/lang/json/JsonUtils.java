@@ -1,4 +1,4 @@
-package com.github.dakusui.scriptiveunit.loaders.json;
+package com.github.dakusui.scriptiveunit.model.lang.json;
 
 import com.github.dakusui.scriptiveunit.exceptions.ScriptiveUnitException;
 import org.codehaus.jackson.JsonNode;

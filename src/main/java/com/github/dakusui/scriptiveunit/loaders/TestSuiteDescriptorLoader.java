@@ -4,6 +4,7 @@ import com.github.dakusui.scriptiveunit.core.Config;
 import com.github.dakusui.scriptiveunit.model.desc.TestSuiteDescriptor;
 import com.github.dakusui.scriptiveunit.model.lang.ApplicationSpec;
 import com.github.dakusui.scriptiveunit.model.lang.HostSpec;
+import com.github.dakusui.scriptiveunit.model.lang.Preprocessor;
 import com.github.dakusui.scriptiveunit.model.session.Session;
 
 import java.lang.reflect.InvocationTargetException;
