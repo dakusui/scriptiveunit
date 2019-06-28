@@ -10,8 +10,10 @@ import org.codehaus.jackson.node.ArrayNode;
 import org.codehaus.jackson.node.ObjectNode;
 
 import java.util.List;
+import java.util.function.Function;
 
 import static com.github.dakusui.scriptiveunit.loaders.json.JsonPreprocessorUtils.requireObjectNode;
+import static java.util.stream.Collectors.toList;
 
 public class JsonBasedTestSuiteDescriptorLoader extends TestSuiteDescriptorLoader.Base {
 
@@ -51,7 +53,26 @@ public class JsonBasedTestSuiteDescriptorLoader extends TestSuiteDescriptorLoade
 
   // TEMPLATE
   protected List<Preprocessor<JsonNode>> getPreprocessors() {
-    return modelSpec.preprocessors(hostLanguage);
+    return modelSpec.preprocessors_(hostLanguage)
+        .stream()
+        .map(new Function<Preprocessor<ModelSpec.Node>, Preprocessor<JsonNode>>() {
+          @Override
+          public Preprocessor<JsonNode> apply(Preprocessor<ModelSpec.Node> nodePreprocessor) {
+            return new Preprocessor<JsonNode>() {
+              @Override
+              public JsonNode translate(JsonNode targetElement) {
+                return hostLanguage.translate(nodePreprocessor.translate(hostLanguage.toModelNode(targetElement)));
+              }
+
+              @Override
+              public boolean matches(Path pathToTargetElement) {
+                return nodePreprocessor.matches(pathToTargetElement);
+              }
+            };
+          }
+        })
+        .collect(toList())
+        ;
   }
 
   // TEMPLATE
@@ -64,7 +85,7 @@ public class JsonBasedTestSuiteDescriptorLoader extends TestSuiteDescriptorLoade
   // TEMPLATE
   protected ObjectNode preprocess(ObjectNode inputNode, List<Preprocessor<JsonNode>> preprocessors) {
     for (Preprocessor<JsonNode> each : preprocessors) {
-      inputNode = hostLanguage.preprocess(inputNode, each);
+      inputNode = hostLanguage.translate(hostLanguage.preprocess(hostLanguage.toModelDictionary(inputNode), hostLanguage.convertProcessor(each)));
     }
     return requireObjectNode(inputNode);
   }

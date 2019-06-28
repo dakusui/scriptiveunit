@@ -7,6 +7,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.BiFunction;
+import java.util.function.Function;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
@@ -19,7 +20,9 @@ public interface ModelSpec<NODE> {
 
   <OBJECT extends NODE, ARRAY extends NODE, ATOM extends NODE> List<Preprocessor<NODE>> preprocessors(HostLanguage<NODE, OBJECT, ARRAY, ATOM> hostLanguage);
 
-  static boolean isDictionary(ModelSpec.Node node) {
+  <OBJECT extends NODE, ARRAY extends NODE, ATOM extends NODE> List<Preprocessor<Node>> preprocessors_(HostLanguage<NODE, OBJECT, ARRAY, ATOM> hostLanguage);
+
+    static boolean isDictionary(ModelSpec.Node node) {
     return node instanceof Dictionary;
   }
 
@@ -63,6 +66,25 @@ public interface ModelSpec<NODE> {
         hostLanguage.putToObject(ret, "type", ((HostLanguage<NODE, O, A, ? extends NODE>) hostLanguage).newAtomNode("simple"));
         hostLanguage.putToObject(ret, "args", targetElement);
         return ret;
+      };
+    }
+
+    @Override
+    public <OBJECT extends N, ARRAY extends N, ATOM extends N> List<Preprocessor<Node>> preprocessors_(HostLanguage<N, OBJECT, ARRAY, ATOM> hostLanguage) {
+      return singletonList(hostLanguage.preprocessor(
+          toUniformedObjectNodeTranslator_(),
+          Preprocessor.Utils.pathMatcher("factorSpace", "factors", ".*")
+      ));
+    }
+
+    static Function<Node, Node> toUniformedObjectNodeTranslator_() {
+      return (targetElement) -> {
+        if (isDictionary(targetElement))
+          return targetElement;
+        return dict(
+            $("type", atom("simple")),
+            $("args", targetElement)
+        );
       };
     }
   }

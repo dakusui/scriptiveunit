@@ -36,7 +36,7 @@ public interface HostLanguage<NODE, OBJECT extends NODE, ARRAY extends NODE, ATO
       Function<ModelSpec.Node, ModelSpec.Node> translator,
       Predicate<Preprocessor.Path> pathMatcher);
 
-  OBJECT preprocess(OBJECT inputNode, Preprocessor<NODE> preprocessor);
+  ModelSpec.Dictionary preprocess(ModelSpec.Dictionary inputNode, Preprocessor<ModelSpec.Node> preprocessor);
 
   OBJECT newObjectNode();
 
@@ -136,11 +136,6 @@ public interface HostLanguage<NODE, OBJECT extends NODE, ARRAY extends NODE, ATO
         work;
   }
 
-
-  default NODE preprocess_(Preprocessor<NODE> preprocessor, Preprocessor.Path pathToTarget, NODE targetElement) {
-    return translate(preprocess__(convertProcessor(preprocessor), pathToTarget, toModelNode(targetElement)));
-  }
-
   default Preprocessor<ModelSpec.Node> convertProcessor(Preprocessor<NODE> preprocessor) {
     return new Preprocessor<ModelSpec.Node>() {
       @Override
@@ -199,12 +194,12 @@ public interface HostLanguage<NODE, OBJECT extends NODE, ARRAY extends NODE, ATO
 
     @Override
     public Preprocessor<ModelSpec.Node> preprocessor(Function<ModelSpec.Node, ModelSpec.Node> translator, Predicate<Preprocessor.Path> pathMatcher) {
-      return null;
+      return Preprocessor.preprocessor(translator, pathMatcher);
     }
 
     @Override
-    public ObjectNode preprocess(ObjectNode inputNode, Preprocessor<JsonNode> preprocessor) {
-      return (ObjectNode) preprocess_(preprocessor, Preprocessor.Path.createRoot(), inputNode);
+    public ModelSpec.Dictionary preprocess(ModelSpec.Dictionary inputNode, Preprocessor<ModelSpec.Node> preprocessor) {
+      return (ModelSpec.Dictionary) preprocess__(preprocessor, Preprocessor.Path.createRoot(), inputNode);
     }
 
     @Override
