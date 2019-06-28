@@ -7,8 +7,10 @@ import com.github.dakusui.scriptiveunit.model.lang.HostSpec;
 import com.github.dakusui.scriptiveunit.model.session.Session;
 
 import java.lang.reflect.InvocationTargetException;
+import java.util.List;
 
 import static com.github.dakusui.scriptiveunit.exceptions.ScriptiveUnitException.wrap;
+import static com.github.dakusui.scriptiveunit.model.lang.ApplicationSpec.dict;
 import static java.util.Objects.requireNonNull;
 
 public interface TestSuiteDescriptorLoader {
@@ -25,13 +27,45 @@ public interface TestSuiteDescriptorLoader {
 
     protected final ApplicationSpec applicationSpec = modelSpec();
 
-
     public Base(Config config) {
       this.config = requireNonNull(config);
     }
 
     public Config getConfig() {
       return this.config;
+    }
+
+    // TEMPLATE
+    protected ApplicationSpec.Dictionary readObjectNodeWithMerging(String resourceName) {
+      ApplicationSpec.Dictionary child = preprocess(
+          hostSpec.toApplicationDictionary(
+              hostSpec.readObjectNode(resourceName)),
+          getPreprocessors());
+
+      ApplicationSpec.Dictionary work_ = dict();
+      for (String s : modelSpec().parentsOf(child))
+        work_ = ApplicationSpec.deepMerge(readObjectNodeWithMerging(s), work_);
+      return ApplicationSpec.deepMerge(child, work_);
+    }
+
+    // TEMPLATE
+    protected List<Preprocessor> getPreprocessors() {
+      return applicationSpec.preprocessors();
+    }
+
+    // TEMPLATE
+    protected ApplicationSpec.Dictionary readScriptHandlingInheritance(String scriptResourceName) {
+      ApplicationSpec.Dictionary work = readObjectNodeWithMerging(scriptResourceName);
+      ApplicationSpec.Dictionary ret = applicationSpec.createDefaultValues();
+      return applicationSpec.removeInheritanceDirective(ApplicationSpec.deepMerge(work, ret));
+    }
+
+    // TEMPLATE
+    protected ApplicationSpec.Dictionary preprocess(ApplicationSpec.Dictionary inputNode, List<Preprocessor> preprocessors) {
+      for (Preprocessor each : preprocessors) {
+        inputNode = ApplicationSpec.preprocess(inputNode, each);
+      }
+      return inputNode;
     }
 
     abstract protected ApplicationSpec modelSpec();
