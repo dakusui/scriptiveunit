@@ -77,21 +77,19 @@ public interface ModelSpec {
   static Dictionary deepMerge(Dictionary source, Dictionary target) {
     requireNonNull(source);
     requireNonNull(target);
-    return dict(
-        Stream.concat(
-            target.streamKeys()
-                .map(each -> source.containsKey(each) ?
-                    isDictionary(source.valueOf(each)) ?
-                        $(each, deepMerge(
-                            requireDictionary(source.valueOf(each), nonDictionaryFound(each)),
-                            requireDictionary(target.valueOf(each), nonDictionaryFound(each)))) :
-                        $(each, source.valueOf(each)) :
-                    $(each, target.valueOf(each))),
-            source.streamKeys()
-                .filter(each -> !target.containsKey(each))
-                .map(each -> $(each, source.valueOf(each))))
-            .toArray(Dictionary.Entry[]::new)
-    );
+    return dict(Stream.concat(
+        target.streamKeys()
+            .map(each -> source.containsKey(each) ?
+                isDictionary(source.valueOf(each)) ?
+                    $(each, deepMerge(
+                        requireDictionary(source.valueOf(each), nonDictionaryFound(each)),
+                        requireDictionary(target.valueOf(each), nonDictionaryFound(each)))) :
+                    $(each, source.valueOf(each)) :
+                $(each, target.valueOf(each))),
+        source.streamKeys()
+            .filter(each -> !target.containsKey(each))
+            .map(each -> $(each, source.valueOf(each))))
+        .toArray(Dictionary.Entry[]::new));
   }
 
   enum Utils {
