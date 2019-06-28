@@ -2,6 +2,8 @@ package com.github.dakusui.scriptiveunit.loaders;
 
 import com.github.dakusui.scriptiveunit.core.Config;
 import com.github.dakusui.scriptiveunit.model.desc.TestSuiteDescriptor;
+import com.github.dakusui.scriptiveunit.model.lang.ApplicationSpec;
+import com.github.dakusui.scriptiveunit.model.lang.HostSpec;
 import com.github.dakusui.scriptiveunit.model.session.Session;
 
 import java.lang.reflect.InvocationTargetException;
@@ -14,9 +16,15 @@ public interface TestSuiteDescriptorLoader {
 
   TestSuiteDescriptor loadTestSuiteDescriptor(Session session);
 
-  abstract class Base implements TestSuiteDescriptorLoader {
+  abstract class Base<NODE, OBJECT extends NODE, ARRAY extends NODE, ATOM extends NODE> implements
+      TestSuiteDescriptorLoader {
 
     private final Config config;
+
+    protected final HostSpec<NODE, OBJECT, ARRAY, NODE> hostSpec = hostLanguage();
+
+    protected final ApplicationSpec applicationSpec = modelSpec();
+
 
     public Base(Config config) {
       this.config = requireNonNull(config);
@@ -25,6 +33,11 @@ public interface TestSuiteDescriptorLoader {
     public Config getConfig() {
       return this.config;
     }
+
+    abstract protected ApplicationSpec modelSpec();
+
+    abstract protected HostSpec<NODE, OBJECT, ARRAY, NODE> hostLanguage();
+
   }
 
   static TestSuiteDescriptorLoader createInstance(Class<? extends TestSuiteDescriptorLoader> klass, Config config) {

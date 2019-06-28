@@ -1,4 +1,4 @@
-package com.github.dakusui.scriptiveunit.loaders.json;
+package com.github.dakusui.scriptiveunit.model.lang;
 
 import com.github.dakusui.scriptiveunit.exceptions.ScriptiveUnitException;
 import com.github.dakusui.scriptiveunit.loaders.Preprocessor;
@@ -14,19 +14,25 @@ import java.util.function.Function;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
-import static com.github.dakusui.scriptiveunit.loaders.json.ModelSpec.Utils.nonDictionaryFound;
-import static com.github.dakusui.scriptiveunit.loaders.json.ModelSpec.Utils.requireDictionary;
+import static com.github.dakusui.scriptiveunit.model.lang.ApplicationSpec.Utils.nonDictionaryFound;
+import static com.github.dakusui.scriptiveunit.model.lang.ApplicationSpec.Utils.requireDictionary;
 import static com.github.dakusui.scriptiveunit.utils.Checks.check;
 import static java.lang.String.format;
+import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static java.util.Objects.requireNonNull;
+import static java.util.stream.Collectors.toList;
 
-public interface ModelSpec {
+public interface ApplicationSpec {
   Dictionary createDefaultValues();
 
   List<Preprocessor> preprocessors();
 
-  static ModelSpec.Dictionary preprocess(ModelSpec.Dictionary inputNode, Preprocessor preprocessor) {
+  Dictionary removeInheritanceDirective(Dictionary inputNode);
+
+  List<String> parentsOf(Dictionary rootNode);
+
+  static ApplicationSpec.Dictionary preprocess(ApplicationSpec.Dictionary inputNode, Preprocessor preprocessor) {
     return (Dictionary) preprocess(preprocessor, Preprocessor.Path.createRoot(), inputNode);
   }
 
@@ -61,15 +67,15 @@ public interface ModelSpec {
         work;
   }
 
-  static boolean isDictionary(ModelSpec.Node node) {
+  static boolean isDictionary(ApplicationSpec.Node node) {
     return node instanceof Dictionary;
   }
 
-  static boolean isArray(ModelSpec.Node node) {
+  static boolean isArray(ApplicationSpec.Node node) {
     return node instanceof Array;
   }
 
-  static boolean isAtom(ModelSpec.Node node) {
+  static boolean isAtom(ApplicationSpec.Node node) {
     return node instanceof Atom;
   }
 
@@ -114,9 +120,13 @@ public interface ModelSpec {
       Checks.check(isDictionary(node), () -> otherwiseThrow.apply(node));
       return (Dictionary) node;
     }
+
+    private static String requireString(Object object) {
+      return (String) object;
+    }
   }
 
-  class Standard implements ModelSpec {
+  class Standard implements ApplicationSpec {
     @Override
     public Dictionary createDefaultValues() {
       return dict(
@@ -137,6 +147,44 @@ public interface ModelSpec {
           Preprocessor.preprocessor(toUniformedObjectNodeTranslator(),
               Preprocessor.Utils.pathMatcher("factorSpace", "factors", ".*")));
     }
+
+    @Override
+    public Dictionary removeInheritanceDirective(Dictionary inputNode) {
+      return ApplicationSpec.dict(
+          inputNode.streamKeys()
+              .filter(each -> !Objects.equals(inheritanceKeyword(), each))
+              .map(each -> $(each, inputNode.valueOf(each)))
+              .toArray(Dictionary.Entry[]::new)
+      );
+    }
+
+    private String inheritanceKeyword() {
+      return HostSpec.Json.EXTENDS_KEYWORD;
+    }
+
+    @Override
+    public List<String> parentsOf(Dictionary rootNode) {
+      return rootNode.containsKey(inheritanceKeyword()) ?
+          toStringList(requireArray(rootNode.valueOf(inheritanceKeyword()))) :
+          emptyList();
+    }
+
+    private static Array requireArray(Node node) {
+      return (Array) node;
+    }
+
+    private static Atom requireAtom(Node node) {
+      return (Atom) node;
+    }
+
+    private static List<String> toStringList(Array array) {
+      return array.stream()
+          .map(Standard::requireAtom)
+          .map(Atom::get)
+          .map(Utils::requireString)
+          .collect(toList());
+    }
+
 
     static Function<Node, Node> toUniformedObjectNodeTranslator() {
       return (targetElement) -> {

@@ -1,8 +1,8 @@
 package com.github.dakusui.scriptiveunit.unittests.preprocessing;
 
 import com.github.dakusui.scriptiveunit.loaders.Preprocessor;
-import com.github.dakusui.scriptiveunit.loaders.json.HostLanguage;
-import com.github.dakusui.scriptiveunit.loaders.json.ModelSpec;
+import com.github.dakusui.scriptiveunit.model.lang.HostSpec;
+import com.github.dakusui.scriptiveunit.model.lang.ApplicationSpec;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.node.ObjectNode;
 import org.junit.Test;
@@ -17,10 +17,10 @@ public class JsonPreprocessorTest {
     ObjectNode targetObject = (ObjectNode) new ObjectMapper().readTree("{\"a1\":[0,1,2]}");
     Preprocessor jsonPreprocessor = new Preprocessor() {
       @Override
-      public ModelSpec.Node translate(ModelSpec.Node targetElement) {
-        return ModelSpec.dict(
-            ModelSpec.$("v1", ModelSpec.atom("Hello")),
-            ModelSpec.$("v2", targetElement)
+      public ApplicationSpec.Node translate(ApplicationSpec.Node targetElement) {
+        return ApplicationSpec.dict(
+            ApplicationSpec.$("v1", ApplicationSpec.atom("Hello")),
+            ApplicationSpec.$("v2", targetElement)
         );
       }
 
@@ -31,10 +31,10 @@ public class JsonPreprocessorTest {
         );
       }
     };
-    HostLanguage.Json hostLanguage = new HostLanguage.Json();
+    HostSpec.Json hostLanguage = new HostSpec.Json();
     assertEquals(
         "{\"a1\":{\"v1\":\"Hello\",\"v2\":[0,1,2]}}",
-        hostLanguage.translate(ModelSpec.preprocess(hostLanguage.toModelDictionary(targetObject), jsonPreprocessor)).toString()
+        hostLanguage.translate(ApplicationSpec.preprocess(hostLanguage.toApplicationDictionary(targetObject), jsonPreprocessor)).toString()
     );
   }
 
@@ -43,10 +43,10 @@ public class JsonPreprocessorTest {
     ObjectNode targetObject = (ObjectNode) new ObjectMapper().readTree("{\"a1\":{\"c1\":100, \"c2\":200}}");
     Preprocessor jsonPreprocessor = new Preprocessor() {
       @Override
-      public ModelSpec.Node translate(ModelSpec.Node targetElement) {
-        return ModelSpec.dict(
-            ModelSpec.$("v1", ModelSpec.atom("Hello")),
-            ModelSpec.$("v2", targetElement)
+      public ApplicationSpec.Node translate(ApplicationSpec.Node targetElement) {
+        return ApplicationSpec.dict(
+            ApplicationSpec.$("v1", ApplicationSpec.atom("Hello")),
+            ApplicationSpec.$("v2", targetElement)
         );
       }
 
@@ -57,10 +57,10 @@ public class JsonPreprocessorTest {
         );
       }
     };
-    HostLanguage.Json hostLanguage = new HostLanguage.Json();
+    HostSpec.Json hostLanguage = new HostSpec.Json();
     assertEquals(
         "{\"a1\":{\"c1\":100,\"c2\":{\"v1\":\"Hello\",\"v2\":200}}}",
-        hostLanguage.translate(ModelSpec.preprocess(hostLanguage.toModelDictionary(targetObject), jsonPreprocessor)).toString()
+        hostLanguage.translate(ApplicationSpec.preprocess(hostLanguage.toApplicationDictionary(targetObject), jsonPreprocessor)).toString()
     );
   }
 

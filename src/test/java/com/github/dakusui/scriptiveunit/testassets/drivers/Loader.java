@@ -2,7 +2,7 @@ package com.github.dakusui.scriptiveunit.testassets.drivers;
 
 import com.github.dakusui.scriptiveunit.core.Config;
 import com.github.dakusui.scriptiveunit.loaders.json.JsonBasedTestSuiteDescriptorLoader;
-import com.github.dakusui.scriptiveunit.loaders.json.ModelSpec;
+import com.github.dakusui.scriptiveunit.model.lang.ApplicationSpec;
 import com.github.dakusui.scriptiveunit.testutils.Resource;
 import org.codehaus.jackson.node.ObjectNode;
 
@@ -17,10 +17,10 @@ public abstract class Loader extends JsonBasedTestSuiteDescriptorLoader {
     super(config);
   }
 
-  protected ModelSpec.Dictionary readObjectNodeWithMerging(String resourceName) {
-    ModelSpec.Dictionary work = super.readObjectNodeWithMerging(resourceName);
+  protected ApplicationSpec.Dictionary readObjectNodeWithMerging(String resourceName) {
+    ApplicationSpec.Dictionary work = super.readObjectNodeWithMerging(resourceName);
     for (ObjectNode each : objectNodes()) {
-      work = ModelSpec.deepMerge(hostLanguage.toModelDictionary(each), work);
+      work = ApplicationSpec.deepMerge(hostSpec.toApplicationDictionary(each), work);
     }
     return work;
   }

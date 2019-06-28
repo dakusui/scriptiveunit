@@ -1,6 +1,6 @@
 package com.github.dakusui.scriptiveunit.exceptions;
 
-import com.github.dakusui.scriptiveunit.loaders.json.ModelSpec;
+import com.github.dakusui.scriptiveunit.model.lang.ApplicationSpec;
 import com.github.dakusui.scriptiveunit.model.session.Stage;
 import com.github.dakusui.scriptiveunit.model.statement.Statement;
 import org.codehaus.jackson.JsonNode;
@@ -34,7 +34,7 @@ public class SyntaxException extends ScriptiveUnitException {
     ));
   }
 
-  public static SyntaxException mergeFailed(ModelSpec.Dictionary source, ModelSpec.Dictionary target, String key) {
+  public static SyntaxException mergeFailed(ApplicationSpec.Dictionary source, ApplicationSpec.Dictionary target, String key) {
     throw new SyntaxException(format("Failed to merge '%s' and '%s' on '%s'", source, target, key));
   }
 

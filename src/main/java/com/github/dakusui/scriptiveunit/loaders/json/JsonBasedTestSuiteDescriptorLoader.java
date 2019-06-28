@@ -4,6 +4,8 @@ import com.github.dakusui.scriptiveunit.core.Config;
 import com.github.dakusui.scriptiveunit.loaders.Preprocessor;
 import com.github.dakusui.scriptiveunit.loaders.TestSuiteDescriptorLoader;
 import com.github.dakusui.scriptiveunit.model.desc.TestSuiteDescriptor;
+import com.github.dakusui.scriptiveunit.model.lang.ApplicationSpec;
+import com.github.dakusui.scriptiveunit.model.lang.HostSpec;
 import com.github.dakusui.scriptiveunit.model.session.Session;
 import org.codehaus.jackson.JsonNode;
 import org.codehaus.jackson.node.ArrayNode;
@@ -11,13 +13,13 @@ import org.codehaus.jackson.node.ObjectNode;
 
 import java.util.List;
 
-import static com.github.dakusui.scriptiveunit.loaders.json.ModelSpec.dict;
+import static com.github.dakusui.scriptiveunit.model.lang.ApplicationSpec.dict;
 
 public class JsonBasedTestSuiteDescriptorLoader extends TestSuiteDescriptorLoader.Base {
 
-  protected final HostLanguage<JsonNode, ObjectNode, ArrayNode, JsonNode> hostLanguage = hostLanguage();
+  protected final HostSpec<JsonNode, ObjectNode, ArrayNode, JsonNode> hostSpec = hostLanguage();
 
-  private final ModelSpec modelSpec = modelSpec();
+  private final ApplicationSpec applicationSpec = modelSpec();
 
   @SuppressWarnings("unused")
   public JsonBasedTestSuiteDescriptorLoader(Config config) {
@@ -27,50 +29,52 @@ public class JsonBasedTestSuiteDescriptorLoader extends TestSuiteDescriptorLoade
   // TEMPLATE
   @Override
   public TestSuiteDescriptor loadTestSuiteDescriptor(Session session) {
-    return hostLanguage.mapObjectNode(
-        readScriptHandlingInheritance(session.getConfig().getScriptResourceName()),
+    return hostSpec.mapObjectNode(
+        hostSpec.translate(readScriptHandlingInheritance(session.getConfig().getScriptResourceName())),
         JsonTestSuiteDescriptorBean.class)
         .create(session);
   }
 
   // TEMPLATE
-  protected ModelSpec.Dictionary readObjectNodeWithMerging(String resourceName) {
-    ModelSpec.Dictionary child = preprocess(
-        hostLanguage.toModelDictionary(
-            hostLanguage.readObjectNode(resourceName)),
+  protected ApplicationSpec.Dictionary readObjectNodeWithMerging(String resourceName) {
+    ApplicationSpec.Dictionary child = preprocess(
+        hostSpec.toApplicationDictionary(
+            hostSpec.readObjectNode(resourceName)),
         getPreprocessors());
 
-    ModelSpec.Dictionary work_ = dict();
-    for (String s : hostLanguage.getParents(hostLanguage.translate(child)))
-      work_ = ModelSpec.deepMerge(readObjectNodeWithMerging(s), work_);
-    return ModelSpec.deepMerge(child, work_);
+    ApplicationSpec.Dictionary work_ = dict();
+    for (String s : modelSpec().parentsOf(child))
+      work_ = ApplicationSpec.deepMerge(readObjectNodeWithMerging(s), work_);
+    return ApplicationSpec.deepMerge(child, work_);
   }
 
   // TEMPLATE
   protected List<Preprocessor> getPreprocessors() {
-    return modelSpec.preprocessors();
+    return applicationSpec.preprocessors();
   }
 
   // TEMPLATE
-  protected ObjectNode readScriptHandlingInheritance(String scriptResourceName) {
-    ModelSpec.Dictionary work = readObjectNodeWithMerging(scriptResourceName);
-    ModelSpec.Dictionary ret = modelSpec.createDefaultValues();
-    return hostLanguage.removeInheritanceDirective(hostLanguage.translate(ModelSpec.deepMerge(work, ret)));
+  protected ApplicationSpec.Dictionary readScriptHandlingInheritance(String scriptResourceName) {
+    ApplicationSpec.Dictionary work = readObjectNodeWithMerging(scriptResourceName);
+    ApplicationSpec.Dictionary ret = applicationSpec.createDefaultValues();
+    return applicationSpec.removeInheritanceDirective(ApplicationSpec.deepMerge(work, ret));
   }
 
   // TEMPLATE
-  protected ModelSpec.Dictionary preprocess(ModelSpec.Dictionary inputNode, List<Preprocessor> preprocessors) {
+  protected ApplicationSpec.Dictionary preprocess(ApplicationSpec.Dictionary inputNode, List<Preprocessor> preprocessors) {
     for (Preprocessor each : preprocessors) {
-      inputNode = ModelSpec.preprocess(inputNode, each);
+      inputNode = ApplicationSpec.preprocess(inputNode, each);
     }
     return inputNode;
   }
 
-  protected ModelSpec modelSpec() {
-    return new ModelSpec.Standard();
+  @Override
+  protected ApplicationSpec modelSpec() {
+    return new ApplicationSpec.Standard();
   }
 
-  protected HostLanguage<JsonNode, ObjectNode, ArrayNode, JsonNode> hostLanguage() {
-    return new HostLanguage.Json();
+  @Override
+  protected HostSpec<JsonNode, ObjectNode, ArrayNode, JsonNode> hostLanguage() {
+    return new HostSpec.Json();
   }
 }

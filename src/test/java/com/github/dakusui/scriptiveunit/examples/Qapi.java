@@ -14,7 +14,7 @@ import com.github.dakusui.scriptiveunit.drivers.Strings;
 import com.github.dakusui.scriptiveunit.drivers.actions.Basic;
 import com.github.dakusui.scriptiveunit.loaders.Preprocessor;
 import com.github.dakusui.scriptiveunit.loaders.json.JsonBasedTestSuiteDescriptorLoader;
-import com.github.dakusui.scriptiveunit.loaders.json.ModelSpec;
+import com.github.dakusui.scriptiveunit.model.lang.ApplicationSpec;
 import com.github.dakusui.scriptiveunit.model.form.Form;
 import com.github.dakusui.scriptiveunit.runners.ScriptiveUnit;
 import com.github.dakusui.scriptiveunit.unittests.cli.MemoizationExample;
@@ -27,11 +27,11 @@ import java.util.List;
 import java.util.Map;
 
 import static com.github.dakusui.scriptiveunit.loaders.Preprocessor.Utils.pathMatcher;
-import static com.github.dakusui.scriptiveunit.loaders.json.ModelSpec.$;
-import static com.github.dakusui.scriptiveunit.loaders.json.ModelSpec.Utils.requireDictionary;
-import static com.github.dakusui.scriptiveunit.loaders.json.ModelSpec.array;
-import static com.github.dakusui.scriptiveunit.loaders.json.ModelSpec.atom;
-import static com.github.dakusui.scriptiveunit.loaders.json.ModelSpec.dict;
+import static com.github.dakusui.scriptiveunit.model.lang.ApplicationSpec.$;
+import static com.github.dakusui.scriptiveunit.model.lang.ApplicationSpec.Utils.requireDictionary;
+import static com.github.dakusui.scriptiveunit.model.lang.ApplicationSpec.array;
+import static com.github.dakusui.scriptiveunit.model.lang.ApplicationSpec.atom;
+import static com.github.dakusui.scriptiveunit.model.lang.ApplicationSpec.dict;
 import static java.lang.String.format;
 import static java.util.Collections.unmodifiableMap;
 import static java.util.Objects.requireNonNull;
@@ -44,8 +44,8 @@ import static java.util.Objects.requireNonNull;
 public class Qapi {
   public static class Loader extends JsonBasedTestSuiteDescriptorLoader {
     @Override
-    protected ModelSpec modelSpec() {
-      return new ModelSpec.Standard() {
+    protected ApplicationSpec modelSpec() {
+      return new ApplicationSpec.Standard() {
         @Override
         public List<Preprocessor> preprocessors() {
           return new LinkedList<Preprocessor>(super.preprocessors()) {{
@@ -62,8 +62,8 @@ public class Qapi {
       super(config);
     }
 
-    static ModelSpec.Node getModelNode(ModelSpec.Node node) {
-      return ModelSpec.deepMerge(
+    static ApplicationSpec.Node getModelNode(ApplicationSpec.Node node) {
+      return ApplicationSpec.deepMerge(
           requireDictionary(node),
           dict(
               $("after", array(atom("nop")))

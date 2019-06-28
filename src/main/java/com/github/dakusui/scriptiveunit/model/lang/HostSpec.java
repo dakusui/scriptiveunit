@@ -1,5 +1,6 @@
-package com.github.dakusui.scriptiveunit.loaders.json;
+package com.github.dakusui.scriptiveunit.model.lang;
 
+import com.github.dakusui.scriptiveunit.loaders.json.JsonUtils;
 import com.github.dakusui.scriptiveunit.utils.ReflectionUtils;
 import org.codehaus.jackson.JsonNode;
 import org.codehaus.jackson.map.ObjectMapper;
@@ -8,19 +9,18 @@ import org.codehaus.jackson.node.JsonNodeFactory;
 import org.codehaus.jackson.node.ObjectNode;
 
 import java.io.IOException;
-import java.util.List;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
 import static com.github.dakusui.scriptiveunit.exceptions.ScriptiveUnitException.wrap;
 import static com.github.dakusui.scriptiveunit.loaders.json.JsonPreprocessorUtils.requireObjectNode;
-import static com.github.dakusui.scriptiveunit.loaders.json.ModelSpec.isArray;
-import static com.github.dakusui.scriptiveunit.loaders.json.ModelSpec.isAtom;
-import static com.github.dakusui.scriptiveunit.loaders.json.ModelSpec.isDictionary;
+import static com.github.dakusui.scriptiveunit.model.lang.ApplicationSpec.isArray;
+import static com.github.dakusui.scriptiveunit.model.lang.ApplicationSpec.isAtom;
+import static com.github.dakusui.scriptiveunit.model.lang.ApplicationSpec.isDictionary;
 import static com.github.dakusui.scriptiveunit.utils.CoreUtils.toBigDecimal;
 import static java.lang.String.format;
 
-public interface HostLanguage<NODE, OBJECT extends NODE, ARRAY extends NODE, ATOM extends NODE> {
+public interface HostSpec<NODE, OBJECT extends NODE, ARRAY extends NODE, ATOM extends NODE> {
   OBJECT newObjectNode();
 
   ARRAY newArrayNode();
@@ -45,85 +45,81 @@ public interface HostLanguage<NODE, OBJECT extends NODE, ARRAY extends NODE, ATO
 
   <V> V mapObjectNode(OBJECT rootNode, Class<V> valueType);
 
-  List<String> getParents(OBJECT child);
-
-  OBJECT removeInheritanceDirective(OBJECT object);
-
   void putToObject(OBJECT ret, String eachKey, NODE jsonNodeValue);
 
   void addToArray(ARRAY ret, NODE eachNode);
 
-  OBJECT translate(ModelSpec.Dictionary dictionary);
+  OBJECT translate(ApplicationSpec.Dictionary dictionary);
 
-  ModelSpec.Dictionary toModelDictionary(OBJECT object);
+  ApplicationSpec.Dictionary toApplicationDictionary(OBJECT object);
 
-  interface Default<NODE, OBJECT extends NODE, ARRAY extends NODE, ATOM extends NODE> extends HostLanguage<NODE, OBJECT, ARRAY, ATOM> {
+  interface Default<NODE, OBJECT extends NODE, ARRAY extends NODE, ATOM extends NODE> extends HostSpec<NODE, OBJECT, ARRAY, ATOM> {
     @Override
-    default OBJECT translate(ModelSpec.Dictionary dictionary) {
+    default OBJECT translate(ApplicationSpec.Dictionary dictionary) {
       OBJECT ret = newObjectNode();
       dictionary.streamKeys()
           .forEach((String eachKey) -> {
-            ModelSpec.Node nodeValue = dictionary.valueOf(eachKey);
-            NODE jsonNodeValue = translate(nodeValue);
+            ApplicationSpec.Node nodeValue = dictionary.valueOf(eachKey);
+            NODE jsonNodeValue = toHostNode(nodeValue);
             putToObject(ret, eachKey, jsonNodeValue);
           });
       return ret;
     }
 
     @Override
-    default ModelSpec.Dictionary toModelDictionary(OBJECT object) {
-      return ModelSpec.dict(
+    default ApplicationSpec.Dictionary toApplicationDictionary(OBJECT object) {
+      return ApplicationSpec.dict(
           keysOf(object)
-              .map(k -> ModelSpec.$(k, toModelNode(valueOf(object, k)))).toArray(ModelSpec.Dictionary.Entry[]::new)
+              .map(k -> ApplicationSpec.$(k, toApplicationNode(valueOf(object, k)))).toArray(ApplicationSpec.Dictionary.Entry[]::new)
       );
     }
 
-    default ARRAY translate(ModelSpec.Array array) {
+    default ARRAY toHostArray(ApplicationSpec.Array array) {
       ARRAY ret = newArrayNode();
-      array.stream().forEach((ModelSpec.Node eachNode) -> addToArray(ret, translate(eachNode)));
+      array.stream().forEach((ApplicationSpec.Node eachNode) -> addToArray(ret, toHostNode(eachNode)));
       return ret;
     }
 
-    default ATOM translate(ModelSpec.Atom atom) {
+    default ATOM toHostAtom(ApplicationSpec.Atom atom) {
       return newAtomNode(atom.get());
     }
 
-    default NODE translate(ModelSpec.Node modelNode) {
+    default NODE toHostNode(ApplicationSpec.Node modelNode) {
       NODE nodeValue;
       if (isAtom(modelNode))
-        nodeValue = translate((ModelSpec.Atom) modelNode);
+        nodeValue = toHostAtom((ApplicationSpec.Atom) modelNode);
       else if (isArray(modelNode))
-        nodeValue = translate((ModelSpec.Array) modelNode);
+        nodeValue = toHostArray((ApplicationSpec.Array) modelNode);
       else if (isDictionary(modelNode))
-        nodeValue = translate((ModelSpec.Dictionary) modelNode);
+        nodeValue = translate((ApplicationSpec.Dictionary) modelNode);
       else
         throw new RuntimeException(format("Unsupported value was given: '%s'", modelNode));
       return nodeValue;
     }
 
-    default ModelSpec.Array toModelArray(ARRAY array) {
-      return ModelSpec.array(elementsOf(array)
-          .map(this::toModelNode)
-          .toArray(ModelSpec.Node[]::new));
+    default ApplicationSpec.Array toApplicationArray(ARRAY array) {
+      return ApplicationSpec.array(elementsOf(array)
+          .map(this::toApplicationNode)
+          .toArray(ApplicationSpec.Node[]::new));
     }
 
-    default ModelSpec.Atom toModelAtom(ATOM atom) {
-      return ModelSpec.atom(valueOf(atom));
+    default ApplicationSpec.Atom toModelAtom(ATOM atom) {
+      return ApplicationSpec.atom(valueOf(atom));
     }
 
     @SuppressWarnings("unchecked")
-    default ModelSpec.Node toModelNode(NODE node) {
+    default ApplicationSpec.Node toApplicationNode(NODE node) {
       if (isAtomNode(node))
         return toModelAtom((ATOM) node);
       if (isArrayNode(node))
-        return toModelArray((ARRAY) node);
+        return toApplicationArray((ARRAY) node);
       if (isObjectNode(node))
-        return toModelDictionary((OBJECT) node);
+        return toApplicationDictionary((OBJECT) node);
       throw new UnsupportedOperationException();
     }
   }
 
-  class Json implements HostLanguage.Default<JsonNode, ObjectNode, ArrayNode, JsonNode> {
+  class Json implements HostSpec.Default<JsonNode, ObjectNode, ArrayNode, JsonNode> {
     public static final String EXTENDS_KEYWORD = "$extends";
 
     @Override
@@ -213,17 +209,6 @@ public interface HostLanguage<NODE, OBJECT extends NODE, ARRAY extends NODE, ATO
       } catch (IOException e) {
         throw wrap(e);
       }
-    }
-
-    @Override
-    public List<String> getParents(ObjectNode child) {
-      return JsonPreprocessorUtils.getParentsOf(child, EXTENDS_KEYWORD);
-    }
-
-    @Override
-    public ObjectNode removeInheritanceDirective(ObjectNode ret) {
-      ret.remove(EXTENDS_KEYWORD);
-      return ret;
     }
 
     @Override

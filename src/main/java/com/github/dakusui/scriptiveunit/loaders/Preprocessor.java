@@ -1,6 +1,6 @@
 package com.github.dakusui.scriptiveunit.loaders;
 
-import com.github.dakusui.scriptiveunit.loaders.json.ModelSpec;
+import com.github.dakusui.scriptiveunit.model.lang.ApplicationSpec;
 import com.google.common.collect.Lists;
 
 import java.util.ArrayList;
@@ -16,7 +16,7 @@ import static java.util.Objects.requireNonNull;
 import static java.util.stream.Collectors.toList;
 
 public interface Preprocessor {
-  ModelSpec.Node translate(ModelSpec.Node targetElement);
+  ApplicationSpec.Node translate(ApplicationSpec.Node targetElement);
 
   boolean matches(Preprocessor.Path pathToTargetElement);
 
@@ -29,12 +29,12 @@ public interface Preprocessor {
    *                    where translations by {@code translator} are desired.
    * @return A new preprocessor.
    */
-  static Preprocessor preprocessor(Function<ModelSpec.Node, ModelSpec.Node> translator, Predicate<Path> pathMatcher) {
+  static Preprocessor preprocessor(Function<ApplicationSpec.Node, ApplicationSpec.Node> translator, Predicate<Path> pathMatcher) {
     requireNonNull(translator);
     requireNonNull(pathMatcher);
     return new Preprocessor() {
       @Override
-      public ModelSpec.Node translate(ModelSpec.Node targetElement) {
+      public ApplicationSpec.Node translate(ApplicationSpec.Node targetElement) {
         return translator.apply(targetElement);
       }
 
