@@ -19,21 +19,31 @@ public interface ModelSpec<NODE> {
 
   <OBJECT extends NODE, ARRAY extends NODE, ATOM extends NODE> List<Preprocessor<NODE>> preprocessors(HostLanguage<NODE, OBJECT, ARRAY, ATOM> hostLanguage);
 
+  static boolean isDictionary(ModelSpec.Node node) {
+    return node instanceof Dictionary;
+  }
+
+  static boolean isArray(ModelSpec.Node node) {
+    return node instanceof Array;
+  }
+
+  static boolean isAtom(ModelSpec.Node node) {
+    return node instanceof Atom;
+  }
+
   class Standard<N> implements ModelSpec<N> {
     @Override
     public Dictionary createDefaultValues() {
       return dict(
           $("factorSpace", dict(
               $("factors", dict()),
-              $("constraints", array())
-          )),
+              $("constraints", array()))),
           $("runnerType", atom("groupByTestOracle")),
           $("define", dict()),
           $("setUpBeforeAll", atom(null)),
           $("setUp", atom(null)),
           $("tearDown", atom(null)),
-          $("tearDownAfterAll", atom(null))
-      );
+          $("tearDownAfterAll", atom(null)));
     }
 
     @Override

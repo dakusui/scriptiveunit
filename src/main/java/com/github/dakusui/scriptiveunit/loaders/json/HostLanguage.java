@@ -9,23 +9,31 @@ import org.codehaus.jackson.node.JsonNodeFactory;
 import org.codehaus.jackson.node.ObjectNode;
 
 import java.io.IOException;
-import java.math.BigDecimal;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.BiFunction;
+import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
 import static com.github.dakusui.scriptiveunit.exceptions.ScriptiveUnitException.wrap;
 import static com.github.dakusui.scriptiveunit.loaders.json.JsonPreprocessorUtils.requireObjectNode;
+import static com.github.dakusui.scriptiveunit.loaders.json.ModelSpec.isArray;
+import static com.github.dakusui.scriptiveunit.loaders.json.ModelSpec.isAtom;
+import static com.github.dakusui.scriptiveunit.loaders.json.ModelSpec.isDictionary;
+import static com.github.dakusui.scriptiveunit.utils.CoreUtils.toBigDecimal;
 import static java.lang.String.format;
 
 public interface HostLanguage<NODE, OBJECT extends NODE, ARRAY extends NODE, ATOM extends NODE> {
   Preprocessor<NODE> preprocessor(
       ModelSpec<NODE> modelSpec,
       BiFunction<NODE, HostLanguage<NODE, OBJECT, ARRAY, ATOM>, NODE> translator,
+      Predicate<Preprocessor.Path> pathMatcher);
+
+  Preprocessor<ModelSpec.Node> preprocessor(
+      Function<ModelSpec.Node, ModelSpec.Node> translator,
       Predicate<Preprocessor.Path> pathMatcher);
 
   OBJECT preprocess(OBJECT inputNode, Preprocessor<NODE> preprocessor);
@@ -96,32 +104,30 @@ public interface HostLanguage<NODE, OBJECT extends NODE, ARRAY extends NODE, ATO
     return nodeValue;
   }
 
-  @SuppressWarnings("unchecked")
-  default NODE preprocess_(Preprocessor<NODE> preprocessor, Preprocessor.Path pathToTarget, NODE targetElement) {
+  default ModelSpec.Node preprocess__(Preprocessor<ModelSpec.Node> preprocessor, Preprocessor.Path pathToTarget, ModelSpec.Node targetElement) {
     if (preprocessor.matches(pathToTarget)) {
       return preprocessor.translate(targetElement);
     }
-    NODE work;
-    if (isObjectNode(targetElement)) {
-      work = targetElement;
-      keysOf((OBJECT) targetElement).forEach(
-          attributeName -> putToObject(
-              (OBJECT) work,
+    ModelSpec.Node work;
+    if (isDictionary(targetElement)) {
+      //work = targetElement;
+      work = ModelSpec.dict(((ModelSpec.Dictionary) targetElement).streamKeys().map(
+          (String attributeName) -> ModelSpec.$(
               attributeName,
-              this.preprocess_(
+              this.preprocess__(
                   preprocessor,
                   pathToTarget.createChild(attributeName),
-                  valueOf((OBJECT) targetElement, attributeName))));
-    } else if (isArrayNode(targetElement)) {
+                  ((ModelSpec.Dictionary) targetElement).valueOf(attributeName)))).toArray(ModelSpec.Dictionary.Entry[]::new));
+    } else if (isArray(targetElement)) {
       AtomicInteger i = new AtomicInteger(0);
-      work = newArrayNode();
-      elementsOf((ARRAY) targetElement).forEach(
-          (NODE jsonNode) -> addToArray((ARRAY) work,
-              preprocess_(
-                  preprocessor,
-                  pathToTarget.createChild(i.getAndIncrement()),
-                  jsonNode
-              )));
+      work = ModelSpec.array(((ModelSpec.Array) targetElement)
+          .stream()
+          .map((ModelSpec.Node each) -> preprocess__(
+              preprocessor,
+              pathToTarget.createChild(i.getAndIncrement()),
+              each
+          )).toArray(ModelSpec.Node[]::new)
+      );
     } else {
       work = targetElement;
     }
@@ -130,35 +136,54 @@ public interface HostLanguage<NODE, OBJECT extends NODE, ARRAY extends NODE, ATO
         work;
   }
 
+
+  default NODE preprocess_(Preprocessor<NODE> preprocessor, Preprocessor.Path pathToTarget, NODE targetElement) {
+    return translate(preprocess__(convertProcessor(preprocessor), pathToTarget, toModelNode(targetElement)));
+  }
+
+  default Preprocessor<ModelSpec.Node> convertProcessor(Preprocessor<NODE> preprocessor) {
+    return new Preprocessor<ModelSpec.Node>() {
+      @Override
+      public ModelSpec.Node translate(ModelSpec.Node targetElement) {
+        return toModelNode(preprocessor.translate(HostLanguage.this.translate(targetElement)));
+      }
+
+      @Override
+      public boolean matches(Path pathToTargetElement) {
+        return preprocessor.matches(pathToTargetElement);
+      }
+    };
+  }
+
   void putToObject(OBJECT ret, String eachKey, NODE jsonNodeValue);
 
   void addToArray(ARRAY ret, NODE eachNode);
 
-  default ModelSpec.Dictionary toDictionary(OBJECT object) {
+  default ModelSpec.Dictionary toModelDictionary(OBJECT object) {
     return ModelSpec.dict(
         keysOf(object)
             .map(k -> ModelSpec.$(k, toModelNode(valueOf(object, k)))).toArray(ModelSpec.Dictionary.Entry[]::new)
     );
   }
 
-  default ModelSpec.Array toArray(ARRAY array) {
+  default ModelSpec.Array toModelArray(ARRAY array) {
     return ModelSpec.array(elementsOf(array)
         .map(this::toModelNode)
         .toArray(ModelSpec.Node[]::new));
   }
 
-  default ModelSpec.Atom toAtom(ATOM atom) {
+  default ModelSpec.Atom toModelAtom(ATOM atom) {
     return ModelSpec.atom(valueOf(atom));
   }
 
   @SuppressWarnings("unchecked")
   default ModelSpec.Node toModelNode(NODE node) {
     if (isAtomNode(node))
-      return toAtom((ATOM) node);
+      return toModelAtom((ATOM) node);
     if (isArrayNode(node))
-      return toArray((ARRAY) node);
+      return toModelArray((ARRAY) node);
     if (isObjectNode(node))
-      return toDictionary((OBJECT) node);
+      return toModelDictionary((OBJECT) node);
     throw new UnsupportedOperationException();
   }
 
@@ -170,6 +195,11 @@ public interface HostLanguage<NODE, OBJECT extends NODE, ARRAY extends NODE, ATO
         ModelSpec<JsonNode> modelSpec, BiFunction<JsonNode, HostLanguage<JsonNode, ObjectNode, ArrayNode, JsonNode>, JsonNode> translator,
         Predicate<Preprocessor.Path> pathMatcher) {
       return Preprocessor.preprocessor(jsonNode -> translator.apply(jsonNode, Json.this), pathMatcher);
+    }
+
+    @Override
+    public Preprocessor<ModelSpec.Node> preprocessor(Function<ModelSpec.Node, ModelSpec.Node> translator, Predicate<Preprocessor.Path> pathMatcher) {
+      return null;
     }
 
     @Override
@@ -191,8 +221,13 @@ public interface HostLanguage<NODE, OBJECT extends NODE, ARRAY extends NODE, ATO
     public JsonNode newAtomNode(Object value) {
       if (value == null)
         return JsonNodeFactory.instance.nullNode();
-      if (value instanceof Number)
-        return JsonNodeFactory.instance.numberNode((BigDecimal) value);
+      if (value instanceof Number) {
+        if (value instanceof Integer)
+          return JsonNodeFactory.instance.numberNode((Integer) value);
+        if (value instanceof Long)
+          return JsonNodeFactory.instance.numberNode((Long) value);
+        return JsonNodeFactory.instance.numberNode(toBigDecimal((Number) value));
+      }
       if (value instanceof String)
         return JsonNodeFactory.instance.textNode((String) value);
       throw new RuntimeException(format("Unsupported value was given: '%s'", value));
@@ -232,6 +267,17 @@ public interface HostLanguage<NODE, OBJECT extends NODE, ARRAY extends NODE, ATO
 
     @Override
     public Object valueOf(JsonNode jsonNode) {
+      if (jsonNode.isNull())
+        return null;
+      if (jsonNode.isTextual())
+        return jsonNode.asText();
+      if (jsonNode.isBoolean())
+        return jsonNode.asBoolean();
+      if (jsonNode.isInt())
+        return jsonNode.asInt();
+      if (jsonNode.isNumber()) {
+        return jsonNode.getDecimalValue();
+      }
       throw new UnsupportedOperationException();
     }
 
@@ -280,17 +326,5 @@ public interface HostLanguage<NODE, OBJECT extends NODE, ARRAY extends NODE, ATO
     public void addToArray(ArrayNode ret, JsonNode eachNode) {
       ret.add(eachNode);
     }
-  }
-
-  static boolean isDictionary(ModelSpec.Node nodeValue) {
-    return nodeValue instanceof ModelSpec.Dictionary;
-  }
-
-  static boolean isArray(ModelSpec.Node nodeValue) {
-    return nodeValue instanceof ModelSpec.Array;
-  }
-
-  static boolean isAtom(ModelSpec.Node nodeValue) {
-    return nodeValue instanceof ModelSpec.Atom;
   }
 }
