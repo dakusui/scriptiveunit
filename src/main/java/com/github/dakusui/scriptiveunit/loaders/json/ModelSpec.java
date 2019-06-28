@@ -6,6 +6,7 @@ import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.BiFunction;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
@@ -13,12 +14,12 @@ import static com.github.dakusui.scriptiveunit.utils.Checks.check;
 import static java.util.Collections.singletonList;
 import static java.util.Objects.requireNonNull;
 
-public interface ModelSpec<T> {
+public interface ModelSpec<NODE> {
   Dictionary createDefaultValues();
 
-  List<Preprocessor<T>> preprocessors(HostLanguage<T, ?, ?, ? extends T> hostLanguage);
+  <OBJECT extends NODE, ARRAY extends NODE, ATOM extends NODE> List<Preprocessor<NODE>> preprocessors(HostLanguage<NODE, OBJECT, ARRAY, ATOM> hostLanguage);
 
-  class Standard<T> implements ModelSpec<T> {
+  class Standard<N> implements ModelSpec<N> {
     @Override
     public Dictionary createDefaultValues() {
       return dict(
@@ -36,19 +37,23 @@ public interface ModelSpec<T> {
     }
 
     @Override
-    public List<Preprocessor<T>> preprocessors(HostLanguage<T, ?, ?, ? extends T> hostLanguage) {
+    public <OBJECT extends N, ARRAY extends N, ATOM extends N> List<Preprocessor<N>> preprocessors(HostLanguage<N, OBJECT, ARRAY, ATOM> hostLanguage) {
       return singletonList(hostLanguage.preprocessor(
-          (jsonNode, lang) -> toUniformedObjectNode(jsonNode, lang),
-          Preprocessor.Utils.pathMatcher("factorSpace", "factors", ".*")));
+          this,
+          toUniformedObjectNodeTranslator(),
+          Preprocessor.Utils.pathMatcher("factorSpace", "factors", ".*")
+      ));
     }
 
-    static <T, O extends T, A extends T> T toUniformedObjectNode(T targetElement, HostLanguage<T, O, A, ? extends T> hostLanguage) {
-      if (hostLanguage.isObjectNode(targetElement))
-        return targetElement;
-      O ret = hostLanguage.newObjectNode();
-      hostLanguage.putToObject(ret, "type", hostLanguage.newAtomNode("simple"));
-      hostLanguage.putToObject(ret, "args", targetElement);
-      return ret;
+    static <NODE, O extends NODE, A extends NODE, ATOM extends NODE> BiFunction<NODE, HostLanguage<NODE, O, A, ATOM>, NODE> toUniformedObjectNodeTranslator() {
+      return (targetElement, hostLanguage) -> {
+        if (hostLanguage.isObjectNode(targetElement))
+          return targetElement;
+        O ret = hostLanguage.newObjectNode();
+        hostLanguage.putToObject(ret, "type", ((HostLanguage<NODE, O, A, ? extends NODE>) hostLanguage).newAtomNode("simple"));
+        hostLanguage.putToObject(ret, "args", targetElement);
+        return ret;
+      };
     }
   }
 

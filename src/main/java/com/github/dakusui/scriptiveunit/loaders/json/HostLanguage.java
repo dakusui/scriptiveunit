@@ -19,11 +19,12 @@ import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
 import static com.github.dakusui.scriptiveunit.exceptions.ScriptiveUnitException.wrap;
-import static com.github.dakusui.scriptiveunit.loaders.json.JsonPreprocessorUtils.checkObjectNode;
+import static com.github.dakusui.scriptiveunit.loaders.json.JsonPreprocessorUtils.requireObjectNode;
 import static java.lang.String.format;
 
 public interface HostLanguage<NODE, OBJECT extends NODE, ARRAY extends NODE, ATOM extends NODE> {
   Preprocessor<NODE> preprocessor(
+      ModelSpec<NODE> modelSpec,
       BiFunction<NODE, HostLanguage<NODE, OBJECT, ARRAY, ATOM>, NODE> translator,
       Predicate<Preprocessor.Path> pathMatcher);
 
@@ -41,11 +42,13 @@ public interface HostLanguage<NODE, OBJECT extends NODE, ARRAY extends NODE, ATO
 
   boolean isAtomNode(NODE node);
 
-  Iterable<String> keysOf(OBJECT objectNode);
+  Stream<String> keysOf(OBJECT objectNode);
 
   Stream<NODE> elementsOf(ARRAY arrayNode);
 
   NODE valueOf(OBJECT object, String key);
+
+  Object valueOf(ATOM atom);
 
   OBJECT readObjectNode(String resourceName);
 
@@ -131,13 +134,40 @@ public interface HostLanguage<NODE, OBJECT extends NODE, ARRAY extends NODE, ATO
 
   void addToArray(ARRAY ret, NODE eachNode);
 
+  default ModelSpec.Dictionary toDictionary(OBJECT object) {
+    return ModelSpec.dict(
+        keysOf(object)
+            .map(k -> ModelSpec.$(k, toModelNode(valueOf(object, k)))).toArray(ModelSpec.Dictionary.Entry[]::new)
+    );
+  }
+
+  default ModelSpec.Array toArray(ARRAY array) {
+    return ModelSpec.array(elementsOf(array)
+        .map(this::toModelNode)
+        .toArray(ModelSpec.Node[]::new));
+  }
+
+  default ModelSpec.Atom toAtom(ATOM atom) {
+    return ModelSpec.atom(valueOf(atom));
+  }
+
+  @SuppressWarnings("unchecked")
+  default ModelSpec.Node toModelNode(NODE node) {
+    if (isAtomNode(node))
+      return toAtom((ATOM) node);
+    if (isArrayNode(node))
+      return toArray((ARRAY) node);
+    if (isObjectNode(node))
+      return toDictionary((OBJECT) node);
+    throw new UnsupportedOperationException();
+  }
 
   class Json implements HostLanguage<JsonNode, ObjectNode, ArrayNode, JsonNode> {
     public static final String EXTENDS_KEYWORD = "$extends";
 
     @Override
     public Preprocessor<JsonNode> preprocessor(
-        BiFunction<JsonNode, HostLanguage<JsonNode, ObjectNode, ArrayNode, JsonNode>, JsonNode> translator,
+        ModelSpec<JsonNode> modelSpec, BiFunction<JsonNode, HostLanguage<JsonNode, ObjectNode, ArrayNode, JsonNode>, JsonNode> translator,
         Predicate<Preprocessor.Path> pathMatcher) {
       return Preprocessor.preprocessor(jsonNode -> translator.apply(jsonNode, Json.this), pathMatcher);
     }
@@ -185,8 +215,8 @@ public interface HostLanguage<NODE, OBJECT extends NODE, ARRAY extends NODE, ATO
 
     @SuppressWarnings("NullableProblems")
     @Override
-    public Iterable<String> keysOf(ObjectNode objectNode) {
-      return objectNode::getFieldNames;
+    public Stream<String> keysOf(ObjectNode objectNode) {
+      return StreamSupport.stream(((Iterable<String>) objectNode::getFieldNames).spliterator(), false);
     }
 
     @SuppressWarnings("NullableProblems")
@@ -201,8 +231,13 @@ public interface HostLanguage<NODE, OBJECT extends NODE, ARRAY extends NODE, ATO
     }
 
     @Override
+    public Object valueOf(JsonNode jsonNode) {
+      throw new UnsupportedOperationException();
+    }
+
+    @Override
     public ObjectNode readObjectNode(String resourceName) {
-      return checkObjectNode(JsonUtils.readJsonNodeFromStream(ReflectionUtils.openResourceAsStream(resourceName)));
+      return requireObjectNode(JsonUtils.readJsonNodeFromStream(ReflectionUtils.openResourceAsStream(resourceName)));
     }
 
     public <V> V mapObjectNode(ObjectNode rootNode, Class<V> valueType) {

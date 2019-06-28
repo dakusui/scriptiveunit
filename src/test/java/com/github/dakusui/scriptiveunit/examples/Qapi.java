@@ -6,14 +6,12 @@ import com.github.dakusui.scriptiveunit.annotations.Import.Alias;
 import com.github.dakusui.scriptiveunit.annotations.Load;
 import com.github.dakusui.scriptiveunit.annotations.Scriptable;
 import com.github.dakusui.scriptiveunit.core.Config;
-import com.github.dakusui.scriptiveunit.drivers.Arith;
-import com.github.dakusui.scriptiveunit.drivers.Collections;
-import com.github.dakusui.scriptiveunit.drivers.Predicates;
-import com.github.dakusui.scriptiveunit.drivers.QueryApi;
-import com.github.dakusui.scriptiveunit.drivers.Strings;
+import com.github.dakusui.scriptiveunit.drivers.*;
 import com.github.dakusui.scriptiveunit.drivers.actions.Basic;
 import com.github.dakusui.scriptiveunit.loaders.Preprocessor;
+import com.github.dakusui.scriptiveunit.loaders.json.HostLanguage;
 import com.github.dakusui.scriptiveunit.loaders.json.JsonBasedTestSuiteDescriptorLoader;
+import com.github.dakusui.scriptiveunit.loaders.json.ModelSpec;
 import com.github.dakusui.scriptiveunit.model.form.Form;
 import com.github.dakusui.scriptiveunit.runners.ScriptiveUnit;
 import com.github.dakusui.scriptiveunit.unittests.cli.MemoizationExample;
@@ -40,6 +38,16 @@ import static java.util.Objects.requireNonNull;
 @RunWith(ScriptiveUnit.class)
 public class Qapi {
   public static class Loader extends JsonBasedTestSuiteDescriptorLoader {
+    @Override
+    protected ModelSpec<JsonNode> modelSpec() {
+      return new ModelSpec.Standard<JsonNode>() {
+        @Override
+        public <OBJECT extends JsonNode, ARRAY extends JsonNode, ATOM extends JsonNode> List<Preprocessor<JsonNode>> preprocessors(HostLanguage<JsonNode, OBJECT, ARRAY, ATOM> hostLanguage) {
+          return super.preprocessors(hostLanguage);
+        }
+      };
+    }
+
     @SuppressWarnings("WeakerAccess")
     public Loader(Config config) {
       super(config);
@@ -51,7 +59,7 @@ public class Qapi {
       return new LinkedList<Preprocessor<JsonNode>>() {{
         addAll(Loader.super.getPreprocessors());
         add(hostLanguage().preprocessor(
-            (targetElement, hostLanguage) -> {
+            modelSpec(), (targetElement, hostLanguage) -> {
               ObjectNode ret = (ObjectNode) targetElement;
               ObjectNode nodeForAfter = hostLanguage.newObjectNode();
               ArrayNode arr = hostLanguage.newArrayNode();
@@ -61,7 +69,9 @@ public class Qapi {
                   ret,
                   nodeForAfter
               );
-            }, pathMatcher("testOracles", ".*")));
+            },
+            pathMatcher("testOracles", ".*")
+        ));
       }};
     }
   }
@@ -179,7 +189,7 @@ public class Qapi {
     }
 
     private final Map<String, Object> fixture;
-    private final Term[]              terms;
+    private final Term[] terms;
 
     Request(Map<String, Object> fixture) {
       this.fixture = unmodifiableMap(fixture);
@@ -242,7 +252,7 @@ public class Qapi {
     ;
 
     private final String content;
-    private final int    price;
+    private final int price;
 
     Entry(String content, int price) {
       this.content = requireNonNull(content);

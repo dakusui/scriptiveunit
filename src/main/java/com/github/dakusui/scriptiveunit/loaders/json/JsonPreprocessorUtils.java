@@ -20,21 +20,21 @@ import static java.util.Objects.requireNonNull;
 public enum JsonPreprocessorUtils {
   ;
 
-  public static ObjectNode checkObjectNode(JsonNode curr) {
+  public static ObjectNode requireObjectNode(JsonNode curr) {
     return (ObjectNode) check(curr, v -> curr.isObject(), () -> nonObject(curr));
   }
 
-  private static TextNode checkTextNode(JsonNode curr) {
+  private static TextNode requireTextNode(JsonNode curr) {
     return (TextNode) check(curr, v -> curr.isTextual(), () -> nonText(curr));
   }
 
-  private static ArrayNode checkArrayNode(JsonNode curr) {
+  private static ArrayNode requireArrayNode(JsonNode curr) {
     return (ArrayNode) check(curr, v -> curr.isArray(), () -> nonArray(curr));
   }
 
   public static AbstractList<String> getParentsOf(final ObjectNode child, final String parentAttributeName) {
     return new AbstractList<String>() {
-      ArrayNode parents = checkArrayNode(child.get(parentAttributeName));
+      ArrayNode parents = requireArrayNode(child.get(parentAttributeName));
 
       @Override
       public int size() {
@@ -43,7 +43,7 @@ public enum JsonPreprocessorUtils {
 
       @Override
       public String get(int index) {
-        return checkTextNode(parents.get(index)).asText();
+        return requireTextNode(parents.get(index)).asText();
       }
     };
   }

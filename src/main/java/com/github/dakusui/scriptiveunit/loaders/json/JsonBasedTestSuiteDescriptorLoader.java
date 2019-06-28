@@ -11,7 +11,7 @@ import org.codehaus.jackson.node.ObjectNode;
 
 import java.util.List;
 
-import static com.github.dakusui.scriptiveunit.loaders.json.JsonPreprocessorUtils.checkObjectNode;
+import static com.github.dakusui.scriptiveunit.loaders.json.JsonPreprocessorUtils.requireObjectNode;
 
 public class JsonBasedTestSuiteDescriptorLoader extends TestSuiteDescriptorLoader.Base {
 
@@ -51,7 +51,6 @@ public class JsonBasedTestSuiteDescriptorLoader extends TestSuiteDescriptorLoade
 
   // TEMPLATE
   protected List<Preprocessor<JsonNode>> getPreprocessors() {
-    // TODO
     return modelSpec.preprocessors(hostLanguage);
   }
 
@@ -67,7 +66,7 @@ public class JsonBasedTestSuiteDescriptorLoader extends TestSuiteDescriptorLoade
     for (Preprocessor<JsonNode> each : preprocessors) {
       inputNode = hostLanguage.preprocess(inputNode, each);
     }
-    return checkObjectNode(inputNode);
+    return requireObjectNode(inputNode);
   }
 
   protected ModelSpec<JsonNode> modelSpec() {
