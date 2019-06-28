@@ -21,7 +21,7 @@ import static java.lang.String.format;
 import static java.util.Collections.singletonList;
 import static java.util.Objects.requireNonNull;
 
-public interface ModelSpec<NODE> {
+public interface ModelSpec {
   static ModelSpec.Dictionary preprocess(ModelSpec.Dictionary inputNode, Preprocessor<ModelSpec.Node> preprocessor) {
     return (Dictionary) preprocess__(preprocessor, Preprocessor.Path.createRoot(), inputNode);
   }
@@ -60,7 +60,7 @@ public interface ModelSpec<NODE> {
 
   Dictionary createDefaultValues();
 
-  <OBJECT extends NODE, ARRAY extends NODE, ATOM extends NODE> List<Preprocessor<Node>> preprocessors_(HostLanguage<NODE, OBJECT, ARRAY, ATOM> hostLanguage);
+  List<Preprocessor<Node>> preprocessors();
 
   static boolean isDictionary(ModelSpec.Node node) {
     return node instanceof Dictionary;
@@ -119,7 +119,7 @@ public interface ModelSpec<NODE> {
     }
   }
 
-  class Standard<N> implements ModelSpec<N> {
+  class Standard implements ModelSpec {
     @Override
     public Dictionary createDefaultValues() {
       return dict(
@@ -135,7 +135,7 @@ public interface ModelSpec<NODE> {
     }
 
     @Override
-    public <OBJECT extends N, ARRAY extends N, ATOM extends N> List<Preprocessor<Node>> preprocessors_(HostLanguage<N, OBJECT, ARRAY, ATOM> hostLanguage) {
+    public List<Preprocessor<Node>> preprocessors() {
       return singletonList(Preprocessor.preprocessor(toUniformedObjectNodeTranslator_(),
           Preprocessor.Utils.pathMatcher("factorSpace", "factors", ".*")));
     }

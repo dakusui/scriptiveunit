@@ -20,6 +20,11 @@ import static com.github.dakusui.scriptiveunit.loaders.json.JsonPreprocessorUtil
 
 @Load(with = DryQapi.Loader.class)
 public class DryQapi extends Qapi {
+  /**
+   * A resource that holds default values of ScriptiveUnit.
+   */
+  protected static final String DEFAULTS_JSON = "defaults/values.json";
+
   public static class Loader extends Qapi.Loader {
     public Loader(Config config) {
       super(config);

@@ -13,26 +13,22 @@ import com.github.dakusui.scriptiveunit.drivers.QueryApi;
 import com.github.dakusui.scriptiveunit.drivers.Strings;
 import com.github.dakusui.scriptiveunit.drivers.actions.Basic;
 import com.github.dakusui.scriptiveunit.loaders.Preprocessor;
-import com.github.dakusui.scriptiveunit.loaders.json.HostLanguage;
 import com.github.dakusui.scriptiveunit.loaders.json.JsonBasedTestSuiteDescriptorLoader;
 import com.github.dakusui.scriptiveunit.loaders.json.ModelSpec;
 import com.github.dakusui.scriptiveunit.model.form.Form;
 import com.github.dakusui.scriptiveunit.runners.ScriptiveUnit;
 import com.github.dakusui.scriptiveunit.unittests.cli.MemoizationExample;
 import com.google.common.collect.Maps;
-import org.codehaus.jackson.JsonNode;
-import org.codehaus.jackson.node.ArrayNode;
-import org.codehaus.jackson.node.ObjectNode;
 import org.junit.runner.RunWith;
 
 import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Function;
 
 import static com.github.dakusui.scriptiveunit.loaders.Preprocessor.Utils.pathMatcher;
 import static com.github.dakusui.scriptiveunit.loaders.json.ModelSpec.$;
+import static com.github.dakusui.scriptiveunit.loaders.json.ModelSpec.Utils.requireDictionary;
 import static com.github.dakusui.scriptiveunit.loaders.json.ModelSpec.array;
 import static com.github.dakusui.scriptiveunit.loaders.json.ModelSpec.atom;
 import static com.github.dakusui.scriptiveunit.loaders.json.ModelSpec.dict;
@@ -48,8 +44,17 @@ import static java.util.Objects.requireNonNull;
 public class Qapi {
   public static class Loader extends JsonBasedTestSuiteDescriptorLoader {
     @Override
-    protected ModelSpec<JsonNode> modelSpec() {
-      return new ModelSpec.Standard<>();
+    protected ModelSpec modelSpec() {
+      return new ModelSpec.Standard() {
+        @Override
+        public List<Preprocessor<Node>> preprocessors() {
+          return new LinkedList<Preprocessor<Node>>(super.preprocessors()) {{
+            add(Preprocessor.preprocessor(
+                Loader::getModelNode,
+                pathMatcher("testOracles", ".*")));
+          }};
+        }
+      };
     }
 
     @SuppressWarnings("WeakerAccess")
@@ -57,41 +62,9 @@ public class Qapi {
       super(config);
     }
 
-    @Override
-    protected List<Preprocessor<JsonNode>> getPreprocessors() {
-      HostLanguage<JsonNode, ObjectNode, ArrayNode, JsonNode> hostLanguage = hostLanguage();
-      return new LinkedList<Preprocessor<JsonNode>>() {{
-        addAll(Loader.super.getPreprocessors());
-        add(Preprocessor.preprocessor(new Function<JsonNode, JsonNode>() {
-                                        @Override
-                                        public JsonNode apply(JsonNode jsonNode) {
-                                          return hostLanguage.translate(getModelNode(hostLanguage.toModelNode(jsonNode)));
-                                        }
-                                      },
-            pathMatcher("testOracles", ".*")
-        ));
-        /*
-        add(hostLanguage().preprocessor(
-            modelSpec(), (targetElement, hostLanguage) -> {
-              ObjectNode ret = (ObjectNode) targetElement;
-              ObjectNode nodeForAfter = hostLanguage.newObjectNode();
-              ArrayNode arr = hostLanguage.newArrayNode();
-              hostLanguage.addToArray(arr, hostLanguage.newAtomNode("nop"));
-              hostLanguage.putToObject(nodeForAfter, "after", arr);
-              return hostLanguage.deepMerge(
-                  ret,
-                  nodeForAfter
-              );
-            },
-            pathMatcher("testOracles", ".*")
-        ));
-         */
-      }};
-    }
-
     static ModelSpec.Node getModelNode(ModelSpec.Node node) {
       return ModelSpec.deepMerge(
-          ModelSpec.Utils.requireDictionary(node),
+          requireDictionary(node),
           dict(
               $("after", array(atom("nop")))
           ));

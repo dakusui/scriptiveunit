@@ -17,14 +17,9 @@ import static java.util.stream.Collectors.toList;
 
 public class JsonBasedTestSuiteDescriptorLoader extends TestSuiteDescriptorLoader.Base {
 
-  /**
-   * A resource that holds default values of ScriptiveUnit.
-   */
-  protected static final String DEFAULTS_JSON = "defaults/values.json";
-
   private final HostLanguage<JsonNode, ObjectNode, ArrayNode, JsonNode> hostLanguage = hostLanguage();
 
-  private final ModelSpec<JsonNode> modelSpec = modelSpec();
+  private final ModelSpec modelSpec = modelSpec();
 
   @SuppressWarnings("unused")
   public JsonBasedTestSuiteDescriptorLoader(Config config) {
@@ -53,7 +48,7 @@ public class JsonBasedTestSuiteDescriptorLoader extends TestSuiteDescriptorLoade
 
   // TEMPLATE
   protected List<Preprocessor<JsonNode>> getPreprocessors() {
-    return modelSpec.preprocessors_(hostLanguage)
+    return modelSpec.preprocessors()
         .stream()
         .map((Function<Preprocessor<ModelSpec.Node>, Preprocessor<JsonNode>>) nodePreprocessor -> new Preprocessor<JsonNode>() {
           @Override
@@ -86,8 +81,8 @@ public class JsonBasedTestSuiteDescriptorLoader extends TestSuiteDescriptorLoade
     return requireObjectNode(inputNode);
   }
 
-  protected ModelSpec<JsonNode> modelSpec() {
-    return new ModelSpec.Standard<>();
+  protected ModelSpec modelSpec() {
+    return new ModelSpec.Standard();
   }
 
   protected HostLanguage<JsonNode, ObjectNode, ArrayNode, JsonNode> hostLanguage() {
