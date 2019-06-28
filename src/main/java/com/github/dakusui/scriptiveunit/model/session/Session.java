@@ -64,8 +64,8 @@ public interface Session {
           Report.create(
               testItem,
               getConfig().getScriptResourceName(),
-              getConfig().getBaseDirectory(),
-              getConfig().getReportFileName());
+              getConfig().getReportingConfig().reportBaseDirectory,
+              getConfig().getReportingConfig().reportFileName);
       this.testSuiteDescriptor = testSuiteDescriptorLoader.loadTestSuiteDescriptor(this);
     }
 
