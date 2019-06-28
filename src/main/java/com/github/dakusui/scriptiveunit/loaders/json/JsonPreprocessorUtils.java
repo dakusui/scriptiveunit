@@ -1,21 +1,16 @@
 package com.github.dakusui.scriptiveunit.loaders.json;
 
-import com.github.dakusui.scriptiveunit.loaders.Preprocessor;
 import org.codehaus.jackson.JsonNode;
 import org.codehaus.jackson.node.ArrayNode;
-import org.codehaus.jackson.node.JsonNodeFactory;
 import org.codehaus.jackson.node.ObjectNode;
 import org.codehaus.jackson.node.TextNode;
 
 import java.util.AbstractList;
-import java.util.Objects;
-import java.util.concurrent.atomic.AtomicInteger;
 
 import static com.github.dakusui.scriptiveunit.exceptions.SyntaxException.nonArray;
 import static com.github.dakusui.scriptiveunit.exceptions.SyntaxException.nonObject;
 import static com.github.dakusui.scriptiveunit.exceptions.SyntaxException.nonText;
 import static com.github.dakusui.scriptiveunit.utils.Checks.check;
-import static java.util.Objects.requireNonNull;
 
 public enum JsonPreprocessorUtils {
   ;
@@ -46,40 +41,5 @@ public enum JsonPreprocessorUtils {
         return requireTextNode(parents.get(index)).asText();
       }
     };
-  }
-
-  public static ObjectNode translate(Preprocessor<JsonNode> jsonPreprocessor, ObjectNode rootNode) {
-    return (ObjectNode) translate(jsonPreprocessor, Preprocessor.Path.createRoot(), rootNode);
-  }
-
-  public static JsonNode translate(Preprocessor<JsonNode> jsonPreprocessor, Preprocessor.Path pathToTarget, JsonNode targetElement) {
-    if (jsonPreprocessor.matches(pathToTarget)) {
-      return jsonPreprocessor.translate(targetElement);
-    }
-    JsonNode work;
-    if (targetElement instanceof ObjectNode) {
-      work = targetElement;
-      ((Iterable<String>) () -> requireNonNull(targetElement.getFieldNames())).forEach(
-          (String attributeName) ->
-              ((ObjectNode) targetElement).put(
-                  attributeName,
-                  translate(jsonPreprocessor, pathToTarget.createChild(attributeName), targetElement.get(attributeName))
-              ));
-    } else if (targetElement instanceof ArrayNode) {
-      AtomicInteger i = new AtomicInteger(0);
-      work = new ArrayNode(JsonNodeFactory.instance);
-      targetElement.forEach(
-          (JsonNode jsonNode) -> ((ArrayNode) work).add(
-              translate(
-                  jsonPreprocessor,
-                  pathToTarget.createChild(i.getAndIncrement()),
-                  jsonNode
-              )));
-    } else {
-      work = targetElement;
-    }
-    return Objects.equals(targetElement, work) ?
-        targetElement :
-        work;
   }
 }

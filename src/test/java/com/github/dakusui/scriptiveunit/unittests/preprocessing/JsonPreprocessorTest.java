@@ -15,7 +15,7 @@ public class JsonPreprocessorTest {
   @Test
   public void whenPreprocessingOnArrayIsRequested() throws IOException {
     ObjectNode targetObject = (ObjectNode) new ObjectMapper().readTree("{\"a1\":[0,1,2]}");
-    Preprocessor<ModelSpec.Node> jsonPreprocessor = new Preprocessor<ModelSpec.Node>() {
+    Preprocessor jsonPreprocessor = new Preprocessor() {
       @Override
       public ModelSpec.Node translate(ModelSpec.Node targetElement) {
         return ModelSpec.dict(
@@ -41,7 +41,7 @@ public class JsonPreprocessorTest {
   @Test
   public void whenPreprocessingOnMapIsRequested() throws IOException {
     ObjectNode targetObject = (ObjectNode) new ObjectMapper().readTree("{\"a1\":{\"c1\":100, \"c2\":200}}");
-    Preprocessor<ModelSpec.Node> jsonPreprocessor = new Preprocessor<ModelSpec.Node>() {
+    Preprocessor jsonPreprocessor = new Preprocessor() {
       @Override
       public ModelSpec.Node translate(ModelSpec.Node targetElement) {
         return ModelSpec.dict(

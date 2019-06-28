@@ -22,11 +22,11 @@ import static java.util.Collections.singletonList;
 import static java.util.Objects.requireNonNull;
 
 public interface ModelSpec {
-  static ModelSpec.Dictionary preprocess(ModelSpec.Dictionary inputNode, Preprocessor<ModelSpec.Node> preprocessor) {
+  static ModelSpec.Dictionary preprocess(ModelSpec.Dictionary inputNode, Preprocessor preprocessor) {
     return (Dictionary) preprocess__(preprocessor, Preprocessor.Path.createRoot(), inputNode);
   }
 
-  static Node preprocess__(Preprocessor<Node> preprocessor, Preprocessor.Path pathToTarget, Node targetElement) {
+  static Node preprocess__(Preprocessor preprocessor, Preprocessor.Path pathToTarget, Node targetElement) {
     if (preprocessor.matches(pathToTarget)) {
       return preprocessor.translate(targetElement);
     }
@@ -60,7 +60,7 @@ public interface ModelSpec {
 
   Dictionary createDefaultValues();
 
-  List<Preprocessor<Node>> preprocessors();
+  List<Preprocessor> preprocessors();
 
   static boolean isDictionary(ModelSpec.Node node) {
     return node instanceof Dictionary;
@@ -135,7 +135,7 @@ public interface ModelSpec {
     }
 
     @Override
-    public List<Preprocessor<Node>> preprocessors() {
+    public List<Preprocessor> preprocessors() {
       return singletonList(Preprocessor.preprocessor(toUniformedObjectNodeTranslator_(),
           Preprocessor.Utils.pathMatcher("factorSpace", "factors", ".*")));
     }

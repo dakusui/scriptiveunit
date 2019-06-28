@@ -1,6 +1,5 @@
 package com.github.dakusui.scriptiveunit.loaders.json;
 
-import com.github.dakusui.scriptiveunit.loaders.Preprocessor;
 import com.github.dakusui.scriptiveunit.utils.ReflectionUtils;
 import org.codehaus.jackson.JsonNode;
 import org.codehaus.jackson.map.ObjectMapper;
@@ -86,20 +85,6 @@ public interface HostLanguage<NODE, OBJECT extends NODE, ARRAY extends NODE, ATO
     else
       throw new RuntimeException(format("Unsupported value was given: '%s'", modelNode));
     return nodeValue;
-  }
-
-  default Preprocessor<ModelSpec.Node> convertProcessor(Preprocessor<NODE> preprocessor) {
-    return new Preprocessor<ModelSpec.Node>() {
-      @Override
-      public ModelSpec.Node translate(ModelSpec.Node targetElement) {
-        return toModelNode(preprocessor.translate(HostLanguage.this.translate(targetElement)));
-      }
-
-      @Override
-      public boolean matches(Path pathToTargetElement) {
-        return preprocessor.matches(pathToTargetElement);
-      }
-    };
   }
 
   void putToObject(OBJECT ret, String eachKey, NODE jsonNodeValue);

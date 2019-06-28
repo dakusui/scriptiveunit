@@ -47,8 +47,8 @@ public class Qapi {
     protected ModelSpec modelSpec() {
       return new ModelSpec.Standard() {
         @Override
-        public List<Preprocessor<Node>> preprocessors() {
-          return new LinkedList<Preprocessor<Node>>(super.preprocessors()) {{
+        public List<Preprocessor> preprocessors() {
+          return new LinkedList<Preprocessor>(super.preprocessors()) {{
             add(Preprocessor.preprocessor(
                 Loader::getModelNode,
                 pathMatcher("testOracles", ".*")));
