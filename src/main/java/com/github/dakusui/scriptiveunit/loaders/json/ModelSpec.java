@@ -6,7 +6,6 @@ import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
@@ -17,8 +16,6 @@ import static java.util.Objects.requireNonNull;
 
 public interface ModelSpec<NODE> {
   Dictionary createDefaultValues();
-
-  <OBJECT extends NODE, ARRAY extends NODE, ATOM extends NODE> List<Preprocessor<NODE>> preprocessors(HostLanguage<NODE, OBJECT, ARRAY, ATOM> hostLanguage);
 
   <OBJECT extends NODE, ARRAY extends NODE, ATOM extends NODE> List<Preprocessor<Node>> preprocessors_(HostLanguage<NODE, OBJECT, ARRAY, ATOM> hostLanguage);
 
@@ -50,31 +47,16 @@ public interface ModelSpec<NODE> {
     }
 
     @Override
-    public <OBJECT extends N, ARRAY extends N, ATOM extends N> List<Preprocessor<N>> preprocessors(HostLanguage<N, OBJECT, ARRAY, ATOM> hostLanguage) {
-      return singletonList(hostLanguage.preprocessor(
-          this,
-          toUniformedObjectNodeTranslator(),
-          Preprocessor.Utils.pathMatcher("factorSpace", "factors", ".*")
-      ));
-    }
-
-    static <NODE, O extends NODE, A extends NODE, ATOM extends NODE> BiFunction<NODE, HostLanguage<NODE, O, A, ATOM>, NODE> toUniformedObjectNodeTranslator() {
-      return (targetElement, hostLanguage) -> {
-        if (hostLanguage.isObjectNode(targetElement))
-          return targetElement;
-        O ret = hostLanguage.newObjectNode();
-        hostLanguage.putToObject(ret, "type", ((HostLanguage<NODE, O, A, ? extends NODE>) hostLanguage).newAtomNode("simple"));
-        hostLanguage.putToObject(ret, "args", targetElement);
-        return ret;
-      };
-    }
-
-    @Override
     public <OBJECT extends N, ARRAY extends N, ATOM extends N> List<Preprocessor<Node>> preprocessors_(HostLanguage<N, OBJECT, ARRAY, ATOM> hostLanguage) {
+      return singletonList(Preprocessor.preprocessor(toUniformedObjectNodeTranslator_(),
+          Preprocessor.Utils.pathMatcher("factorSpace", "factors", ".*")));
+      /*
       return singletonList(hostLanguage.preprocessor(
           toUniformedObjectNodeTranslator_(),
           Preprocessor.Utils.pathMatcher("factorSpace", "factors", ".*")
       ));
+
+       */
     }
 
     static Function<Node, Node> toUniformedObjectNodeTranslator_() {

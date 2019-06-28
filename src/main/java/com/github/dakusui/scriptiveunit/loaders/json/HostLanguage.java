@@ -13,7 +13,6 @@ import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.BiFunction;
-import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
@@ -30,10 +29,6 @@ public interface HostLanguage<NODE, OBJECT extends NODE, ARRAY extends NODE, ATO
   Preprocessor<NODE> preprocessor(
       ModelSpec<NODE> modelSpec,
       BiFunction<NODE, HostLanguage<NODE, OBJECT, ARRAY, ATOM>, NODE> translator,
-      Predicate<Preprocessor.Path> pathMatcher);
-
-  Preprocessor<ModelSpec.Node> preprocessor(
-      Function<ModelSpec.Node, ModelSpec.Node> translator,
       Predicate<Preprocessor.Path> pathMatcher);
 
   ModelSpec.Dictionary preprocess(ModelSpec.Dictionary inputNode, Preprocessor<ModelSpec.Node> preprocessor);
@@ -190,11 +185,6 @@ public interface HostLanguage<NODE, OBJECT extends NODE, ARRAY extends NODE, ATO
         ModelSpec<JsonNode> modelSpec, BiFunction<JsonNode, HostLanguage<JsonNode, ObjectNode, ArrayNode, JsonNode>, JsonNode> translator,
         Predicate<Preprocessor.Path> pathMatcher) {
       return Preprocessor.preprocessor(jsonNode -> translator.apply(jsonNode, Json.this), pathMatcher);
-    }
-
-    @Override
-    public Preprocessor<ModelSpec.Node> preprocessor(Function<ModelSpec.Node, ModelSpec.Node> translator, Predicate<Preprocessor.Path> pathMatcher) {
-      return Preprocessor.preprocessor(translator, pathMatcher);
     }
 
     @Override

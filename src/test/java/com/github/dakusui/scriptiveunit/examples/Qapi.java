@@ -6,10 +6,13 @@ import com.github.dakusui.scriptiveunit.annotations.Import.Alias;
 import com.github.dakusui.scriptiveunit.annotations.Load;
 import com.github.dakusui.scriptiveunit.annotations.Scriptable;
 import com.github.dakusui.scriptiveunit.core.Config;
-import com.github.dakusui.scriptiveunit.drivers.*;
+import com.github.dakusui.scriptiveunit.drivers.Arith;
+import com.github.dakusui.scriptiveunit.drivers.Collections;
+import com.github.dakusui.scriptiveunit.drivers.Predicates;
+import com.github.dakusui.scriptiveunit.drivers.QueryApi;
+import com.github.dakusui.scriptiveunit.drivers.Strings;
 import com.github.dakusui.scriptiveunit.drivers.actions.Basic;
 import com.github.dakusui.scriptiveunit.loaders.Preprocessor;
-import com.github.dakusui.scriptiveunit.loaders.json.HostLanguage;
 import com.github.dakusui.scriptiveunit.loaders.json.JsonBasedTestSuiteDescriptorLoader;
 import com.github.dakusui.scriptiveunit.loaders.json.ModelSpec;
 import com.github.dakusui.scriptiveunit.model.form.Form;
@@ -40,12 +43,7 @@ public class Qapi {
   public static class Loader extends JsonBasedTestSuiteDescriptorLoader {
     @Override
     protected ModelSpec<JsonNode> modelSpec() {
-      return new ModelSpec.Standard<JsonNode>() {
-        @Override
-        public <OBJECT extends JsonNode, ARRAY extends JsonNode, ATOM extends JsonNode> List<Preprocessor<JsonNode>> preprocessors(HostLanguage<JsonNode, OBJECT, ARRAY, ATOM> hostLanguage) {
-          return super.preprocessors(hostLanguage);
-        }
-      };
+      return new ModelSpec.Standard<>();
     }
 
     @SuppressWarnings("WeakerAccess")
