@@ -11,11 +11,11 @@ import org.codehaus.jackson.node.ObjectNode;
 
 import java.util.List;
 
-import static com.github.dakusui.scriptiveunit.loaders.json.JsonPreprocessorUtils.requireObjectNode;
+import static com.github.dakusui.scriptiveunit.loaders.json.ModelSpec.dict;
 
 public class JsonBasedTestSuiteDescriptorLoader extends TestSuiteDescriptorLoader.Base {
 
-  private final HostLanguage<JsonNode, ObjectNode, ArrayNode, JsonNode> hostLanguage = hostLanguage();
+  protected final HostLanguage<JsonNode, ObjectNode, ArrayNode, JsonNode> hostLanguage = hostLanguage();
 
   private final ModelSpec modelSpec = modelSpec();
 
@@ -34,14 +34,16 @@ public class JsonBasedTestSuiteDescriptorLoader extends TestSuiteDescriptorLoade
   }
 
   // TEMPLATE
-  protected ObjectNode readObjectNodeWithMerging(String resourceName) {
-    ObjectNode work = hostLanguage.newObjectNode();
-    ObjectNode child = preprocess(hostLanguage.readObjectNode(resourceName), getPreprocessors());
-    if (hostLanguage.hasInheritanceDirective(child))
-      hostLanguage
-          .getParents(child)
-          .forEach(s -> hostLanguage.deepMerge(readObjectNodeWithMerging(s), work));
-    return hostLanguage.deepMerge(child, work);
+  protected ModelSpec.Dictionary readObjectNodeWithMerging(String resourceName) {
+    ModelSpec.Dictionary child = preprocess(
+        hostLanguage.toModelDictionary(
+            hostLanguage.readObjectNode(resourceName)),
+        getPreprocessors());
+
+    ModelSpec.Dictionary work_ = dict();
+    for (String s : hostLanguage.getParents(hostLanguage.translate(child)))
+      work_ = ModelSpec.deepMerge(readObjectNodeWithMerging(s), work_);
+    return ModelSpec.deepMerge(child, work_);
   }
 
   // TEMPLATE
@@ -51,18 +53,17 @@ public class JsonBasedTestSuiteDescriptorLoader extends TestSuiteDescriptorLoade
 
   // TEMPLATE
   protected ObjectNode readScriptHandlingInheritance(String scriptResourceName) {
-    ObjectNode work = readObjectNodeWithMerging(scriptResourceName);
-    ObjectNode ret = hostLanguage.translate(modelSpec.createDefaultValues());
-    return hostLanguage.removeInheritanceDirective(hostLanguage.deepMerge(work, ret));
+    ModelSpec.Dictionary work = readObjectNodeWithMerging(scriptResourceName);
+    ModelSpec.Dictionary ret = modelSpec.createDefaultValues();
+    return hostLanguage.removeInheritanceDirective(hostLanguage.translate(ModelSpec.deepMerge(work, ret)));
   }
 
   // TEMPLATE
-  protected ObjectNode preprocess(ObjectNode inputNode, List<Preprocessor> preprocessors) {
+  protected ModelSpec.Dictionary preprocess(ModelSpec.Dictionary inputNode, List<Preprocessor> preprocessors) {
     for (Preprocessor each : preprocessors) {
-      inputNode = hostLanguage.translate(
-          ModelSpec.preprocess(hostLanguage.toModelDictionary(inputNode), each));
+      inputNode = ModelSpec.preprocess(inputNode, each);
     }
-    return requireObjectNode(inputNode);
+    return inputNode;
   }
 
   protected ModelSpec modelSpec() {

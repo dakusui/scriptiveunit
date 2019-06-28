@@ -45,81 +45,85 @@ public interface HostLanguage<NODE, OBJECT extends NODE, ARRAY extends NODE, ATO
 
   <V> V mapObjectNode(OBJECT rootNode, Class<V> valueType);
 
-  boolean hasInheritanceDirective(OBJECT child);
-
   List<String> getParents(OBJECT child);
 
   OBJECT removeInheritanceDirective(OBJECT object);
-
-  OBJECT deepMerge(OBJECT work, OBJECT base);
-
-  default OBJECT translate(ModelSpec.Dictionary dictionary) {
-    OBJECT ret = newObjectNode();
-    dictionary.streamKeys()
-        .forEach((String eachKey) -> {
-          ModelSpec.Node nodeValue = dictionary.valueOf(eachKey);
-          NODE jsonNodeValue = translate(nodeValue);
-          putToObject(ret, eachKey, jsonNodeValue);
-        });
-    return ret;
-  }
-
-  default ARRAY translate(ModelSpec.Array array) {
-    ARRAY ret = newArrayNode();
-    array.stream().forEach((ModelSpec.Node eachNode) -> addToArray(ret, translate(eachNode)));
-    return ret;
-  }
-
-  default ATOM translate(ModelSpec.Atom atom) {
-    return newAtomNode(atom.get());
-  }
-
-  default NODE translate(ModelSpec.Node modelNode) {
-    NODE nodeValue;
-    if (isAtom(modelNode))
-      nodeValue = translate((ModelSpec.Atom) modelNode);
-    else if (isArray(modelNode))
-      nodeValue = translate((ModelSpec.Array) modelNode);
-    else if (isDictionary(modelNode))
-      nodeValue = translate((ModelSpec.Dictionary) modelNode);
-    else
-      throw new RuntimeException(format("Unsupported value was given: '%s'", modelNode));
-    return nodeValue;
-  }
 
   void putToObject(OBJECT ret, String eachKey, NODE jsonNodeValue);
 
   void addToArray(ARRAY ret, NODE eachNode);
 
-  default ModelSpec.Dictionary toModelDictionary(OBJECT object) {
-    return ModelSpec.dict(
-        keysOf(object)
-            .map(k -> ModelSpec.$(k, toModelNode(valueOf(object, k)))).toArray(ModelSpec.Dictionary.Entry[]::new)
-    );
+  OBJECT translate(ModelSpec.Dictionary dictionary);
+
+  ModelSpec.Dictionary toModelDictionary(OBJECT object);
+
+  interface Default<NODE, OBJECT extends NODE, ARRAY extends NODE, ATOM extends NODE> extends HostLanguage<NODE, OBJECT, ARRAY, ATOM> {
+    @Override
+    default OBJECT translate(ModelSpec.Dictionary dictionary) {
+      OBJECT ret = newObjectNode();
+      dictionary.streamKeys()
+          .forEach((String eachKey) -> {
+            ModelSpec.Node nodeValue = dictionary.valueOf(eachKey);
+            NODE jsonNodeValue = translate(nodeValue);
+            putToObject(ret, eachKey, jsonNodeValue);
+          });
+      return ret;
+    }
+
+    @Override
+    default ModelSpec.Dictionary toModelDictionary(OBJECT object) {
+      return ModelSpec.dict(
+          keysOf(object)
+              .map(k -> ModelSpec.$(k, toModelNode(valueOf(object, k)))).toArray(ModelSpec.Dictionary.Entry[]::new)
+      );
+    }
+
+    default ARRAY translate(ModelSpec.Array array) {
+      ARRAY ret = newArrayNode();
+      array.stream().forEach((ModelSpec.Node eachNode) -> addToArray(ret, translate(eachNode)));
+      return ret;
+    }
+
+    default ATOM translate(ModelSpec.Atom atom) {
+      return newAtomNode(atom.get());
+    }
+
+    default NODE translate(ModelSpec.Node modelNode) {
+      NODE nodeValue;
+      if (isAtom(modelNode))
+        nodeValue = translate((ModelSpec.Atom) modelNode);
+      else if (isArray(modelNode))
+        nodeValue = translate((ModelSpec.Array) modelNode);
+      else if (isDictionary(modelNode))
+        nodeValue = translate((ModelSpec.Dictionary) modelNode);
+      else
+        throw new RuntimeException(format("Unsupported value was given: '%s'", modelNode));
+      return nodeValue;
+    }
+
+    default ModelSpec.Array toModelArray(ARRAY array) {
+      return ModelSpec.array(elementsOf(array)
+          .map(this::toModelNode)
+          .toArray(ModelSpec.Node[]::new));
+    }
+
+    default ModelSpec.Atom toModelAtom(ATOM atom) {
+      return ModelSpec.atom(valueOf(atom));
+    }
+
+    @SuppressWarnings("unchecked")
+    default ModelSpec.Node toModelNode(NODE node) {
+      if (isAtomNode(node))
+        return toModelAtom((ATOM) node);
+      if (isArrayNode(node))
+        return toModelArray((ARRAY) node);
+      if (isObjectNode(node))
+        return toModelDictionary((OBJECT) node);
+      throw new UnsupportedOperationException();
+    }
   }
 
-  default ModelSpec.Array toModelArray(ARRAY array) {
-    return ModelSpec.array(elementsOf(array)
-        .map(this::toModelNode)
-        .toArray(ModelSpec.Node[]::new));
-  }
-
-  default ModelSpec.Atom toModelAtom(ATOM atom) {
-    return ModelSpec.atom(valueOf(atom));
-  }
-
-  @SuppressWarnings("unchecked")
-  default ModelSpec.Node toModelNode(NODE node) {
-    if (isAtomNode(node))
-      return toModelAtom((ATOM) node);
-    if (isArrayNode(node))
-      return toModelArray((ARRAY) node);
-    if (isObjectNode(node))
-      return toModelDictionary((OBJECT) node);
-    throw new UnsupportedOperationException();
-  }
-
-  class Json implements HostLanguage<JsonNode, ObjectNode, ArrayNode, JsonNode> {
+  class Json implements HostLanguage.Default<JsonNode, ObjectNode, ArrayNode, JsonNode> {
     public static final String EXTENDS_KEYWORD = "$extends";
 
     @Override
@@ -212,11 +216,6 @@ public interface HostLanguage<NODE, OBJECT extends NODE, ARRAY extends NODE, ATO
     }
 
     @Override
-    public boolean hasInheritanceDirective(ObjectNode child) {
-      return child.has(EXTENDS_KEYWORD);
-    }
-
-    @Override
     public List<String> getParents(ObjectNode child) {
       return JsonPreprocessorUtils.getParentsOf(child, EXTENDS_KEYWORD);
     }
@@ -225,11 +224,6 @@ public interface HostLanguage<NODE, OBJECT extends NODE, ARRAY extends NODE, ATO
     public ObjectNode removeInheritanceDirective(ObjectNode ret) {
       ret.remove(EXTENDS_KEYWORD);
       return ret;
-    }
-
-    @Override
-    public ObjectNode deepMerge(ObjectNode work, ObjectNode base) {
-      return JsonUtils.deepMerge(work, base);
     }
 
     @Override

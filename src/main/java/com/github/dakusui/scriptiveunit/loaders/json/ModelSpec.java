@@ -22,6 +22,10 @@ import static java.util.Collections.singletonList;
 import static java.util.Objects.requireNonNull;
 
 public interface ModelSpec {
+  Dictionary createDefaultValues();
+
+  List<Preprocessor> preprocessors();
+
   static ModelSpec.Dictionary preprocess(ModelSpec.Dictionary inputNode, Preprocessor preprocessor) {
     return (Dictionary) preprocess(preprocessor, Preprocessor.Path.createRoot(), inputNode);
   }
@@ -32,7 +36,6 @@ public interface ModelSpec {
     }
     Node work;
     if (isDictionary(targetElement)) {
-      //work = targetElement;
       work = dict(((Dictionary) targetElement).streamKeys().map(
           (String attributeName) -> $(
               attributeName,
@@ -57,10 +60,6 @@ public interface ModelSpec {
         targetElement :
         work;
   }
-
-  Dictionary createDefaultValues();
-
-  List<Preprocessor> preprocessors();
 
   static boolean isDictionary(ModelSpec.Node node) {
     return node instanceof Dictionary;
@@ -134,18 +133,18 @@ public interface ModelSpec {
 
     @Override
     public List<Preprocessor> preprocessors() {
-      return singletonList(Preprocessor.preprocessor(toUniformedObjectNodeTranslator_(),
-          Preprocessor.Utils.pathMatcher("factorSpace", "factors", ".*")));
+      return singletonList(
+          Preprocessor.preprocessor(toUniformedObjectNodeTranslator(),
+              Preprocessor.Utils.pathMatcher("factorSpace", "factors", ".*")));
     }
 
-    static Function<Node, Node> toUniformedObjectNodeTranslator_() {
+    static Function<Node, Node> toUniformedObjectNodeTranslator() {
       return (targetElement) -> {
         if (isDictionary(targetElement))
           return targetElement;
         return dict(
             $("type", atom("simple")),
-            $("args", targetElement)
-        );
+            $("args", targetElement));
       };
     }
   }
@@ -272,7 +271,6 @@ public interface ModelSpec {
     default Stream<String> streamKeys() {
       return StreamSupport.stream(keys().spliterator(), false);
     }
-
 
     interface Entry {
       String key();

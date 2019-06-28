@@ -2,6 +2,7 @@ package com.github.dakusui.scriptiveunit.loaders.json;
 
 import org.codehaus.jackson.JsonNode;
 import org.codehaus.jackson.node.ArrayNode;
+import org.codehaus.jackson.node.JsonNodeFactory;
 import org.codehaus.jackson.node.ObjectNode;
 import org.codehaus.jackson.node.TextNode;
 
@@ -29,7 +30,9 @@ public enum JsonPreprocessorUtils {
 
   public static AbstractList<String> getParentsOf(final ObjectNode child, final String parentAttributeName) {
     return new AbstractList<String>() {
-      ArrayNode parents = requireArrayNode(child.get(parentAttributeName));
+      ArrayNode parents = child.has(parentAttributeName) ?
+          requireArrayNode(child.get(parentAttributeName)) :
+          JsonNodeFactory.instance.arrayNode();
 
       @Override
       public int size() {

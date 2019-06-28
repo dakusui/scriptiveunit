@@ -5,6 +5,7 @@ import com.github.dakusui.scriptiveunit.core.Config;
 import com.github.dakusui.scriptiveunit.loaders.json.HostLanguage;
 import com.github.dakusui.scriptiveunit.loaders.json.JsonPreprocessorUtils;
 import com.github.dakusui.scriptiveunit.loaders.json.JsonUtils;
+import com.github.dakusui.scriptiveunit.unittests.core.UtJsonUtils;
 import com.github.dakusui.scriptiveunit.utils.ReflectionUtils;
 import org.codehaus.jackson.node.JsonNodeFactory;
 import org.codehaus.jackson.node.ObjectNode;
@@ -41,18 +42,24 @@ public class DryQapi extends Qapi {
       System.out.println("<" + resourceName + ">");
       ObjectNode work = readObjectNodeDirectlyWithMerging(resourceName);
       ObjectNode ret = requireObjectNode(JsonUtils.readJsonNodeFromStream(ReflectionUtils.openResourceAsStream(DEFAULTS_JSON)));
-      ret = JsonUtils.deepMerge(work, ret);
+      ret = UtJsonUtils.deepMerge(work, ret);
       ret.remove(HostLanguage.Json.EXTENDS_KEYWORD);
       return ret;
     }
 
     ObjectNode readObjectNodeDirectlyWithMerging(String script) {
-      ObjectNode child = requireObjectNode(preprocess(requireObjectNode(JsonUtils.readJsonNodeFromStream(toInputStream(script))), getPreprocessors()));
+      ObjectNode child = requireObjectNode(
+          hostLanguage.translate(
+              preprocess(
+                  hostLanguage.toModelDictionary(
+                      requireObjectNode(JsonUtils.readJsonNodeFromStream(toInputStream(script)))),
+                  getPreprocessors())));
       ObjectNode work = JsonNodeFactory.instance.objectNode();
       if (child.has(HostLanguage.Json.EXTENDS_KEYWORD)) {
-        JsonPreprocessorUtils.getParentsOf(child, HostLanguage.Json.EXTENDS_KEYWORD).forEach(s -> JsonUtils.deepMerge(requireObjectNode(readObjectNodeWithMerging(s)), work));
+        JsonPreprocessorUtils.getParentsOf(child, HostLanguage.Json.EXTENDS_KEYWORD)
+            .forEach(s -> UtJsonUtils.deepMerge(requireObjectNode(hostLanguage.translate(readObjectNodeWithMerging(s))), work));
       }
-      return JsonUtils.deepMerge(child, work);
+      return UtJsonUtils.deepMerge(child, work);
     }
 
     private InputStream toInputStream(String script) {
@@ -61,10 +68,10 @@ public class DryQapi extends Qapi {
   }
 
   public static void main(String... args) {
-    System.getProperties().put("scriptiveunit.target","{\"$extends\":[\"tests/issues/issue-28.json\"]}");
+    System.getProperties().put("scriptiveunit.target", "{\"$extends\":[\"tests/issues/issue-28.json\"]}");
     Result result = JUnitCore.runClasses(DryQapi.class);
     System.out.println("wasSuccessful:" + result.wasSuccessful());
-    for (Failure failure: result.getFailures()) {
+    for (Failure failure : result.getFailures()) {
       System.out.println(failure.getDescription().getMethodName());
     }
   }
