@@ -55,20 +55,15 @@ public class JsonBasedTestSuiteDescriptorLoader extends TestSuiteDescriptorLoade
   protected List<Preprocessor<JsonNode>> getPreprocessors() {
     return modelSpec.preprocessors_(hostLanguage)
         .stream()
-        .map(new Function<Preprocessor<ModelSpec.Node>, Preprocessor<JsonNode>>() {
+        .map((Function<Preprocessor<ModelSpec.Node>, Preprocessor<JsonNode>>) nodePreprocessor -> new Preprocessor<JsonNode>() {
           @Override
-          public Preprocessor<JsonNode> apply(Preprocessor<ModelSpec.Node> nodePreprocessor) {
-            return new Preprocessor<JsonNode>() {
-              @Override
-              public JsonNode translate(JsonNode targetElement) {
-                return hostLanguage.translate(nodePreprocessor.translate(hostLanguage.toModelNode(targetElement)));
-              }
+          public JsonNode translate(JsonNode targetElement) {
+            return hostLanguage.translate(nodePreprocessor.translate(hostLanguage.toModelNode(targetElement)));
+          }
 
-              @Override
-              public boolean matches(Path pathToTargetElement) {
-                return nodePreprocessor.matches(pathToTargetElement);
-              }
-            };
+          @Override
+          public boolean matches(Path pathToTargetElement) {
+            return nodePreprocessor.matches(pathToTargetElement);
           }
         })
         .collect(toList())
@@ -85,7 +80,8 @@ public class JsonBasedTestSuiteDescriptorLoader extends TestSuiteDescriptorLoade
   // TEMPLATE
   protected ObjectNode preprocess(ObjectNode inputNode, List<Preprocessor<JsonNode>> preprocessors) {
     for (Preprocessor<JsonNode> each : preprocessors) {
-      inputNode = hostLanguage.translate(hostLanguage.preprocess(hostLanguage.toModelDictionary(inputNode), hostLanguage.convertProcessor(each)));
+      inputNode = hostLanguage.translate(
+          ModelSpec.preprocess(hostLanguage.toModelDictionary(inputNode), hostLanguage.convertProcessor(each)));
     }
     return requireObjectNode(inputNode);
   }

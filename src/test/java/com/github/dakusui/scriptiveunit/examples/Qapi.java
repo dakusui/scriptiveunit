@@ -13,6 +13,7 @@ import com.github.dakusui.scriptiveunit.drivers.QueryApi;
 import com.github.dakusui.scriptiveunit.drivers.Strings;
 import com.github.dakusui.scriptiveunit.drivers.actions.Basic;
 import com.github.dakusui.scriptiveunit.loaders.Preprocessor;
+import com.github.dakusui.scriptiveunit.loaders.json.HostLanguage;
 import com.github.dakusui.scriptiveunit.loaders.json.JsonBasedTestSuiteDescriptorLoader;
 import com.github.dakusui.scriptiveunit.loaders.json.ModelSpec;
 import com.github.dakusui.scriptiveunit.model.form.Form;
@@ -28,8 +29,13 @@ import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
 
 import static com.github.dakusui.scriptiveunit.loaders.Preprocessor.Utils.pathMatcher;
+import static com.github.dakusui.scriptiveunit.loaders.json.ModelSpec.$;
+import static com.github.dakusui.scriptiveunit.loaders.json.ModelSpec.array;
+import static com.github.dakusui.scriptiveunit.loaders.json.ModelSpec.atom;
+import static com.github.dakusui.scriptiveunit.loaders.json.ModelSpec.dict;
 import static java.lang.String.format;
 import static java.util.Collections.unmodifiableMap;
 import static java.util.Objects.requireNonNull;
@@ -53,9 +59,18 @@ public class Qapi {
 
     @Override
     protected List<Preprocessor<JsonNode>> getPreprocessors() {
-
+      HostLanguage<JsonNode, ObjectNode, ArrayNode, JsonNode> hostLanguage = hostLanguage();
       return new LinkedList<Preprocessor<JsonNode>>() {{
         addAll(Loader.super.getPreprocessors());
+        add(Preprocessor.preprocessor(new Function<JsonNode, JsonNode>() {
+                                        @Override
+                                        public JsonNode apply(JsonNode jsonNode) {
+                                          return hostLanguage.translate(getModelNode(hostLanguage.toModelNode(jsonNode)));
+                                        }
+                                      },
+            pathMatcher("testOracles", ".*")
+        ));
+        /*
         add(hostLanguage().preprocessor(
             modelSpec(), (targetElement, hostLanguage) -> {
               ObjectNode ret = (ObjectNode) targetElement;
@@ -70,7 +85,16 @@ public class Qapi {
             },
             pathMatcher("testOracles", ".*")
         ));
+         */
       }};
+    }
+
+    static ModelSpec.Node getModelNode(ModelSpec.Node node) {
+      return ModelSpec.deepMerge(
+          ModelSpec.Utils.requireDictionary(node),
+          dict(
+              $("after", array(atom("nop")))
+          ));
     }
   }
 
@@ -187,7 +211,7 @@ public class Qapi {
     }
 
     private final Map<String, Object> fixture;
-    private final Term[] terms;
+    private final Term[]              terms;
 
     Request(Map<String, Object> fixture) {
       this.fixture = unmodifiableMap(fixture);
@@ -250,7 +274,7 @@ public class Qapi {
     ;
 
     private final String content;
-    private final int price;
+    private final int    price;
 
     Entry(String content, int price) {
       this.content = requireNonNull(content);

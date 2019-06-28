@@ -10,10 +10,6 @@ import org.codehaus.jackson.node.ObjectNode;
 
 import java.io.IOException;
 import java.util.List;
-import java.util.Objects;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.function.BiFunction;
-import java.util.function.Predicate;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
@@ -26,13 +22,6 @@ import static com.github.dakusui.scriptiveunit.utils.CoreUtils.toBigDecimal;
 import static java.lang.String.format;
 
 public interface HostLanguage<NODE, OBJECT extends NODE, ARRAY extends NODE, ATOM extends NODE> {
-  Preprocessor<NODE> preprocessor(
-      ModelSpec<NODE> modelSpec,
-      BiFunction<NODE, HostLanguage<NODE, OBJECT, ARRAY, ATOM>, NODE> translator,
-      Predicate<Preprocessor.Path> pathMatcher);
-
-  ModelSpec.Dictionary preprocess(ModelSpec.Dictionary inputNode, Preprocessor<ModelSpec.Node> preprocessor);
-
   OBJECT newObjectNode();
 
   ARRAY newArrayNode();
@@ -99,38 +88,6 @@ public interface HostLanguage<NODE, OBJECT extends NODE, ARRAY extends NODE, ATO
     return nodeValue;
   }
 
-  default ModelSpec.Node preprocess__(Preprocessor<ModelSpec.Node> preprocessor, Preprocessor.Path pathToTarget, ModelSpec.Node targetElement) {
-    if (preprocessor.matches(pathToTarget)) {
-      return preprocessor.translate(targetElement);
-    }
-    ModelSpec.Node work;
-    if (isDictionary(targetElement)) {
-      //work = targetElement;
-      work = ModelSpec.dict(((ModelSpec.Dictionary) targetElement).streamKeys().map(
-          (String attributeName) -> ModelSpec.$(
-              attributeName,
-              this.preprocess__(
-                  preprocessor,
-                  pathToTarget.createChild(attributeName),
-                  ((ModelSpec.Dictionary) targetElement).valueOf(attributeName)))).toArray(ModelSpec.Dictionary.Entry[]::new));
-    } else if (isArray(targetElement)) {
-      AtomicInteger i = new AtomicInteger(0);
-      work = ModelSpec.array(((ModelSpec.Array) targetElement)
-          .stream()
-          .map((ModelSpec.Node each) -> preprocess__(
-              preprocessor,
-              pathToTarget.createChild(i.getAndIncrement()),
-              each
-          )).toArray(ModelSpec.Node[]::new)
-      );
-    } else {
-      work = targetElement;
-    }
-    return Objects.equals(targetElement, work) ?
-        targetElement :
-        work;
-  }
-
   default Preprocessor<ModelSpec.Node> convertProcessor(Preprocessor<NODE> preprocessor) {
     return new Preprocessor<ModelSpec.Node>() {
       @Override
@@ -179,18 +136,6 @@ public interface HostLanguage<NODE, OBJECT extends NODE, ARRAY extends NODE, ATO
 
   class Json implements HostLanguage<JsonNode, ObjectNode, ArrayNode, JsonNode> {
     public static final String EXTENDS_KEYWORD = "$extends";
-
-    @Override
-    public Preprocessor<JsonNode> preprocessor(
-        ModelSpec<JsonNode> modelSpec, BiFunction<JsonNode, HostLanguage<JsonNode, ObjectNode, ArrayNode, JsonNode>, JsonNode> translator,
-        Predicate<Preprocessor.Path> pathMatcher) {
-      return Preprocessor.preprocessor(jsonNode -> translator.apply(jsonNode, Json.this), pathMatcher);
-    }
-
-    @Override
-    public ModelSpec.Dictionary preprocess(ModelSpec.Dictionary inputNode, Preprocessor<ModelSpec.Node> preprocessor) {
-      return (ModelSpec.Dictionary) preprocess__(preprocessor, Preprocessor.Path.createRoot(), inputNode);
-    }
 
     @Override
     public ObjectNode newObjectNode() {

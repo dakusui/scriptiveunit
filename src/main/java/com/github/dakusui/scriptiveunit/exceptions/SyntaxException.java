@@ -1,5 +1,6 @@
 package com.github.dakusui.scriptiveunit.exceptions;
 
+import com.github.dakusui.scriptiveunit.loaders.json.ModelSpec;
 import com.github.dakusui.scriptiveunit.model.session.Stage;
 import com.github.dakusui.scriptiveunit.model.statement.Statement;
 import org.codehaus.jackson.JsonNode;
@@ -33,6 +34,10 @@ public class SyntaxException extends ScriptiveUnitException {
     ));
   }
 
+  public static SyntaxException mergeFailed(ModelSpec.Dictionary source, ModelSpec.Dictionary target, String key) {
+    throw new SyntaxException(format("Failed to merge '%s' and '%s' on '%s'", source, target, key));
+  }
+
   public static SyntaxException mergeFailed(ObjectNode source, ObjectNode target, String key) {
     throw new SyntaxException(format("Failed to merge '%s' and '%s' on '%s'", source, target, key));
   }
@@ -63,5 +68,9 @@ public class SyntaxException extends ScriptiveUnitException {
 
   public static SyntaxException systemAttributeNotFound(String attr, Stage input) {
     throw new SyntaxException(format("Unknown system attribute '%s' was accessed in '%s'", attr, input));
+  }
+
+  public static Supplier<ScriptiveUnitException> notDictionary() {
+    return () -> new SyntaxException("Non dictionary node was given");
   }
 }

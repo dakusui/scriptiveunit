@@ -1,25 +1,68 @@
 package com.github.dakusui.scriptiveunit.loaders.json;
 
+import com.github.dakusui.scriptiveunit.exceptions.ScriptiveUnitException;
 import com.github.dakusui.scriptiveunit.loaders.Preprocessor;
+import com.github.dakusui.scriptiveunit.utils.Checks;
 
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
+import static com.github.dakusui.scriptiveunit.loaders.json.ModelSpec.Utils.nonDictionaryFound;
+import static com.github.dakusui.scriptiveunit.loaders.json.ModelSpec.Utils.requireDictionary;
 import static com.github.dakusui.scriptiveunit.utils.Checks.check;
+import static java.lang.String.format;
 import static java.util.Collections.singletonList;
 import static java.util.Objects.requireNonNull;
 
 public interface ModelSpec<NODE> {
+  static ModelSpec.Dictionary preprocess(ModelSpec.Dictionary inputNode, Preprocessor<ModelSpec.Node> preprocessor) {
+    return (Dictionary) preprocess__(preprocessor, Preprocessor.Path.createRoot(), inputNode);
+  }
+
+  static Node preprocess__(Preprocessor<Node> preprocessor, Preprocessor.Path pathToTarget, Node targetElement) {
+    if (preprocessor.matches(pathToTarget)) {
+      return preprocessor.translate(targetElement);
+    }
+    Node work;
+    if (isDictionary(targetElement)) {
+      //work = targetElement;
+      work = dict(((Dictionary) targetElement).streamKeys().map(
+          (String attributeName) -> $(
+              attributeName,
+              preprocess__(
+                  preprocessor,
+                  pathToTarget.createChild(attributeName),
+                  ((Dictionary) targetElement).valueOf(attributeName)))).toArray(Dictionary.Entry[]::new));
+    } else if (isArray(targetElement)) {
+      AtomicInteger i = new AtomicInteger(0);
+      work = array(((Array) targetElement)
+          .stream()
+          .map((Node each) -> preprocess__(
+              preprocessor,
+              pathToTarget.createChild(i.getAndIncrement()),
+              each
+          )).toArray(Node[]::new)
+      );
+    } else {
+      work = targetElement;
+    }
+    return Objects.equals(targetElement, work) ?
+        targetElement :
+        work;
+  }
+
   Dictionary createDefaultValues();
 
   <OBJECT extends NODE, ARRAY extends NODE, ATOM extends NODE> List<Preprocessor<Node>> preprocessors_(HostLanguage<NODE, OBJECT, ARRAY, ATOM> hostLanguage);
 
-    static boolean isDictionary(ModelSpec.Node node) {
+  static boolean isDictionary(ModelSpec.Node node) {
     return node instanceof Dictionary;
   }
 
@@ -29,6 +72,51 @@ public interface ModelSpec<NODE> {
 
   static boolean isAtom(ModelSpec.Node node) {
     return node instanceof Atom;
+  }
+
+  static Dictionary deepMerge(Dictionary source, Dictionary target) {
+    requireNonNull(source);
+    requireNonNull(target);
+    return dict(
+        Stream.concat(
+            target.streamKeys()
+                .map(each -> source.containsKey(each) ?
+                    isDictionary(source.valueOf(each)) ?
+                        $(each, deepMerge(
+                            requireDictionary(source.valueOf(each), nonDictionaryFound(each)),
+                            requireDictionary(target.valueOf(each), nonDictionaryFound(each)))) :
+                        $(each, source.valueOf(each)) :
+                    $(each, target.valueOf(each))),
+            source.streamKeys()
+                .filter(each -> !target.containsKey(each))
+                .map(each -> $(each, source.valueOf(each))))
+            .toArray(Dictionary.Entry[]::new)
+    );
+  }
+
+  enum Utils {
+    ;
+
+    static Function<Node, ScriptiveUnitException> nonDictionaryFound(String key) {
+      return node -> {
+        throw new ScriptiveUnitException(format("Non dictionary node:'%s' was found at key:'%s'", node, key));
+      };
+    }
+
+    static Function<Node, ScriptiveUnitException> notDictionary() {
+      return node -> {
+        throw new ScriptiveUnitException(format("Node:'%s' is not a dictionary", node));
+      };
+    }
+
+    public static Dictionary requireDictionary(Node node) {
+      return requireDictionary(node, notDictionary());
+    }
+
+    public static Dictionary requireDictionary(Node node, Function<Node, ScriptiveUnitException> otherwiseThrow) {
+      Checks.check(isDictionary(node), () -> otherwiseThrow.apply(node));
+      return (Dictionary) node;
+    }
   }
 
   class Standard<N> implements ModelSpec<N> {
@@ -50,13 +138,6 @@ public interface ModelSpec<NODE> {
     public <OBJECT extends N, ARRAY extends N, ATOM extends N> List<Preprocessor<Node>> preprocessors_(HostLanguage<N, OBJECT, ARRAY, ATOM> hostLanguage) {
       return singletonList(Preprocessor.preprocessor(toUniformedObjectNodeTranslator_(),
           Preprocessor.Utils.pathMatcher("factorSpace", "factors", ".*")));
-      /*
-      return singletonList(hostLanguage.preprocessor(
-          toUniformedObjectNodeTranslator_(),
-          Preprocessor.Utils.pathMatcher("factorSpace", "factors", ".*")
-      ));
-
-       */
     }
 
     static Function<Node, Node> toUniformedObjectNodeTranslator_() {
@@ -112,6 +193,11 @@ public interface ModelSpec<NODE> {
       @Override
       public Node valueOf(String key) {
         return map.get(key);
+      }
+
+      @Override
+      public boolean containsKey(String each) {
+        return map.containsKey(each);
       }
 
       @Override
@@ -181,11 +267,14 @@ public interface ModelSpec<NODE> {
 
     Node valueOf(String key);
 
+    boolean containsKey(String each);
+
     int size();
 
     default Stream<String> streamKeys() {
       return StreamSupport.stream(keys().spliterator(), false);
     }
+
 
     interface Entry {
       String key();
