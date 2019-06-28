@@ -1,16 +1,17 @@
 package com.github.dakusui.scriptiveunit.testassets.drivers;
 
-import com.github.dakusui.scriptiveunit.ScriptiveSuiteSet;
-import com.github.dakusui.scriptiveunit.ScriptiveUnit;
+import com.github.dakusui.scriptiveunit.drivers.contrib.Reporting;
+import com.github.dakusui.scriptiveunit.utils.ScriptiveSuiteSet;
+import com.github.dakusui.scriptiveunit.runners.ScriptiveUnit;
 import com.github.dakusui.scriptiveunit.annotations.Import;
 import com.github.dakusui.scriptiveunit.annotations.Import.Alias;
 import com.github.dakusui.scriptiveunit.annotations.Load;
 import com.github.dakusui.scriptiveunit.drivers.*;
 import com.github.dakusui.scriptiveunit.drivers.actions.Basic;
-import com.github.dakusui.scriptiveunit.loaders.json.JsonBasedLoader;
+import com.github.dakusui.scriptiveunit.loaders.json.JsonBasedTestSuiteDescriptorLoader;
 import org.junit.runner.RunWith;
 
-@Load(with = JsonBasedLoader.class)
+@Load(with = JsonBasedTestSuiteDescriptorLoader.class)
 @RunWith(ScriptiveUnit.class)
 public class Simple {
   @SuppressWarnings("unused")

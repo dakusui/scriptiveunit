@@ -1,35 +1,41 @@
 package com.github.dakusui.scriptiveunit.model.statement;
 
-import com.github.dakusui.scriptiveunit.model.func.Func;
-
 import java.util.Iterator;
+import java.util.List;
 
 public interface Arguments extends Iterable<Statement> {
-  static Arguments create(Statement.Factory statementFactory, Iterable<Func> args) {
-    return () -> new Iterator<Statement>() {
-      Iterator<Func> i = args.iterator();
+  Statement get(int i);
 
-      @Override
-      public boolean hasNext() {
-        return i.hasNext();
+  int size();
+
+  static Arguments create(Statement.Factory statementFactory, List<Object> args) {
+    return new Arguments() {
+      public Statement get(int i) {
+        return statementFactory.create(args.get(i));
       }
 
       @Override
-      public Statement next() {
-        return statementFactory.create(i.next());
+      public int size() {
+        return args.size();
+      }
+
+      @SuppressWarnings("NullableProblems")
+      @Override
+      public Iterator<Statement> iterator() {
+        return new Iterator<Statement>() {
+          Iterator<Object> i = args.iterator();
+
+          @Override
+          public boolean hasNext() {
+            return i.hasNext();
+          }
+
+          @Override
+          public Statement next() {
+            return statementFactory.create(i.next());
+          }
+        };
       }
     };
-  }
-
-  class Factory {
-    private final Statement.Factory statementFactory;
-
-    public Factory(Statement.Factory statementFactory) {
-      this.statementFactory = statementFactory;
-    }
-
-    public Arguments create(Iterable<Func> args) {
-      return Arguments.create(statementFactory, args);
-    }
   }
 }

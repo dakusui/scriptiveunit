@@ -17,14 +17,14 @@ public @interface Import {
     String ALL = "*";
 
     /**
-     * If {@code "*"} is returned, ScriptiveUnit imports all the available {@code Func}s
+     * If {@code "*"} is returned, ScriptiveUnit imports all the available {@code Form}s
      * in the class.
      */
     String value();
 
     /**
-     * Returns an alias for the {@code Func} specified by {@code value()}.
-     * If a string whose length is 0 is returned, alias is not used and the func will
+     * Returns an alias for the {@code Form} specified by {@code value()}.
+     * If a string whose length is 0 is returned, alias is not used and the func(form) will
      * be referred to by the {@code value}.
      */
     String as() default "";

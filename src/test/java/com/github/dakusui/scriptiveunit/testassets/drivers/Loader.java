@@ -1,8 +1,8 @@
 package com.github.dakusui.scriptiveunit.testassets.drivers;
 
 import com.github.dakusui.scriptiveunit.core.Config;
-import com.github.dakusui.scriptiveunit.core.Utils;
-import com.github.dakusui.scriptiveunit.loaders.json.JsonBasedLoader;
+import com.github.dakusui.scriptiveunit.loaders.json.JsonBasedTestSuiteDescriptorLoader;
+import com.github.dakusui.scriptiveunit.model.lang.ApplicationSpec;
 import com.github.dakusui.scriptiveunit.testutils.Resource;
 import org.codehaus.jackson.node.ObjectNode;
 
@@ -11,16 +11,16 @@ import java.util.Arrays;
 import static java.util.stream.Collectors.toList;
 
 
-public abstract class Loader extends JsonBasedLoader {
+public abstract class Loader extends JsonBasedTestSuiteDescriptorLoader {
   @SuppressWarnings("WeakerAccess")
   protected Loader(Config config) {
     super(config);
   }
 
-  protected ObjectNode readObjectNodeWithMerging(String resourceName) {
-    ObjectNode work = super.readObjectNodeWithMerging(resourceName);
+  protected ApplicationSpec.Dictionary readObjectNodeWithMerging(String resourceName) {
+    ApplicationSpec.Dictionary work = super.readObjectNodeWithMerging(resourceName);
     for (ObjectNode each : objectNodes()) {
-      work = Utils.deepMerge(each, work);
+      work = ApplicationSpec.deepMerge(hostSpec.toApplicationDictionary(each), work);
     }
     return work;
   }

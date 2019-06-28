@@ -6,23 +6,24 @@ import com.github.dakusui.scriptiveunit.annotations.Scriptable;
 import com.github.dakusui.scriptiveunit.core.Config;
 import com.github.dakusui.scriptiveunit.exceptions.ScriptiveUnitException;
 import com.github.dakusui.scriptiveunit.exceptions.SyntaxException;
-import com.github.dakusui.scriptiveunit.model.Stage;
-import com.github.dakusui.scriptiveunit.model.TestItem;
-import com.github.dakusui.scriptiveunit.model.func.Func;
+import com.github.dakusui.scriptiveunit.model.desc.testitem.TestItem;
+import com.github.dakusui.scriptiveunit.model.form.Form;
+import com.github.dakusui.scriptiveunit.model.form.FormList;
+import com.github.dakusui.scriptiveunit.model.session.Stage;
 
 import java.lang.reflect.InvocationTargetException;
-import java.util.Arrays;
 import java.util.List;
 
-import static com.github.dakusui.scriptiveunit.core.Utils.check;
 import static com.github.dakusui.scriptiveunit.exceptions.SyntaxException.attributeNotFound;
+import static com.github.dakusui.scriptiveunit.utils.Checks.check;
+import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
 import static java.util.stream.Collectors.toList;
 
 public class Core {
   /**
    * Returns a function to access an attribute value in a test case.
-   * This can be used in {@code GENERATION}, {@code GIVEN}, {@code WHEN}, and {@code THEN}
+   * This can be used in {@code SUITE}, {@code FIXTURE}, and {@code ORACLE}
    * stages.
    *
    * @param attr Attribute name whose value should be returned
@@ -31,9 +32,9 @@ public class Core {
   @SuppressWarnings("unused")
   @Scriptable
   @AccessesTestParameter
-  public <E> Func<E> attr(Func<String> attr) {
+  public <E> Form<E> attr(Form<String> attr) {
     return (Stage input) -> {
-      Tuple testCase = input.getTestCaseTuple();
+      Tuple testCase = input.getTestCaseTuple().orElseThrow(RuntimeException::new);
       String attrName = attr.apply(input);
       check(
           testCase.containsKey(attrName),
@@ -53,7 +54,7 @@ public class Core {
    */
   @SuppressWarnings("unused")
   @Scriptable
-  public <E> Func<E> value(Func<String> entryName, Func<?> target) {
+  public <E> Form<E> value(Form<String> entryName, Form<?> target) {
     return (Stage input) -> {
       Object object = requireNonNull(target.apply(input));
       String methodName = requireNonNull(entryName.apply(input));
@@ -68,28 +69,32 @@ public class Core {
 
   @SuppressWarnings("unused")
   @Scriptable
-  public Func<Throwable> exception() {
-    return Stage::getThrowable;
+  public Form<Throwable> exception() {
+    return stage ->
+        stage.getThrowable()
+            .orElseThrow(IllegalStateException::new);
   }
 
   @SuppressWarnings("unused")
   @Scriptable
-  public Func<TestItem> testItem() {
-    return Stage::getTestItem;
+  public Form<TestItem> testItem() {
+    return stage -> stage.getTestItem().orElseThrow(
+        () -> new IllegalStateException(
+            format("This method cannot be called on '%s' stage", stage.getExecutionLevel())));
   }
 
   @SuppressWarnings("unused")
   @Scriptable
-  public final Func<List<?>> quote(Func<?>... values) {
-    return (Stage input) -> Arrays
-        .stream(values)
-        .map((Func<?> each) -> each instanceof Func.Const ? each.apply(input) : each)
+  public final Form<List<?>> quote(FormList<?> values) {
+    return (Stage input) -> values
+        .stream()
+        .map((Form<?> each) -> each instanceof Form.Const ? each.apply(input) : each)
         .collect(toList());
   }
 
   @SuppressWarnings("unused")
   @Scriptable
-  public Func<Object> configAttr(Func<String> attrName) {
+  public Form<Object> configAttr(Form<String> attrName) {
     return input -> {
       String attr = requireNonNull(attrName.apply(input));
       Config config = input.getConfig();
@@ -113,7 +118,7 @@ public class Core {
 
   @SuppressWarnings("unused")
   @Scriptable
-  public Func<Object> systemProperty(Func<String> attrName) {
+  public Form<Object> systemProperty(Form<String> attrName) {
     return input -> System.getProperties().getProperty(requireNonNull(attrName.apply(input)));
   }
 }

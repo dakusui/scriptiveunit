@@ -6,13 +6,12 @@ import com.github.dakusui.jcunit8.runners.junit4.annotations.Condition;
 import com.github.dakusui.jcunit8.runners.junit4.annotations.From;
 import com.github.dakusui.jcunit8.runners.junit4.annotations.Given;
 import com.github.dakusui.jcunit8.runners.junit4.annotations.ParameterSource;
-import com.github.dakusui.scriptiveunit.ScriptiveUnit;
-import com.github.dakusui.scriptiveunit.annotations.Scriptable;
+import com.github.dakusui.scriptiveunit.runners.ScriptiveUnit;
 import com.github.dakusui.scriptiveunit.core.Config;
-import com.github.dakusui.scriptiveunit.core.Utils;
-import com.github.dakusui.scriptiveunit.testutils.Resource;
+import com.github.dakusui.scriptiveunit.model.lang.json.JsonUtils;
 import com.github.dakusui.scriptiveunit.testassets.drivers.Loader;
 import com.github.dakusui.scriptiveunit.testassets.drivers.Simple;
+import com.github.dakusui.scriptiveunit.testutils.Resource;
 import org.codehaus.jackson.node.ObjectNode;
 import org.junit.Test;
 import org.junit.runner.JUnitCore;
@@ -25,10 +24,7 @@ import java.util.function.Function;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
-import static com.github.dakusui.scriptiveunit.core.Utils.allScriptsUnderMatching;
-import static java.lang.String.format;
-import static org.hamcrest.CoreMatchers.containsString;
-import static org.hamcrest.MatcherAssert.assertThat;
+import static com.github.dakusui.scriptiveunit.utils.ReflectionUtils.allScriptsUnderMatching;
 
 
 @RunWith(JCUnit8.class)
@@ -44,7 +40,7 @@ public class VariationTest {
             .map((Function<String, Resource<ObjectNode>>) s -> new Resource.Base<ObjectNode>(s) {
               @Override
               protected ObjectNode readObjectFromStream(InputStream is) {
-                return (ObjectNode) Utils.readJsonNodeFromStream(is);
+                return (ObjectNode) JsonUtils.readJsonNodeFromStream(is);
               }
             })
             .collect(Collectors.toList())
@@ -127,27 +123,16 @@ public class VariationTest {
       Resource<ObjectNode> setUpBeforeAll,
       Resource<ObjectNode> testOracles
   ) throws Throwable {
-    try {
-      runTest(
-          _extends,
-          description,
-          factors,
-          constraints,
-          runnerType,
-          setUp,
-          setUpBeforeAll,
-          testOracles
-      );
-    } catch (RuntimeException e) {
-      assertThat(
-          e.getMessage(),
-          containsString(format(
-              "Undefined factor(s) [sortBy, order] are used by (constraint)[sortBy, order]",
-              Scriptable.class.getSimpleName(),
-              Simple.class.getCanonicalName()
-          )));
-      throw e;
-    }
+    runTest(
+        _extends,
+        description,
+        factors,
+        constraints,
+        runnerType,
+        setUp,
+        setUpBeforeAll,
+        testOracles
+    );
   }
 
   @Condition
