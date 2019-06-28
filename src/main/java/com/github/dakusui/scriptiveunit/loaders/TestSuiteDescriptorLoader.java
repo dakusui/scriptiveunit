@@ -18,14 +18,14 @@ public interface TestSuiteDescriptorLoader {
 
   TestSuiteDescriptor loadTestSuiteDescriptor(Session session);
 
-  abstract class Base<NODE, OBJECT extends NODE, ARRAY extends NODE, ATOM extends NODE> implements
+  abstract class Base<NODE, OBJECT extends NODE, ARRAY extends NODE> implements
       TestSuiteDescriptorLoader {
 
     private final Config config;
 
     protected final HostSpec<NODE, OBJECT, ARRAY, NODE> hostSpec = hostLanguage();
 
-    protected final ApplicationSpec applicationSpec = modelSpec();
+    final ApplicationSpec applicationSpec = modelSpec();
 
     public Base(Config config) {
       this.config = requireNonNull(config);
@@ -35,7 +35,6 @@ public interface TestSuiteDescriptorLoader {
       return this.config;
     }
 
-    // TEMPLATE
     protected ApplicationSpec.Dictionary readObjectNodeWithMerging(String resourceName) {
       ApplicationSpec.Dictionary child = preprocess(
           hostSpec.toApplicationDictionary(
@@ -48,19 +47,16 @@ public interface TestSuiteDescriptorLoader {
       return ApplicationSpec.deepMerge(child, work_);
     }
 
-    // TEMPLATE
     protected List<Preprocessor> getPreprocessors() {
       return applicationSpec.preprocessors();
     }
 
-    // TEMPLATE
     protected ApplicationSpec.Dictionary readScriptHandlingInheritance(String scriptResourceName) {
       ApplicationSpec.Dictionary work = readObjectNodeWithMerging(scriptResourceName);
       ApplicationSpec.Dictionary ret = applicationSpec.createDefaultValues();
       return applicationSpec.removeInheritanceDirective(ApplicationSpec.deepMerge(work, ret));
     }
 
-    // TEMPLATE
     protected ApplicationSpec.Dictionary preprocess(ApplicationSpec.Dictionary inputNode, List<Preprocessor> preprocessors) {
       for (Preprocessor each : preprocessors) {
         inputNode = ApplicationSpec.preprocess(inputNode, each);

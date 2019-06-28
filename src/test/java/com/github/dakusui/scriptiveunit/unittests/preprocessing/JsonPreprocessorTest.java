@@ -34,7 +34,7 @@ public class JsonPreprocessorTest {
     HostSpec.Json hostLanguage = new HostSpec.Json();
     assertEquals(
         "{\"a1\":{\"v1\":\"Hello\",\"v2\":[0,1,2]}}",
-        hostLanguage.translate(ApplicationSpec.preprocess(hostLanguage.toApplicationDictionary(targetObject), jsonPreprocessor)).toString()
+        hostLanguage.toHostObject(ApplicationSpec.preprocess(hostLanguage.toApplicationDictionary(targetObject), jsonPreprocessor)).toString()
     );
   }
 
@@ -60,7 +60,7 @@ public class JsonPreprocessorTest {
     HostSpec.Json hostLanguage = new HostSpec.Json();
     assertEquals(
         "{\"a1\":{\"c1\":100,\"c2\":{\"v1\":\"Hello\",\"v2\":200}}}",
-        hostLanguage.translate(ApplicationSpec.preprocess(hostLanguage.toApplicationDictionary(targetObject), jsonPreprocessor)).toString()
+        hostLanguage.toHostObject(ApplicationSpec.preprocess(hostLanguage.toApplicationDictionary(targetObject), jsonPreprocessor)).toString()
     );
   }
 

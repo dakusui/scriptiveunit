@@ -50,7 +50,7 @@ public class DryQapi extends Qapi {
 
     ObjectNode readObjectNodeDirectlyWithMerging(String script) {
       ObjectNode child = requireObjectNode(
-          hostSpec.translate(
+          hostSpec.toHostObject(
               preprocess(
                   hostSpec.toApplicationDictionary(
                       requireObjectNode(JsonUtils.readJsonNodeFromStream(toInputStream(script)))),
@@ -58,7 +58,7 @@ public class DryQapi extends Qapi {
       ObjectNode work = JsonNodeFactory.instance.objectNode();
       if (child.has(HostSpec.Json.EXTENDS_KEYWORD)) {
         JsonPreprocessorUtils.getParentsOf(child, HostSpec.Json.EXTENDS_KEYWORD)
-            .forEach(s -> UtJsonUtils.deepMerge(requireObjectNode(hostSpec.translate(readObjectNodeWithMerging(s))), work));
+            .forEach(s -> UtJsonUtils.deepMerge(requireObjectNode(hostSpec.toHostObject(readObjectNodeWithMerging(s))), work));
       }
       return UtJsonUtils.deepMerge(child, work);
     }

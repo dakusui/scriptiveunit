@@ -7,10 +7,15 @@ import com.github.dakusui.scriptiveunit.model.lang.ApplicationSpec;
 import com.github.dakusui.scriptiveunit.model.lang.HostSpec;
 import com.github.dakusui.scriptiveunit.model.session.Session;
 import org.codehaus.jackson.JsonNode;
+import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.node.ArrayNode;
 import org.codehaus.jackson.node.ObjectNode;
 
-public class JsonBasedTestSuiteDescriptorLoader extends TestSuiteDescriptorLoader.Base<JsonNode, ObjectNode, ArrayNode, JsonNode> {
+import java.io.IOException;
+
+import static com.github.dakusui.scriptiveunit.exceptions.ScriptiveUnitException.wrap;
+
+public class JsonBasedTestSuiteDescriptorLoader extends TestSuiteDescriptorLoader.Base<JsonNode, ObjectNode, ArrayNode> {
 
   @SuppressWarnings("unused")
   public JsonBasedTestSuiteDescriptorLoader(Config config) {
@@ -20,9 +25,9 @@ public class JsonBasedTestSuiteDescriptorLoader extends TestSuiteDescriptorLoade
   // TEMPLATE
   @Override
   public TestSuiteDescriptor loadTestSuiteDescriptor(Session session) {
-    return hostSpec.mapObjectNode(
-        hostSpec.translate(readScriptHandlingInheritance(session.getConfig().getScriptResourceName())),
-        JsonTestSuiteDescriptorBean.class)
+    return mapObjectNodeToJsonTestSuiteDescriptorBean(
+        new HostSpec.Json().toHostObject(readScriptHandlingInheritance(session.getConfig().getScriptResourceName()))
+    )
         .create(session);
   }
 
@@ -34,5 +39,15 @@ public class JsonBasedTestSuiteDescriptorLoader extends TestSuiteDescriptorLoade
   @Override
   protected HostSpec<JsonNode, ObjectNode, ArrayNode, JsonNode> hostLanguage() {
     return new HostSpec.Json();
+  }
+
+  private JsonTestSuiteDescriptorBean mapObjectNodeToJsonTestSuiteDescriptorBean(ObjectNode rootNode) {
+    try {
+      return new ObjectMapper().readValue(
+          rootNode,
+          JsonTestSuiteDescriptorBean.class);
+    } catch (IOException e) {
+      throw wrap(e);
+    }
   }
 }

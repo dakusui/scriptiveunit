@@ -28,7 +28,7 @@ public class ApplicationSpecTest extends TestBase {
     );
 
     ObjectNode objectNode = new HostSpec.Json()
-        .translate(ApplicationSpec.deepMerge(a, b));
+        .toHostObject(ApplicationSpec.deepMerge(a, b));
     System.out.println(objectNode);
     assertEquals(
         "{\"ab\":{\"bb\":\"bb\",\"aa\":\"aa\"},\"b\":\"b\",\"b0\":[\"b0\"],\"b1\":{\"b1\":\"b1\"},\"a\":\"a\",\"a0\":[\"a0\"],\"a1\":{\"a1\":\"a1\"}}",

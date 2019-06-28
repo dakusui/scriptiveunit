@@ -3,16 +3,13 @@ package com.github.dakusui.scriptiveunit.model.lang;
 import com.github.dakusui.scriptiveunit.loaders.json.JsonUtils;
 import com.github.dakusui.scriptiveunit.utils.ReflectionUtils;
 import org.codehaus.jackson.JsonNode;
-import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.node.ArrayNode;
 import org.codehaus.jackson.node.JsonNodeFactory;
 import org.codehaus.jackson.node.ObjectNode;
 
-import java.io.IOException;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
-import static com.github.dakusui.scriptiveunit.exceptions.ScriptiveUnitException.wrap;
 import static com.github.dakusui.scriptiveunit.loaders.json.JsonPreprocessorUtils.requireObjectNode;
 import static com.github.dakusui.scriptiveunit.model.lang.ApplicationSpec.isArray;
 import static com.github.dakusui.scriptiveunit.model.lang.ApplicationSpec.isAtom;
@@ -43,19 +40,17 @@ public interface HostSpec<NODE, OBJECT extends NODE, ARRAY extends NODE, ATOM ex
 
   OBJECT readObjectNode(String resourceName);
 
-  <V> V mapObjectNode(OBJECT rootNode, Class<V> valueType);
-
   void putToObject(OBJECT ret, String eachKey, NODE jsonNodeValue);
 
   void addToArray(ARRAY ret, NODE eachNode);
 
-  OBJECT translate(ApplicationSpec.Dictionary dictionary);
+  OBJECT toHostObject(ApplicationSpec.Dictionary dictionary);
 
   ApplicationSpec.Dictionary toApplicationDictionary(OBJECT object);
 
   interface Default<NODE, OBJECT extends NODE, ARRAY extends NODE, ATOM extends NODE> extends HostSpec<NODE, OBJECT, ARRAY, ATOM> {
     @Override
-    default OBJECT translate(ApplicationSpec.Dictionary dictionary) {
+    default OBJECT toHostObject(ApplicationSpec.Dictionary dictionary) {
       OBJECT ret = newObjectNode();
       dictionary.streamKeys()
           .forEach((String eachKey) -> {
@@ -91,7 +86,7 @@ public interface HostSpec<NODE, OBJECT extends NODE, ARRAY extends NODE, ATOM ex
       else if (isArray(modelNode))
         nodeValue = toHostArray((ApplicationSpec.Array) modelNode);
       else if (isDictionary(modelNode))
-        nodeValue = translate((ApplicationSpec.Dictionary) modelNode);
+        nodeValue = toHostObject((ApplicationSpec.Dictionary) modelNode);
       else
         throw new RuntimeException(format("Unsupported value was given: '%s'", modelNode));
       return nodeValue;
@@ -190,6 +185,12 @@ public interface HostSpec<NODE, OBJECT extends NODE, ARRAY extends NODE, ATOM ex
         return jsonNode.asBoolean();
       if (jsonNode.isInt())
         return jsonNode.asInt();
+      if (jsonNode.isLong())
+        return jsonNode.asLong();
+      if (jsonNode.isBigInteger())
+        return jsonNode.getBigIntegerValue();
+      if (jsonNode.isBigDecimal())
+        return jsonNode.getDecimalValue();
       if (jsonNode.isNumber()) {
         return jsonNode.getDecimalValue();
       }
@@ -199,16 +200,6 @@ public interface HostSpec<NODE, OBJECT extends NODE, ARRAY extends NODE, ATOM ex
     @Override
     public ObjectNode readObjectNode(String resourceName) {
       return requireObjectNode(JsonUtils.readJsonNodeFromStream(ReflectionUtils.openResourceAsStream(resourceName)));
-    }
-
-    public <V> V mapObjectNode(ObjectNode rootNode, Class<V> valueType) {
-      try {
-        return new ObjectMapper().readValue(
-            rootNode,
-            valueType);
-      } catch (IOException e) {
-        throw wrap(e);
-      }
     }
 
     @Override

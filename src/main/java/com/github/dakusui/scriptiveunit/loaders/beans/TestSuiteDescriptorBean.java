@@ -60,7 +60,6 @@ public abstract class TestSuiteDescriptorBean {
     this.tearDownAfterAllClause = tearDownAfterAllClause;
   }
 
-
   public TestSuiteDescriptor create(Session session) {
     try {
       return new TestSuiteDescriptor() {
