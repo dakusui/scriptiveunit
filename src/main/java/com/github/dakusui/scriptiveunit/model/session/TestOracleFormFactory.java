@@ -1,14 +1,14 @@
 package com.github.dakusui.scriptiveunit.model.session;
 
-import com.github.dakusui.actionunit.Action;
-import com.github.dakusui.actionunit.Context;
-import com.github.dakusui.actionunit.connectors.Sink;
+import com.github.dakusui.actionunit.core.Action;
+import com.github.dakusui.actionunit.core.Context;
 import com.github.dakusui.jcunit.core.tuples.Tuple;
 import com.github.dakusui.scriptiveunit.model.desc.testitem.TestItem;
 import com.github.dakusui.scriptiveunit.model.desc.testitem.TestOracle;
 import com.github.dakusui.scriptiveunit.model.form.Form;
 import com.github.dakusui.scriptiveunit.model.form.FormInvoker;
 import com.github.dakusui.scriptiveunit.model.form.handle.FormUtils;
+import com.github.dakusui.scriptiveunit.model.session.action.Sink;
 import org.hamcrest.BaseMatcher;
 import org.hamcrest.Description;
 import org.hamcrest.Matcher;
@@ -16,7 +16,7 @@ import org.hamcrest.Matcher;
 import java.util.function.Function;
 import java.util.function.Predicate;
 
-import static com.github.dakusui.actionunit.Actions.nop;
+import static com.github.dakusui.actionunit.core.ActionSupport.nop;
 import static com.github.dakusui.scriptiveunit.model.session.Stage.ExecutionLevel.ORACLE;
 import static com.github.dakusui.scriptiveunit.utils.StringUtils.iterableToString;
 import static java.lang.String.format;

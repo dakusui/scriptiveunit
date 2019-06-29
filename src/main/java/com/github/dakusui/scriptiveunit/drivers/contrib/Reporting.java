@@ -1,11 +1,13 @@
 package com.github.dakusui.scriptiveunit.drivers.contrib;
 
-import com.github.dakusui.actionunit.Action;
+import com.github.dakusui.actionunit.core.Action;
+import com.github.dakusui.actionunit.core.context.ContextConsumer;
 import com.github.dakusui.scriptiveunit.annotations.Scriptable;
-import com.github.dakusui.scriptiveunit.model.session.Stage;
 import com.github.dakusui.scriptiveunit.model.form.Form;
+import com.github.dakusui.scriptiveunit.model.session.Stage;
 
-import static com.github.dakusui.actionunit.Actions.simple;
+import static com.github.dakusui.actionunit.core.ActionSupport.leaf;
+import static com.github.dakusui.actionunit.core.ActionSupport.simple;
 import static com.github.dakusui.scriptiveunit.utils.StringUtils.prettify;
 
 public class Reporting {
@@ -24,8 +26,8 @@ public class Reporting {
   @SuppressWarnings("unused")
   @Scriptable
   public Form<Action> submit() {
-    return (Stage input) -> simple(prettify("submit", () ->
-        input.getReport()
-            .orElseThrow(RuntimeException::new).submit()));
+    return (Stage input) -> simple("submit",
+        (c) -> input.getReport()
+            .orElseThrow(RuntimeException::new).submit());
   }
 }

@@ -1,7 +1,8 @@
 package com.github.dakusui.scriptiveunit.drivers.actions;
 
-import com.github.dakusui.actionunit.Action;
-import com.github.dakusui.actionunit.Actions;
+import com.github.dakusui.actionunit.core.Action;
+import com.github.dakusui.actionunit.core.ActionSupport;
+import com.github.dakusui.actionunit.core.context.ContextConsumer;
 import com.github.dakusui.scriptiveunit.annotations.Doc;
 import com.github.dakusui.scriptiveunit.annotations.Scriptable;
 import com.github.dakusui.scriptiveunit.model.form.Form;
@@ -14,8 +15,8 @@ import org.slf4j.LoggerFactory;
 import java.util.Objects;
 import java.util.function.Consumer;
 
-import static com.github.dakusui.actionunit.Actions.simple;
-import static com.github.dakusui.scriptiveunit.utils.StringUtils.prettify;
+import static com.github.dakusui.actionunit.core.ActionSupport.leaf;
+import static com.github.dakusui.actionunit.core.ActionSupport.simple;
 import static java.util.Objects.requireNonNull;
 import static java.util.stream.Collectors.toList;
 
@@ -32,13 +33,13 @@ public class Basic {
   @SuppressWarnings("unused")
   @Scriptable
   public Form<Action> nop() {
-    return input -> Actions.nop();
+    return input -> ActionSupport.nop();
   }
 
   @SuppressWarnings("unused")
   @Scriptable
   public final Form<Action> sequential(FormList<Action> actions) {
-    return (Stage input) -> Actions.sequential(
+    return (Stage input) -> ActionSupport.sequential(
         actions.stream()
             .map(each -> each.apply(input))
             .collect(toList())
@@ -48,7 +49,7 @@ public class Basic {
   @SuppressWarnings("unused")
   @Scriptable
   public final Form<Action> concurrent(FormList<Action> actions) {
-    return (Stage input) -> Actions.concurrent(
+    return (Stage input) -> ActionSupport.parallel(
         actions.stream()
             .map(each -> each.apply(input))
             .collect(toList())
@@ -58,7 +59,7 @@ public class Basic {
   @SuppressWarnings("unused")
   @Scriptable
   public Form<Action> fail(Form<String> in) {
-    return input -> simple(() -> {
+    return input -> simple("fail", (c) -> {
       throw new RuntimeException(in.apply(input));
     });
   }
@@ -66,11 +67,11 @@ public class Basic {
   @SuppressWarnings("unused")
   @Scriptable
   public Form<Action> print(Form<?> in) {
-    return input -> simple(prettify(
-        "print",
-        () -> {
+    return input -> leaf(
+        ContextConsumer.of(() -> "print", c -> {
           String s = in.apply(input).toString();
           System.out.println(s);
+
         })
     );
   }
@@ -91,19 +92,19 @@ public class Basic {
   @SuppressWarnings("unused")
   @Scriptable
   public Form<Action> dumb(@Doc("A value to be printed") Form<?> in) {
-    return (Stage input) -> simple(prettify("dumb",
+    return (Stage input) -> simple(
+        "dumb",
         // Even if it doesn't go anywhere, we must do 'apply'.
-        (Runnable) () -> in.apply(input))
-    );
+        (c) -> in.apply(input));
   }
 
   @SuppressWarnings("unused")
   @Scriptable
   public final Form<Action> tag(Form<String> string) {
-    return input -> simple(prettify(
+    return input -> simple(
         Objects.toString(string.apply(input)),
-        () -> {
-        }));
+        (c) -> {
+        });
   }
 
   @SuppressWarnings("unused")
@@ -111,7 +112,7 @@ public class Basic {
   public final Form<Boolean> perform(FormList<Action> actions) {
     return input -> {
       ActionUtils.performActionWithLogging(
-          Actions.sequential(
+          ActionSupport.sequential(
               actions.stream()
                   .map(actionFunc -> actionFunc.apply(input))
                   .collect(toList()))
