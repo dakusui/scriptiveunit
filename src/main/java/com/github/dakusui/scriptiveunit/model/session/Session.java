@@ -15,7 +15,7 @@ import com.github.dakusui.scriptiveunit.model.form.handle.FormUtils;
 import com.github.dakusui.scriptiveunit.model.session.action.Pipe;
 import com.github.dakusui.scriptiveunit.model.session.action.Sink;
 import com.github.dakusui.scriptiveunit.model.session.action.Source;
-import com.github.dakusui.scriptiveunit.model.session.action.TestActionBuilder;
+import com.github.dakusui.scriptiveunit.utils.ActionUtils;
 import com.github.dakusui.scriptiveunit.utils.TupleUtils;
 import org.hamcrest.Matcher;
 
@@ -124,7 +124,7 @@ public interface Session {
           definition.describeTestCase(testCaseTuple),
           sequential(
               createBefore(testItem, definition, report),
-              attempt(TestActionBuilder.<Tuple, TestIO>test()
+              attempt(ActionUtils.<Tuple, TestIO>test()
                   .given(createGiven(testItem, report, definition.givenFactory()))
                   .when(createWhen(testItem, report, definition.whenFactory()))
                   .then(createThen(testItem, report, definition.thenFactory())).build())

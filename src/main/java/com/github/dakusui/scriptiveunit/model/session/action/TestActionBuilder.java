@@ -1,22 +1,19 @@
 package com.github.dakusui.scriptiveunit.model.session.action;
 
 import com.github.dakusui.actionunit.core.Action;
-import com.github.dakusui.actionunit.core.Context;
-import com.github.dakusui.actionunit.core.context.ContextConsumer;
 
 import static com.github.dakusui.actionunit.core.ActionSupport.simple;
 
 public class TestActionBuilder<I, O> {
 
-  public static  <I, O> TestActionBuilder<I, O> test() {
-    return new TestActionBuilder<>();
-  }
+  private final String name;
 
   private Source<I>  given;
   private Pipe<I, O> when;
   private Sink<O>    then;
 
-  private TestActionBuilder() {
+  public TestActionBuilder(String name) {
+    this.name = name;
   }
 
   public TestActionBuilder<I, O> given(Source<I> source) {
@@ -35,11 +32,9 @@ public class TestActionBuilder<I, O> {
   }
 
   public Action build() {
-    return simple("", new ContextConsumer() {
-      @Override
-      public void accept(Context context) {
-        then.accept(when.apply(given.apply(context), context), context);
-      }
-    });
+    return simple(
+        name,
+        context -> then.accept(when.apply(given.apply(context), context), context)
+    );
   }
 }
