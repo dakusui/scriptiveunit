@@ -59,7 +59,7 @@ public class Basic {
   @SuppressWarnings("unused")
   @Scriptable
   public Form<Action> fail(Form<String> in) {
-    return input -> simple("", (c) -> {
+    return input -> simple("fail", (c) -> {
       throw new RuntimeException(in.apply(input));
     });
   }
