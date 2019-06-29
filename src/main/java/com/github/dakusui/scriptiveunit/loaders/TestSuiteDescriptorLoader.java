@@ -15,6 +15,12 @@ import static com.github.dakusui.scriptiveunit.model.lang.ApplicationSpec.dict;
 import static java.util.Objects.requireNonNull;
 
 public interface TestSuiteDescriptorLoader {
+  static TestSuiteDescriptorLoader createTestSuiteDescriptorLoader(
+      Class<? extends TestSuiteDescriptorLoader> loaderClass,
+      Config config) {
+    return createInstance(loaderClass, config);
+  }
+
   Config getConfig();
 
   TestSuiteDescriptor loadTestSuiteDescriptor(Session session);

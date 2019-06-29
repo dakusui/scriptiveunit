@@ -185,7 +185,7 @@ import static java.util.stream.Collectors.toList;
  *
  * //</pre>
  *
- * @see ScriptiveUnit.Mode
+ * @see RunningMode
  */
 public final class GroupedTestItemRunner extends ParentRunner<Action> {
   static Iterable<Runner> createRunnersGroupingByTestOracle(final Session session) {
