@@ -1,9 +1,9 @@
 package com.github.dakusui.scriptiveunit.utils;
 
-import com.github.dakusui.actionunit.Context;
-import com.github.dakusui.actionunit.connectors.Pipe;
-import com.github.dakusui.actionunit.connectors.Sink;
-import com.github.dakusui.actionunit.connectors.Source;
+import com.github.dakusui.actionunit.core.Context;
+import com.github.dakusui.scriptiveunit.model.session.Pipe;
+import com.github.dakusui.scriptiveunit.model.session.Sink;
+import com.github.dakusui.scriptiveunit.model.session.Source;
 import com.google.common.collect.Iterables;
 
 import java.util.Map;
@@ -20,6 +20,7 @@ import static java.util.Objects.requireNonNull;
 
 public enum StringUtils {
   ;
+
   public static String iterableToString(Iterable<?> i) {
     if (Iterables.size(i) < 2) {
       return i.toString();
@@ -111,8 +112,8 @@ public enum StringUtils {
     return new Sink<T>() {
 
       @Override
-      public void apply(T t, Context context) {
-        sink.apply(t, context);
+      public void accept(T t, Context context) {
+        sink.accept(t, context);
       }
 
       @Override
