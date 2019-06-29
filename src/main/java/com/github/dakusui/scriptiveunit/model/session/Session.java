@@ -2,8 +2,6 @@ package com.github.dakusui.scriptiveunit.model.session;
 
 import com.github.dakusui.actionunit.core.Action;
 import com.github.dakusui.actionunit.core.ActionSupport;
-import com.github.dakusui.actionunit.core.Context;
-import com.github.dakusui.actionunit.core.context.ContextConsumer;
 import com.github.dakusui.jcunit.core.tuples.Tuple;
 import com.github.dakusui.jcunit8.factorspace.Constraint;
 import com.github.dakusui.scriptiveunit.core.Config;
@@ -14,12 +12,20 @@ import com.github.dakusui.scriptiveunit.model.desc.testitem.IndexedTestCase;
 import com.github.dakusui.scriptiveunit.model.desc.testitem.TestItem;
 import com.github.dakusui.scriptiveunit.model.desc.testitem.TestOracle;
 import com.github.dakusui.scriptiveunit.model.form.handle.FormUtils;
+import com.github.dakusui.scriptiveunit.model.session.action.Pipe;
+import com.github.dakusui.scriptiveunit.model.session.action.Sink;
+import com.github.dakusui.scriptiveunit.model.session.action.Source;
+import com.github.dakusui.scriptiveunit.model.session.action.TestActionBuilder;
 import com.github.dakusui.scriptiveunit.utils.TupleUtils;
 import org.hamcrest.Matcher;
 
 import java.util.function.Function;
 
-import static com.github.dakusui.actionunit.core.ActionSupport.*;
+import static com.github.dakusui.actionunit.core.ActionSupport.attempt;
+import static com.github.dakusui.actionunit.core.ActionSupport.leaf;
+import static com.github.dakusui.actionunit.core.ActionSupport.named;
+import static com.github.dakusui.actionunit.core.ActionSupport.nop;
+import static com.github.dakusui.actionunit.core.ActionSupport.sequential;
 import static com.github.dakusui.scriptiveunit.model.session.Stage.ExecutionLevel.FIXTURE;
 import static com.github.dakusui.scriptiveunit.model.session.Stage.ExecutionLevel.SUITE;
 import static java.lang.String.format;
@@ -50,9 +56,9 @@ public interface Session {
   }
 
   class Impl implements Session {
-    private final Config config;
+    private final Config                     config;
     private final Function<TestItem, Report> reportCreator;
-    private final TestSuiteDescriptor testSuiteDescriptor;
+    private final TestSuiteDescriptor        testSuiteDescriptor;
 
     @SuppressWarnings("WeakerAccess")
     protected Impl(Config config, TestSuiteDescriptorLoader testSuiteDescriptorLoader) {
@@ -118,7 +124,7 @@ public interface Session {
           definition.describeTestCase(testCaseTuple),
           sequential(
               createBefore(testItem, definition, report),
-              attempt(this.<Tuple, TestIO>test()
+              attempt(TestActionBuilder.<Tuple, TestIO>test()
                   .given(createGiven(testItem, report, definition.givenFactory()))
                   .when(createWhen(testItem, report, definition.whenFactory()))
                   .then(createThen(testItem, report, definition.thenFactory())).build())
@@ -126,43 +132,6 @@ public interface Session {
                       AssertionError.class,
                       leaf(c -> createErrorHandler(testItem, definition, report).accept(c.thrownException(), c)))
                   .ensure(createAfter(testItem, definition, report))));
-    }
-
-    <I, O> TestActionBuilder<I, O> test() {
-      return new TestActionBuilder<>();
-    }
-
-    static class TestActionBuilder<I, O> {
-      private Sink<O> then;
-      private Source<I> given;
-      private Pipe<I, O> when;
-
-      TestActionBuilder() {
-      }
-
-      TestActionBuilder<I, O> given(Source<I> source) {
-        this.given = source;
-        return this;
-      }
-
-      TestActionBuilder<I, O> when(Pipe<I, O> pipe) {
-        this.when = pipe;
-        return this;
-      }
-
-      TestActionBuilder<I, O> then(Sink<O> sink) {
-        this.then = sink;
-        return this;
-      }
-
-      Action build() {
-        return simple("", new ContextConsumer() {
-          @Override
-          public void accept(Context context) {
-
-          }
-        });
-      }
     }
 
     @Override

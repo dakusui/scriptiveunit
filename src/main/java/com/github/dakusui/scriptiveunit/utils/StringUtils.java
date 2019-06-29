@@ -1,9 +1,9 @@
 package com.github.dakusui.scriptiveunit.utils;
 
 import com.github.dakusui.actionunit.core.Context;
-import com.github.dakusui.scriptiveunit.model.session.Pipe;
-import com.github.dakusui.scriptiveunit.model.session.Sink;
-import com.github.dakusui.scriptiveunit.model.session.Source;
+import com.github.dakusui.scriptiveunit.model.session.action.Pipe;
+import com.github.dakusui.scriptiveunit.model.session.action.Sink;
+import com.github.dakusui.scriptiveunit.model.session.action.Source;
 import com.google.common.collect.Iterables;
 
 import java.util.Map;

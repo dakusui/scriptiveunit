@@ -1,4 +1,4 @@
-package com.github.dakusui.scriptiveunit.model.session;
+package com.github.dakusui.scriptiveunit.model.session.action;
 
 import java.util.function.Function;
 

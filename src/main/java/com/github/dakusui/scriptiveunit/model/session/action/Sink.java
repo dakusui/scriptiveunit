@@ -1,4 +1,4 @@
-package com.github.dakusui.scriptiveunit.model.session;
+package com.github.dakusui.scriptiveunit.model.session.action;
 
 import com.github.dakusui.actionunit.core.Context;
 

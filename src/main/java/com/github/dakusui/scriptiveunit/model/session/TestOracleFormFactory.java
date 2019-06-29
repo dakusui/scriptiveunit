@@ -8,6 +8,7 @@ import com.github.dakusui.scriptiveunit.model.desc.testitem.TestOracle;
 import com.github.dakusui.scriptiveunit.model.form.Form;
 import com.github.dakusui.scriptiveunit.model.form.FormInvoker;
 import com.github.dakusui.scriptiveunit.model.form.handle.FormUtils;
+import com.github.dakusui.scriptiveunit.model.session.action.Sink;
 import org.hamcrest.BaseMatcher;
 import org.hamcrest.Description;
 import org.hamcrest.Matcher;
