@@ -1,7 +1,6 @@
 package com.github.dakusui.scriptiveunit.runners;
 
-import com.github.dakusui.actionunit.Action;
-import com.github.dakusui.actionunit.Actions;
+import com.github.dakusui.actionunit.core.Action;
 import com.github.dakusui.jcunit.core.tuples.Tuple;
 import com.github.dakusui.jcunit8.factorspace.Parameter;
 import com.github.dakusui.jcunit8.testsuite.TestCase;
@@ -10,6 +9,7 @@ import com.github.dakusui.scriptiveunit.model.desc.TestSuiteDescriptor;
 import com.github.dakusui.scriptiveunit.model.desc.testitem.IndexedTestCase;
 import com.github.dakusui.scriptiveunit.model.desc.testitem.TestOracle;
 import com.github.dakusui.scriptiveunit.model.session.Session;
+import com.github.dakusui.scriptiveunit.utils.ActionUtils;
 import org.junit.internal.runners.statements.RunAfters;
 import org.junit.internal.runners.statements.RunBefores;
 import org.junit.runner.Description;
@@ -31,12 +31,14 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
-import static com.github.dakusui.actionunit.Actions.attempt;
-import static com.github.dakusui.actionunit.Actions.nop;
-import static com.github.dakusui.scriptiveunit.utils.TestItemUtils.templateTestOracleDescription;
+import static com.github.dakusui.actionunit.core.ActionSupport.attempt;
+import static com.github.dakusui.actionunit.core.ActionSupport.named;
+import static com.github.dakusui.actionunit.core.ActionSupport.nop;
+import static com.github.dakusui.actionunit.core.ActionSupport.sequential;
 import static com.github.dakusui.scriptiveunit.runners.GroupedTestItemRunner.Utils.createMainActionsForTestCase;
 import static com.github.dakusui.scriptiveunit.runners.GroupedTestItemRunner.Utils.createMainActionsForTestFixture;
 import static com.github.dakusui.scriptiveunit.utils.ActionUtils.performActionWithLogging;
+import static com.github.dakusui.scriptiveunit.utils.TestItemUtils.templateTestOracleDescription;
 import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
 import static java.util.stream.Collectors.toCollection;
@@ -44,35 +46,35 @@ import static java.util.stream.Collectors.toList;
 
 /**
  * = Test Case structure in scriptiveunit
- *
+ * <p>
  * A fixture is a subtuple of a test case, where attributes involved in a setUp procedure
  * are projected from the test case.
- *
+ * <p>
  * For each of running mode, the suite level set up is executed always before all
  * tests.
  * Also the suite level tear down is executed always after all tests.
- *
+ * <p>
  * Three running modes:
- *
+ * <p>
  * - ByTestOracle
  * - ByTestCase
  * - ByTestFixture
- *
+ * <p>
  * == Execution Models of Running Modes
  * In this section, we assume that each test case has two attributes ``F`` and ``T``.
  * ``F`` is used in setUp procedure while ``T`` is not.
  * Also we have three test cases ``TestCase_1``, ``TestCase_2``, and ``TestCase_3``,
  * each of which has following values.
- *
+ * <p>
  * |===
  * |           |``F``|``T``
  * |TestCase_1 |x    |100
  * |TestCase_2 |x    |200
  * |TestCase_3 |Y    |300
  * |===
- *
+ * <p>
  * === ByTestOracle
- *
+ * <p>
  * //<pre>
  * [ditaa]
  * ----
@@ -96,10 +98,10 @@ import static java.util.stream.Collectors.toList;
  * ----
  *
  * //</pre>
- *
+ * <p>
  * === ByTestCase
  * A test runner is created for a ''
- *
+ * <p>
  * //<pre>
  *
  * [ditaa]
@@ -124,10 +126,10 @@ import static java.util.stream.Collectors.toList;
  * ----
  *
  * //</pre>
- *
+ * <p>
  * === ByTestFixture
  * GroupedTestItemRunner
- *
+ * <p>
  * //<pre>
  *
  * [ditaa]
@@ -155,10 +157,10 @@ import static java.util.stream.Collectors.toList;
  * ----
  *
  * //</pre>
- *
+ * <p>
  * === ByTestFixtureOrderedByTestOracle
- *
- *
+ * <p>
+ * <p>
  * //<pre>
  *
  * [ditaa]
@@ -363,7 +365,7 @@ public final class GroupedTestItemRunner extends ParentRunner<Action> {
   }
 
   private String testName(Action action) {
-    return format("%s[%d]", action.toString(), this.groupId);
+    return format("%s[%d]", ActionUtils.formatAction(action), this.groupId);
   }
 
   private static Statement actionInvoker(Action action) {
@@ -461,16 +463,16 @@ public final class GroupedTestItemRunner extends ParentRunner<Action> {
             @Override
             public Action apply(IndexedTestCase input) {
               try {
-                return Actions.sequential(
+                return named(
                     format("%03d: %s", i, templateTestOracleDescription(input.get(), testSuiteDescription, testOracle.getDescription())),
-                    session.createSetUpActionForFixture(testSuiteDescriptor, input.get()),
-                    attempt(
-                        session.createMainAction(
-                            testOracle,
-                            input))
-                        .ensure(
-                            session.createTearDownActionForFixture(testSuiteDescriptor, input.get()))
-                        .build());
+                    sequential(
+                        session.createSetUpActionForFixture(testSuiteDescriptor, input.get()),
+                        attempt(
+                            session.createMainAction(
+                                testOracle,
+                                input))
+                            .ensure(
+                                session.createTearDownActionForFixture(testSuiteDescriptor, input.get()))));
               } finally {
                 i++;
               }

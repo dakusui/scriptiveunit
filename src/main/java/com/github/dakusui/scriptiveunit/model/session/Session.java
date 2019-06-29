@@ -1,10 +1,7 @@
 package com.github.dakusui.scriptiveunit.model.session;
 
-import com.github.dakusui.actionunit.Action;
-import com.github.dakusui.actionunit.Actions;
-import com.github.dakusui.actionunit.connectors.Pipe;
-import com.github.dakusui.actionunit.connectors.Sink;
-import com.github.dakusui.actionunit.connectors.Source;
+import com.github.dakusui.actionunit.core.Action;
+import com.github.dakusui.actionunit.core.ActionSupport;
 import com.github.dakusui.jcunit.core.tuples.Tuple;
 import com.github.dakusui.jcunit8.factorspace.Constraint;
 import com.github.dakusui.scriptiveunit.core.Config;
@@ -15,14 +12,20 @@ import com.github.dakusui.scriptiveunit.model.desc.testitem.IndexedTestCase;
 import com.github.dakusui.scriptiveunit.model.desc.testitem.TestItem;
 import com.github.dakusui.scriptiveunit.model.desc.testitem.TestOracle;
 import com.github.dakusui.scriptiveunit.model.form.handle.FormUtils;
+import com.github.dakusui.scriptiveunit.model.session.action.Pipe;
+import com.github.dakusui.scriptiveunit.model.session.action.Sink;
+import com.github.dakusui.scriptiveunit.model.session.action.Source;
+import com.github.dakusui.scriptiveunit.utils.ActionUtils;
 import com.github.dakusui.scriptiveunit.utils.TupleUtils;
 import org.hamcrest.Matcher;
 
 import java.util.function.Function;
 
-import static com.github.dakusui.actionunit.Actions.attempt;
-import static com.github.dakusui.actionunit.Actions.nop;
-import static com.github.dakusui.actionunit.Actions.sequential;
+import static com.github.dakusui.actionunit.core.ActionSupport.attempt;
+import static com.github.dakusui.actionunit.core.ActionSupport.leaf;
+import static com.github.dakusui.actionunit.core.ActionSupport.named;
+import static com.github.dakusui.actionunit.core.ActionSupport.nop;
+import static com.github.dakusui.actionunit.core.ActionSupport.sequential;
 import static com.github.dakusui.scriptiveunit.model.session.Stage.ExecutionLevel.FIXTURE;
 import static com.github.dakusui.scriptiveunit.model.session.Stage.ExecutionLevel.SUITE;
 import static java.lang.String.format;
@@ -53,9 +56,9 @@ public interface Session {
   }
 
   class Impl implements Session {
-    private final Config config;
+    private final Config                     config;
     private final Function<TestItem, Report> reportCreator;
-    private final TestSuiteDescriptor testSuiteDescriptor;
+    private final TestSuiteDescriptor        testSuiteDescriptor;
 
     @SuppressWarnings("WeakerAccess")
     protected Impl(Config config, TestSuiteDescriptorLoader testSuiteDescriptorLoader) {
@@ -88,7 +91,7 @@ public interface Session {
 
     @Override
     public Action createSetUpBeforeAllAction(Tuple commonFixtureTuple) {
-      return Actions.named(
+      return ActionSupport.named(
           format("Suite level set up: %s", testSuiteDescriptor.getDescription()),
           testSuiteDescriptor
               .setUpBeforeAll()
@@ -99,7 +102,7 @@ public interface Session {
 
     @Override
     public Action createSetUpActionForFixture(TestSuiteDescriptor testSuiteDescriptor, Tuple fixtureTuple) {
-      return Actions.named(
+      return ActionSupport.named(
           "Fixture set up",
           testSuiteDescriptor
               .setUp()
@@ -117,24 +120,23 @@ public interface Session {
       ));
       Tuple testCaseTuple = testItem.getTestCaseTuple();
       Report report = createReport(testItem);
-      return sequential(
+      return named(
           definition.describeTestCase(testCaseTuple),
-          createBefore(testItem, definition, report),
-          attempt(Actions.<Tuple, TestIO>test()
-              .given(createGiven(testItem, report, definition.givenFactory()))
-              .when(createWhen(testItem, report, definition.whenFactory()))
-              .then(createThen(testItem, report, definition.thenFactory())).build())
-              .recover(
-                  AssertionError.class,
-                  createErrorHandler(testItem, definition, report))
-              .ensure(createAfter(testItem, definition, report))
-              .build()
-      );
+          sequential(
+              createBefore(testItem, definition, report),
+              attempt(ActionUtils.<Tuple, TestIO>test()
+                  .given(createGiven(testItem, report, definition.givenFactory()))
+                  .when(createWhen(testItem, report, definition.whenFactory()))
+                  .then(createThen(testItem, report, definition.thenFactory())).build())
+                  .recover(
+                      AssertionError.class,
+                      leaf(c -> createErrorHandler(testItem, definition, report).accept(c.thrownException(), c)))
+                  .ensure(createAfter(testItem, definition, report))));
     }
 
     @Override
     public Action createTearDownActionForFixture(TestSuiteDescriptor testSuiteDescriptor, Tuple fixtureTuple) {
-      return Actions.named(
+      return ActionSupport.named(
           "Fixture tear down",
           testSuiteDescriptor
               .tearDown()
@@ -145,7 +147,7 @@ public interface Session {
 
     @Override
     public Action createTearDownAfterAllAction(Tuple commonFixtureTuple) {
-      return Actions.named(
+      return ActionSupport.named(
           format("Suite level tear down: %s", testSuiteDescriptor.getDescription()),
           testSuiteDescriptor
               .tearDownAfterAll()

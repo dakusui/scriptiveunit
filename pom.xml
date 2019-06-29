@@ -4,7 +4,7 @@
     <artifactId>scriptiveunit</artifactId>
     <packaging>jar</packaging>
     <version>0.4.0-SNAPSHOT</version>
-    <description>Action based junit test runner library</description>
+    <description>A framework for building your own testing language</description>
     <name>scriptiveunit</name>
     <url>https://github.com/dakusui/scriptunit</url>
 
@@ -54,7 +54,7 @@
         <dependency>
             <groupId>com.github.dakusui</groupId>
             <artifactId>actionunit</artifactId>
-            <version>2.1.2</version>
+            <version>5.2.3</version>
         </dependency>
         <dependency>
             <groupId>com.github.dakusui</groupId>

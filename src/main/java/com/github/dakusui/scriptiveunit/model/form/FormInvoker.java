@@ -1,6 +1,5 @@
 package com.github.dakusui.scriptiveunit.model.form;
 
-import com.github.dakusui.actionunit.visitors.ActionPrinter;
 import com.github.dakusui.jcunit.core.utils.StringUtils;
 import com.google.common.collect.Lists;
 
@@ -25,7 +24,7 @@ public interface FormInvoker {
       return this.writer.asString();
     }
 
-    public static class Writer implements ActionPrinter.Writer, Iterable<String> {
+    public static class Writer implements com.github.dakusui.actionunit.io.Writer, Iterable<String> {
       List<String> output = Lists.newArrayList();
 
       Writer() {

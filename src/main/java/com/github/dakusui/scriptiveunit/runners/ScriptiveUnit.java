@@ -1,6 +1,6 @@
 package com.github.dakusui.scriptiveunit.runners;
 
-import com.github.dakusui.actionunit.Action;
+import com.github.dakusui.actionunit.core.Action;
 import com.github.dakusui.jcunit.core.tuples.Tuple;
 import com.github.dakusui.scriptiveunit.annotations.Load;
 import com.github.dakusui.scriptiveunit.core.Config;
@@ -27,7 +27,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Stream;
 
-import static com.github.dakusui.actionunit.Utils.createTestClassMock;
+import static com.github.dakusui.jcunit8.core.Utils.createTestClassMock;
 import static com.github.dakusui.scriptiveunit.exceptions.ResourceException.functionNotFound;
 import static com.github.dakusui.scriptiveunit.utils.ActionUtils.performActionWithLogging;
 import static com.google.common.collect.Lists.newLinkedList;
