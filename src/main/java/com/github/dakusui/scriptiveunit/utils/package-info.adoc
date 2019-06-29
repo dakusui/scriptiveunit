@@ -1,3 +1,1 @@
-Hello, world.
-
-This is {@code ScriptiveUnit} package.
+A package to host various utility classes of the *ScriptiveUnit*.
