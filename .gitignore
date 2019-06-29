@@ -6,4 +6,4 @@
 *.log
 diag-*.png
 .asciidoctor/
-
+package-info.java
