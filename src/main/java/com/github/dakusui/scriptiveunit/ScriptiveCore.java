@@ -1,8 +1,8 @@
 package com.github.dakusui.scriptiveunit;
 
-import com.github.dakusui.scriptiveunit.utils.ScriptiveSuiteSet;
-import com.github.dakusui.scriptiveunit.utils.ScriptiveSuiteSet.SuiteScripts;
-import com.github.dakusui.scriptiveunit.utils.ScriptiveSuiteSet.SuiteScripts.Streamer;
+import com.github.dakusui.scriptiveunit.runners.ScriptiveSuiteSet;
+import com.github.dakusui.scriptiveunit.runners.ScriptiveSuiteSet.SuiteScripts;
+import com.github.dakusui.scriptiveunit.runners.ScriptiveSuiteSet.SuiteScripts.Streamer;
 import com.github.dakusui.scriptiveunit.core.Config;
 import com.github.dakusui.scriptiveunit.core.Description;
 import com.github.dakusui.scriptiveunit.exceptions.ScriptiveUnitException;
