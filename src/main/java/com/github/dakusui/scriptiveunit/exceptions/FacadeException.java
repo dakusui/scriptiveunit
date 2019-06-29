@@ -1,7 +1,7 @@
 package com.github.dakusui.scriptiveunit.exceptions;
 
-import com.github.dakusui.scriptiveunit.utils.ScriptiveSuiteSet;
-import com.github.dakusui.scriptiveunit.utils.ScriptiveSuiteSet.SuiteScripts;
+import com.github.dakusui.scriptiveunit.runners.ScriptiveSuiteSet;
+import com.github.dakusui.scriptiveunit.runners.ScriptiveSuiteSet.SuiteScripts;
 import com.github.dakusui.scriptiveunit.runners.ScriptiveUnit;
 import org.junit.runner.RunWith;
 
