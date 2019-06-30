@@ -66,7 +66,7 @@ public interface Session {
       this.reportCreator = testItem ->
           Report.create(
               testItem,
-              getConfig().getScriptResourceName(),
+              getConfig().getScriptResourceName().orElse("(not specified)"),
               getConfig().getReportingConfig().reportBaseDirectory,
               getConfig().getReportingConfig().reportFileName);
       this.testSuiteDescriptor = testSuiteDescriptorLoader.loadTestSuiteDescriptor(this);
@@ -184,8 +184,11 @@ public interface Session {
 
     Sink<TestIO> createThen(TestItem testItem, Report report, Function<Stage, Function<Object, Matcher<Stage>>> matcherFunction) {
       return (testIO, context) -> {
-        Stage thenStage = createOracleVerificationStage(testItem, testIO.getOutput(), report);
-        assertThat(thenStage, matcherFunction.apply(thenStage).apply(testIO.getOutput()));
+        Stage thenStage = Impl.this.createOracleVerificationStage(testItem, testIO.getOutput(), report);
+        assertThat(
+            String.format("Failed to verify with %s", testIO.getInput()),
+            thenStage,
+            matcherFunction.apply(thenStage).apply(testIO.getOutput()));
       };
     }
 

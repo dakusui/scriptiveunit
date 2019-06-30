@@ -49,10 +49,11 @@ public class ScriptiveUnit extends Parameterized {
    * @param config A config object.
    */
   public ScriptiveUnit(Class<?> klass, Config config) throws Throwable {
-    this(klass, TestSuiteDescriptorLoader.createTestSuiteDescriptorLoader(ReflectionUtils.getAnnotationWithDefault(
-        config.getDriverObject().getClass(),
-        Load.DEFAULT_INSTANCE
-    ).with(), config));
+    this(klass, TestSuiteDescriptorLoader.createTestSuiteDescriptorLoader(
+        ReflectionUtils.getAnnotationWithDefault(
+            config.getDriverObject().getClass(),
+            Load.DEFAULT_INSTANCE).with(),
+        config));
   }
 
   public ScriptiveUnit(Class<?> klass, TestSuiteDescriptorLoader loader) throws Throwable {
@@ -68,7 +69,7 @@ public class ScriptiveUnit extends Parameterized {
 
   @Override
   public String getName() {
-    return this.session.getConfig().getScriptResourceName()
+    return this.session.getConfig().getScriptResourceName().orElse(getTestClass().getName())
         .replaceAll(".+/", "")
         .replaceAll("\\.[^.]*$", "")
         + ":" + getTestSuiteDescriptor().getDescription();
@@ -79,7 +80,6 @@ public class ScriptiveUnit extends Parameterized {
   public List<Runner> getChildren() {
     return this.runners;
   }
-
 
   @Override
   protected TestClass createTestClass(Class<?> testClass) {

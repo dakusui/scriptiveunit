@@ -121,4 +121,10 @@ public class Core {
   public Form<Object> systemProperty(Form<String> attrName) {
     return input -> System.getProperties().getProperty(requireNonNull(attrName.apply(input)));
   }
+
+  @SuppressWarnings("unchecked")
+  @Scriptable
+  public <T> Form<T> output() {
+    return input -> (T) input.response().orElseThrow(RuntimeException::new);
+  }
 }

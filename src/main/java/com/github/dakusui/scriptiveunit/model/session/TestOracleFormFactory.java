@@ -9,6 +9,7 @@ import com.github.dakusui.scriptiveunit.model.form.Form;
 import com.github.dakusui.scriptiveunit.model.form.FormInvoker;
 import com.github.dakusui.scriptiveunit.model.form.handle.FormUtils;
 import com.github.dakusui.scriptiveunit.model.session.action.Sink;
+import com.github.dakusui.scriptiveunit.model.statement.Statement;
 import org.hamcrest.BaseMatcher;
 import org.hamcrest.Description;
 import org.hamcrest.Matcher;
@@ -67,8 +68,6 @@ public interface TestOracleFormFactory {
         return stage -> out -> new BaseMatcher<Stage>() {
           Function<FormInvoker, Predicate<Stage>> p = fi -> s -> (Boolean) requireNonNull(
               FormUtils.INSTANCE.toForm(definition.then()).apply(s));
-          Function<FormInvoker, Function<Stage, String>> c = fi -> s -> fi.asString();
-
           @Override
           public boolean matches(Object item) {
             return p.apply(formInvoker).test(stage);
@@ -76,7 +75,9 @@ public interface TestOracleFormFactory {
 
           @Override
           public void describeTo(Description description) {
-            description.appendText(format("output should have made true the criterion defined in stage:%s", stage.getExecutionLevel()));
+            description.appendText(format("output:'%s' should have made true the criterion:'%s'",
+                out,
+                Statement.format(definition.then())));
           }
 
           @Override
@@ -90,7 +91,7 @@ public interface TestOracleFormFactory {
               description.appendText(format("created from '%s'", testItem.getTestCaseTuple()));
               description.appendText(" ");
             }
-            description.appendText(format("did not satisfy it.:%n'%s'", c.apply(formInvoker).apply(stage)));
+            description.appendText(format("did not satisfy it.:%n'%s'", formInvoker.asString()));
           }
         };
       }

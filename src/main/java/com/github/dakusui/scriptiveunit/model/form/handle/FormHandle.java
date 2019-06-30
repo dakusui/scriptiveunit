@@ -52,7 +52,7 @@ public interface FormHandle {
 
     @Override
     public String toString() {
-      return String.format("form:%s", this.objectMethod);
+      return this.objectMethod.getName();
     }
 
     ObjectMethod objectMethod() {
@@ -115,7 +115,7 @@ public interface FormHandle {
     }
 
     private static Form<Object> userFunc(Form<Statement> statementForm, Form<?>... args) {
-      return (Stage input) -> statementForm
+      return input -> statementForm
           .apply(input)
           .toForm()
           .apply(createWrappedStage(input, args));

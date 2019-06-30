@@ -43,8 +43,10 @@ import static java.util.Objects.requireNonNull;
 @RunWith(ScriptiveUnit.class)
 public class Qapi {
   public static class Loader extends JsonBasedTestSuiteDescriptorLoader {
+    private static ApplicationSpec applicationSpec = new ApplicationSpec.Standard();
+
     @Override
-    protected ApplicationSpec modelSpec() {
+    protected ApplicationSpec applicationLanguage() {
       return new ApplicationSpec.Standard() {
         @Override
         public List<Preprocessor> preprocessors() {
@@ -63,7 +65,7 @@ public class Qapi {
     }
 
     static ApplicationSpec.Node getModelNode(ApplicationSpec.Node node) {
-      return ApplicationSpec.deepMerge(
+      return applicationSpec.deepMerge(
           requireDictionary(node),
           dict(
               $("after", array(atom("nop")))

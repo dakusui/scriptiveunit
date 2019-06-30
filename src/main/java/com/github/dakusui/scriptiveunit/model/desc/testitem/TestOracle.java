@@ -16,7 +16,7 @@ public interface TestOracle {
    * <p>
    * Note that this method always returns raw form (a string before being templated).
    */
-  String getDescription();
+  Optional<String> getDescription();
 
   Definition definition();
 
@@ -99,8 +99,8 @@ public interface TestOracle {
     }
 
     @Override
-    public String getDescription() {
-      return description;
+    public Optional<String> getDescription() {
+      return Optional.ofNullable(description);
     }
 
     @Override

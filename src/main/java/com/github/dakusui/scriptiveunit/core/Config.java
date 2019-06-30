@@ -1,13 +1,12 @@
 package com.github.dakusui.scriptiveunit.core;
 
 import com.github.dakusui.scriptiveunit.annotations.Load;
-import com.github.dakusui.scriptiveunit.utils.Checks;
 import com.github.dakusui.scriptiveunit.utils.ReflectionUtils;
 
 import java.io.File;
+import java.util.Optional;
 import java.util.Properties;
 
-import static com.github.dakusui.scriptiveunit.exceptions.ConfigurationException.scriptNotSpecified;
 import static com.github.dakusui.scriptiveunit.exceptions.ScriptiveUnitException.wrap;
 
 public interface Config {
@@ -15,7 +14,7 @@ public interface Config {
 
   String getScriptResourceNameKey();
 
-  String getScriptResourceName();
+  Optional<String> getScriptResourceName();
 
   Reporting getReportingConfig();
 
@@ -63,12 +62,13 @@ public interface Config {
           }
 
           @Override
-          public String getScriptResourceName() {
-            return Checks.check(
-                properties.getProperty(getScriptResourceNameKey(), Builder.this.loadAnnotation.defaultScriptName()),
-                (in) -> !in.equals(Load.SCRIPT_NOT_SPECIFIED),
-                () -> scriptNotSpecified(getScriptResourceNameKey())
-            );
+          public Optional<String> getScriptResourceName() {
+            String work = properties.getProperty(
+                getScriptResourceNameKey(),
+                Builder.this.loadAnnotation.defaultScriptName());
+            return Load.SCRIPT_NOT_SPECIFIED.equals(work) ?
+                Optional.empty() :
+                Optional.of(work);
           }
 
           @Override

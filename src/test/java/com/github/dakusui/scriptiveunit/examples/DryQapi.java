@@ -58,7 +58,7 @@ public class DryQapi extends Qapi {
       ObjectNode work = JsonNodeFactory.instance.objectNode();
       if (child.has(HostSpec.Json.EXTENDS_KEYWORD)) {
         JsonPreprocessorUtils.getParentsOf(child, HostSpec.Json.EXTENDS_KEYWORD)
-            .forEach(s -> UtJsonUtils.deepMerge(requireObjectNode(hostSpec.toHostObject(readObjectNodeWithMerging(s))), work));
+            .forEach(s -> UtJsonUtils.deepMerge(requireObjectNode(hostSpec.toHostObject(readApplicationDictionaryWithMerging(s))), work));
       }
       return UtJsonUtils.deepMerge(child, work);
     }

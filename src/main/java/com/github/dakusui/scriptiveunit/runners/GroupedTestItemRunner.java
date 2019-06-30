@@ -464,7 +464,7 @@ public final class GroupedTestItemRunner extends ParentRunner<Action> {
             public Action apply(IndexedTestCase input) {
               try {
                 return named(
-                    format("%03d: %s", i, templateTestOracleDescription(input.get(), testSuiteDescription, testOracle.getDescription())),
+                    describe(input),
                     sequential(
                         session.createSetUpActionForFixture(testSuiteDescriptor, input.get()),
                         attempt(
@@ -476,6 +476,14 @@ public final class GroupedTestItemRunner extends ParentRunner<Action> {
               } finally {
                 i++;
               }
+            }
+
+            String describe(IndexedTestCase input) {
+              return format("%03d: %s", i,
+                  templateTestOracleDescription(
+                      input.get(),
+                      testSuiteDescription,
+                      testOracle.getDescription().orElse("(no name)")));
             }
           }).collect(toList());
     }
