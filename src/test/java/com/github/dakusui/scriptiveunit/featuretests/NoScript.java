@@ -4,6 +4,7 @@ import com.github.dakusui.scriptiveunit.annotations.Import;
 import com.github.dakusui.scriptiveunit.annotations.Load;
 import com.github.dakusui.scriptiveunit.core.Config;
 import com.github.dakusui.scriptiveunit.drivers.Core;
+import com.github.dakusui.scriptiveunit.drivers.Predicates;
 import com.github.dakusui.scriptiveunit.drivers.Strings;
 import com.github.dakusui.scriptiveunit.loaders.TestSuiteDescriptorLoader;
 import com.github.dakusui.scriptiveunit.model.lang.ApplicationSpec;
@@ -69,13 +70,19 @@ public class NoScript {
                       $("then", array("matches", array("output"), ".*ell.*"))),
                   dict(
                       $("when", array("format", "hello")),
+                      $("then", array("matches", array("output"), ".*ELLO"))),
+                  dict(
+                      $("given", array("not", array("always"))),
+                      $("when", array("format", "hello")),
                       $("then", array("matches", array("output"), ".*Ell.*")))))),
           defaultValues);
     }
   }
 
   @Import
-  public Object strings = new Strings();
-  @Import
   public Object core    = new Core();
+  @Import
+  public Object predicates = new Predicates();
+  @Import
+  public Object strings = new Strings();
 }

@@ -6,8 +6,6 @@ import com.github.dakusui.jcunit.core.tuples.Tuple;
 import com.github.dakusui.scriptiveunit.model.desc.testitem.TestItem;
 import com.github.dakusui.scriptiveunit.model.desc.testitem.TestOracle;
 import com.github.dakusui.scriptiveunit.model.form.Form;
-import com.github.dakusui.scriptiveunit.model.form.FormInvoker;
-import com.github.dakusui.scriptiveunit.model.form.handle.FormUtils;
 import com.github.dakusui.scriptiveunit.model.session.action.Sink;
 import com.github.dakusui.scriptiveunit.model.statement.Statement;
 import org.hamcrest.BaseMatcher;
@@ -18,59 +16,60 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 
 import static com.github.dakusui.actionunit.core.ActionSupport.nop;
-import static com.github.dakusui.scriptiveunit.model.session.Stage.ExecutionLevel.ORACLE;
 import static com.github.dakusui.scriptiveunit.utils.StringUtils.iterableToString;
 import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
 
 public interface TestOracleFormFactory {
   static TestOracleFormFactory createTestOracleFormFactory(TestItem testItem, TestOracle.Definition definition, Function<Tuple, String> testCaseFormatter) {
+    Form<Action> beforeForm = definition.before()
+        .map(Statement::<Action>toForm)
+        .orElse((Stage s) -> nop());
+    Form<Boolean> givenForm = definition.given()
+        .map(Statement::<Boolean>toForm)
+        .orElse((Stage stage) -> true);
+    Form<Object> whenForm = (Stage stage) -> definition.when().toForm().apply(stage);
+    Form<Boolean> thenForm = definition.then().toForm();
     return new TestOracleFormFactory() {
       @Override
       public Form<Action> beforeFactory(TestItem testItem_, Report report) {
-        return definition.before()
-            .map(FormUtils.INSTANCE::<Action>toForm)
-            .orElse((Stage s) -> nop());
+        return beforeForm;
       }
 
       @Override
       public Form<Matcher<Tuple>> givenFactory() {
         return (Stage s) -> new BaseMatcher<Tuple>() {
-          private FormInvoker formInvoker = FormInvoker.create();
-
           @Override
           public boolean matches(Object item) {
-            return definition.given()
-                .map(FormUtils.INSTANCE::<Boolean>toForm)
-                .orElse((Stage stage) -> true)
-                .apply(s);
+            return givenForm.apply(s);
           }
 
           @Override
           public void describeTo(Description description) {
             description.appendText(
-                format("input (%s) should have made true following criterion but not.:%n'%s' defined in stage:%s",
+                format("input:%s did not meet the precondition:'%s'",
                     testItem.getTestCaseTuple(),
-                    formInvoker.asString(),
-                    ORACLE));
+                    definition.given()
+                    .map(Statement::format)
+                    .orElse("(unavailable)")
+                ));
           }
         };
       }
 
       @Override
       public Form<Object> whenFactory() {
-        return (Stage stage) -> FormUtils.INSTANCE.toForm(definition.when()).apply(stage);
+        return whenForm;
       }
 
       @Override
       public Form<Function<Object, Matcher<Stage>>> thenFactory() {
-        FormInvoker formInvoker = FormInvoker.create();
         return stage -> out -> new BaseMatcher<Stage>() {
-          Function<FormInvoker, Predicate<Stage>> p = fi -> s -> (Boolean) requireNonNull(
-              FormUtils.INSTANCE.toForm(definition.then()).apply(s));
+          Predicate<Stage> p = s -> requireNonNull(thenForm).apply(s);
+
           @Override
           public boolean matches(Object item) {
-            return p.apply(formInvoker).test(stage);
+            return p.test(stage);
           }
 
           @Override
@@ -91,7 +90,7 @@ public interface TestOracleFormFactory {
               description.appendText(format("created from '%s'", testItem.getTestCaseTuple()));
               description.appendText(" ");
             }
-            description.appendText(format("did not satisfy it.:%n'%s'", formInvoker.asString()));
+            description.appendText(format("did not satisfy it.:%n"));
           }
         };
       }
@@ -99,7 +98,7 @@ public interface TestOracleFormFactory {
       @Override
       public Form<Sink<AssertionError>> errorHandlerFactory(TestItem testItem, Report report) {
         return definition.onFailure()
-            .map(FormUtils.INSTANCE::<Sink<AssertionError>>toForm)
+            .map(Statement::<Sink<AssertionError>>toForm)
             .orElse((Stage) -> (AssertionError assertionError, Context context) -> {
               throw assertionError;
             });
@@ -108,7 +107,7 @@ public interface TestOracleFormFactory {
       @Override
       public Form<Action> afterFactory(TestItem testItem_, Report report) {
         return definition.after()
-            .map(FormUtils.INSTANCE::<Action>toForm)
+            .map(Statement::<Action>toForm)
             .orElse((Stage s) -> nop());
       }
 
