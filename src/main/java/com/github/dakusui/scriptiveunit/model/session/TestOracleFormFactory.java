@@ -29,10 +29,11 @@ public interface TestOracleFormFactory {
         .map(Statement::<Boolean>toForm)
         .orElse((Stage stage) -> true);
     Form<Object> whenForm = (Stage stage) -> definition.when().toForm().apply(stage);
-    Form<Boolean> thenForm = definition.then().toForm();
+    final Statement thenStatement = definition.then();
+    Form<Boolean> thenForm = thenStatement.toForm();
     return new TestOracleFormFactory() {
       @Override
-      public Form<Action> beforeFactory(TestItem testItem_, Report report) {
+      public Form<Action> beforeFactory() {
         return beforeForm;
       }
 
@@ -47,11 +48,10 @@ public interface TestOracleFormFactory {
           @Override
           public void describeTo(Description description) {
             description.appendText(
-                format("input:%s did not meet the precondition:'%s'",
-                    testItem.getTestCaseTuple(),
-                    definition.given()
-                    .map(Statement::format)
-                    .orElse("(unavailable)")
+                format("Precondition:<%s> was not satisfied by given input:<%s>",
+                    definition.given().map(Statement::format)
+                        .orElse("(unavailable)"),
+                    testItem.getTestCaseTuple()
                 ));
           }
         };
@@ -74,20 +74,20 @@ public interface TestOracleFormFactory {
 
           @Override
           public void describeTo(Description description) {
-            description.appendText(format("output:'%s' should have made true the criterion:'%s'",
+            description.appendText(format("output:<%s> should have made true the criterion:<%s>",
                 out,
-                Statement.format(definition.then())));
+                Statement.format(thenStatement)));
           }
 
           @Override
-          public void describeMismatch(Object item, Description description) {
+          public void describeMismatch(Object stage, Description description) {
             Object output = out instanceof Iterable ?
                 iterableToString((Iterable<?>) out) :
                 out;
-            description.appendText(format("output '%s'", output));
+            description.appendText(format("output <%s>", output));
             description.appendText(" ");
             if (!testItem.getTestCaseTuple().isEmpty()) {
-              description.appendText(format("created from '%s'", testItem.getTestCaseTuple()));
+              description.appendText(format("created from <%s>", testItem.getTestCaseTuple()));
               description.appendText(" ");
             }
             description.appendText(format("did not satisfy it.:%n"));
@@ -96,7 +96,7 @@ public interface TestOracleFormFactory {
       }
 
       @Override
-      public Form<Sink<AssertionError>> errorHandlerFactory(TestItem testItem, Report report) {
+      public Form<Sink<AssertionError>> errorHandlerFactory() {
         return definition.onFailure()
             .map(Statement::<Sink<AssertionError>>toForm)
             .orElse((Stage) -> (AssertionError assertionError, Context context) -> {
@@ -105,7 +105,7 @@ public interface TestOracleFormFactory {
       }
 
       @Override
-      public Form<Action> afterFactory(TestItem testItem_, Report report) {
+      public Form<Action> afterFactory() {
         return definition.after()
             .map(Statement::<Action>toForm)
             .orElse((Stage s) -> nop());
@@ -118,7 +118,7 @@ public interface TestOracleFormFactory {
     };
   }
 
-  Form<Action> beforeFactory(TestItem testItem, Report report);
+  Form<Action> beforeFactory();
 
   Form<Matcher<Tuple>> givenFactory();
 
@@ -126,9 +126,9 @@ public interface TestOracleFormFactory {
 
   Form<Function<Object, Matcher<Stage>>> thenFactory();
 
-  Form<Sink<AssertionError>> errorHandlerFactory(TestItem testItem, Report report);
+  Form<Sink<AssertionError>> errorHandlerFactory();
 
-  Form<Action> afterFactory(TestItem testItem, Report report);
+  Form<Action> afterFactory();
 
   String describeTestCase(Tuple testCaseTuple);
 }

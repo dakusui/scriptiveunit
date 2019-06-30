@@ -1,5 +1,7 @@
 package com.github.dakusui.scriptiveunit.model.form.handle;
 
+import com.github.dakusui.scriptiveunit.model.form.Form;
+import com.github.dakusui.scriptiveunit.model.session.Stage;
 import com.github.dakusui.scriptiveunit.model.statement.Statement;
 import com.github.dakusui.scriptiveunit.model.statement.StatementRegistry;
 
@@ -10,7 +12,7 @@ import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
 
 public class FormHandleFactory {
-  private final StatementRegistry statementRegistryForUserForms;
+  private final StatementRegistry    statementRegistryForUserForms;
   private final ObjectMethodRegistry objectMethodRegistry;
 
   public FormHandleFactory(ObjectMethodRegistry objectMethodRegistry, StatementRegistry statementRegistryForUserForms) {
@@ -19,10 +21,45 @@ public class FormHandleFactory {
   }
 
   public FormHandle create(String name) {
-    return createLambdaFormHandle(name)
-        .orElseGet(() -> FormHandleFactory.this.createUserDefinedFormHandle(name)
-            .orElseGet(() -> FormHandleFactory.this.createMethodBasedFormHandle(name)
-                .orElseThrow(undefinedForm(name))));
+    return new FormHandle() {
+      FormHandle formHandle = createLambdaFormHandle(name)
+          .orElseGet(() -> FormHandleFactory.this.createUserDefinedFormHandle(name)
+              .orElseGet(() -> FormHandleFactory.this.createMethodBasedFormHandle(name)
+                  .orElseThrow(undefinedForm(name))));
+
+      @Override
+      public <U> Form<U> toForm(Statement.Compound statement) {
+        return new Form<U>() {
+          Form<U> form = formHandle.toForm(statement);
+
+          @Override
+          public U apply(Stage input) {
+            System.out.println("begin:" + name + ":(" + input.getExecutionLevel() + ")");
+            U ret = form.apply(input);
+            System.out.println("end  :" + name + ":(" + input.getExecutionLevel() + "):" + ret);
+            return ret;
+          }
+
+          public String name() {
+            return form.name();
+          }
+
+          public String toString() {
+            return form.toString();
+          }
+        };
+      }
+
+      @Override
+      public boolean isAccessor() {
+        return formHandle.isAccessor();
+      }
+
+      @Override
+      public String toString() {
+        return formHandle.toString();
+      }
+    };
   }
 
   private static Supplier<UnsupportedOperationException> undefinedForm(String name) {

@@ -158,7 +158,7 @@ public interface Session {
 
     Action createBefore(TestItem testItem, TestOracleFormFactory testOracleFormFactory, Report report) {
       Stage beforeStage = this.createOracleLevelStage(testItem, report);
-      return testOracleFormFactory.beforeFactory(testItem, report).apply(beforeStage);
+      return testOracleFormFactory.beforeFactory().apply(beforeStage);
     }
 
     Source<Tuple> createGiven(
@@ -186,7 +186,7 @@ public interface Session {
       return (testIO, context) -> {
         Stage thenStage = Impl.this.createOracleVerificationStage(testItem, testIO.getOutput(), report);
         assertThat(
-            String.format("Failed to verify with %s", testIO.getInput()),
+            String.format("Failed to verify with input:<%s>", testIO.getInput()),
             thenStage,
             matcherFunction.apply(thenStage).apply(testIO.getOutput()));
       };
@@ -199,14 +199,14 @@ public interface Session {
     Sink<AssertionError> createErrorHandler(TestItem testItem, TestOracleFormFactory definition, Report report) {
       return (input, context) -> {
         Stage onFailureStage = createOracleFailureHandlingStage(testItem, input, report);
-        definition.errorHandlerFactory(testItem, report).apply(onFailureStage);
+        definition.errorHandlerFactory().apply(onFailureStage);
         throw input;
       };
     }
 
     Action createAfter(TestItem testItem, TestOracleFormFactory definition, Report report) {
       Stage afterStage = this.createOracleLevelStage(testItem, report);
-      return definition.afterFactory(testItem, report).apply(afterStage);
+      return definition.afterFactory().apply(afterStage);
     }
 
     Stage createSuiteLevelStage(Tuple suiteLevelTuple) {

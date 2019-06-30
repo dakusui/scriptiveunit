@@ -17,11 +17,17 @@ import static java.util.stream.Collectors.toList;
 public interface FormHandle {
   <U> Form<U> toForm(Statement.Compound statement);
 
-  default boolean isAccessor() {
-    return false;
+  boolean isAccessor();
+
+  interface Default extends FormHandle {
+    @Override
+    default boolean isAccessor() {
+      return false;
+    }
   }
 
-  abstract class Base implements FormHandle {
+  abstract class Base implements FormHandle.Default {
+    @Override
     public abstract String toString();
   }
 

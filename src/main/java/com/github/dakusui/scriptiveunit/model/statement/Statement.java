@@ -6,6 +6,7 @@ import com.github.dakusui.scriptiveunit.model.form.Form;
 import com.github.dakusui.scriptiveunit.model.form.handle.FormHandle;
 import com.github.dakusui.scriptiveunit.model.form.handle.FormHandleFactory;
 import com.github.dakusui.scriptiveunit.model.form.handle.ObjectMethodRegistry;
+import com.github.dakusui.scriptiveunit.model.session.Stage;
 import com.github.dakusui.scriptiveunit.utils.CoreUtils;
 
 import java.util.List;
@@ -97,7 +98,21 @@ public interface Statement {
 
           @Override
           public <U> Form<U> toForm() {
-            return input -> input.getArgument((this.value()));
+            Form<U> form = input -> input.getArgument((this.value()));
+            return new Form<U>() {
+              @Override
+              public U apply(Stage input) {
+                System.out.println("begin:arg[" + car + "]");
+                U ret = form.apply(input);
+                System.out.println("end:arg[" + car + "]:" + ret);
+                return ret;
+              }
+
+              @Override
+              public String toString() {
+                return form.toString();
+              }
+            };
           }
 
           @Override
@@ -118,7 +133,21 @@ public interface Statement {
       return new Atom() {
         @Override
         public <U> Form<U> toForm() {
-          return createConst(this.value());
+          Form<U> form = createConst(this.value());
+          return new Form<U>() {
+            @Override
+            public U apply(Stage input) {
+              System.out.println("begin:  const:<" + value() + ">");
+              U ret = form.apply(input);
+              System.out.println("end  :  const:<" + value() + ">");
+              return ret;
+            }
+
+            @Override
+            public String toString() {
+              return form.toString();
+            }
+          };
         }
 
         @SuppressWarnings("unchecked")
