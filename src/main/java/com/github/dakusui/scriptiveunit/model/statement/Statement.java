@@ -105,6 +105,11 @@ public interface Statement {
               }
 
               @Override
+              public String name() {
+                return String.format("(%s)", car);
+              }
+
+              @Override
               public String toString() {
                 return form.toString();
               }
@@ -133,6 +138,11 @@ public interface Statement {
             @Override
             public U apply(Stage stage) {
               return Stage.applyForm(stage, this, (f, s) -> value());
+            }
+
+            @Override
+            public String name() {
+              return String.format("'%s'", Objects.toString(value()));
             }
 
             @Override

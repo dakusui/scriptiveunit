@@ -48,7 +48,9 @@ public interface FormHandle {
 
     @Override
     public <U> Form<U> toForm(Statement.Compound compound) {
-      return methodBasedFormHandleToForm(this, compound);
+      return Form.Named.create(
+          this.objectMethod.getName(),
+          methodBasedFormHandleToForm(this, compound));
     }
 
     @Override

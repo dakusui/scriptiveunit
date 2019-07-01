@@ -29,22 +29,8 @@ public class FormHandleFactory {
 
       @Override
       public <U> Form<U> toForm(Statement.Compound statement) {
-        return new Form<U>() {
-          Form<U> form = formHandle.toForm(statement);
-
-          @Override
-          public U apply(Stage stage) {
-            return Stage.applyForm(stage, form, Form::apply);
-          }
-
-          public String name() {
-            return form.name();
-          }
-
-          public String toString() {
-            return form.toString();
-          }
-        };
+        Form<U> form = formHandle.toForm(statement);
+        return stage -> Stage.applyForm(stage, form, Form::apply);
       }
 
       @Override

@@ -14,18 +14,25 @@ import java.util.regex.Pattern;
 
 import static com.github.dakusui.scriptiveunit.exceptions.SyntaxException.cyclicTemplatingFound;
 import static com.github.dakusui.scriptiveunit.exceptions.SyntaxException.undefinedFactor;
-import static java.lang.Character.*;
+import static java.lang.Character.isUpperCase;
+import static java.lang.Character.toLowerCase;
+import static java.lang.Character.toUpperCase;
 import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
 
 public enum StringUtils {
   ;
+
   public static String indent(int indentLevel) {
-    String ret = "";
-    for (int i = 0; i < indentLevel; i++) {
-      ret += "  ";
+    return spaces(indentLevel * 2);
+  }
+
+  public static String spaces(int num) {
+    StringBuilder ret = new StringBuilder();
+    for (int i = 0; i < num; i++) {
+      ret.append(" ");
     }
-    return ret;
+    return ret.toString();
   }
 
   public static String iterableToString(Iterable<?> i) {

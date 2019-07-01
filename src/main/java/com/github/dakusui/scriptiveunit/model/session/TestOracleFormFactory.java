@@ -12,13 +12,18 @@ import org.hamcrest.BaseMatcher;
 import org.hamcrest.Description;
 import org.hamcrest.Matcher;
 
+import java.util.LinkedList;
+import java.util.List;
+import java.util.OptionalInt;
 import java.util.function.Function;
 import java.util.function.Predicate;
 
 import static com.github.dakusui.actionunit.core.ActionSupport.nop;
 import static com.github.dakusui.scriptiveunit.utils.StringUtils.indent;
 import static com.github.dakusui.scriptiveunit.utils.StringUtils.iterableToString;
+import static com.github.dakusui.scriptiveunit.utils.StringUtils.spaces;
 import static java.lang.String.format;
+import static java.util.Collections.unmodifiableList;
 import static java.util.Objects.requireNonNull;
 
 public interface TestOracleFormFactory {
@@ -40,19 +45,22 @@ public interface TestOracleFormFactory {
 
       @Override
       public Form<Matcher<Tuple>> givenFactory() {
-        return (Stage s) -> new BaseMatcher<Tuple>() {
+        return (Stage stage) -> new BaseMatcher<Tuple>() {
+          Form.Listener formListener = createFormListener();
+
           @Override
           public boolean matches(Object item) {
-            return givenForm.apply(s);
+            return givenForm.apply(Stage.Factory.createFormListeningStage(stage, formListener));
           }
 
           @Override
           public void describeTo(Description description) {
             description.appendText(
-                format("Precondition:<%s> was not satisfied by given input:<%s>",
+                format("Precondition:<%s> was not satisfied by given input:<%s>:%n%s",
                     definition.given().map(Statement::format)
                         .orElse("(unavailable)"),
-                    testItem.getTestCaseTuple()
+                    testItem.getTestCaseTuple(),
+                    formListener.toString()
                 ));
           }
         };
@@ -63,38 +71,69 @@ public interface TestOracleFormFactory {
         return whenForm;
       }
 
-      Form.Listener formListener = new Form.Listener() {
-        int indentLevel = 0;
+      private Form.Listener createFormListener() {
+        return new Form.Listener() {
+          List<StringBuilder> b = new LinkedList<StringBuilder>() {{
+          }};
+          int indentLevel = 0;
+          List<Object> out = new LinkedList<>();
 
-        @Override
-        public void enter(Form form) {
-          indentLevel++;
-          System.out.println();
-          System.out.print(indent(indentLevel) + "(" + form.name() + " ");
-        }
+          @Override
+          public void enter(Form form) {
+            if (currentLineLength().isPresent()) {
+              cur().append(pad());
+              cur().append(format("%s", out.isEmpty() ? "" : out.toString()));
+              out.removeAll(unmodifiableList(out));
+            }
+            b.add(new StringBuilder());
+            String call = format("%s(%s", indent(indentLevel), form.name());
+            cur().append(call);
+            indentLevel++;
+          }
 
-        @Override
-        public void leave(Form form, Object value) {
-          System.out.print("):" + value);
-        }
+          @Override
+          public void leave(Form form, Object value) {
+            cur().append(")");
+            out.add(value);
+          }
 
-        @Override
-        public void fail(Form form, Throwable t) {
-          System.out.print("):" + t.getMessage());
-          t.printStackTrace();
-          indentLevel--;
-        }
-      };
+          @Override
+          public void fail(Form form, Throwable t) {
+            indentLevel--;
+            cur().append(format("): '%s'%n", t.getMessage()));
+          }
+
+          @Override
+          public String toString() {
+            return String.join(format("%n"), b) + pad() + out;
+          }
+
+          private StringBuilder cur() {
+            return this.b.get(b.size() - 1);
+          }
+
+          private OptionalInt currentLineLength() {
+            return b.size() > 0 ?
+                OptionalInt.of(b.get(b.size() - 1).length()) :
+                OptionalInt.empty();
+          }
+
+          private String pad() {
+            return spaces(60 - currentLineLength().orElse(60));
+          }
+        };
+      }
 
       @Override
       public Form<Function<Object, Matcher<Stage>>> thenFactory() {
         return stage -> out -> new BaseMatcher<Stage>() {
-          Predicate<Stage> p = s -> requireNonNull(thenForm).apply(Stage.Factory.createFormListeningStage(s, formListener));
-
+          Predicate<Stage> p = s -> requireNonNull(thenForm)
+              .apply(s);
+          Form.Listener formListener = createFormListener();
 
           @Override
           public boolean matches(Object item) {
-            return p.test(stage);
+            return p.test(Stage.Factory.createFormListeningStage(stage, formListener));
           }
 
           @Override
@@ -115,7 +154,7 @@ public interface TestOracleFormFactory {
               description.appendText(format("created from <%s>", testItem.getTestCaseTuple()));
               description.appendText(" ");
             }
-            description.appendText(format("did not satisfy it.:%n"));
+            description.appendText(format("did not satisfy it.:%n%s", formListener.toString()));
           }
         };
       }
