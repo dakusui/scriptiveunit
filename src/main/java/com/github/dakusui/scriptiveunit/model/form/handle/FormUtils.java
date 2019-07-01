@@ -5,8 +5,6 @@ import com.github.dakusui.scriptiveunit.model.form.Form;
 import com.github.dakusui.scriptiveunit.model.statement.Statement;
 import com.google.common.collect.Lists;
 
-import java.lang.reflect.InvocationHandler;
-import java.lang.reflect.Proxy;
 import java.util.List;
 import java.util.Objects;
 
@@ -31,21 +29,6 @@ public enum FormUtils {
 
   public <U> Form<U> toForm(Statement statement) {
     return statement.toForm();
-  }
-
-  static <O> Form<O> createProxy(InvocationHandler handler, Class<? extends Form> interfaceClass) {
-    //noinspection unchecked
-    return (Form<O>) Proxy.newProxyInstance(
-        Form.class.getClassLoader(),
-        new Class[]{interfaceClass},
-        handler
-    );
-  }
-
-  public static <T> Form<T> createConst(T value) {
-    return createProxy(
-        (proxy, method, args) -> value,
-        Form.Const.class);
   }
 
   private static List<String> involvedParameters(Statement statement, List<String> work) {

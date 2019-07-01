@@ -15,7 +15,6 @@ import java.util.Objects;
 import java.util.stream.StreamSupport;
 
 import static com.github.dakusui.scriptiveunit.exceptions.TypeMismatch.headOfCallMustBeString;
-import static com.github.dakusui.scriptiveunit.model.form.handle.FormUtils.createConst;
 
 /**
  * An interface that represents a lexical structure of a script element.
@@ -133,19 +132,18 @@ public interface Statement {
       return new Atom() {
         @Override
         public <U> Form<U> toForm() {
-          Form<U> form = createConst(this.value());
-          return new Form<U>() {
+          return new Form.Const<U>() {
             @Override
             public U apply(Stage input) {
               System.out.println("begin:  const:<" + value() + ">");
-              U ret = form.apply(input);
+              U ret = value();
               System.out.println("end  :  const:<" + value() + ">");
               return ret;
             }
 
             @Override
             public String toString() {
-              return form.toString();
+              return Objects.toString(value());//form.toString();
             }
           };
         }

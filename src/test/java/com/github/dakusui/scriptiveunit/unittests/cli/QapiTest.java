@@ -67,6 +67,7 @@ public class QapiTest extends TestBase {
   public void runTest(
       @From("testItem") TestItem testItem
   ) {
+    System.out.println(testItem.getTestInput());
     TestUtils.configureScriptNameSystemProperty(testItem.getTestInput(), Simple.class);
     assertThat(JUnitCore.runClasses(Qapi.class), testItem.getOracle(this));
   }
