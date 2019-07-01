@@ -12,18 +12,17 @@ import org.hamcrest.BaseMatcher;
 import org.hamcrest.Description;
 import org.hamcrest.Matcher;
 
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.OptionalInt;
+import java.util.Map;
 import java.util.function.Function;
 import java.util.function.Predicate;
 
 import static com.github.dakusui.actionunit.core.ActionSupport.nop;
 import static com.github.dakusui.scriptiveunit.utils.StringUtils.indent;
 import static com.github.dakusui.scriptiveunit.utils.StringUtils.iterableToString;
-import static com.github.dakusui.scriptiveunit.utils.StringUtils.spaces;
 import static java.lang.String.format;
-import static java.util.Collections.unmodifiableList;
 import static java.util.Objects.requireNonNull;
 
 public interface TestOracleFormFactory {
@@ -73,53 +72,56 @@ public interface TestOracleFormFactory {
 
       private Form.Listener createFormListener() {
         return new Form.Listener() {
-          List<StringBuilder> b = new LinkedList<StringBuilder>() {{
-          }};
-          int indentLevel = 0;
-          List<Object> out = new LinkedList<>();
+          class FormLevel {
+            Form form;
+            int  level;
+
+            FormLevel(Form form, int level) {
+              this.form = form;
+              this.level = level;
+            }
+          }
+
+          List<FormLevel> history = new LinkedList<>();
+          Map<Form, List<Object>> values = new HashMap<>();
+
+          int level = 0;
 
           @Override
           public void enter(Form form) {
-            if (currentLineLength().isPresent()) {
-              cur().append(pad());
-              cur().append(format("%s", out.isEmpty() ? "" : out.toString()));
-              out.removeAll(unmodifiableList(out));
-            }
-            b.add(new StringBuilder());
-            String call = format("%s(%s", indent(indentLevel), form.name());
-            cur().append(call);
-            indentLevel++;
+            this.history.add(new FormLevel(form, level++));
           }
 
           @Override
           public void leave(Form form, Object value) {
-            cur().append(")");
-            out.add(value);
+            level--;
+            addValue(form, value);
           }
 
           @Override
           public void fail(Form form, Throwable t) {
-            indentLevel--;
-            cur().append(format("): '%s'%n", t.getMessage()));
+            level--;
+            addValue(form, t.getMessage());
           }
 
           @Override
           public String toString() {
-            return String.join(format("%n"), b) + pad() + out;
+            StringBuilder b = new StringBuilder();
+            history.stream()
+                .map(fl -> $(String.format("%s%s", indent(fl.level), fl.form.name()), fl.form))
+                .map(v -> $(String.format("%-60s", v[0]), v[1]))
+                .map(v -> String.format("%s:%s", v[0], values.get((Form) v[1])))
+                .forEach(v -> b.append(String.format("%s%n", v)));
+            return b.toString();
           }
 
-          private StringBuilder cur() {
-            return this.b.get(b.size() - 1);
+          void addValue(Form form, Object value) {
+            this.values.computeIfAbsent(form, f -> new LinkedList<>());
+            this.values.get(form).add(value);
           }
 
-          private OptionalInt currentLineLength() {
-            return b.size() > 0 ?
-                OptionalInt.of(b.get(b.size() - 1).length()) :
-                OptionalInt.empty();
-          }
-
-          private String pad() {
-            return spaces(60 - currentLineLength().orElse(60));
+          Object[] $(Object... values) {
+            return values;
           }
         };
       }

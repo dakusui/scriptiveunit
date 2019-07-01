@@ -74,7 +74,10 @@ public interface FormHandle {
 
     @Override
     public <U> Form<U> toForm(Statement.Compound statement) {
-      return lambdaFormHandleToForm(statement);
+      return Form.Named.create(
+          "<lambda>",
+          lambdaFormHandleToForm(statement)
+      );
     }
 
     static <U> Form<U> lambdaFormHandleToForm(Statement.Compound compound) {
@@ -119,7 +122,7 @@ public interface FormHandle {
 
     @SuppressWarnings("unchecked")
     private static Form<Object> createUserFunc(Form[] args) {
-      return userFunc(CoreUtils.car(args), CoreUtils.cdr(args));
+      return Form.Named.create("<user>", userFunc(CoreUtils.car(args), CoreUtils.cdr(args)));
     }
 
     private static Form<Object> userFunc(Form<Statement> statementForm, Form<?>... args) {
@@ -131,7 +134,7 @@ public interface FormHandle {
 
     @Override
     public String toString() {
-      return "user:" + userDefinedStatement;
+      return "<user>:" + userDefinedStatement;
     }
   }
 }
