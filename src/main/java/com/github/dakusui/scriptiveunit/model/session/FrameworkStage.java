@@ -6,7 +6,6 @@ import com.github.dakusui.scriptiveunit.model.desc.testitem.TestItem;
 import com.github.dakusui.scriptiveunit.model.form.Form;
 
 import java.util.Optional;
-import java.util.function.Function;
 
 class FrameworkStage<RESPONSE> extends StageBase<RESPONSE> {
   private final Tuple testCase;
@@ -20,10 +19,4 @@ class FrameworkStage<RESPONSE> extends StageBase<RESPONSE> {
   public Optional<Tuple> getTestCaseTuple() {
     return Optional.of(testCase);
   }
-
-  @Override
-  public Optional<TestItem> getTestItem() {
-    return Optional.empty();
-  }
-
 }

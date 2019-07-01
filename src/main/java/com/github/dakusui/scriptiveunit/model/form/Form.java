@@ -36,4 +36,12 @@ public interface Form<O> extends Function<Stage, O>, Formattable {
    */
   interface Const<O> extends Form<O> {
   }
+
+  interface Listener {
+    void enter(Form form);
+
+    void leave(Form form, Object value);
+
+    void fail(Form form, Throwable t);
+  }
 }

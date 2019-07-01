@@ -5,11 +5,7 @@ import com.github.dakusui.scriptiveunit.core.Config;
 import com.github.dakusui.scriptiveunit.model.desc.testitem.TestItem;
 import com.github.dakusui.scriptiveunit.model.form.Form;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 import java.util.Optional;
-import java.util.function.Function;
 
 import static com.github.dakusui.scriptiveunit.exceptions.ScriptiveUnitException.indexOutOfBounds;
 import static com.github.dakusui.scriptiveunit.utils.Checks.check;
@@ -18,11 +14,7 @@ import static com.github.dakusui.scriptiveunit.utils.Checks.check;
  * A stage is a part of session, where various activities defined as Funcs are
  * executed.
  */
-public interface Stage {
-  static Memo createMemo() {
-    return new Memo.Impl();
-  }
-
+public interface Stage extends Form.Listener{
   /**
    * Reurns a type of this stage.
    *
@@ -46,6 +38,27 @@ public interface Stage {
 
   Optional<TestItem> getTestItem();
 
+  interface Default extends Stage {
+    @Override
+    default Optional<TestItem> getTestItem() {
+      return Optional.empty();
+    }
+
+    @Override
+    default void enter(Form form) {
+
+    }
+
+    @Override
+    default void leave(Form form, Object value) {
+
+    }
+
+    @Override
+    default void fail(Form form, Throwable t) {
+    }
+  }
+
   enum ExecutionLevel {
     SUITE,
     FIXTURE,
@@ -62,32 +75,35 @@ public interface Stage {
       return new FrameworkStage<>(fixture, executionLevel, config);
     }
 
-    static Stage createWrappedStage(Stage input, Form<?>... args) {
-      return new Delegating(input) {
+    static Stage createWrappedStage(Stage stage, Form<?>... args) {
+      return new Delegating(stage) {
         @Override
         public <U> U getArgument(int index) {
           check(index < sizeOfArguments(), () -> indexOutOfBounds(index, sizeOfArguments()));
           //noinspection unchecked
-          return (U) args[index].apply(input);
+          return (U) args[index].apply(stage);
         }
 
         @Override
         public int sizeOfArguments() {
           return args.length;
         }
-      };
-    }
-  }
 
-  interface Memo extends Map<List<Object>, Object> {
-    class Impl extends HashMap<List<Object>, Object> implements Memo {
-      @Override
-      public Object computeIfAbsent(List<Object> key,
-                                    Function<? super List<Object>, ?> mappingFunction) {
-        Object ret = mappingFunction.apply(key);
-        put(key, ret);
-        return ret;
-      }
+        @Override
+        public void enter(Form form) {
+          stage.enter(form);
+        }
+
+        @Override
+        public void leave(Form form, Object value) {
+          stage.leave(form, value);
+        }
+
+        @Override
+        public void fail(Form form, Throwable t) {
+          stage.fail(form, t);
+        }
+      };
     }
   }
 }
