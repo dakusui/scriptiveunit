@@ -70,62 +70,6 @@ public interface TestOracleFormFactory {
         return whenForm;
       }
 
-      private Form.Listener createFormListener() {
-        return new Form.Listener() {
-          class FormLevel {
-            Form form;
-            int  level;
-
-            FormLevel(Form form, int level) {
-              this.form = form;
-              this.level = level;
-            }
-          }
-
-          List<FormLevel> history = new LinkedList<>();
-          Map<Form, List<Object>> values = new HashMap<>();
-
-          int level = 0;
-
-          @Override
-          public void enter(Form form) {
-            this.history.add(new FormLevel(form, level++));
-          }
-
-          @Override
-          public void leave(Form form, Object value) {
-            level--;
-            addValue(form, value);
-          }
-
-          @Override
-          public void fail(Form form, Throwable t) {
-            level--;
-            addValue(form, t.getMessage());
-          }
-
-          @Override
-          public String toString() {
-            StringBuilder b = new StringBuilder();
-            history.stream()
-                .map(fl -> $(String.format("%s%s", indent(fl.level), fl.form.name()), fl.form))
-                .map(v -> $(String.format("%-60s", v[0]), v[1]))
-                .map(v -> String.format("%s:%s", v[0], values.get((Form) v[1])))
-                .forEach(v -> b.append(String.format("%s%n", v)));
-            return b.toString();
-          }
-
-          void addValue(Form form, Object value) {
-            this.values.computeIfAbsent(form, f -> new LinkedList<>());
-            this.values.get(form).add(value);
-          }
-
-          Object[] $(Object... values) {
-            return values;
-          }
-        };
-      }
-
       @Override
       public Form<Function<Object, Matcher<Stage>>> thenFactory() {
         return stage -> out -> new BaseMatcher<Stage>() {
@@ -180,6 +124,62 @@ public interface TestOracleFormFactory {
       @Override
       public String describeTestCase(Tuple testCaseTuple) {
         return testCaseFormatter.apply(testCaseTuple);
+      }
+
+      private Form.Listener createFormListener() {
+        return new Form.Listener() {
+          class FormLevel {
+            Form form;
+            int  level;
+
+            FormLevel(Form form, int level) {
+              this.form = form;
+              this.level = level;
+            }
+          }
+
+          List<FormLevel> history = new LinkedList<>();
+          Map<Form, List<Object>> values = new HashMap<>();
+
+          int level = 0;
+
+          @Override
+          public void enter(Form form) {
+            this.history.add(new FormLevel(form, level++));
+          }
+
+          @Override
+          public void leave(Form form, Object value) {
+            level--;
+            addValue(form, value);
+          }
+
+          @Override
+          public void fail(Form form, Throwable t) {
+            level--;
+            addValue(form, t.getMessage());
+          }
+
+          @Override
+          public String toString() {
+            StringBuilder b = new StringBuilder();
+            history.stream()
+                .map(fl -> $(String.format("%s%s", indent(fl.level), fl.form.name()), fl.form))
+                .map(v -> $(String.format("%-60s", v[0]), v[1]))
+                .map(v -> String.format("%s:%s", v[0], values.get((Form) v[1])))
+                .forEach(v -> b.append(String.format("%s%n", v)));
+            return b.toString();
+          }
+
+          void addValue(Form form, Object value) {
+            this.values.computeIfAbsent(form, f -> new LinkedList<>());
+            this.values.get(form).add(value);
+          }
+
+          Object[] $(Object... values) {
+            return values;
+          }
+        };
       }
     };
   }

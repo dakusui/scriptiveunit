@@ -66,12 +66,15 @@ public class NoScript {
           dict(
               $("testOracles", array(
                   dict(
+                      $("description", "shouldPass"),
                       $("when", array("format", "hello")),
                       $("then", array("matches", array("output"), ".*ell.*"))),
                   dict(
+                      $("description", "shouldFail"),
                       $("when", array("format", "hello")),
                       $("then", array("matches", array("output"), ".*ELLO"))),
                   dict(
+                      $("description", "shouldBeIgnored"),
                       $("given", array("not", array("always"))),
                       $("when", array("format", "hello")),
                       $("then", array("matches", array("output"), ".*Ell.*")))))),
