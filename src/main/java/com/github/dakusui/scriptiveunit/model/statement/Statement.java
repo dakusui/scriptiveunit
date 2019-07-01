@@ -100,11 +100,8 @@ public interface Statement {
             Form<U> form = input -> input.getArgument((this.value()));
             return new Form<U>() {
               @Override
-              public U apply(Stage input) {
-                System.out.println("begin:arg[" + car + "]");
-                U ret = form.apply(input);
-                System.out.println("end:arg[" + car + "]:" + ret);
-                return ret;
+              public U apply(Stage stage) {
+                return Stage.applyForm(stage, form, Form::apply);
               }
 
               @Override
@@ -134,11 +131,8 @@ public interface Statement {
         public <U> Form<U> toForm() {
           return new Form.Const<U>() {
             @Override
-            public U apply(Stage input) {
-              System.out.println("begin:  const:<" + value() + ">");
-              U ret = value();
-              System.out.println("end  :  const:<" + value() + ">");
-              return ret;
+            public U apply(Stage stage) {
+              return Stage.applyForm(stage, this, (f, s) -> value());
             }
 
             @Override

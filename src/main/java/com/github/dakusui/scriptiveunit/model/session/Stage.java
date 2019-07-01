@@ -6,6 +6,7 @@ import com.github.dakusui.scriptiveunit.model.desc.testitem.TestItem;
 import com.github.dakusui.scriptiveunit.model.form.Form;
 
 import java.util.Optional;
+import java.util.function.BiFunction;
 
 import static com.github.dakusui.scriptiveunit.exceptions.ScriptiveUnitException.indexOutOfBounds;
 import static com.github.dakusui.scriptiveunit.utils.Checks.check;
@@ -15,6 +16,18 @@ import static com.github.dakusui.scriptiveunit.utils.Checks.check;
  * executed.
  */
 public interface Stage extends Form.Listener{
+  static <U> U applyForm(Stage stage, Form<U> form, BiFunction<Form<U>, Stage, U> applier) {
+    stage.enter(form);
+    try {
+      U ret = applier.apply(form, stage);
+      stage.leave(form, ret);
+      return ret;
+    } catch (RuntimeException | Error e) {
+      stage.fail(form, e);
+      throw e;
+    }
+  }
+
   /**
    * Reurns a type of this stage.
    *
@@ -105,5 +118,70 @@ public interface Stage extends Form.Listener{
         }
       };
     }
+
+    static Stage createFormListeningStage(Stage stage, Form.Listener formListener) {
+      return new Stage() {
+        @Override
+        public ExecutionLevel getExecutionLevel() {
+          return stage.getExecutionLevel();
+        }
+
+        @Override
+        public Config getConfig() {
+          return stage.getConfig();
+        }
+
+        @Override
+        public int sizeOfArguments() {
+          return stage.sizeOfArguments();
+        }
+
+        @Override
+        public <T> T getArgument(int index) {
+          return stage.getArgument(index);
+        }
+
+        @Override
+        public Optional<Throwable> getThrowable() {
+          return stage.getThrowable();
+        }
+
+        @Override
+        public Optional<Tuple> getTestCaseTuple() {
+          return stage.getTestCaseTuple();
+        }
+
+        @Override
+        public <RESPONSE> Optional<RESPONSE> response() {
+          return stage.response();
+        }
+
+        @Override
+        public Optional<Report> getReport() {
+          return stage.getReport();
+        }
+
+        @Override
+        public Optional<TestItem> getTestItem() {
+          return stage.getTestItem();
+        }
+
+        @Override
+        public void enter(Form form) {
+          formListener.enter(form);
+        }
+
+        @Override
+        public void leave(Form form, Object value) {
+          formListener.leave(form, value);
+        }
+
+        @Override
+        public void fail(Form form, Throwable t) {
+          formListener.fail(form, t);
+        }
+      };
+    }
   }
+
 }

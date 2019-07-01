@@ -33,11 +33,8 @@ public class FormHandleFactory {
           Form<U> form = formHandle.toForm(statement);
 
           @Override
-          public U apply(Stage input) {
-            System.out.println("begin:" + name + ":(" + input.getExecutionLevel() + ")");
-            U ret = form.apply(input);
-            System.out.println("end  :" + name + ":(" + input.getExecutionLevel() + "):" + ret);
-            return ret;
+          public U apply(Stage stage) {
+            return Stage.applyForm(stage, form, Form::apply);
           }
 
           public String name() {

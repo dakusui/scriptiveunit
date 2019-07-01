@@ -3,7 +3,6 @@ package com.github.dakusui.scriptiveunit.model.session;
 import com.github.dakusui.actionunit.core.Action;
 import com.github.dakusui.actionunit.core.Context;
 import com.github.dakusui.jcunit.core.tuples.Tuple;
-import com.github.dakusui.scriptiveunit.core.Config;
 import com.github.dakusui.scriptiveunit.model.desc.testitem.TestItem;
 import com.github.dakusui.scriptiveunit.model.desc.testitem.TestOracle;
 import com.github.dakusui.scriptiveunit.model.form.Form;
@@ -13,11 +12,11 @@ import org.hamcrest.BaseMatcher;
 import org.hamcrest.Description;
 import org.hamcrest.Matcher;
 
-import java.util.Optional;
 import java.util.function.Function;
 import java.util.function.Predicate;
 
 import static com.github.dakusui.actionunit.core.ActionSupport.nop;
+import static com.github.dakusui.scriptiveunit.utils.StringUtils.indent;
 import static com.github.dakusui.scriptiveunit.utils.StringUtils.iterableToString;
 import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
@@ -65,86 +64,33 @@ public interface TestOracleFormFactory {
       }
 
       Form.Listener formListener = new Form.Listener() {
+        int indentLevel = 0;
+
         @Override
         public void enter(Form form) {
-
+          indentLevel++;
+          System.out.println();
+          System.out.print(indent(indentLevel) + "(" + form.name() + " ");
         }
 
         @Override
         public void leave(Form form, Object value) {
-
+          System.out.print("):" + value);
         }
 
         @Override
         public void fail(Form form, Throwable t) {
-
+          System.out.print("):" + t.getMessage());
+          t.printStackTrace();
+          indentLevel--;
         }
       };
 
       @Override
       public Form<Function<Object, Matcher<Stage>>> thenFactory() {
         return stage -> out -> new BaseMatcher<Stage>() {
-          Predicate<Stage> p = s -> requireNonNull(thenForm).apply(new Stage() {
-            @Override
-            public ExecutionLevel getExecutionLevel() {
-              return s.getExecutionLevel();
-            }
+          Predicate<Stage> p = s -> requireNonNull(thenForm).apply(Stage.Factory.createFormListeningStage(s, formListener));
 
-            @Override
-            public Config getConfig() {
-              return s.getConfig();
-            }
-
-            @Override
-            public int sizeOfArguments() {
-              return s.sizeOfArguments();
-            }
-
-            @Override
-            public <T> T getArgument(int index) {
-              return s.getArgument(index);
-            }
-
-            @Override
-            public Optional<Throwable> getThrowable() {
-              return s.getThrowable();
-            }
-
-            @Override
-            public Optional<Tuple> getTestCaseTuple() {
-              return s.getTestCaseTuple();
-            }
-
-            @Override
-            public <RESPONSE> Optional<RESPONSE> response() {
-              return s.response();
-            }
-
-            @Override
-            public Optional<Report> getReport() {
-              return s.getReport();
-            }
-
-            @Override
-            public Optional<TestItem> getTestItem() {
-              return s.getTestItem();
-            }
-
-            @Override
-            public void enter(Form form) {
-              formListener.enter(form);
-            }
-
-            @Override
-            public void leave(Form form, Object value) {
-              formListener.leave(form, value);
-            }
-
-            @Override
-            public void fail(Form form, Throwable t) {
-              formListener.fail(form, t);
-            }
-          });
 
           @Override
           public boolean matches(Object item) {
@@ -210,4 +156,5 @@ public interface TestOracleFormFactory {
   Form<Action> afterFactory();
 
   String describeTestCase(Tuple testCaseTuple);
+
 }

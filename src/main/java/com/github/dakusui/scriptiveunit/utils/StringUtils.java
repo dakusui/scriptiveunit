@@ -20,6 +20,13 @@ import static java.util.Objects.requireNonNull;
 
 public enum StringUtils {
   ;
+  public static String indent(int indentLevel) {
+    String ret = "";
+    for (int i = 0; i < indentLevel; i++) {
+      ret += "  ";
+    }
+    return ret;
+  }
 
   public static String iterableToString(Iterable<?> i) {
     if (Iterables.size(i) < 2) {

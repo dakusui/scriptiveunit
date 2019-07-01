@@ -4,6 +4,8 @@ import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
+import static com.github.dakusui.scriptiveunit.utils.StringUtils.indent;
+
 public interface Description {
   static Description describe(String name, List<Object> body) {
     return new Description() {
@@ -38,14 +40,6 @@ public interface Description {
           }
         }
         out.add(indent(indentLevel) + ")");
-      }
-
-      String indent(int indentLevel) {
-        String ret = "";
-        for (int i = 0; i < indentLevel; i++) {
-          ret += "  ";
-        }
-        return ret;
       }
 
       @Override
