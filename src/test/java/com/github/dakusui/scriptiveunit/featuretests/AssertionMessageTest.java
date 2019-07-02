@@ -5,8 +5,17 @@ import com.github.dakusui.scriptiveunit.core.Config;
 import com.github.dakusui.scriptiveunit.model.lang.ApplicationSpec;
 import com.github.dakusui.scriptiveunit.runners.ScriptiveUnit;
 import org.junit.Test;
+import org.junit.runner.notification.Failure;
 
-import static com.github.dakusui.crest.Crest.*;
+import static com.github.dakusui.crest.Crest.allOf;
+import static com.github.dakusui.crest.Crest.asBoolean;
+import static com.github.dakusui.crest.Crest.asInteger;
+import static com.github.dakusui.crest.Crest.asObject;
+import static com.github.dakusui.crest.Crest.asString;
+import static com.github.dakusui.crest.Crest.assertThat;
+import static com.github.dakusui.crest.Crest.call;
+import static com.github.dakusui.crest.Crest.substringAfterRegex;
+import static com.github.dakusui.printables.Printables.isEmptyString;
 import static org.junit.runner.JUnitCore.runClasses;
 
 public class AssertionMessageTest {
@@ -20,6 +29,34 @@ public class AssertionMessageTest {
             asInteger("getRunCount").equalTo(expectation.getRunCount()).$(),
             asInteger("getFailureCount").equalTo(expectation.getFailureRunCount()).$(),
             asInteger("getIgnoreCount").equalTo(expectation.getIgnoreCount()).$()));
+  }
+
+  @Test
+  public void givenSimpleTestClass$whenRunTestClass$thenAssertionMessagesLooksGood() throws Throwable {
+    Failure failure = runClasses(SimpleTest.class).getFailures().get(0);
+    System.out.println("header=" + failure.getTestHeader());
+    System.out.println("description=" + failure.getDescription());
+    System.out.println("exception=" + failure.getException().getClass());
+    System.out.println("message=" + failure.getMessage());
+    System.out.println("toString=" + failure.toString());
+    assertThat(
+        failure,
+        allOf(
+            asString("getTestHeader").containsString("shouldFail").$(),
+            asObject("getException").isInstanceOf(AssertionError.class).$(),
+            asString(call("getMessage").$())
+                .check(
+                    substringAfterRegex("Expected:")
+                        .after("output:\\<hello\\>")
+                        .after("criterion:\\<\\(matches \\(output\\) .+\\)\\>")
+                        .after("     but: output \\<hello\\> did not satisfy it")
+                        .after("matches").after("\\[false\\]")
+                        .after("  output").after("\\[hello\\]")
+                        .after("  \\'\\.\\*ELLO\\'").after("\\[[^]]+\\]")
+                        .$(),
+                    isEmptyString().negate()
+                ).$()
+        ));
   }
 
   @SuppressWarnings("SameParameterValue")
