@@ -38,7 +38,7 @@ public class Predicates {
       "Returns true if any of the given predicates return true.",
       "Predicates are evaluated sequentially in an order where they are given.",
       "When one of those predicate is evaluated true, the rest will not be evaluated" +
-          "and true will be returned immediately."
+          " and true will be returned immediately."
   })
   public final Form<Boolean> or(
       @Doc("Predicates to be evaluated.") FormList<Boolean> predicates) {
@@ -58,8 +58,8 @@ public class Predicates {
       "If the first argument is evaluated true, the second argument is evaluated" +
           " and the value will be returned. Otherwise, false will be returned without" +
           " evaluating the second argument.",
-      "This function is useful to describe a constraint or a condition to ignore " +
-          "a certain test oracle."
+      "This function is useful to describe a constraint or a condition to ignore" +
+          " a certain test oracle."
   })
   public Form<Boolean> ifthen(
       @Doc("A condition value") Form<Boolean> cond,

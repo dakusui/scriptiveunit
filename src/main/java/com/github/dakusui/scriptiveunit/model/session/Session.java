@@ -186,7 +186,7 @@ public interface Session {
       return (testIO, context) -> {
         Stage thenStage = Impl.this.createOracleVerificationStage(testItem, testIO.getOutput(), report);
         assertThat(
-            String.format("Failed to verify with input:<%s>", testIO.getInput()),
+            String.format("Test:<%s> failed with input:<%s>", testItem.getDescription().orElse("(noname)"), testIO.getInput()),
             thenStage,
             matcherFunction.apply(thenStage).apply(testIO.getOutput()));
       };
