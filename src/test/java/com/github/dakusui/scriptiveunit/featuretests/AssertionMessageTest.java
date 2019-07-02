@@ -4,6 +4,7 @@ import com.github.dakusui.scriptiveunit.annotations.Load;
 import com.github.dakusui.scriptiveunit.core.Config;
 import com.github.dakusui.scriptiveunit.model.lang.ApplicationSpec;
 import com.github.dakusui.scriptiveunit.runners.ScriptiveUnit;
+import com.github.dakusui.scriptiveunit.testutils.TestBase;
 import org.junit.Test;
 import org.junit.runner.notification.Failure;
 
@@ -18,7 +19,7 @@ import static com.github.dakusui.crest.Crest.substringAfterRegex;
 import static com.github.dakusui.printables.Printables.isEmptyString;
 import static org.junit.runner.JUnitCore.runClasses;
 
-public class AssertionMessageTest {
+public class AssertionMessageTest extends TestBase {
   @Test
   public void givenSimpleTestClass$whenRunTestClass$thenExpectedResult() throws Throwable {
     ResultExpectation expectation = buildResultExpectation(Simple.class);
@@ -32,7 +33,7 @@ public class AssertionMessageTest {
   }
 
   @Test
-  public void givenSimpleTestClass$whenRunTestClass$thenAssertionMessagesLooksGood() throws Throwable {
+  public void givenSimpleTestClass$whenRunTestClass$thenAssertionMessagesLooksGood() {
     Failure failure = runClasses(Simple.class).getFailures().get(0);
     System.out.println("header=" + failure.getTestHeader());
     System.out.println("description=" + failure.getDescription());
