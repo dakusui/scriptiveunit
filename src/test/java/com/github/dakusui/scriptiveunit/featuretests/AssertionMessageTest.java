@@ -21,9 +21,9 @@ import static org.junit.runner.JUnitCore.runClasses;
 public class AssertionMessageTest {
   @Test
   public void givenSimpleTestClass$whenRunTestClass$thenExpectedResult() throws Throwable {
-    ResultExpectation expectation = buildResultExpectation(SimpleTest.class);
+    ResultExpectation expectation = buildResultExpectation(Simple.class);
     assertThat(
-        runClasses(SimpleTest.class),
+        runClasses(Simple.class),
         allOf(
             asBoolean("wasSuccessful").equalTo(false).$(),
             asInteger("getRunCount").equalTo(expectation.getRunCount()).$(),
@@ -33,7 +33,7 @@ public class AssertionMessageTest {
 
   @Test
   public void givenSimpleTestClass$whenRunTestClass$thenAssertionMessagesLooksGood() throws Throwable {
-    Failure failure = runClasses(SimpleTest.class).getFailures().get(0);
+    Failure failure = runClasses(Simple.class).getFailures().get(0);
     System.out.println("header=" + failure.getTestHeader());
     System.out.println("description=" + failure.getDescription());
     System.out.println("exception=" + failure.getException().getClass());
@@ -96,8 +96,8 @@ public class AssertionMessageTest {
     }
   }
 
-  @Load(with = SimpleTest.Loader.class)
-  public static class SimpleTest extends SimpleTestBase {
+  @Load(with = Simple.Loader.class)
+  public static class Simple extends SimpleTestBase {
     public static class Loader extends SimpleTestBase.Loader {
       public Loader(Config config) {
         super(config);

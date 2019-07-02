@@ -24,8 +24,8 @@ import static org.hamcrest.MatcherAssert.assertThat;
 @RunWith(JCUnit8.class)
 public class QapiTest extends TestBase {
   public enum TestItem implements TestDef<String, QapiTest, Result> {
-    @SuppressWarnings("unused")DEFAULT_VALUES("tests/regular/defaultValues.json", false, 18, 6, 0),
-    @SuppressWarnings("unused")STANDARD_VALUES("examples/qapi.json", false, 27, 9, 0);
+    @SuppressWarnings("unused")DEFAULT_VALUES("tests/regular/defaultValues.json", false, 18, 6, 6),
+    @SuppressWarnings("unused")STANDARD_VALUES("examples/qapi.json", false, 27, 9, 9);
 
     final private String  scriptResourceName;
     final private boolean wasSuccessful;
