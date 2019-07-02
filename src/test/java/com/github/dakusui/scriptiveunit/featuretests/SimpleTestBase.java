@@ -1,7 +1,6 @@
 package com.github.dakusui.scriptiveunit.featuretests;
 
 import com.github.dakusui.scriptiveunit.annotations.Import;
-import com.github.dakusui.scriptiveunit.annotations.Load;
 import com.github.dakusui.scriptiveunit.core.Config;
 import com.github.dakusui.scriptiveunit.drivers.Core;
 import com.github.dakusui.scriptiveunit.drivers.Predicates;
@@ -17,8 +16,7 @@ import java.util.Arrays;
 import static com.github.dakusui.scriptiveunit.model.lang.ApplicationSpec.atom;
 
 @RunWith(ScriptiveUnit.class)
-@Load(with = NoScript.Loader.class)
-public class NoScript {
+public abstract class SimpleTestBase {
   interface SyntaxSugar {
     default ApplicationSpec.Dictionary dict(ApplicationSpec.Dictionary.Entry... entries) {
       return ApplicationSpec.dict(entries);
@@ -45,8 +43,8 @@ public class NoScript {
     }
   }
 
-  public static class Loader extends TestSuiteDescriptorLoader.Base implements SyntaxSugar {
-    public Loader(Config config) {
+  public abstract static class Loader extends TestSuiteDescriptorLoader.Base implements SyntaxSugar {
+    Loader(Config config) {
       super(config);
     }
 
@@ -59,31 +57,10 @@ public class NoScript {
     protected HostSpec hostLanguage() {
       return new HostSpec.Json();
     }
-
-    @Override
-    protected ApplicationSpec.Dictionary readScript(Config config, ApplicationSpec.Dictionary defaultValues) {
-      return applicationSpec.deepMerge(
-          dict(
-              $("testOracles", array(
-                  dict(
-                      $("description", "shouldPass"),
-                      $("when", array("format", "hello")),
-                      $("then", array("matches", array("output"), ".*ell.*"))),
-                  dict(
-                      $("description", "shouldFail"),
-                      $("when", array("format", "hello")),
-                      $("then", array("matches", array("output"), ".*ELLO"))),
-                  dict(
-                      $("description", "shouldBeIgnored"),
-                      $("given", array("not", array("always"))),
-                      $("when", array("format", "hello")),
-                      $("then", array("matches", array("output"), ".*Ell.*")))))),
-          defaultValues);
-    }
   }
 
   @Import
-  public Object core    = new Core();
+  public Object core = new Core();
   @Import
   public Object predicates = new Predicates();
   @Import
