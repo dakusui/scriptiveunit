@@ -14,8 +14,6 @@ import org.junit.internal.runners.statements.RunAfters;
 import org.junit.internal.runners.statements.RunBefores;
 import org.junit.runner.Description;
 import org.junit.runner.Runner;
-import org.junit.runner.notification.Failure;
-import org.junit.runner.notification.RunListener;
 import org.junit.runner.notification.RunNotifier;
 import org.junit.runners.ParentRunner;
 import org.junit.runners.model.InitializationError;
@@ -177,7 +175,7 @@ import static java.util.stream.Collectors.toList;
  * ----
  *
  * //</pre>
- *
+ * <p>
  * == Notes
  * Unlike conventional JUnit's test runners, this class marks a test that threw {@link org.junit.AssumptionViolatedException}
  * "ignored" instead of ignoring silently.
@@ -331,13 +329,7 @@ public final class GroupedTestItemRunner extends ParentRunner<Action> {
     if (isIgnored(child)) {
       notifier.fireTestIgnored(description);
     } else {
-      RunListener runListener = considerAssumptionViolatedExceptionIgnored(notifier, description);
-      notifier.addListener(runListener);
-      try {
-        runLeaf(actionBlock(child), description, notifier);
-      } finally {
-        notifier.removeListener(runListener);
-      }
+      runLeaf(actionBlock(child), description, notifier);
     }
   }
 
@@ -450,15 +442,6 @@ public final class GroupedTestItemRunner extends ParentRunner<Action> {
     } catch (InitializationError initializationError) {
       throw ScriptiveUnitException.wrap(initializationError);
     }
-  }
-
-  private static RunListener considerAssumptionViolatedExceptionIgnored(RunNotifier notifier, Description description) {
-    return new RunListener() {
-      @Override
-      public void testAssumptionFailure(Failure failure) {
-        notifier.fireTestIgnored(description);
-      }
-    };
   }
 
   enum Utils {

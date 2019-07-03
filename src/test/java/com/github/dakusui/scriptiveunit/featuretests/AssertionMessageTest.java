@@ -8,18 +8,12 @@ import com.github.dakusui.scriptiveunit.testutils.TestBase;
 import org.junit.Test;
 import org.junit.runner.notification.Failure;
 
-import static com.github.dakusui.crest.Crest.allOf;
-import static com.github.dakusui.crest.Crest.asBoolean;
-import static com.github.dakusui.crest.Crest.asInteger;
-import static com.github.dakusui.crest.Crest.asObject;
-import static com.github.dakusui.crest.Crest.asString;
-import static com.github.dakusui.crest.Crest.assertThat;
-import static com.github.dakusui.crest.Crest.call;
-import static com.github.dakusui.crest.Crest.substringAfterRegex;
+import static com.github.dakusui.crest.Crest.*;
 import static com.github.dakusui.printables.Printables.isEmptyString;
-import static org.junit.runner.JUnitCore.runClasses;
+import static com.github.dakusui.scriptiveunit.testutils.TestUtils.runClasses;
 
 public class AssertionMessageTest extends TestBase {
+
   @Test
   public void givenSimpleTestClass$whenRunTestClass$thenExpectedResult() throws Throwable {
     ResultExpectation expectation = buildResultExpectation(Simple.class);
