@@ -8,7 +8,7 @@ import com.github.dakusui.jcunit8.runners.junit4.annotations.Given;
 import com.github.dakusui.jcunit8.runners.junit4.annotations.ParameterSource;
 import com.github.dakusui.scriptiveunit.runners.ScriptiveUnit;
 import com.github.dakusui.scriptiveunit.core.Config;
-import com.github.dakusui.scriptiveunit.model.lang.json.JsonUtils;
+import com.github.dakusui.scriptiveunit.utils.JsonUtils;
 import com.github.dakusui.scriptiveunit.testassets.drivers.Loader;
 import com.github.dakusui.scriptiveunit.testassets.drivers.Simple;
 import com.github.dakusui.scriptiveunit.testutils.Resource;

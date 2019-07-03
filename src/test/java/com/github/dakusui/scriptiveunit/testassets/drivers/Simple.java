@@ -13,8 +13,8 @@ import com.github.dakusui.scriptiveunit.drivers.actions.Basic;
 import com.github.dakusui.scriptiveunit.drivers.contrib.Reporting;
 import com.github.dakusui.scriptiveunit.model.form.Form;
 import com.github.dakusui.scriptiveunit.model.session.Stage;
+import com.github.dakusui.scriptiveunit.runners.ScriptiveSuiteSet;
 import com.github.dakusui.scriptiveunit.runners.ScriptiveUnit;
-import com.github.dakusui.scriptiveunit.utils.ScriptiveSuiteSet;
 import org.junit.runner.RunWith;
 
 import java.util.Map;

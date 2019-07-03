@@ -4,18 +4,18 @@ import com.github.dakusui.jcunit8.factorspace.Parameter;
 import com.github.dakusui.jcunit8.runners.junit4.JCUnit8;
 import com.github.dakusui.jcunit8.runners.junit4.annotations.From;
 import com.github.dakusui.jcunit8.runners.junit4.annotations.ParameterSource;
+import com.github.dakusui.scriptiveunit.examples.Qapi;
+import com.github.dakusui.scriptiveunit.testassets.drivers.Simple;
 import com.github.dakusui.scriptiveunit.testutils.JUnitResultMatcher;
 import com.github.dakusui.scriptiveunit.testutils.TestBase;
 import com.github.dakusui.scriptiveunit.testutils.TestDef;
 import com.github.dakusui.scriptiveunit.testutils.TestUtils;
-import com.github.dakusui.scriptiveunit.examples.Qapi;
-import com.github.dakusui.scriptiveunit.testassets.drivers.Simple;
 import org.hamcrest.Matcher;
 import org.junit.Test;
-import org.junit.runner.JUnitCore;
 import org.junit.runner.Result;
 import org.junit.runner.RunWith;
 
+import static com.github.dakusui.scriptiveunit.testutils.TestUtils.runClasses;
 import static com.github.dakusui.scriptiveunit.unittests.cli.QapiTest.TestItem.DEFAULT_VALUES;
 import static com.github.dakusui.scriptiveunit.unittests.cli.QapiTest.TestItem.STANDARD_VALUES;
 import static java.util.Arrays.asList;
@@ -69,6 +69,6 @@ public class QapiTest extends TestBase {
   ) {
     System.out.println(testItem.getTestInput());
     TestUtils.configureScriptNameSystemProperty(testItem.getTestInput(), Simple.class);
-    assertThat(JUnitCore.runClasses(Qapi.class), testItem.getOracle(this));
+    assertThat(runClasses(Qapi.class), testItem.getOracle(this));
   }
 }

@@ -1,8 +1,8 @@
-package com.github.dakusui.scriptiveunit.utils;
+package com.github.dakusui.scriptiveunit.runners;
 
 import com.github.dakusui.scriptiveunit.core.Config;
 import com.github.dakusui.scriptiveunit.exceptions.ScriptiveUnitException;
-import com.github.dakusui.scriptiveunit.runners.ScriptiveUnit;
+import com.github.dakusui.scriptiveunit.utils.ReflectionUtils;
 import org.junit.runner.Description;
 import org.junit.runner.Runner;
 import org.junit.runner.notification.RunNotifier;

@@ -1,6 +1,6 @@
 package com.github.dakusui.scriptiveunit.model.lang;
 
-import com.github.dakusui.scriptiveunit.model.lang.json.JsonUtils;
+import com.github.dakusui.scriptiveunit.utils.JsonUtils;
 import com.github.dakusui.scriptiveunit.utils.ReflectionUtils;
 import org.codehaus.jackson.JsonNode;
 import org.codehaus.jackson.node.ArrayNode;
@@ -10,7 +10,7 @@ import org.codehaus.jackson.node.ObjectNode;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
-import static com.github.dakusui.scriptiveunit.loaders.json.JsonPreprocessorUtils.requireObjectNode;
+import static com.github.dakusui.scriptiveunit.utils.JsonUtils.requireObjectNode;
 import static com.github.dakusui.scriptiveunit.model.lang.ApplicationSpec.isArray;
 import static com.github.dakusui.scriptiveunit.model.lang.ApplicationSpec.isAtom;
 import static com.github.dakusui.scriptiveunit.model.lang.ApplicationSpec.isDictionary;

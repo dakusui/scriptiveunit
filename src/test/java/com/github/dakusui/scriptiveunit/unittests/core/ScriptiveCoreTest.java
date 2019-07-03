@@ -14,7 +14,7 @@ import com.github.dakusui.scriptiveunit.testassets.drivers.ExampleSuiteSet;
 import com.github.dakusui.scriptiveunit.testassets.drivers.Simple;
 import com.github.dakusui.scriptiveunit.testutils.JUnitResultMatcher;
 import com.github.dakusui.scriptiveunit.testutils.TestBase;
-import com.github.dakusui.scriptiveunit.utils.ScriptiveSuiteSet;
+import com.github.dakusui.scriptiveunit.runners.ScriptiveSuiteSet;
 import org.junit.Ignore;
 import org.junit.Test;
 
