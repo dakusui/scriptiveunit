@@ -65,9 +65,7 @@ public interface Session {
       this.config = config;
       this.reportCreator = testItem ->
           Report.create(
-              testItem,
-              getConfig().getScriptResourceName().orElse("(not specified)"),
-              getConfig().getReportingConfig().reportBaseDirectory,
+              null, getConfig().getReportingConfig().reportBaseDirectory, getConfig().getScriptResourceName().orElse("(not specified)"), testItem,
               getConfig().getReportingConfig().reportFileName);
       this.testSuiteDescriptor = testSuiteDescriptorLoader.loadTestSuiteDescriptor(this);
     }

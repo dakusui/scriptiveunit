@@ -4,16 +4,13 @@ import com.github.dakusui.scriptiveunit.annotations.Import;
 import com.github.dakusui.scriptiveunit.annotations.Import.Alias;
 import com.github.dakusui.scriptiveunit.annotations.Load;
 import com.github.dakusui.scriptiveunit.annotations.Scriptable;
-import com.github.dakusui.scriptiveunit.drivers.Arith;
-import com.github.dakusui.scriptiveunit.drivers.Collections;
-import com.github.dakusui.scriptiveunit.drivers.Core;
-import com.github.dakusui.scriptiveunit.drivers.Predicates;
-import com.github.dakusui.scriptiveunit.drivers.Strings;
+import com.github.dakusui.scriptiveunit.drivers.*;
 import com.github.dakusui.scriptiveunit.drivers.actions.Basic;
-import com.github.dakusui.scriptiveunit.drivers.contrib.Reporting;
+import com.github.dakusui.scriptiveunit.drivers.extras.Reporting;
 import com.github.dakusui.scriptiveunit.model.form.Form;
 import com.github.dakusui.scriptiveunit.model.session.Stage;
 import com.github.dakusui.scriptiveunit.runners.ScriptiveSuiteSet;
+import com.github.dakusui.scriptiveunit.runners.ScriptiveSuiteSet.SuiteScripts;
 import com.github.dakusui.scriptiveunit.runners.ScriptiveUnit;
 import org.junit.runner.RunWith;
 
@@ -73,6 +70,9 @@ public class Simple {
   })
   public Object additinal = new Additional();
 
+  @Import
+  public Object broken = new Broken();
+
   @SuppressWarnings("WeakerAccess")
   public static class Additional {
     @SuppressWarnings("unused")
@@ -115,10 +115,15 @@ public class Simple {
     }
   }
 
+  public static class Broken {
+    @Scriptable
+    public Form<String> override(Form<Map<String, Object>> values, Form<String> request) {
+      throw new RuntimeException("broken");
+    }
+  }
+
   @RunWith(ScriptiveSuiteSet.class)
-  @ScriptiveSuiteSet.SuiteScripts(driverClass = Simple.class, includes = ".*reporting\\.json")
+  @SuiteScripts(driverClass = Simple.class, includes = ".*reporting\\.json")
   public static class Run {
-
-
   }
 }

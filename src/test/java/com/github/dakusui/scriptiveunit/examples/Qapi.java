@@ -9,7 +9,7 @@ import com.github.dakusui.scriptiveunit.core.Config;
 import com.github.dakusui.scriptiveunit.drivers.Arith;
 import com.github.dakusui.scriptiveunit.drivers.Collections;
 import com.github.dakusui.scriptiveunit.drivers.Predicates;
-import com.github.dakusui.scriptiveunit.drivers.contrib.QueryApi;
+import com.github.dakusui.scriptiveunit.drivers.extras.QueryApi;
 import com.github.dakusui.scriptiveunit.drivers.Strings;
 import com.github.dakusui.scriptiveunit.drivers.actions.Basic;
 import com.github.dakusui.scriptiveunit.model.lang.Preprocessor;

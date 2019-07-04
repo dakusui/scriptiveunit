@@ -71,7 +71,7 @@ public interface ObjectMethod {
 
       @Override
       public int getParameterCount() {
-        return method.getParameterCount();
+        return method.getParameterTypes().length;
       }
 
       @Override
