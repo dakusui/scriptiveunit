@@ -5,6 +5,7 @@ import com.github.dakusui.scriptiveunit.annotations.Import;
 import com.github.dakusui.scriptiveunit.annotations.Import.Alias;
 import com.github.dakusui.scriptiveunit.annotations.Scriptable;
 import com.github.dakusui.scriptiveunit.drivers.Arith;
+import com.github.dakusui.scriptiveunit.drivers.Core;
 import com.github.dakusui.scriptiveunit.drivers.Predicates;
 import com.github.dakusui.scriptiveunit.drivers.actions.Basic;
 import com.github.dakusui.scriptiveunit.model.form.Form;
@@ -39,6 +40,10 @@ public class Driver1 {
   @SuppressWarnings("unused")
   @Import
   public final Object helloWorld = new HelloWorld();
+
+  @SuppressWarnings("unused")
+  @Import
+  public final Object core = new Core();
 
   static class HelloWorld {
     @Doc({"Hello, world", "everyone"})

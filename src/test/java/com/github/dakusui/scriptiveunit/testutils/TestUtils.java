@@ -1,6 +1,7 @@
 package com.github.dakusui.scriptiveunit.testutils;
 
 import com.github.dakusui.scriptiveunit.core.Config;
+import org.junit.runner.Result;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -31,5 +32,9 @@ public enum TestUtils {
         }
       }));
     }
+  }
+
+  public static Result runClasses(Class... classes) {
+    return new AssumptionViolationConsciousJUnitCore().run(classes);
   }
 }

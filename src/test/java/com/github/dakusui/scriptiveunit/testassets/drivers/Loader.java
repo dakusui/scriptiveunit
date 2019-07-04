@@ -12,15 +12,17 @@ import static java.util.stream.Collectors.toList;
 
 
 public abstract class Loader extends JsonBasedTestSuiteDescriptorLoader {
+  private ApplicationSpec applicationSpec = new ApplicationSpec.Standard();
+
   @SuppressWarnings("WeakerAccess")
   protected Loader(Config config) {
     super(config);
   }
 
-  protected ApplicationSpec.Dictionary readObjectNodeWithMerging(String resourceName) {
-    ApplicationSpec.Dictionary work = super.readObjectNodeWithMerging(resourceName);
+  protected ApplicationSpec.Dictionary readApplicationDictionaryWithMerging(String resourceName) {
+    ApplicationSpec.Dictionary work = super.readApplicationDictionaryWithMerging(resourceName);
     for (ObjectNode each : objectNodes()) {
-      work = ApplicationSpec.deepMerge(hostSpec.toApplicationDictionary(each), work);
+      work = applicationSpec.deepMerge(hostSpec.toApplicationDictionary(each), work);
     }
     return work;
   }

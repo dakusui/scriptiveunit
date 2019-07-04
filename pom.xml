@@ -158,7 +158,7 @@
                         <artifactId>asciidoclet</artifactId>
                         <version>${asciidoclet.version}</version>
                     </docletArtifact>
-                    <overview>src/main/java/overview.adoc</overview>
+                    <overview>src/main/javadoc/overview.adoc</overview>
                     <additionalparam>
                         --base-dir ${project.basedir}
                         --attribute "name=${project.name}"

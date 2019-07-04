@@ -6,13 +6,15 @@ import com.github.dakusui.scriptiveunit.model.form.Form;
 import com.github.dakusui.scriptiveunit.model.form.handle.FormHandle;
 import com.github.dakusui.scriptiveunit.model.form.handle.FormHandleFactory;
 import com.github.dakusui.scriptiveunit.model.form.handle.ObjectMethodRegistry;
+import com.github.dakusui.scriptiveunit.model.session.Stage;
 import com.github.dakusui.scriptiveunit.utils.CoreUtils;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+import java.util.stream.StreamSupport;
 
 import static com.github.dakusui.scriptiveunit.exceptions.TypeMismatch.headOfCallMustBeString;
-import static com.github.dakusui.scriptiveunit.model.form.handle.FormUtils.createConst;
 
 /**
  * An interface that represents a lexical structure of a script element.
@@ -24,9 +26,17 @@ public interface Statement {
 
   <U> Form<U> toForm();
 
+  default void accept(Visitor visitor) {
+    throw new UnsupportedOperationException();
+  }
+
   interface Atom extends Statement {
     default boolean isParameterAccessor() {
       return false;
+    }
+
+    default void accept(Visitor visitor) {
+      visitor.visit(this);
     }
 
     default <V> V value() {
@@ -38,6 +48,10 @@ public interface Statement {
     FormHandle getFormHandle();
 
     Arguments getArguments();
+
+    default void accept(Visitor visitor) {
+      visitor.visit(this);
+    }
   }
 
   class Factory {
@@ -83,12 +97,33 @@ public interface Statement {
 
           @Override
           public <U> Form<U> toForm() {
-            return input -> input.getArgument((this.value()));
+            Form<U> form = input -> input.getArgument((this.value()));
+            return new Form<U>() {
+              @Override
+              public U apply(Stage stage) {
+                return Stage.applyForm(stage, form, Form::apply);
+              }
+
+              @Override
+              public String name() {
+                return String.format("(%s)", car);
+              }
+
+              @Override
+              public String toString() {
+                return form.toString();
+              }
+            };
           }
 
           @Override
           public boolean isParameterAccessor() {
             return true;
+          }
+
+          @Override
+          public String toString() {
+            return String.format("(%s)", car);
           }
         };
       }
@@ -99,7 +134,22 @@ public interface Statement {
       return new Atom() {
         @Override
         public <U> Form<U> toForm() {
-          return createConst(this.value());
+          return new Form.Const<U>() {
+            @Override
+            public U apply(Stage stage) {
+              return Stage.applyForm(stage, this, (f, s) -> value());
+            }
+
+            @Override
+            public String name() {
+              return String.format("'%s'", Objects.toString(value()));
+            }
+
+            @Override
+            public String toString() {
+              return Objects.toString(value());//form.toString();
+            }
+          };
         }
 
         @SuppressWarnings("unchecked")
@@ -108,9 +158,48 @@ public interface Statement {
             throw new IllegalStateException();
           return (V) object;
         }
+
+        @Override
+        public String toString() {
+          return String.format("\"%s\"", Objects.toString(this.value()));
+        }
       };
     }
-
   }
 
+  interface Visitor {
+    void visit(Statement.Atom atom);
+
+    void visit(Statement.Compound compound);
+
+    class Formatter implements Visitor {
+      StringBuilder b = new StringBuilder();
+
+      @Override
+      public void visit(Atom atom) {
+        b.append(atom);
+      }
+
+      @Override
+      public void visit(Compound compound) {
+        b.append("(");
+        b.append(compound.getFormHandle().toString());
+        //
+        StreamSupport.stream(compound.getArguments().spliterator(), false)
+            .peek(each -> b.append(" "))
+            .forEach(each -> each.accept(this));
+        b.append(")");
+      }
+
+      public String toString() {
+        return b.toString();
+      }
+    }
+  }
+
+  static String format(Statement statement) {
+    Visitor.Formatter formatter = new Visitor.Formatter();
+    statement.accept(formatter);
+    return formatter.toString();
+  }
 }

@@ -31,6 +31,24 @@ public interface ApplicationSpec {
 
   List<String> parentsOf(Dictionary rootNode);
 
+  default Dictionary deepMerge(Dictionary source, Dictionary target) {
+    requireNonNull(source);
+    requireNonNull(target);
+    return dict(Stream.concat(
+        target.streamKeys()
+            .map(each -> source.containsKey(each) ?
+                isDictionary(source.valueOf(each)) ?
+                    $(each, deepMerge(
+                        requireDictionary(source.valueOf(each), nonDictionaryFound(each)),
+                        requireDictionary(target.valueOf(each), nonDictionaryFound(each)))) :
+                    $(each, source.valueOf(each)) :
+                $(each, target.valueOf(each))),
+        source.streamKeys()
+            .filter(each -> !target.containsKey(each))
+            .map(each -> $(each, source.valueOf(each))))
+        .toArray(Dictionary.Entry[]::new));
+  }
+
   static ApplicationSpec.Dictionary preprocess(ApplicationSpec.Dictionary inputNode, Preprocessor preprocessor) {
     return (Dictionary) preprocess(preprocessor, Preprocessor.Path.createRoot(), inputNode);
   }
@@ -78,24 +96,6 @@ public interface ApplicationSpec {
     return node instanceof Atom;
   }
 
-  static Dictionary deepMerge(Dictionary source, Dictionary target) {
-    requireNonNull(source);
-    requireNonNull(target);
-    return dict(Stream.concat(
-        target.streamKeys()
-            .map(each -> source.containsKey(each) ?
-                isDictionary(source.valueOf(each)) ?
-                    $(each, deepMerge(
-                        requireDictionary(source.valueOf(each), nonDictionaryFound(each)),
-                        requireDictionary(target.valueOf(each), nonDictionaryFound(each)))) :
-                    $(each, source.valueOf(each)) :
-                $(each, target.valueOf(each))),
-        source.streamKeys()
-            .filter(each -> !target.containsKey(each))
-            .map(each -> $(each, source.valueOf(each))))
-        .toArray(Dictionary.Entry[]::new));
-  }
-
   enum Utils {
     ;
 
@@ -141,6 +141,13 @@ public interface ApplicationSpec {
     }
 
     @Override
+    public List<String> parentsOf(Dictionary rootNode) {
+      return rootNode.containsKey(inheritanceKeyword()) ?
+          toStringList(requireArray(rootNode.valueOf(inheritanceKeyword()))) :
+          emptyList();
+    }
+
+    @Override
     public List<Preprocessor> preprocessors() {
       return singletonList(
           Preprocessor.preprocessor(toUniformedObjectNodeTranslator(),
@@ -159,13 +166,6 @@ public interface ApplicationSpec {
 
     private String inheritanceKeyword() {
       return HostSpec.Json.EXTENDS_KEYWORD;
-    }
-
-    @Override
-    public List<String> parentsOf(Dictionary rootNode) {
-      return rootNode.containsKey(inheritanceKeyword()) ?
-          toStringList(requireArray(rootNode.valueOf(inheritanceKeyword()))) :
-          emptyList();
     }
 
     private static Array requireArray(Node node) {
@@ -198,7 +198,8 @@ public interface ApplicationSpec {
 
 
   static Atom atom(Object value) {
-    check(value, v -> !(v instanceof Node), "Value must not be an instance of '%s' but was: %s", Node.class, value);
+    check(value, v -> !(v instanceof Node),
+        "Value must not be an instance of '%s' but was: %s", Node.class.getSimpleName(), value);
     return new Atom() {
       @SuppressWarnings("unchecked")
       @Override
@@ -269,6 +270,10 @@ public interface ApplicationSpec {
 
   static Dictionary.Entry $(String key, Node value) {
     return entry(key, value);
+  }
+
+  static Atom $(String key) {
+    return atom(key);
   }
 
   interface Node {

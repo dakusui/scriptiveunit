@@ -13,7 +13,7 @@ import com.github.dakusui.scriptiveunit.model.desc.testitem.TestOracle;
 import com.github.dakusui.scriptiveunit.model.form.handle.FormUtils;
 import com.github.dakusui.scriptiveunit.model.session.Session;
 import com.github.dakusui.scriptiveunit.model.statement.Statement;
-import com.github.dakusui.scriptiveunit.runners.ScriptiveUnit;
+import com.github.dakusui.scriptiveunit.runners.RunningMode;
 import com.github.dakusui.scriptiveunit.utils.StringUtils;
 
 import java.util.List;
@@ -32,7 +32,7 @@ public abstract class TestSuiteDescriptorBean {
   private final FactorSpaceDescriptorBean      factorSpaceBean;
   private final List<? extends TestOracleBean> testOracleBeanList;
   private final String                         description;
-  private final ScriptiveUnit.Mode             runnerMode;
+  private final RunningMode                    runnerMode;
   private final Map<String, List<Object>>      userDefinedFormClauses;
   private final List<Object>                   setUpClause;
   private final List<Object>                   setUpBeforeAllClause;
@@ -50,7 +50,7 @@ public abstract class TestSuiteDescriptorBean {
       List<Object> tearDownClause,
       List<Object> tearDownAfterAllClause) {
     this.description = description;
-    this.runnerMode = ScriptiveUnit.Mode.valueOf(StringUtils.toALL_CAPS(runnerType));
+    this.runnerMode = RunningMode.valueOf(StringUtils.toALL_CAPS(runnerType));
     this.factorSpaceBean = factorSpaceBean;
     this.userDefinedFormClauses = userDefinedFormClauses;
     this.setUpBeforeAllClause = setUpBeforeAllClause;
@@ -149,7 +149,7 @@ public abstract class TestSuiteDescriptorBean {
         }
 
         @Override
-        public ScriptiveUnit.Mode getRunnerMode() {
+        public RunningMode getRunnerMode() {
           return runnerMode;
         }
 

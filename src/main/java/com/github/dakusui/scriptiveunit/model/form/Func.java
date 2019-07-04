@@ -15,12 +15,13 @@ public interface Func<O> extends Form<O> {
 
   Function<Object[], O> body();
 
-    static <O> Builder<O> body(Function<Object[], O> body) {
+  static <O> Builder<O> body(Function<Object[], O> body) {
     return new Builder<O>().func(body);
   }
+
   final class Builder<O> {
-    private final List<Form> parameters;
-    private Function<Object[], O> body;
+    private final List<Form>            parameters;
+    private       Function<Object[], O> body;
 
     public Builder() {
       this.parameters = new LinkedList<>();
