@@ -2,21 +2,24 @@ package com.github.dakusui.scriptiveunit.model.session;
 
 import com.github.dakusui.jcunit.core.tuples.Tuple;
 import com.github.dakusui.scriptiveunit.core.Config;
-import com.github.dakusui.scriptiveunit.model.desc.testitem.TestItem;
-import com.github.dakusui.scriptiveunit.model.form.Form;
 
 import java.util.Optional;
 
 class FrameworkStage<RESPONSE> extends StageBase<RESPONSE> {
   private final Tuple testCase;
 
-  FrameworkStage(Tuple testCase, ExecutionLevel executionLevel, Config config) {
-    super(null, executionLevel, null, config, null);
+  FrameworkStage(Tuple testCase,  Config config) {
+    super(null, null, config, null);
     this.testCase = testCase;
   }
 
   @Override
   public Optional<Tuple> getTestCaseTuple() {
     return Optional.of(testCase);
+  }
+
+  @Override
+  public String toString() {
+    return String.format("stage:fixture:<%s>", testCase);
   }
 }

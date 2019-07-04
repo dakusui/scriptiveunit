@@ -208,11 +208,11 @@ public interface Session {
     }
 
     Stage createSuiteLevelStage(Tuple suiteLevelTuple) {
-      return Stage.Factory.frameworkStageFor(SUITE, this.getConfig(), suiteLevelTuple);
+      return Stage.Factory.frameworkStageFor( this.getConfig(), suiteLevelTuple);
     }
 
     Stage createFixtureLevelStage(Tuple fixtureLevelTuple) {
-      return Stage.Factory.frameworkStageFor(FIXTURE, this.getConfig(), fixtureLevelTuple);
+      return Stage.Factory.frameworkStageFor( this.getConfig(), fixtureLevelTuple);
     }
 
     Stage createOracleLevelStage(TestItem testItem, Report report) {

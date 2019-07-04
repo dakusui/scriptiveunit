@@ -28,13 +28,6 @@ public interface Stage extends Form.Listener{
     }
   }
 
-  /**
-   * Reurns a type of this stage.
-   *
-   * @return Type of this stage.
-   */
-  ExecutionLevel getExecutionLevel();
-
   Config getConfig();
 
   int sizeOfArguments();
@@ -81,11 +74,11 @@ public interface Stage extends Form.Listener{
 
   interface Factory {
     static <RESPONSE> Stage oracleLevelStageFor(Config config, TestItem testItem, RESPONSE response, Throwable throwable, Report report) {
-      return new OracleLevelStage<>(response, ExecutionLevel.ORACLE, throwable, config, report, testItem);
+      return new OracleLevelStage<>(response, throwable, config, report, testItem);
     }
 
-    static Stage frameworkStageFor(ExecutionLevel executionLevel, Config config, Tuple fixture) {
-      return new FrameworkStage<>(fixture, executionLevel, config);
+    static Stage frameworkStageFor( Config config, Tuple fixture) {
+      return new FrameworkStage<>(fixture, config);
     }
 
     static Stage createWrappedStage(Stage stage, Form<?>... args) {
@@ -121,11 +114,6 @@ public interface Stage extends Form.Listener{
 
     static Stage createFormListeningStage(Stage stage, Form.Listener formListener) {
       return new Stage() {
-        @Override
-        public ExecutionLevel getExecutionLevel() {
-          return stage.getExecutionLevel();
-        }
-
         @Override
         public Config getConfig() {
           return stage.getConfig();

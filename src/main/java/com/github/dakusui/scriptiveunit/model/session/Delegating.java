@@ -26,11 +26,6 @@ abstract class Delegating implements Stage {
   }
 
   @Override
-  public ExecutionLevel getExecutionLevel() {
-    return this.target.getExecutionLevel();
-  }
-
-  @Override
   public <T> T getArgument(int index) {
     return this.target.getArgument(index);
   }

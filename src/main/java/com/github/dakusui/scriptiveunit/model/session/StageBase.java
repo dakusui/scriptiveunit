@@ -6,14 +6,12 @@ import java.util.Optional;
 
 abstract class StageBase<RESPONSE> implements Stage.Default {
   private final RESPONSE response;
-  private final ExecutionLevel executionLevel;
   private final Throwable throwable;
   private final Config config;
   private final Report report;
 
-  StageBase(RESPONSE response, ExecutionLevel executionLevel, Throwable throwable, Config config, Report report) {
+  StageBase(RESPONSE response, Throwable throwable, Config config, Report report) {
     this.response = response;
-    this.executionLevel = executionLevel;
     this.throwable = throwable;
     this.config = config;
     this.report = report;
@@ -23,11 +21,6 @@ abstract class StageBase<RESPONSE> implements Stage.Default {
   @Override
   public Optional<RESPONSE> response() {
     return Optional.ofNullable(response);
-  }
-
-  @Override
-  public ExecutionLevel getExecutionLevel() {
-    return executionLevel;
   }
 
   @Override

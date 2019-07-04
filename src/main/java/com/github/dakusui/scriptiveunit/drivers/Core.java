@@ -80,7 +80,7 @@ public class Core {
   public Form<TestItem> testItem() {
     return stage -> stage.getTestItem().orElseThrow(
         () -> new IllegalStateException(
-            format("This method cannot be called on '%s' stage", stage.getExecutionLevel())));
+            format("This method cannot be called on this stage:<%s>", stage)));
   }
 
   @SuppressWarnings("unused")
