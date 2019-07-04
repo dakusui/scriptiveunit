@@ -4,32 +4,23 @@ import com.github.dakusui.scriptiveunit.core.Config;
 
 import java.util.Optional;
 
-abstract class StageBase<RESPONSE> implements Stage {
+abstract class StageBase<RESPONSE> implements Stage.Default {
   private final RESPONSE response;
-  private final ExecutionLevel executionLevel;
   private final Throwable throwable;
   private final Config config;
   private final Report report;
-  private final Memo memo;
 
-  StageBase(RESPONSE response, ExecutionLevel executionLevel, Throwable throwable, Config config, Report report) {
+  StageBase(RESPONSE response, Throwable throwable, Config config, Report report) {
     this.response = response;
-    this.executionLevel = executionLevel;
     this.throwable = throwable;
     this.config = config;
     this.report = report;
-    this.memo = Stage.createMemo();
   }
 
   @SuppressWarnings("unchecked")
   @Override
   public Optional<RESPONSE> response() {
     return Optional.ofNullable(response);
-  }
-
-  @Override
-  public ExecutionLevel getExecutionLevel() {
-    return executionLevel;
   }
 
   @Override

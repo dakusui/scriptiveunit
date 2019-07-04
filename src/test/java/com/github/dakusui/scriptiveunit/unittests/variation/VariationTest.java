@@ -159,7 +159,6 @@ public class VariationTest {
       Resource<ObjectNode> setUpBeforeAll,
       Resource<ObjectNode> testOracles
   ) throws Throwable {
-    //noinspection unchecked
     new JUnitCore().run(
         new ScriptiveUnit(
             Simple.class,

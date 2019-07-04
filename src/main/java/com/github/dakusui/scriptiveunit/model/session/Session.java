@@ -65,9 +65,7 @@ public interface Session {
       this.config = config;
       this.reportCreator = testItem ->
           Report.create(
-              testItem,
-              getConfig().getScriptResourceName(),
-              getConfig().getReportingConfig().reportBaseDirectory,
+              null, getConfig().getReportingConfig().reportBaseDirectory, getConfig().getScriptResourceName().orElse("(not specified)"), testItem,
               getConfig().getReportingConfig().reportFileName);
       this.testSuiteDescriptor = testSuiteDescriptorLoader.loadTestSuiteDescriptor(this);
     }
@@ -158,7 +156,7 @@ public interface Session {
 
     Action createBefore(TestItem testItem, TestOracleFormFactory testOracleFormFactory, Report report) {
       Stage beforeStage = this.createOracleLevelStage(testItem, report);
-      return testOracleFormFactory.beforeFactory(testItem, report).apply(beforeStage);
+      return testOracleFormFactory.beforeFactory().apply(beforeStage);
     }
 
     Source<Tuple> createGiven(
@@ -184,8 +182,11 @@ public interface Session {
 
     Sink<TestIO> createThen(TestItem testItem, Report report, Function<Stage, Function<Object, Matcher<Stage>>> matcherFunction) {
       return (testIO, context) -> {
-        Stage thenStage = createOracleVerificationStage(testItem, testIO.getOutput(), report);
-        assertThat(thenStage, matcherFunction.apply(thenStage).apply(testIO.getOutput()));
+        Stage thenStage = Impl.this.createOracleVerificationStage(testItem, testIO.getOutput(), report);
+        assertThat(
+            String.format("Test:<%s> failed with input:<%s>", testItem.getDescription().orElse("(noname)"), testIO.getInput()),
+            thenStage,
+            matcherFunction.apply(thenStage).apply(testIO.getOutput()));
       };
     }
 
@@ -196,22 +197,22 @@ public interface Session {
     Sink<AssertionError> createErrorHandler(TestItem testItem, TestOracleFormFactory definition, Report report) {
       return (input, context) -> {
         Stage onFailureStage = createOracleFailureHandlingStage(testItem, input, report);
-        definition.errorHandlerFactory(testItem, report).apply(onFailureStage);
+        definition.errorHandlerFactory().apply(onFailureStage);
         throw input;
       };
     }
 
     Action createAfter(TestItem testItem, TestOracleFormFactory definition, Report report) {
       Stage afterStage = this.createOracleLevelStage(testItem, report);
-      return definition.afterFactory(testItem, report).apply(afterStage);
+      return definition.afterFactory().apply(afterStage);
     }
 
     Stage createSuiteLevelStage(Tuple suiteLevelTuple) {
-      return Stage.Factory.frameworkStageFor(SUITE, this.getConfig(), suiteLevelTuple);
+      return Stage.Factory.frameworkStageFor( this.getConfig(), suiteLevelTuple);
     }
 
     Stage createFixtureLevelStage(Tuple fixtureLevelTuple) {
-      return Stage.Factory.frameworkStageFor(FIXTURE, this.getConfig(), fixtureLevelTuple);
+      return Stage.Factory.frameworkStageFor( this.getConfig(), fixtureLevelTuple);
     }
 
     Stage createOracleLevelStage(TestItem testItem, Report report) {

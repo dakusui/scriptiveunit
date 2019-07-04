@@ -15,10 +15,12 @@ import static java.lang.String.format;
 public interface Report extends Map<String, Object> {
   void submit();
 
-  static Report create(TestItem testItem, final String testSuiteName, final File baseDirectory, final String reportFileName) {
+  static Report create(File baseDir, final File applicationDirectory, final String testSuiteName, TestItem testItem, final String reportFileName) {
     int testCaseId = testItem.getTestCaseId();
     int oracleId = testItem.getTestOracleId();
     return new Base() {
+      private final File base = baseDir;
+
       @Override
       public void submit() {
         File reportFile = new File(ensureDirectoryExists(reportingDirectory()), reportFileName);
@@ -30,23 +32,27 @@ public interface Report extends Map<String, Object> {
       }
 
       private File reportingDirectory() {
-        return
-            new File(
-                new File("reports"),
-                new File(testSuiteName,
+        return base == null ?
+            reportingDirectory_() :
+            new File(base, reportingDirectory_().getPath());
+      }
+      private File reportingDirectory_() {
+        return new File(
+            new File("reports"),
+            new File(testSuiteName,
+                new File(
+                    this.applicationDirectory(),
                     new File(
-                        this.baseDirectory(),
-                        new File(
-                            Integer.toString(oracleId),
-                            Integer.toString(testCaseId)
-                        ).getPath()
+                        Integer.toString(oracleId),
+                        Integer.toString(testCaseId)
                     ).getPath()
                 ).getPath()
-            );
+            ).getPath()
+        );
       }
 
-      private File baseDirectory() {
-        return baseDirectory;
+      private File applicationDirectory() {
+        return applicationDirectory;
       }
 
       private File ensureDirectoryExists(File dir) {

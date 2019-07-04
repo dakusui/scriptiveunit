@@ -9,8 +9,8 @@ import java.util.Optional;
 class OracleLevelStage<RESPONSE> extends StageBase<RESPONSE> {
   private final TestItem testItem;
 
-  OracleLevelStage(RESPONSE response, ExecutionLevel executionLevel, Throwable throwable, Config config, Report report, TestItem testItem) {
-    super(response, executionLevel, throwable, config, report);
+  OracleLevelStage(RESPONSE response, Throwable throwable, Config config, Report report, TestItem testItem) {
+    super(response, throwable, config, report);
     this.testItem = testItem;
   }
 
@@ -22,5 +22,10 @@ class OracleLevelStage<RESPONSE> extends StageBase<RESPONSE> {
   @Override
   public Optional<TestItem> getTestItem() {
     return Optional.ofNullable(testItem);
+  }
+
+  @Override
+  public String toString() {
+    return String.format("stage:oracle:<%s>", testItem);
   }
 }

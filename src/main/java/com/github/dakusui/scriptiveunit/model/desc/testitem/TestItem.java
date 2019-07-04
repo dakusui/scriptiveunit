@@ -3,9 +3,12 @@ package com.github.dakusui.scriptiveunit.model.desc.testitem;
 import com.github.dakusui.jcunit.core.tuples.Tuple;
 import com.github.dakusui.scriptiveunit.model.session.TestOracleFormFactory;
 
+import java.util.Optional;
 import java.util.function.Function;
 
 public interface TestItem {
+  Optional<String> getDescription();
+
   int getTestCaseId();
 
   Tuple getTestCaseTuple();
@@ -21,6 +24,11 @@ public interface TestItem {
     Impl(IndexedTestCase indexedTestCase, TestOracle testOracle) {
       this.indexedTestCase = indexedTestCase;
       this.testOracle = testOracle;
+    }
+
+    @Override
+    public Optional<String> getDescription() {
+      return this.testOracle.getDescription();
     }
 
     @Override
@@ -44,7 +52,7 @@ public interface TestItem {
           this,
           this.testOracle.definition(),
           testCaseFormatter
-          );
+      );
     }
   }
 

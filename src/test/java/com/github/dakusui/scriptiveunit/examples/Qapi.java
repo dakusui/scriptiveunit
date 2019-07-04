@@ -9,7 +9,7 @@ import com.github.dakusui.scriptiveunit.core.Config;
 import com.github.dakusui.scriptiveunit.drivers.Arith;
 import com.github.dakusui.scriptiveunit.drivers.Collections;
 import com.github.dakusui.scriptiveunit.drivers.Predicates;
-import com.github.dakusui.scriptiveunit.drivers.contrib.QueryApi;
+import com.github.dakusui.scriptiveunit.drivers.extras.QueryApi;
 import com.github.dakusui.scriptiveunit.drivers.Strings;
 import com.github.dakusui.scriptiveunit.drivers.actions.Basic;
 import com.github.dakusui.scriptiveunit.model.lang.Preprocessor;
@@ -43,8 +43,10 @@ import static java.util.Objects.requireNonNull;
 @RunWith(ScriptiveUnit.class)
 public class Qapi {
   public static class Loader extends JsonBasedTestSuiteDescriptorLoader {
+    private static ApplicationSpec applicationSpec = new ApplicationSpec.Standard();
+
     @Override
-    protected ApplicationSpec modelSpec() {
+    protected ApplicationSpec applicationLanguage() {
       return new ApplicationSpec.Standard() {
         @Override
         public List<Preprocessor> preprocessors() {
@@ -63,7 +65,7 @@ public class Qapi {
     }
 
     static ApplicationSpec.Node getModelNode(ApplicationSpec.Node node) {
-      return ApplicationSpec.deepMerge(
+      return applicationSpec.deepMerge(
           requireDictionary(node),
           dict(
               $("after", array(atom("nop")))

@@ -17,11 +17,17 @@ import static java.util.stream.Collectors.toList;
 public interface FormHandle {
   <U> Form<U> toForm(Statement.Compound statement);
 
-  default boolean isAccessor() {
-    return false;
+  boolean isAccessor();
+
+  interface Default extends FormHandle {
+    @Override
+    default boolean isAccessor() {
+      return false;
+    }
   }
 
-  abstract class Base implements FormHandle {
+  abstract class Base implements FormHandle.Default {
+    @Override
     public abstract String toString();
   }
 
@@ -42,7 +48,9 @@ public interface FormHandle {
 
     @Override
     public <U> Form<U> toForm(Statement.Compound compound) {
-      return methodBasedFormHandleToForm(this, compound);
+      return Form.Named.create(
+          this.objectMethod.getName(),
+          methodBasedFormHandleToForm(this, compound));
     }
 
     @Override
@@ -52,7 +60,7 @@ public interface FormHandle {
 
     @Override
     public String toString() {
-      return String.format("form:%s", this.objectMethod);
+      return this.objectMethod.getName();
     }
 
     ObjectMethod objectMethod() {
@@ -66,7 +74,10 @@ public interface FormHandle {
 
     @Override
     public <U> Form<U> toForm(Statement.Compound statement) {
-      return lambdaFormHandleToForm(statement);
+      return Form.Named.create(
+          "<lambda>",
+          lambdaFormHandleToForm(statement)
+      );
     }
 
     static <U> Form<U> lambdaFormHandleToForm(Statement.Compound compound) {
@@ -111,11 +122,11 @@ public interface FormHandle {
 
     @SuppressWarnings("unchecked")
     private static Form<Object> createUserFunc(Form[] args) {
-      return userFunc(CoreUtils.car(args), CoreUtils.cdr(args));
+      return Form.Named.create("<user>", userFunc(CoreUtils.car(args), CoreUtils.cdr(args)));
     }
 
     private static Form<Object> userFunc(Form<Statement> statementForm, Form<?>... args) {
-      return (Stage input) -> statementForm
+      return input -> statementForm
           .apply(input)
           .toForm()
           .apply(createWrappedStage(input, args));
@@ -123,7 +134,7 @@ public interface FormHandle {
 
     @Override
     public String toString() {
-      return "user:" + userDefinedStatement;
+      return "<user>:" + userDefinedStatement;
     }
   }
 }

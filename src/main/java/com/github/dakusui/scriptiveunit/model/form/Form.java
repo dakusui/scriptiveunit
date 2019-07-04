@@ -24,7 +24,25 @@ public interface Form<O> extends Function<Stage, O>, Formattable {
   }
 
   default String name() {
-    return "(noname)";
+    return "<noname>";
+  }
+
+  interface Named<O> extends Form<O> {
+    String name();
+
+    static <O> Named<O> create(String name, Form<O> form) {
+      return new Named<O>() {
+        @Override
+        public String name() {
+          return name;
+        }
+
+        @Override
+        public O apply(Stage input) {
+          return form.apply(input);
+        }
+      };
+    }
   }
 
   /**
@@ -35,5 +53,13 @@ public interface Form<O> extends Function<Stage, O>, Formattable {
    * @param <O> Type of output constant.
    */
   interface Const<O> extends Form<O> {
+  }
+
+  interface Listener {
+    void enter(Form form);
+
+    void leave(Form form, Object value);
+
+    void fail(Form form, Throwable t);
   }
 }

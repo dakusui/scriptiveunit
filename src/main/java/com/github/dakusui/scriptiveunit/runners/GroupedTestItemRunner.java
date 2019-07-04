@@ -20,21 +20,12 @@ import org.junit.runners.model.InitializationError;
 import org.junit.runners.model.Statement;
 
 import java.lang.annotation.Annotation;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
-import static com.github.dakusui.actionunit.core.ActionSupport.attempt;
-import static com.github.dakusui.actionunit.core.ActionSupport.named;
-import static com.github.dakusui.actionunit.core.ActionSupport.nop;
-import static com.github.dakusui.actionunit.core.ActionSupport.sequential;
+import static com.github.dakusui.actionunit.core.ActionSupport.*;
 import static com.github.dakusui.scriptiveunit.runners.GroupedTestItemRunner.Utils.createMainActionsForTestCase;
 import static com.github.dakusui.scriptiveunit.runners.GroupedTestItemRunner.Utils.createMainActionsForTestFixture;
 import static com.github.dakusui.scriptiveunit.utils.ActionUtils.performActionWithLogging;
@@ -184,8 +175,13 @@ import static java.util.stream.Collectors.toList;
  * ----
  *
  * //</pre>
+ * <p>
+ * == Notes
+ * Unlike conventional JUnit's test runners, this class marks a test that threw {@link org.junit.AssumptionViolatedException}
+ * "ignored" instead of ignoring silently.
+ * That is, a test that returns {@code false} on {@code given} clause will be marked ignored.
  *
- * @see ScriptiveUnit.Mode
+ * @see RunningMode
  */
 public final class GroupedTestItemRunner extends ParentRunner<Action> {
   static Iterable<Runner> createRunnersGroupingByTestOracle(final Session session) {
@@ -284,10 +280,10 @@ public final class GroupedTestItemRunner extends ParentRunner<Action> {
     };
   }
 
-  private final int          groupId;
-  private final Action       beforeAction;
+  private final int groupId;
+  private final Action beforeAction;
   private final List<Action> mainActions;
-  private final Action       afterAction;
+  private final Action afterAction;
 
   /**
    * Constructs a new {@code ParentRunner} that will run {@code @TestClass}
@@ -464,7 +460,7 @@ public final class GroupedTestItemRunner extends ParentRunner<Action> {
             public Action apply(IndexedTestCase input) {
               try {
                 return named(
-                    format("%03d: %s", i, templateTestOracleDescription(input.get(), testSuiteDescription, testOracle.getDescription())),
+                    describe(input),
                     sequential(
                         session.createSetUpActionForFixture(testSuiteDescriptor, input.get()),
                         attempt(
@@ -476,6 +472,14 @@ public final class GroupedTestItemRunner extends ParentRunner<Action> {
               } finally {
                 i++;
               }
+            }
+
+            String describe(IndexedTestCase input) {
+              return format("%03d: %s", i,
+                  templateTestOracleDescription(
+                      input.get(),
+                      testSuiteDescription,
+                      testOracle.getDescription().orElse("(no name)")));
             }
           }).collect(toList());
     }
@@ -492,8 +496,8 @@ public final class GroupedTestItemRunner extends ParentRunner<Action> {
 
     static List<Action> createMainActionsForTestFixture
         (List<IndexedTestCase> testCasesFilteredByFixture,
-            Session session,
-            TestSuiteDescriptor testSuiteDescriptor) {
+         Session session,
+         TestSuiteDescriptor testSuiteDescriptor) {
       return testSuiteDescriptor
           .getRunnerMode()
           .orderBy()

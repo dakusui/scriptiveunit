@@ -5,13 +5,14 @@ import com.github.dakusui.actionunit.core.Action;
 import com.github.dakusui.actionunit.io.Writer;
 import com.github.dakusui.actionunit.visitors.ReportingActionPerformer;
 import com.github.dakusui.scriptiveunit.model.session.action.TestActionBuilder;
+import org.junit.AssumptionViolatedException;
 
 public enum ActionUtils {
   ;
 
   public static void performActionWithLogging(Action action) {
     ReportingActionPerformer performer = ReportingActionPerformer.create();
-    performer.performAndReport(action, Writer.Slf4J.TRACE);
+      performer.performAndReport(action, Writer.Slf4J.TRACE);
   }
 
   public static String formatAction(Action action) {

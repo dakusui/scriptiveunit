@@ -80,7 +80,7 @@ public class Core {
   public Form<TestItem> testItem() {
     return stage -> stage.getTestItem().orElseThrow(
         () -> new IllegalStateException(
-            format("This method cannot be called on '%s' stage", stage.getExecutionLevel())));
+            format("This method cannot be called on this stage:<%s>", stage)));
   }
 
   @SuppressWarnings("unused")
@@ -120,5 +120,11 @@ public class Core {
   @Scriptable
   public Form<Object> systemProperty(Form<String> attrName) {
     return input -> System.getProperties().getProperty(requireNonNull(attrName.apply(input)));
+  }
+
+  @SuppressWarnings("unchecked")
+  @Scriptable
+  public <T> Form<T> output() {
+    return input -> (T) input.response().orElseThrow(RuntimeException::new);
   }
 }
