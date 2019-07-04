@@ -55,7 +55,7 @@ public class AssertionMessageTest extends TestBase {
   }
 
   @SuppressWarnings("SameParameterValue")
-  private static ResultExpectation buildResultExpectation(Class<?> klass) throws Throwable {
+  static ResultExpectation buildResultExpectation(Class<?> klass) throws Throwable {
     ResultExpectation resultExpectation = new ResultExpectation();
     new ScriptiveUnit(klass).getTestSuiteDescriptor().getTestOracles()
         .stream()

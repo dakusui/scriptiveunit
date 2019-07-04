@@ -1,11 +1,13 @@
 package com.github.dakusui.scriptiveunit.featuretests;
 
 import com.github.dakusui.scriptiveunit.annotations.Import;
+import com.github.dakusui.scriptiveunit.annotations.Scriptable;
 import com.github.dakusui.scriptiveunit.core.Config;
 import com.github.dakusui.scriptiveunit.drivers.Core;
 import com.github.dakusui.scriptiveunit.drivers.Predicates;
 import com.github.dakusui.scriptiveunit.drivers.Strings;
 import com.github.dakusui.scriptiveunit.loaders.TestSuiteDescriptorLoader;
+import com.github.dakusui.scriptiveunit.model.form.Form;
 import com.github.dakusui.scriptiveunit.model.lang.ApplicationSpec;
 import com.github.dakusui.scriptiveunit.model.lang.HostSpec;
 import com.github.dakusui.scriptiveunit.runners.ScriptiveUnit;
@@ -65,4 +67,13 @@ public abstract class SimpleTestBase {
   public Object predicates = new Predicates();
   @Import
   public Object strings = new Strings();
+
+  @Import
+  public Object broken = new Broken();
+  public static class Broken {
+    @Scriptable
+    public Form<String> brokenForm() {
+        throw new RuntimeException("brokenForm");
+    }
+  }
 }

@@ -4,7 +4,11 @@ import com.github.dakusui.scriptiveunit.annotations.Import;
 import com.github.dakusui.scriptiveunit.annotations.Import.Alias;
 import com.github.dakusui.scriptiveunit.annotations.Load;
 import com.github.dakusui.scriptiveunit.annotations.Scriptable;
-import com.github.dakusui.scriptiveunit.drivers.*;
+import com.github.dakusui.scriptiveunit.drivers.Arith;
+import com.github.dakusui.scriptiveunit.drivers.Collections;
+import com.github.dakusui.scriptiveunit.drivers.Core;
+import com.github.dakusui.scriptiveunit.drivers.Predicates;
+import com.github.dakusui.scriptiveunit.drivers.Strings;
 import com.github.dakusui.scriptiveunit.drivers.actions.Basic;
 import com.github.dakusui.scriptiveunit.drivers.extras.Reporting;
 import com.github.dakusui.scriptiveunit.model.form.Form;
@@ -70,9 +74,6 @@ public class Simple {
   })
   public Object additinal = new Additional();
 
-  @Import
-  public Object broken = new Broken();
-
   @SuppressWarnings("WeakerAccess")
   public static class Additional {
     @SuppressWarnings("unused")
@@ -112,13 +113,6 @@ public class Simple {
 
     protected String override(Map<String, Object> values, String request) {
       return String.format("override:[%s, [%s]}", request, values);
-    }
-  }
-
-  public static class Broken {
-    @Scriptable
-    public Form<String> override(Form<Map<String, Object>> values, Form<String> request) {
-      throw new RuntimeException("broken");
     }
   }
 
