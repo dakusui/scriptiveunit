@@ -1,4 +1,4 @@
-package com.github.dakusui.scriptiveunit.model.preprocessing;
+package com.github.dakusui.scriptiveunit.loaders.preprocessing;
 
 import com.google.common.collect.Lists;
 

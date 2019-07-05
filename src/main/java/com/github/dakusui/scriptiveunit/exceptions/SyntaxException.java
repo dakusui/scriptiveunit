@@ -1,6 +1,6 @@
 package com.github.dakusui.scriptiveunit.exceptions;
 
-import com.github.dakusui.scriptiveunit.model.preprocessing.ApplicationSpec;
+import com.github.dakusui.scriptiveunit.loaders.preprocessing.ApplicationSpec;
 import com.github.dakusui.scriptiveunit.model.session.Stage;
 import com.github.dakusui.scriptiveunit.model.statement.Statement;
 import org.codehaus.jackson.JsonNode;

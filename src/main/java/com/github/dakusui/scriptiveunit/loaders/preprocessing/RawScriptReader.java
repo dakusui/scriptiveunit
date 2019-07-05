@@ -1,4 +1,4 @@
-package com.github.dakusui.scriptiveunit.model.preprocessing;
+package com.github.dakusui.scriptiveunit.loaders.preprocessing;
 
 import java.util.function.BiFunction;
 

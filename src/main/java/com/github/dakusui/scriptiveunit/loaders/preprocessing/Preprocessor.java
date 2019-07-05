@@ -1,8 +1,8 @@
-package com.github.dakusui.scriptiveunit.model.preprocessing;
+package com.github.dakusui.scriptiveunit.loaders.preprocessing;
 
 import java.util.List;
 
-import static com.github.dakusui.scriptiveunit.model.preprocessing.ApplicationSpec.dict;
+import static com.github.dakusui.scriptiveunit.loaders.preprocessing.ApplicationSpec.dict;
 import static java.util.Objects.requireNonNull;
 
 public interface Preprocessor {

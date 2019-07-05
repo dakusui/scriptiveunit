@@ -1,4 +1,4 @@
-package com.github.dakusui.scriptiveunit.model.preprocessing;
+package com.github.dakusui.scriptiveunit.loaders.preprocessing;
 
 import com.github.dakusui.scriptiveunit.utils.JsonUtils;
 import com.github.dakusui.scriptiveunit.utils.ReflectionUtils;
@@ -11,9 +11,9 @@ import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
 import static com.github.dakusui.scriptiveunit.utils.JsonUtils.requireObjectNode;
-import static com.github.dakusui.scriptiveunit.model.preprocessing.ApplicationSpec.isArray;
-import static com.github.dakusui.scriptiveunit.model.preprocessing.ApplicationSpec.isAtom;
-import static com.github.dakusui.scriptiveunit.model.preprocessing.ApplicationSpec.isDictionary;
+import static com.github.dakusui.scriptiveunit.loaders.preprocessing.ApplicationSpec.isArray;
+import static com.github.dakusui.scriptiveunit.loaders.preprocessing.ApplicationSpec.isAtom;
+import static com.github.dakusui.scriptiveunit.loaders.preprocessing.ApplicationSpec.isDictionary;
 import static com.github.dakusui.scriptiveunit.utils.CoreUtils.toBigDecimal;
 import static java.lang.String.format;
 
