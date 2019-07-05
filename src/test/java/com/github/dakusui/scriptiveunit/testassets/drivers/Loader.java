@@ -2,8 +2,8 @@ package com.github.dakusui.scriptiveunit.testassets.drivers;
 
 import com.github.dakusui.scriptiveunit.core.Config;
 import com.github.dakusui.scriptiveunit.loaders.json.JsonBasedTestSuiteDescriptorLoader;
-import com.github.dakusui.scriptiveunit.model.lang.ApplicationSpec;
-import com.github.dakusui.scriptiveunit.model.lang.HostSpec;
+import com.github.dakusui.scriptiveunit.model.preprocessing.ApplicationSpec;
+import com.github.dakusui.scriptiveunit.model.preprocessing.HostSpec;
 import com.github.dakusui.scriptiveunit.testutils.Resource;
 import org.codehaus.jackson.node.ObjectNode;
 

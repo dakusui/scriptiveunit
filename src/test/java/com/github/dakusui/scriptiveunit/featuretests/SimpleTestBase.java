@@ -8,14 +8,14 @@ import com.github.dakusui.scriptiveunit.drivers.Predicates;
 import com.github.dakusui.scriptiveunit.drivers.Strings;
 import com.github.dakusui.scriptiveunit.loaders.TestSuiteDescriptorLoader;
 import com.github.dakusui.scriptiveunit.model.form.Form;
-import com.github.dakusui.scriptiveunit.model.lang.ApplicationSpec;
-import com.github.dakusui.scriptiveunit.model.lang.HostSpec;
+import com.github.dakusui.scriptiveunit.model.preprocessing.ApplicationSpec;
+import com.github.dakusui.scriptiveunit.model.preprocessing.HostSpec;
 import com.github.dakusui.scriptiveunit.runners.ScriptiveUnit;
 import org.junit.runner.RunWith;
 
 import java.util.Arrays;
 
-import static com.github.dakusui.scriptiveunit.model.lang.ApplicationSpec.atom;
+import static com.github.dakusui.scriptiveunit.model.preprocessing.ApplicationSpec.atom;
 
 @RunWith(ScriptiveUnit.class)
 public abstract class SimpleTestBase {

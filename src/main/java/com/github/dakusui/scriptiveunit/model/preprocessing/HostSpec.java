@@ -1,4 +1,4 @@
-package com.github.dakusui.scriptiveunit.model.lang;
+package com.github.dakusui.scriptiveunit.model.preprocessing;
 
 import com.github.dakusui.scriptiveunit.utils.JsonUtils;
 import com.github.dakusui.scriptiveunit.utils.ReflectionUtils;
@@ -11,9 +11,9 @@ import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
 import static com.github.dakusui.scriptiveunit.utils.JsonUtils.requireObjectNode;
-import static com.github.dakusui.scriptiveunit.model.lang.ApplicationSpec.isArray;
-import static com.github.dakusui.scriptiveunit.model.lang.ApplicationSpec.isAtom;
-import static com.github.dakusui.scriptiveunit.model.lang.ApplicationSpec.isDictionary;
+import static com.github.dakusui.scriptiveunit.model.preprocessing.ApplicationSpec.isArray;
+import static com.github.dakusui.scriptiveunit.model.preprocessing.ApplicationSpec.isAtom;
+import static com.github.dakusui.scriptiveunit.model.preprocessing.ApplicationSpec.isDictionary;
 import static com.github.dakusui.scriptiveunit.utils.CoreUtils.toBigDecimal;
 import static java.lang.String.format;
 
@@ -115,7 +115,7 @@ public interface HostSpec<NODE, OBJECT extends NODE, ARRAY extends NODE, ATOM ex
   }
 
   class Json implements HostSpec.Default<JsonNode, ObjectNode, ArrayNode, JsonNode> {
-    public static final String EXTENDS_KEYWORD = "$extends";
+    static final String EXTENDS_KEYWORD = "$extends";
 
     @Override
     public ObjectNode newObjectNode() {
