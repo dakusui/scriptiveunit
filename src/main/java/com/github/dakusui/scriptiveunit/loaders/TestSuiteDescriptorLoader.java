@@ -5,7 +5,7 @@ import com.github.dakusui.scriptiveunit.loaders.json.JsonTestSuiteDescriptorBean
 import com.github.dakusui.scriptiveunit.model.desc.TestSuiteDescriptor;
 import com.github.dakusui.scriptiveunit.model.lang.ApplicationSpec;
 import com.github.dakusui.scriptiveunit.model.lang.HostSpec;
-import com.github.dakusui.scriptiveunit.model.lang.Preprocessor;
+import com.github.dakusui.scriptiveunit.model.lang.PreprocessingElement;
 import com.github.dakusui.scriptiveunit.model.session.Session;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.node.ObjectNode;
@@ -81,8 +81,8 @@ public interface TestSuiteDescriptorLoader {
       return applicationSpec.removeInheritanceDirective(readApplicationDictionaryWithMerging(scriptResourceName, applicationSpec, hostSpec));
     }
 
-    ApplicationSpec.Dictionary preprocess(ApplicationSpec.Dictionary inputNode, List<Preprocessor> preprocessors) {
-      for (Preprocessor each : preprocessors) {
+    ApplicationSpec.Dictionary preprocess(ApplicationSpec.Dictionary inputNode, List<PreprocessingElement> preprocessingElements) {
+      for (PreprocessingElement each : preprocessingElements) {
         inputNode = ApplicationSpec.preprocess(inputNode, each);
       }
       return inputNode;

@@ -25,7 +25,7 @@ import static java.util.stream.Collectors.toList;
 public interface ApplicationSpec {
   Dictionary createDefaultValues();
 
-  List<Preprocessor> preprocessors();
+  List<PreprocessingElement> preprocessors();
 
   Dictionary removeInheritanceDirective(Dictionary inputNode);
 
@@ -49,13 +49,13 @@ public interface ApplicationSpec {
         .toArray(Dictionary.Entry[]::new));
   }
 
-  static ApplicationSpec.Dictionary preprocess(ApplicationSpec.Dictionary inputNode, Preprocessor preprocessor) {
-    return (Dictionary) preprocess(preprocessor, Preprocessor.Path.createRoot(), inputNode);
+  static ApplicationSpec.Dictionary preprocess(ApplicationSpec.Dictionary inputNode, PreprocessingElement preprocessingElement) {
+    return (Dictionary) preprocess(preprocessingElement, PreprocessingElement.Path.createRoot(), inputNode);
   }
 
-  static Node preprocess(Preprocessor preprocessor, Preprocessor.Path pathToTarget, Node targetElement) {
-    if (preprocessor.matches(pathToTarget)) {
-      return preprocessor.translate(targetElement);
+  static Node preprocess(PreprocessingElement preprocessingElement, PreprocessingElement.Path pathToTarget, Node targetElement) {
+    if (preprocessingElement.matches(pathToTarget)) {
+      return preprocessingElement.translate(targetElement);
     }
     Node work;
     if (isDictionary(targetElement)) {
@@ -63,7 +63,7 @@ public interface ApplicationSpec {
           (String attributeName) -> $(
               attributeName,
               preprocess(
-                  preprocessor,
+                  preprocessingElement,
                   pathToTarget.createChild(attributeName),
                   ((Dictionary) targetElement).valueOf(attributeName)))).toArray(Dictionary.Entry[]::new));
     } else if (isArray(targetElement)) {
@@ -71,7 +71,7 @@ public interface ApplicationSpec {
       work = array(((Array) targetElement)
           .stream()
           .map((Node each) -> preprocess(
-              preprocessor,
+              preprocessingElement,
               pathToTarget.createChild(i.getAndIncrement()),
               each
           )).toArray(Node[]::new)
@@ -148,10 +148,10 @@ public interface ApplicationSpec {
     }
 
     @Override
-    public List<Preprocessor> preprocessors() {
+    public List<PreprocessingElement> preprocessors() {
       return singletonList(
-          Preprocessor.preprocessor(toUniformedObjectNodeTranslator(),
-              Preprocessor.Utils.pathMatcher("factorSpace", "factors", ".*")));
+          PreprocessingElement.preprocessor(toUniformedObjectNodeTranslator(),
+              PreprocessingElement.Utils.pathMatcher("factorSpace", "factors", ".*")));
     }
 
     @Override
