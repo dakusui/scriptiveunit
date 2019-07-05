@@ -1,13 +1,12 @@
 package com.github.dakusui.scriptiveunit.model.form;
 
+import com.github.dakusui.scriptiveunit.exceptions.ScriptiveUnitException;
 import com.github.dakusui.scriptiveunit.model.session.Stage;
 
 import java.io.IOException;
 import java.util.Formattable;
 import java.util.Formatter;
 import java.util.function.Function;
-
-import static com.github.dakusui.scriptiveunit.exceptions.ScriptiveUnitException.wrap;
 
 @FunctionalInterface
 public interface Form<O> extends Function<Stage, O>, Formattable {
@@ -19,7 +18,7 @@ public interface Form<O> extends Function<Stage, O>, Formattable {
     try {
       formatter.out().append(this.name());
     } catch (IOException e) {
-      throw wrap(e);
+      throw ScriptiveUnitException.wrapIfNecessary(e);
     }
   }
 

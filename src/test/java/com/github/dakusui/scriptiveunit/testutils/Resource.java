@@ -28,7 +28,7 @@ public interface Resource<T> {
       try (InputStream is = open(name)) {
         return readObjectFromStream(is);
       } catch (IOException e) {
-        throw ScriptiveUnitException.wrap(e);
+        throw ScriptiveUnitException.wrapIfNecessary(e);
       }
     }
 

@@ -1,13 +1,12 @@
 package com.github.dakusui.scriptiveunit.core;
 
 import com.github.dakusui.scriptiveunit.annotations.Load;
+import com.github.dakusui.scriptiveunit.exceptions.ScriptiveUnitException;
 import com.github.dakusui.scriptiveunit.utils.ReflectionUtils;
 
 import java.io.File;
 import java.util.Optional;
 import java.util.Properties;
-
-import static com.github.dakusui.scriptiveunit.exceptions.ScriptiveUnitException.wrap;
 
 public interface Config {
   Object getDriverObject();
@@ -77,7 +76,7 @@ public interface Config {
           }
         };
       } catch (InstantiationException | IllegalAccessException e) {
-        throw wrap(e);
+        throw ScriptiveUnitException.wrapIfNecessary(e);
       }
     }
   }

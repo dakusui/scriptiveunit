@@ -1,6 +1,7 @@
 package com.github.dakusui.scriptiveunit.loaders;
 
 import com.github.dakusui.scriptiveunit.core.Config;
+import com.github.dakusui.scriptiveunit.exceptions.ScriptiveUnitException;
 import com.github.dakusui.scriptiveunit.loaders.json.JsonTestSuiteDescriptorBean;
 import com.github.dakusui.scriptiveunit.model.desc.TestSuiteDescriptor;
 import com.github.dakusui.scriptiveunit.loaders.preprocessing.ApplicationSpec;
@@ -14,7 +15,6 @@ import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 
 import static com.github.dakusui.scriptiveunit.exceptions.ConfigurationException.scriptNotSpecified;
-import static com.github.dakusui.scriptiveunit.exceptions.ScriptiveUnitException.wrap;
 
 public interface TestSuiteDescriptorLoader {
   static TestSuiteDescriptorLoader createTestSuiteDescriptorLoader(
@@ -71,7 +71,7 @@ public interface TestSuiteDescriptorLoader {
             rootNode,
             JsonTestSuiteDescriptorBean.class);
       } catch (IOException e) {
-        throw wrap(e);
+        throw ScriptiveUnitException.wrapIfNecessary(e);
       }
     }
   }
@@ -80,7 +80,7 @@ public interface TestSuiteDescriptorLoader {
     try {
       return klass.getConstructor(Config.class).newInstance(config);
     } catch (InstantiationException | IllegalAccessException | InvocationTargetException | NoSuchMethodException e) {
-      throw wrap(e);
+      throw ScriptiveUnitException.wrapIfNecessary(e);
     }
   }
 }

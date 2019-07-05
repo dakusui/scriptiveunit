@@ -5,12 +5,12 @@ import com.github.dakusui.jcunit8.runners.junit4.JCUnit8;
 import com.github.dakusui.jcunit8.runners.junit4.annotations.Condition;
 import com.github.dakusui.jcunit8.runners.junit4.annotations.From;
 import com.github.dakusui.jcunit8.runners.junit4.annotations.ParameterSource;
+import com.github.dakusui.scriptiveunit.exceptions.ScriptiveUnitException;
 import org.junit.Ignore;
 import org.junit.runner.RunWith;
 
 import java.util.List;
 
-import static com.github.dakusui.scriptiveunit.exceptions.ScriptiveUnitException.wrap;
 import static java.util.Arrays.asList;
 import static org.junit.Assume.assumeTrue;
 
@@ -211,7 +211,7 @@ public class CliTest {
     try {
       return String.class.cast(this.getClass().getField(fieldName).get(this));
     } catch (IllegalAccessException | NoSuchFieldException e) {
-      throw wrap(e);
+      throw ScriptiveUnitException.wrapIfNecessary(e);
     }
   }
 

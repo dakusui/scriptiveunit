@@ -25,7 +25,7 @@ public class ScriptiveUnitException extends RuntimeException {
     throw new ScriptiveUnitException(format(format, (Object[]) args), requireNonNull(t));
   }
 
-  public static ScriptiveUnitException wrap(Throwable t) {
+  public static ScriptiveUnitException wrapIfNecessary(Throwable t) {
     if (t instanceof RuntimeException)
       throw (RuntimeException) t;
     if (t instanceof Error) {

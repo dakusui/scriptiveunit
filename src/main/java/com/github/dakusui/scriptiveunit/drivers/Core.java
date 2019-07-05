@@ -62,7 +62,7 @@ public class Core {
         //noinspection unchecked
         return (E) object.getClass().getMethod(methodName).invoke(object);
       } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
-        throw ScriptiveUnitException.wrap(e);
+        throw ScriptiveUnitException.wrapIfNecessary(e);
       }
     };
   }
