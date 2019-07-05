@@ -14,10 +14,10 @@ import static java.util.Collections.unmodifiableList;
 import static java.util.Objects.requireNonNull;
 import static java.util.stream.Collectors.toList;
 
-public interface PreprocessingElement {
+public interface PreprocessingUnit {
   ApplicationSpec.Node translate(ApplicationSpec.Node targetElement);
 
-  boolean matches(PreprocessingElement.Path pathToTargetElement);
+  boolean matches(PreprocessingUnit.Path pathToTargetElement);
 
   /**
    * Returns a preprocessor instance which translates a node on a path specified by {@code pathMatcher}
@@ -25,13 +25,13 @@ public interface PreprocessingElement {
    *
    * @param translator  A function with which the translation is made.
    * @param pathMatcher A predicate that returns {@code true} for a path in a JSON node,
-   *                    where translations by {@code translator} are desired.
+   *                    where trcommanslations by {@code translator} are desired.
    * @return A new preprocessor.
    */
-  static PreprocessingElement preprocessor(Function<ApplicationSpec.Node, ApplicationSpec.Node> translator, Predicate<Path> pathMatcher) {
+  static PreprocessingUnit preprocessor(Function<ApplicationSpec.Node, ApplicationSpec.Node> translator, Predicate<Path> pathMatcher) {
     requireNonNull(translator);
     requireNonNull(pathMatcher);
-    return new PreprocessingElement() {
+    return new PreprocessingUnit() {
       @Override
       public ApplicationSpec.Node translate(ApplicationSpec.Node targetElement) {
         return translator.apply(targetElement);

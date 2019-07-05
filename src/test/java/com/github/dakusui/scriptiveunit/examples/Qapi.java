@@ -12,7 +12,7 @@ import com.github.dakusui.scriptiveunit.drivers.Predicates;
 import com.github.dakusui.scriptiveunit.drivers.extras.QueryApi;
 import com.github.dakusui.scriptiveunit.drivers.Strings;
 import com.github.dakusui.scriptiveunit.drivers.actions.Basic;
-import com.github.dakusui.scriptiveunit.model.lang.PreprocessingElement;
+import com.github.dakusui.scriptiveunit.model.lang.PreprocessingUnit;
 import com.github.dakusui.scriptiveunit.loaders.json.JsonBasedTestSuiteDescriptorLoader;
 import com.github.dakusui.scriptiveunit.model.lang.ApplicationSpec;
 import com.github.dakusui.scriptiveunit.model.form.Form;
@@ -26,7 +26,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
-import static com.github.dakusui.scriptiveunit.model.lang.PreprocessingElement.Utils.pathMatcher;
+import static com.github.dakusui.scriptiveunit.model.lang.PreprocessingUnit.Utils.pathMatcher;
 import static com.github.dakusui.scriptiveunit.model.lang.ApplicationSpec.$;
 import static com.github.dakusui.scriptiveunit.model.lang.ApplicationSpec.Utils.requireDictionary;
 import static com.github.dakusui.scriptiveunit.model.lang.ApplicationSpec.array;
@@ -49,9 +49,9 @@ public class Qapi {
     protected ApplicationSpec createApplicationSpec() {
       return new ApplicationSpec.Standard() {
         @Override
-        public List<PreprocessingElement> preprocessors() {
-          return new LinkedList<PreprocessingElement>(super.preprocessors()) {{
-            add(PreprocessingElement.preprocessor(
+        public List<PreprocessingUnit> preprocessors() {
+          return new LinkedList<PreprocessingUnit>(super.preprocessors()) {{
+            add(PreprocessingUnit.preprocessor(
                 Loader::getModelNode,
                 pathMatcher("testOracles", ".*")));
           }};
