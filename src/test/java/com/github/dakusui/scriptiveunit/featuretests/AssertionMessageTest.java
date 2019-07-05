@@ -57,7 +57,7 @@ public class AssertionMessageTest extends TestBase {
                         .after("     but: output \\<hello\\> did not satisfy it")
                         .after("matches").after("\\[false\\]")
                         .after("  output").after("\\[hello\\]")
-                        .after("  \\'\\.\\*ELLO\\'").after("\\[[^]]+\\]")
+                        .after("  const:'\\.\\*ELLO'").after("\\[[^]]+\\]")
                         .$(),
                     isEmptyString().negate()
                 ).$()
@@ -105,25 +105,10 @@ public class AssertionMessageTest extends TestBase {
   public static class Simple extends SimpleTestBase {
     public static class Loader extends SimpleTestBase.Loader {
       public Loader(Config config) {
-        super(new Config() {
-          @Override
-          public Object getDriverObject() {
-            return config.getDriverObject();
-          }
-
-          @Override
-          public String getScriptResourceNameKey() {
-            return config.getScriptResourceNameKey();
-          }
-
+        super(new Config.Delegating(config) {
           @Override
           public Optional<String> getScriptResourceName() {
-            return Optional.of("dummy");
-          }
-
-          @Override
-          public Reporting getReportingConfig() {
-            return config.getReportingConfig();
+            return Optional.of("(dummy)");
           }
         });
       }

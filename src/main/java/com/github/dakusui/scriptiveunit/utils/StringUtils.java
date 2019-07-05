@@ -124,7 +124,6 @@ public enum StringUtils {
 
   public static <T> Sink<T> prettify(String prettyString, Sink<T> sink) {
     return new Sink<T>() {
-
       @Override
       public void accept(T t, Context context) {
         sink.accept(t, context);

@@ -55,10 +55,9 @@ public interface TestOracleFormFactory {
           @Override
           public void describeTo(Description description) {
             description.appendText(
-                format("Precondition:<%s> was not satisfied by given input:<%s>:%n%s",
+                format("<%s>:%n%s",
                     definition.given().map(Statement::format)
                         .orElse("(unavailable)"),
-                    testItem.getTestCaseTuple(),
                     formListener.toString()
                 ));
           }

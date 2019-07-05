@@ -3,10 +3,10 @@ package com.github.dakusui.scriptiveunit.loaders;
 import com.github.dakusui.scriptiveunit.core.Config;
 import com.github.dakusui.scriptiveunit.exceptions.ScriptiveUnitException;
 import com.github.dakusui.scriptiveunit.loaders.json.JsonTestSuiteDescriptorBean;
-import com.github.dakusui.scriptiveunit.model.desc.TestSuiteDescriptor;
 import com.github.dakusui.scriptiveunit.loaders.preprocessing.ApplicationSpec;
 import com.github.dakusui.scriptiveunit.loaders.preprocessing.HostSpec;
 import com.github.dakusui.scriptiveunit.loaders.preprocessing.Preprocessor;
+import com.github.dakusui.scriptiveunit.model.desc.TestSuiteDescriptor;
 import com.github.dakusui.scriptiveunit.model.session.Session;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.node.ObjectNode;
@@ -48,8 +48,10 @@ public interface TestSuiteDescriptorLoader {
     public TestSuiteDescriptor loadTestSuiteDescriptor(Session session) {
       return mapObjectNodeToJsonTestSuiteDescriptorBean(
           new HostSpec.Json().toHostObject(
-              preprocessor.readScript(session.getConfig().getScriptResourceName()
-                  .orElseThrow(() -> scriptNotSpecified(session.getConfig().getScriptResourceNameKey())))))
+              preprocessor.readScript(
+                  session.getConfig()
+                      .getScriptResourceName()
+                      .orElseThrow(() -> scriptNotSpecified(session.getConfig().getScriptResourceNameKey())))))
           .create(session);
     }
 

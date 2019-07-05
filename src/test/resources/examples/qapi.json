@@ -27,12 +27,12 @@
     ],
     "testOracles": [
         {
-            "description": "{{@TESTSUITE}}: Searching {{terms}} should not return too many accessories",
+            "description": "{{@TESTSUITE}}: Searching {{terms}} should not return accessories",
             "given": ["equals", ["attr", "terms"], ["quote", "iPhone"]],
             "when": ["issue", ["query"] ],
-            "then": [">",
+            "then": ["<",
                 ["size", ["compatFilter", ["result"], ["containedBy", ["issue", ["with", {"terms":["iPhone&&シルバー"]}, ["query"]]]]]],
-                3
+                1
             ]
         },
         {

@@ -15,15 +15,59 @@ public interface Config {
 
   Optional<String> getScriptResourceName();
 
-  Reporting getReportingConfig();
+  Reporting getReporting();
 
-  class Reporting {
-    public final String reportFileName;
-    public final File   reportBaseDirectory;
+  class Default implements Config {
+    @Override
+    public Object getDriverObject() {
+      return null;
+    }
 
-    Reporting(String reportFileName, File reportBaseDirectory) {
-      this.reportFileName = reportFileName;
-      this.reportBaseDirectory = reportBaseDirectory;
+    @Override
+    public String getScriptResourceNameKey() {
+      return null;
+    }
+
+    @Override
+    public Optional<String> getScriptResourceName() {
+      return Optional.empty();
+    }
+
+    @Override
+    public Reporting getReporting() {
+      return null;
+    }
+  }
+
+  class Delegating implements Config {
+    private final Config base;
+
+    protected Delegating(Config base) {
+      this.base = base;
+    }
+
+    protected Config base() {
+      return this.base;
+    }
+
+    @Override
+    public Object getDriverObject() {
+      return base.getDriverObject();
+    }
+
+    @Override
+    public String getScriptResourceNameKey() {
+      return base.getScriptResourceNameKey();
+    }
+
+    @Override
+    public Optional<String> getScriptResourceName() {
+      return base.getScriptResourceName();
+    }
+
+    @Override
+    public Reporting getReporting() {
+      return base.getReporting();
     }
   }
 
@@ -64,14 +108,14 @@ public interface Config {
           public Optional<String> getScriptResourceName() {
             String work = properties.getProperty(
                 getScriptResourceNameKey(),
-                Builder.this.loadAnnotation.defaultScriptName());
+                Builder.this.loadAnnotation.script());
             return Load.SCRIPT_NOT_SPECIFIED.equals(work) ?
                 Optional.empty() :
                 Optional.of(work);
           }
 
           @Override
-          public Reporting getReportingConfig() {
+          public Reporting getReporting() {
             return reporting;
           }
         };
