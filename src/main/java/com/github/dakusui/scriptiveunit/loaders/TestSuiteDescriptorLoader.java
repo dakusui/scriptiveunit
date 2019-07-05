@@ -31,8 +31,8 @@ public interface TestSuiteDescriptorLoader {
 
   abstract class Base<NODE, OBJECT extends NODE, ARRAY extends NODE> implements
       TestSuiteDescriptorLoader {
-    protected final HostSpec<NODE, OBJECT, ARRAY, NODE> hostSpec        = hostLanguage();
-    protected final ApplicationSpec                     applicationSpec = applicationLanguage();
+    private final HostSpec<NODE, OBJECT, ARRAY, NODE> hostSpec = createHostSpec();
+    private final ApplicationSpec applicationSpec = createApplicationSpec();
 
     private final Config config;
 
@@ -40,9 +40,17 @@ public interface TestSuiteDescriptorLoader {
       this.config = config;
     }
 
-    abstract protected ApplicationSpec applicationLanguage();
+    protected final HostSpec<NODE, OBJECT, ARRAY, NODE> hostSpec() {
+      return this.hostSpec;
+    }
 
-    abstract protected HostSpec<NODE, OBJECT, ARRAY, NODE> hostLanguage();
+    protected final ApplicationSpec applicationSpec() {
+      return this.applicationSpec;
+    }
+
+    abstract protected ApplicationSpec createApplicationSpec();
+
+    abstract protected HostSpec<NODE, OBJECT, ARRAY, NODE> createHostSpec();
 
     abstract protected ApplicationSpec.Dictionary readScript(Config config, ApplicationSpec.Dictionary defaultValues);
 
@@ -54,7 +62,7 @@ public interface TestSuiteDescriptorLoader {
     public TestSuiteDescriptor loadTestSuiteDescriptor(Session session) {
       return mapObjectNodeToJsonTestSuiteDescriptorBean(
           new HostSpec.Json().toHostObject(readScript(
-              session.getConfig(), applicationLanguage().createDefaultValues()
+              session.getConfig(), createApplicationSpec().createDefaultValues()
           )))
           .create(session);
     }
@@ -75,25 +83,24 @@ public interface TestSuiteDescriptorLoader {
       super(config);
     }
 
-    protected ApplicationSpec.Dictionary readApplicationDictionaryWithMerging(String resourceName) {
+    protected ApplicationSpec.Dictionary readApplicationDictionaryWithMerging(String resourceName, ApplicationSpec applicationSpec, HostSpec<NODE, OBJECT, ARRAY, NODE> hostSpec) {
       ApplicationSpec.Dictionary child = preprocess(
           hostSpec.toApplicationDictionary(
               hostSpec.readObjectNode(resourceName)),
           getPreprocessors());
 
       ApplicationSpec.Dictionary work_ = dict();
-      for (String s : applicationLanguage().parentsOf(child))
-        work_ = applicationSpec.deepMerge(readApplicationDictionaryWithMerging(s), work_);
+      for (String s : applicationSpec.parentsOf(child))
+        work_ = applicationSpec.deepMerge(readApplicationDictionaryWithMerging(s, applicationSpec, hostSpec), work_);
       return applicationSpec.deepMerge(child, work_);
     }
 
     protected List<Preprocessor> getPreprocessors() {
-      return applicationSpec.preprocessors();
+      return applicationSpec().preprocessors();
     }
 
-    protected ApplicationSpec.Dictionary readScriptHandlingInheritance(
-        String scriptResourceName) {
-      return applicationSpec.removeInheritanceDirective(readApplicationDictionaryWithMerging(scriptResourceName));
+    protected ApplicationSpec.Dictionary readScriptHandlingInheritance(String scriptResourceName, ApplicationSpec applicationSpec) {
+      return applicationSpec.removeInheritanceDirective(readApplicationDictionaryWithMerging(scriptResourceName, applicationSpec, hostSpec()));
     }
 
     protected ApplicationSpec.Dictionary preprocess(ApplicationSpec.Dictionary inputNode, List<Preprocessor> preprocessors) {
@@ -105,11 +112,13 @@ public interface TestSuiteDescriptorLoader {
 
     @Override
     public ApplicationSpec.Dictionary readScript(Config config, ApplicationSpec.Dictionary defaultValues) {
-      return applicationSpec.deepMerge(
-          readScriptHandlingInheritance(config
-              .getScriptResourceName()
-              .orElseThrow(() -> scriptNotSpecified(config.getScriptResourceNameKey()))),
-          defaultValues);
+      return readDictionary(defaultValues, config
+          .getScriptResourceName()
+          .orElseThrow(() -> scriptNotSpecified(config.getScriptResourceNameKey())), applicationSpec());
+    }
+
+    ApplicationSpec.Dictionary readDictionary(ApplicationSpec.Dictionary defaultValues, String scriptResourceName, ApplicationSpec applicationSpec) {
+      return applicationSpec.deepMerge(readScriptHandlingInheritance(scriptResourceName, applicationSpec), defaultValues);
     }
   }
 

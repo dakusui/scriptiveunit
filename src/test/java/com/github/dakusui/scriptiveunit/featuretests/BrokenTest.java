@@ -45,7 +45,7 @@ public class BrokenTest {
 
       @Override
       protected ApplicationSpec.Dictionary readScript(Config config, ApplicationSpec.Dictionary defaultValues) {
-        return applicationSpec.deepMerge(
+        return applicationSpec().deepMerge(
             dict(
                 $("testOracles", array(
                     dict(

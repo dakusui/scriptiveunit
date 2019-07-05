@@ -46,7 +46,7 @@ public class Qapi {
     private static ApplicationSpec applicationSpec = new ApplicationSpec.Standard();
 
     @Override
-    protected ApplicationSpec applicationLanguage() {
+    protected ApplicationSpec createApplicationSpec() {
       return new ApplicationSpec.Standard() {
         @Override
         public List<Preprocessor> preprocessors() {

@@ -51,12 +51,12 @@ public abstract class SimpleTestBase {
     }
 
     @Override
-    protected ApplicationSpec applicationLanguage() {
+    protected ApplicationSpec createApplicationSpec() {
       return new ApplicationSpec.Standard();
     }
 
     @Override
-    protected HostSpec hostLanguage() {
+    protected HostSpec createHostSpec() {
       return new HostSpec.Json();
     }
   }

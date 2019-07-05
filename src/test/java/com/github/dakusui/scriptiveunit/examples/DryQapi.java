@@ -8,6 +8,8 @@ import com.github.dakusui.scriptiveunit.utils.JsonUtils;
 import com.github.dakusui.scriptiveunit.model.lang.ApplicationSpec;
 import com.github.dakusui.scriptiveunit.unittests.core.UtJsonUtils;
 import com.github.dakusui.scriptiveunit.utils.ReflectionUtils;
+import org.codehaus.jackson.JsonNode;
+import org.codehaus.jackson.node.ArrayNode;
 import org.codehaus.jackson.node.JsonNodeFactory;
 import org.codehaus.jackson.node.ObjectNode;
 import org.junit.runner.JUnitCore;
@@ -37,18 +39,19 @@ public class DryQapi extends Qapi {
      * than its name.
      *
      * @param resourceName A string that contains the script itself to be run.
+     * @param applicationSpec
      */
     @Override
-    protected ApplicationSpec.Dictionary readScriptHandlingInheritance(String resourceName) {
+    protected ApplicationSpec.Dictionary readScriptHandlingInheritance(String resourceName, ApplicationSpec applicationSpec) {
       System.out.println("<" + resourceName + ">");
-      ObjectNode work = readObjectNodeDirectlyWithMerging(resourceName);
+      ObjectNode work = readObjectNodeDirectlyWithMerging(resourceName, applicationSpec, hostSpec());
       ObjectNode ret = requireObjectNode(JsonUtils.readJsonNodeFromStream(ReflectionUtils.openResourceAsStream(DEFAULTS_JSON)));
       ret = UtJsonUtils.deepMerge(work, ret);
       ret.remove(HostSpec.Json.EXTENDS_KEYWORD);
-      return hostSpec.toApplicationDictionary(ret);
+      return hostSpec().toApplicationDictionary(ret);
     }
 
-    ObjectNode readObjectNodeDirectlyWithMerging(String script) {
+    ObjectNode readObjectNodeDirectlyWithMerging(String script, ApplicationSpec applicationSpec, HostSpec<JsonNode, ObjectNode, ArrayNode, JsonNode> hostSpec) {
       ObjectNode child = requireObjectNode(
           hostSpec.toHostObject(
               preprocess(
@@ -58,7 +61,7 @@ public class DryQapi extends Qapi {
       ObjectNode work = JsonNodeFactory.instance.objectNode();
       if (child.has(HostSpec.Json.EXTENDS_KEYWORD)) {
         JsonPreprocessorUtils.getParentsOf(child, HostSpec.Json.EXTENDS_KEYWORD)
-            .forEach(s -> UtJsonUtils.deepMerge(requireObjectNode(hostSpec.toHostObject(readApplicationDictionaryWithMerging(s))), work));
+            .forEach(s -> UtJsonUtils.deepMerge(requireObjectNode(hostSpec.toHostObject(readApplicationDictionaryWithMerging(s, applicationSpec, hostSpec))), work));
       }
       return UtJsonUtils.deepMerge(child, work);
     }

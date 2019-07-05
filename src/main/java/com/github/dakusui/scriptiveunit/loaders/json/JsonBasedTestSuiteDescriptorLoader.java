@@ -16,12 +16,12 @@ public class JsonBasedTestSuiteDescriptorLoader extends TestSuiteDescriptorLoade
   }
 
   @Override
-  protected ApplicationSpec applicationLanguage() {
+  protected ApplicationSpec createApplicationSpec() {
     return new ApplicationSpec.Standard();
   }
 
   @Override
-  protected HostSpec<JsonNode, ObjectNode, ArrayNode, JsonNode> hostLanguage() {
+  protected HostSpec<JsonNode, ObjectNode, ArrayNode, JsonNode> createHostSpec() {
     return new HostSpec.Json();
   }
 }
