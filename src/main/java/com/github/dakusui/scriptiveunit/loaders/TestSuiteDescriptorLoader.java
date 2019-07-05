@@ -6,6 +6,7 @@ import com.github.dakusui.scriptiveunit.model.desc.TestSuiteDescriptor;
 import com.github.dakusui.scriptiveunit.model.lang.ApplicationSpec;
 import com.github.dakusui.scriptiveunit.model.lang.HostSpec;
 import com.github.dakusui.scriptiveunit.model.lang.PreprocessingElement;
+import com.github.dakusui.scriptiveunit.model.lang.RawScriptReader;
 import com.github.dakusui.scriptiveunit.model.session.Session;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.node.ObjectNode;
@@ -29,11 +30,13 @@ public interface TestSuiteDescriptorLoader {
 
   TestSuiteDescriptor loadTestSuiteDescriptor(Session session);
 
-  abstract class Base<NODE, OBJECT extends NODE, ARRAY extends NODE> implements
-      TestSuiteDescriptorLoader {
-    private final HostSpec<NODE, OBJECT, ARRAY, NODE> hostSpec = createHostSpec();
-
+  abstract class Base<NODE, OBJECT extends NODE, ARRAY extends NODE, ATOM extends NODE>
+      implements TestSuiteDescriptorLoader {
     private final ApplicationSpec applicationSpec = createApplicationSpec();
+
+    private final HostSpec<NODE, OBJECT, ARRAY, ATOM> hostSpec = createHostSpec();
+
+    private final RawScriptReader<NODE, OBJECT, ARRAY, ATOM> rawScriptReader = this::readRawScriptResource;
 
     private final Config config;
 
@@ -54,21 +57,28 @@ public interface TestSuiteDescriptorLoader {
           .create(session);
     }
 
-    ApplicationSpec.Dictionary readScript(String scriptResourceName, ApplicationSpec applicationSpec, HostSpec<NODE, OBJECT, ARRAY, NODE> hostSpec) {
+
+    ApplicationSpec.Dictionary readScript(String scriptResourceName, ApplicationSpec applicationSpec, HostSpec<NODE, OBJECT, ARRAY, ATOM> hostSpec) {
       return readScript(
           scriptResourceName,
           applicationSpec.createDefaultValues(),
           applicationSpec, hostSpec);
     }
 
-    protected ApplicationSpec.Dictionary readScript(String scriptResourceName, ApplicationSpec.Dictionary defaultValues, ApplicationSpec applicationSpec, HostSpec<NODE, OBJECT, ARRAY, NODE> hostSpec) {
+    ApplicationSpec.Dictionary readScript(
+        String scriptResourceName,
+        ApplicationSpec.Dictionary defaultValues,
+        ApplicationSpec applicationSpec,
+        HostSpec<NODE, OBJECT, ARRAY, ATOM> hostSpec) {
       return applicationSpec.deepMerge(readScriptHandlingInheritance(scriptResourceName, applicationSpec, hostSpec), defaultValues);
     }
 
-    protected ApplicationSpec.Dictionary readApplicationDictionaryWithMerging(String resourceName, ApplicationSpec applicationSpec, HostSpec<NODE, OBJECT, ARRAY, NODE> hostSpec) {
+    ApplicationSpec.Dictionary readApplicationDictionaryWithMerging(
+        String resourceName,
+        ApplicationSpec applicationSpec,
+        HostSpec<NODE, OBJECT, ARRAY, ATOM> hostSpec) {
       ApplicationSpec.Dictionary child = preprocess(
-          hostSpec.toApplicationDictionary(
-              hostSpec.readObjectNode(resourceName)),
+          rawScriptReader.apply(resourceName, hostSpec),
           applicationSpec.preprocessors());
 
       ApplicationSpec.Dictionary work_ = dict();
@@ -77,7 +87,8 @@ public interface TestSuiteDescriptorLoader {
       return applicationSpec.deepMerge(child, work_);
     }
 
-    ApplicationSpec.Dictionary readScriptHandlingInheritance(String scriptResourceName, ApplicationSpec applicationSpec, HostSpec<NODE, OBJECT, ARRAY, NODE> hostSpec) {
+
+    ApplicationSpec.Dictionary readScriptHandlingInheritance(String scriptResourceName, ApplicationSpec applicationSpec, HostSpec<NODE, OBJECT, ARRAY, ATOM> hostSpec) {
       return applicationSpec.removeInheritanceDirective(readApplicationDictionaryWithMerging(scriptResourceName, applicationSpec, hostSpec));
     }
 
@@ -90,7 +101,14 @@ public interface TestSuiteDescriptorLoader {
 
     abstract protected ApplicationSpec createApplicationSpec();
 
-    abstract protected HostSpec<NODE, OBJECT, ARRAY, NODE> createHostSpec();
+    abstract protected HostSpec<NODE, OBJECT, ARRAY, ATOM> createHostSpec();
+
+    protected ApplicationSpec.Dictionary readRawScriptResource(
+        String resourceName,
+        HostSpec<NODE, OBJECT, ARRAY, ATOM> hostSpec) {
+      return hostSpec.toApplicationDictionary(
+          hostSpec.readObjectNode(resourceName));
+    }
 
 
     static private JsonTestSuiteDescriptorBean mapObjectNodeToJsonTestSuiteDescriptorBean(ObjectNode rootNode) {

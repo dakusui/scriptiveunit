@@ -14,7 +14,7 @@ public interface Resource<T> {
 
     private final String name;
 
-    public Base(String name) {
+    protected Base(String name) {
       this.name = name;
     }
 
@@ -34,7 +34,7 @@ public interface Resource<T> {
 
     abstract protected T readObjectFromStream(InputStream is);
 
-    protected InputStream open(String name) {
+    InputStream open(String name) {
       return ClassLoader.getSystemResourceAsStream(name);
     }
 

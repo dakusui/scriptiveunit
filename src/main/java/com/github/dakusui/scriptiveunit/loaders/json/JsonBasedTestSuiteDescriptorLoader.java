@@ -8,7 +8,7 @@ import org.codehaus.jackson.JsonNode;
 import org.codehaus.jackson.node.ArrayNode;
 import org.codehaus.jackson.node.ObjectNode;
 
-public class JsonBasedTestSuiteDescriptorLoader extends TestSuiteDescriptorLoader.Base<JsonNode, ObjectNode, ArrayNode> {
+public class JsonBasedTestSuiteDescriptorLoader extends TestSuiteDescriptorLoader.Base<JsonNode, ObjectNode, ArrayNode, JsonNode> {
 
   @SuppressWarnings("unused")
   public JsonBasedTestSuiteDescriptorLoader(Config config) {

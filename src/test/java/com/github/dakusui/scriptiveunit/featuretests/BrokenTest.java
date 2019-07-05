@@ -45,16 +45,13 @@ public class BrokenTest {
       }
 
       @Override
-      protected ApplicationSpec.Dictionary readScript(String scriptResourceName, ApplicationSpec.Dictionary defaultValues, ApplicationSpec applicationSpec, HostSpec hostSpec) {
-        return applicationSpec.deepMerge(
-            dict(
-                $("testOracles", array(
-                    dict(
-                        $("when", array("brokenForm")),
-                        $("then", array("matches", array("output"), "bye"))
-                    )))),
-            defaultValues
-        );
+      protected ApplicationSpec.Dictionary readRawScriptResource(String scriptResourceName, HostSpec hostSpec) {
+        return dict(
+            $("testOracles", array(
+                dict(
+                    $("when", array("brokenForm")),
+                    $("then", array("matches", array("output"), "bye"))
+                ))));
       }
     }
   }
