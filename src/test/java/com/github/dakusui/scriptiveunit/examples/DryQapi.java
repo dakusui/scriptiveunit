@@ -40,9 +40,10 @@ public class DryQapi extends Qapi {
      *
      * @param resourceName A string that contains the script itself to be run.
      * @param applicationSpec
+     * @param hostSpec
      */
     @Override
-    protected ApplicationSpec.Dictionary readScriptHandlingInheritance(String resourceName, ApplicationSpec applicationSpec) {
+    protected ApplicationSpec.Dictionary readScriptHandlingInheritance(String resourceName, ApplicationSpec applicationSpec, HostSpec<JsonNode, ObjectNode, ArrayNode, JsonNode> hostSpec) {
       System.out.println("<" + resourceName + ">");
       ObjectNode work = readObjectNodeDirectlyWithMerging(resourceName, applicationSpec, hostSpec());
       ObjectNode ret = requireObjectNode(JsonUtils.readJsonNodeFromStream(ReflectionUtils.openResourceAsStream(DEFAULTS_JSON)));
@@ -57,7 +58,7 @@ public class DryQapi extends Qapi {
               preprocess(
                   hostSpec.toApplicationDictionary(
                       requireObjectNode(JsonUtils.readJsonNodeFromStream(toInputStream(script)))),
-                  getPreprocessors())));
+                  applicationSpec.preprocessors())));
       ObjectNode work = JsonNodeFactory.instance.objectNode();
       if (child.has(HostSpec.Json.EXTENDS_KEYWORD)) {
         JsonPreprocessorUtils.getParentsOf(child, HostSpec.Json.EXTENDS_KEYWORD)

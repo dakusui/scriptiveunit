@@ -3,6 +3,7 @@ package com.github.dakusui.scriptiveunit.featuretests;
 import com.github.dakusui.scriptiveunit.annotations.Load;
 import com.github.dakusui.scriptiveunit.core.Config;
 import com.github.dakusui.scriptiveunit.model.lang.ApplicationSpec;
+import com.github.dakusui.scriptiveunit.model.lang.HostSpec;
 import com.github.dakusui.scriptiveunit.runners.ScriptiveUnit;
 import com.github.dakusui.scriptiveunit.testutils.TestBase;
 import org.junit.Test;
@@ -99,8 +100,8 @@ public class AssertionMessageTest extends TestBase {
       }
 
       @Override
-      protected ApplicationSpec.Dictionary readScript(Config config, ApplicationSpec.Dictionary defaultValues) {
-        return applicationSpec().deepMerge(
+      protected ApplicationSpec.Dictionary readDictionary(ApplicationSpec.Dictionary defaultValues, String scriptResourceName, ApplicationSpec applicationSpec, HostSpec hostSpec) {
+        return applicationSpec.deepMerge(
             dict(
                 $("testOracles", array(
                     dict(
