@@ -32,6 +32,7 @@ public interface TestSuiteDescriptorLoader {
   abstract class Base<NODE, OBJECT extends NODE, ARRAY extends NODE> implements
       TestSuiteDescriptorLoader {
     private final HostSpec<NODE, OBJECT, ARRAY, NODE> hostSpec = createHostSpec();
+
     private final ApplicationSpec applicationSpec = createApplicationSpec();
 
     private final Config config;
@@ -48,43 +49,20 @@ public interface TestSuiteDescriptorLoader {
     public TestSuiteDescriptor loadTestSuiteDescriptor(Session session) {
       return mapObjectNodeToJsonTestSuiteDescriptorBean(
           new HostSpec.Json().toHostObject(
-              readScript(session.getConfig(), applicationSpec)))
+              readScript(session.getConfig().getScriptResourceName()
+                  .orElseThrow(() -> scriptNotSpecified(session.getConfig().getScriptResourceNameKey())), applicationSpec, hostSpec)))
           .create(session);
     }
 
-    protected final HostSpec<NODE, OBJECT, ARRAY, NODE> hostSpec() {
-      return this.hostSpec;
-    }
-
-    abstract protected ApplicationSpec createApplicationSpec();
-
-    abstract protected HostSpec<NODE, OBJECT, ARRAY, NODE> createHostSpec();
-
-
-    final ApplicationSpec.Dictionary readScript(Config config, ApplicationSpec applicationSpec) {
-      return readDictionary(
+    ApplicationSpec.Dictionary readScript(String scriptResourceName, ApplicationSpec applicationSpec, HostSpec<NODE, OBJECT, ARRAY, NODE> hostSpec) {
+      return readScript(
+          scriptResourceName,
           applicationSpec.createDefaultValues(),
-          config.getScriptResourceName()
-              .orElseThrow(() -> scriptNotSpecified(config.getScriptResourceNameKey())),
-          applicationSpec, hostSpec());
+          applicationSpec, hostSpec);
     }
 
-    abstract protected ApplicationSpec.Dictionary readDictionary(ApplicationSpec.Dictionary defaultValues, String scriptResourceName, ApplicationSpec applicationSpec, HostSpec<NODE, OBJECT, ARRAY, NODE> hostSpec);
-
-    private JsonTestSuiteDescriptorBean mapObjectNodeToJsonTestSuiteDescriptorBean(ObjectNode rootNode) {
-      try {
-        return new ObjectMapper().readValue(
-            rootNode,
-            JsonTestSuiteDescriptorBean.class);
-      } catch (IOException e) {
-        throw wrap(e);
-      }
-    }
-  }
-
-  abstract class ScriptBased<NODE, OBJECT extends NODE, ARRAY extends NODE> extends Base<NODE, OBJECT, ARRAY> {
-    public ScriptBased(Config config) {
-      super(config);
+    protected ApplicationSpec.Dictionary readScript(String scriptResourceName, ApplicationSpec.Dictionary defaultValues, ApplicationSpec applicationSpec, HostSpec<NODE, OBJECT, ARRAY, NODE> hostSpec) {
+      return applicationSpec.deepMerge(readScriptHandlingInheritance(scriptResourceName, applicationSpec, hostSpec), defaultValues);
     }
 
     protected ApplicationSpec.Dictionary readApplicationDictionaryWithMerging(String resourceName, ApplicationSpec applicationSpec, HostSpec<NODE, OBJECT, ARRAY, NODE> hostSpec) {
@@ -99,20 +77,30 @@ public interface TestSuiteDescriptorLoader {
       return applicationSpec.deepMerge(child, work_);
     }
 
-    protected ApplicationSpec.Dictionary readScriptHandlingInheritance(String scriptResourceName, ApplicationSpec applicationSpec, HostSpec<NODE, OBJECT, ARRAY, NODE> hostSpec) {
+    ApplicationSpec.Dictionary readScriptHandlingInheritance(String scriptResourceName, ApplicationSpec applicationSpec, HostSpec<NODE, OBJECT, ARRAY, NODE> hostSpec) {
       return applicationSpec.removeInheritanceDirective(readApplicationDictionaryWithMerging(scriptResourceName, applicationSpec, hostSpec));
     }
 
-    protected ApplicationSpec.Dictionary preprocess(ApplicationSpec.Dictionary inputNode, List<Preprocessor> preprocessors) {
+    ApplicationSpec.Dictionary preprocess(ApplicationSpec.Dictionary inputNode, List<Preprocessor> preprocessors) {
       for (Preprocessor each : preprocessors) {
         inputNode = ApplicationSpec.preprocess(inputNode, each);
       }
       return inputNode;
     }
 
-    @Override
-    protected ApplicationSpec.Dictionary readDictionary(ApplicationSpec.Dictionary defaultValues, String scriptResourceName, ApplicationSpec applicationSpec, HostSpec<NODE, OBJECT, ARRAY, NODE> hostSpec) {
-      return applicationSpec.deepMerge(readScriptHandlingInheritance(scriptResourceName, applicationSpec, hostSpec), defaultValues);
+    abstract protected ApplicationSpec createApplicationSpec();
+
+    abstract protected HostSpec<NODE, OBJECT, ARRAY, NODE> createHostSpec();
+
+
+    static private JsonTestSuiteDescriptorBean mapObjectNodeToJsonTestSuiteDescriptorBean(ObjectNode rootNode) {
+      try {
+        return new ObjectMapper().readValue(
+            rootNode,
+            JsonTestSuiteDescriptorBean.class);
+      } catch (IOException e) {
+        throw wrap(e);
+      }
     }
   }
 
