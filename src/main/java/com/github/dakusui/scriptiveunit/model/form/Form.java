@@ -1,26 +1,13 @@
 package com.github.dakusui.scriptiveunit.model.form;
 
-import com.github.dakusui.scriptiveunit.exceptions.ScriptiveUnitException;
 import com.github.dakusui.scriptiveunit.model.session.Stage;
 
-import java.io.IOException;
-import java.util.Formattable;
-import java.util.Formatter;
 import java.util.function.Function;
 
 @FunctionalInterface
-public interface Form<O> extends Function<Stage, O>, Formattable {
+public interface Form<O> extends Function<Stage, O> {
   @Override
   O apply(Stage input);
-
-  @Override
-  default void formatTo(Formatter formatter, int flags, int width, int precision) {
-    try {
-      formatter.out().append(this.name());
-    } catch (IOException e) {
-      throw ScriptiveUnitException.wrapIfNecessary(e);
-    }
-  }
 
   default String name() {
     return "<noname>";

@@ -55,9 +55,9 @@ public class AssertionMessageTest extends TestBase {
                         .after("output:\\<hello\\>")
                         .after("criterion:\\<\\(matches \\(output\\) .+\\)\\>")
                         .after("     but: output \\<hello\\> did not satisfy it")
-                        .after("matches").after("\\[false\\]")
-                        .after("  output").after("\\[hello\\]")
-                        .after("  const:'\\.\\*ELLO'").after("\\[[^]]+\\]")
+                        .after("matches").after("false")
+                        .after("  output").after("hello")
+                        .after("  const:'\\.\\*ELLO'").after(":\\.\\*ELLO")
                         .$(),
                     isEmptyString().negate()
                 ).$()

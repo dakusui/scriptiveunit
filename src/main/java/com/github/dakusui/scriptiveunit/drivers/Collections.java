@@ -1,11 +1,12 @@
 package com.github.dakusui.scriptiveunit.drivers;
 
 import com.github.dakusui.scriptiveunit.annotations.Scriptable;
-import com.github.dakusui.scriptiveunit.model.session.Stage;
 import com.github.dakusui.scriptiveunit.model.form.Form;
+import com.github.dakusui.scriptiveunit.model.session.Stage;
 import com.google.common.collect.Iterables;
 
 import java.util.Map;
+import java.util.Objects;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -57,7 +58,7 @@ public class Collections {
   }
 
   public static <E> Stage wrapValueAsArgumentInStage(Stage i, Form<E> value) {
-    return Stage.Factory.createWrappedStage(i,  value);
+    return Stage.Factory.createWrappedStage(i, value);
   }
 
   @SuppressWarnings("unused")
@@ -65,7 +66,21 @@ public class Collections {
   public <E> Form<Function<E, Boolean>> containedBy(Form<Iterable<E>> iterable) {
     return (Stage input) -> {
       Iterable<E> collection = requireNonNull(iterable.apply(input));
-      return (Function<E, Boolean>) entry -> Iterables.contains(collection, entry);
+      return (Function<E, Boolean>) new Function<E, Boolean>() {
+
+        private boolean value;
+
+        @Override
+        public Boolean apply(E entry) {
+          value = Iterables.contains(collection, entry);
+          return value;
+        }
+
+        @Override
+        public String toString() {
+          return Objects.toString(value);
+        }
+      };
     };
   }
 

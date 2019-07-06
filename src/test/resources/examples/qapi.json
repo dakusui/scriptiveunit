@@ -49,7 +49,6 @@
         },
         {
             "description": "{{@TESTSUITE}}: Valid queries should result in 200",
-            "given": ["always"],
             "when": ["issue", ["query"]],
             "then": ["==", ["value", "statusCode", ["result"]], 200]
         }

@@ -142,7 +142,7 @@ public interface Statement {
 
             @Override
             public String name() {
-              return String.format("const:'%s'", Objects.toString(value()));
+              return "const:'" + value() + "'";
             }
 
             @Override
