@@ -89,7 +89,7 @@ public enum ReflectionUtils {
     try {
       return field.get(object);
     } catch (IllegalAccessException e) {
-      throw ScriptiveUnitException.wrap(e);
+      throw ScriptiveUnitException.wrapIfNecessary(e);
     }
   }
 }

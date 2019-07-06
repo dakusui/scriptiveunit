@@ -1,0 +1,11 @@
+A package that gathers classes for "preprocessing" of script resources.
+
+= About this package
+
+
+== Mechanism
+
+
+[ditaa]
+----
+----

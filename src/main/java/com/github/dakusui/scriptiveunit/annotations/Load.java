@@ -1,7 +1,7 @@
 package com.github.dakusui.scriptiveunit.annotations;
 
-import com.github.dakusui.scriptiveunit.loaders.json.JsonBasedTestSuiteDescriptorLoader;
 import com.github.dakusui.scriptiveunit.loaders.TestSuiteDescriptorLoader;
+import com.github.dakusui.scriptiveunit.loaders.json.JsonBasedTestSuiteDescriptorLoader;
 
 import java.lang.annotation.Annotation;
 import java.lang.annotation.Retention;
@@ -19,7 +19,7 @@ public @interface Load {
     }
 
     @Override
-    public String defaultScriptName() {
+    public String script() {
       return "";
     }
 
@@ -34,7 +34,7 @@ public @interface Load {
     }
   };
 
-  String defaultScriptName() default SCRIPT_NOT_SPECIFIED;
+  String script() default SCRIPT_NOT_SPECIFIED;
 
   String scriptSystemPropertyKey() default DEFAULT_SCRIPT_SYSTEM_PROPERTY_KEY;
 

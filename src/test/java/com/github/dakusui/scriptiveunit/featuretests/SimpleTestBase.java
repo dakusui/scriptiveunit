@@ -8,14 +8,14 @@ import com.github.dakusui.scriptiveunit.drivers.Predicates;
 import com.github.dakusui.scriptiveunit.drivers.Strings;
 import com.github.dakusui.scriptiveunit.loaders.TestSuiteDescriptorLoader;
 import com.github.dakusui.scriptiveunit.model.form.Form;
-import com.github.dakusui.scriptiveunit.model.lang.ApplicationSpec;
-import com.github.dakusui.scriptiveunit.model.lang.HostSpec;
+import com.github.dakusui.scriptiveunit.loaders.preprocessing.ApplicationSpec;
+import com.github.dakusui.scriptiveunit.loaders.preprocessing.HostSpec;
 import com.github.dakusui.scriptiveunit.runners.ScriptiveUnit;
 import org.junit.runner.RunWith;
 
 import java.util.Arrays;
 
-import static com.github.dakusui.scriptiveunit.model.lang.ApplicationSpec.atom;
+import static com.github.dakusui.scriptiveunit.loaders.preprocessing.ApplicationSpec.atom;
 
 @RunWith(ScriptiveUnit.class)
 public abstract class SimpleTestBase {
@@ -51,12 +51,12 @@ public abstract class SimpleTestBase {
     }
 
     @Override
-    protected ApplicationSpec applicationLanguage() {
+    protected ApplicationSpec createApplicationSpec() {
       return new ApplicationSpec.Standard();
     }
 
     @Override
-    protected HostSpec hostLanguage() {
+    protected HostSpec createHostSpec() {
       return new HostSpec.Json();
     }
   }

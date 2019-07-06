@@ -16,7 +16,6 @@ import com.github.dakusui.scriptiveunit.model.session.action.Pipe;
 import com.github.dakusui.scriptiveunit.model.session.action.Sink;
 import com.github.dakusui.scriptiveunit.model.session.action.Source;
 import com.github.dakusui.scriptiveunit.utils.ActionUtils;
-import com.github.dakusui.scriptiveunit.utils.TupleUtils;
 import org.hamcrest.Matcher;
 
 import java.util.function.Function;
@@ -26,8 +25,7 @@ import static com.github.dakusui.actionunit.core.ActionSupport.leaf;
 import static com.github.dakusui.actionunit.core.ActionSupport.named;
 import static com.github.dakusui.actionunit.core.ActionSupport.nop;
 import static com.github.dakusui.actionunit.core.ActionSupport.sequential;
-import static com.github.dakusui.scriptiveunit.model.session.Stage.ExecutionLevel.FIXTURE;
-import static com.github.dakusui.scriptiveunit.model.session.Stage.ExecutionLevel.SUITE;
+import static com.github.dakusui.scriptiveunit.utils.TestItemUtils.formatTestName;
 import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
 import static org.junit.Assert.assertThat;
@@ -63,10 +61,12 @@ public interface Session {
     @SuppressWarnings("WeakerAccess")
     protected Impl(Config config, TestSuiteDescriptorLoader testSuiteDescriptorLoader) {
       this.config = config;
-      this.reportCreator = testItem ->
-          Report.create(
-              null, getConfig().getReportingConfig().reportBaseDirectory, getConfig().getScriptResourceName().orElse("(not specified)"), testItem,
-              getConfig().getReportingConfig().reportFileName);
+      this.reportCreator = testItem -> Report.create(
+          null,
+          getConfig().getReporting().reportBaseDirectory,
+          getConfig().getScriptResourceName().orElse("__noname__"),
+          testItem,
+          getConfig().getReporting().reportFileName);
       this.testSuiteDescriptor = testSuiteDescriptorLoader.loadTestSuiteDescriptor(this);
     }
 
@@ -112,10 +112,8 @@ public interface Session {
     @Override
     public Action createMainAction(TestOracle testOracle, IndexedTestCase indexedTestCase) {
       TestItem testItem = TestItem.create(indexedTestCase, testOracle);
-      TestOracleFormFactory definition = testItem.testOracleActionFactory(tuple -> "Verify with: " + TupleUtils.filterSimpleSingleLevelParametersOut(
-          tuple,
-          testSuiteDescriptor.getFactorSpaceDescriptor().getParameters()
-      ));
+      TestOracleFormFactory definition = testItem.testOracleActionFactory(
+          tuple -> formatTestName(tuple, testSuiteDescriptor, testOracle.getDescription().orElse("noname")));
       Tuple testCaseTuple = testItem.getTestCaseTuple();
       Report report = createReport(testItem);
       return named(
@@ -184,7 +182,12 @@ public interface Session {
       return (testIO, context) -> {
         Stage thenStage = Impl.this.createOracleVerificationStage(testItem, testIO.getOutput(), report);
         assertThat(
-            String.format("Test:<%s> failed with input:<%s>", testItem.getDescription().orElse("(noname)"), testIO.getInput()),
+            format("Test:<%s> failed with input:<%s>",
+                formatTestName(
+                    testItem.getTestCaseTuple(),
+                    testSuiteDescriptor,
+                    testItem.getDescription().orElse("(noname)")),
+                testIO.getInput()),
             thenStage,
             matcherFunction.apply(thenStage).apply(testIO.getOutput()));
       };
@@ -208,11 +211,11 @@ public interface Session {
     }
 
     Stage createSuiteLevelStage(Tuple suiteLevelTuple) {
-      return Stage.Factory.frameworkStageFor( this.getConfig(), suiteLevelTuple);
+      return Stage.Factory.frameworkStageFor(this.getConfig(), suiteLevelTuple);
     }
 
     Stage createFixtureLevelStage(Tuple fixtureLevelTuple) {
-      return Stage.Factory.frameworkStageFor( this.getConfig(), fixtureLevelTuple);
+      return Stage.Factory.frameworkStageFor(this.getConfig(), fixtureLevelTuple);
     }
 
     Stage createOracleLevelStage(TestItem testItem, Report report) {

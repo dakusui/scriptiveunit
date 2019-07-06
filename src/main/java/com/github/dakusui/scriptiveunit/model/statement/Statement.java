@@ -106,7 +106,7 @@ public interface Statement {
 
               @Override
               public String name() {
-                return String.format("(%s)", car);
+                return String.format("arg[%s]", car);
               }
 
               @Override
@@ -142,7 +142,7 @@ public interface Statement {
 
             @Override
             public String name() {
-              return String.format("'%s'", Objects.toString(value()));
+              return "const:'" + value() + "'";
             }
 
             @Override

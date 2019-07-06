@@ -3,7 +3,8 @@ package com.github.dakusui.scriptiveunit.featuretests;
 import com.github.dakusui.scriptiveunit.annotations.Load;
 import com.github.dakusui.scriptiveunit.core.Config;
 import com.github.dakusui.scriptiveunit.exceptions.ScriptiveUnitException;
-import com.github.dakusui.scriptiveunit.model.lang.ApplicationSpec;
+import com.github.dakusui.scriptiveunit.loaders.preprocessing.ApplicationSpec;
+import com.github.dakusui.scriptiveunit.loaders.preprocessing.HostSpec;
 import org.junit.Test;
 
 import java.lang.reflect.InvocationTargetException;
@@ -44,16 +45,13 @@ public class BrokenTest {
       }
 
       @Override
-      protected ApplicationSpec.Dictionary readScript(Config config, ApplicationSpec.Dictionary defaultValues) {
-        return applicationSpec.deepMerge(
-            dict(
-                $("testOracles", array(
-                    dict(
-                        $("when", array("brokenForm")),
-                        $("then", array("matches", array("output"), "bye"))
-                    )))),
-            defaultValues
-        );
+      protected ApplicationSpec.Dictionary readRawScriptResource(String scriptResourceName, HostSpec hostSpec) {
+        return dict(
+            $("testOracles", array(
+                dict(
+                    $("when", array("brokenForm")),
+                    $("then", array("matches", array("output"), "bye"))
+                ))));
       }
     }
   }

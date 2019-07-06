@@ -12,9 +12,9 @@ import com.github.dakusui.scriptiveunit.drivers.Predicates;
 import com.github.dakusui.scriptiveunit.drivers.extras.QueryApi;
 import com.github.dakusui.scriptiveunit.drivers.Strings;
 import com.github.dakusui.scriptiveunit.drivers.actions.Basic;
-import com.github.dakusui.scriptiveunit.model.lang.Preprocessor;
+import com.github.dakusui.scriptiveunit.loaders.preprocessing.PreprocessingUnit;
 import com.github.dakusui.scriptiveunit.loaders.json.JsonBasedTestSuiteDescriptorLoader;
-import com.github.dakusui.scriptiveunit.model.lang.ApplicationSpec;
+import com.github.dakusui.scriptiveunit.loaders.preprocessing.ApplicationSpec;
 import com.github.dakusui.scriptiveunit.model.form.Form;
 import com.github.dakusui.scriptiveunit.runners.ScriptiveUnit;
 import com.github.dakusui.scriptiveunit.unittests.cli.MemoizationExample;
@@ -26,12 +26,12 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
-import static com.github.dakusui.scriptiveunit.model.lang.Preprocessor.Utils.pathMatcher;
-import static com.github.dakusui.scriptiveunit.model.lang.ApplicationSpec.$;
-import static com.github.dakusui.scriptiveunit.model.lang.ApplicationSpec.Utils.requireDictionary;
-import static com.github.dakusui.scriptiveunit.model.lang.ApplicationSpec.array;
-import static com.github.dakusui.scriptiveunit.model.lang.ApplicationSpec.atom;
-import static com.github.dakusui.scriptiveunit.model.lang.ApplicationSpec.dict;
+import static com.github.dakusui.scriptiveunit.loaders.preprocessing.PreprocessingUnit.Utils.pathMatcher;
+import static com.github.dakusui.scriptiveunit.loaders.preprocessing.ApplicationSpec.$;
+import static com.github.dakusui.scriptiveunit.loaders.preprocessing.ApplicationSpec.Utils.requireDictionary;
+import static com.github.dakusui.scriptiveunit.loaders.preprocessing.ApplicationSpec.array;
+import static com.github.dakusui.scriptiveunit.loaders.preprocessing.ApplicationSpec.atom;
+import static com.github.dakusui.scriptiveunit.loaders.preprocessing.ApplicationSpec.dict;
 import static java.lang.String.format;
 import static java.util.Collections.unmodifiableMap;
 import static java.util.Objects.requireNonNull;
@@ -46,12 +46,12 @@ public class Qapi {
     private static ApplicationSpec applicationSpec = new ApplicationSpec.Standard();
 
     @Override
-    protected ApplicationSpec applicationLanguage() {
+    protected ApplicationSpec createApplicationSpec() {
       return new ApplicationSpec.Standard() {
         @Override
-        public List<Preprocessor> preprocessors() {
-          return new LinkedList<Preprocessor>(super.preprocessors()) {{
-            add(Preprocessor.preprocessor(
+        public List<PreprocessingUnit> preprocessors() {
+          return new LinkedList<PreprocessingUnit>(super.preprocessors()) {{
+            add(PreprocessingUnit.preprocessor(
                 Loader::getModelNode,
                 pathMatcher("testOracles", ".*")));
           }};

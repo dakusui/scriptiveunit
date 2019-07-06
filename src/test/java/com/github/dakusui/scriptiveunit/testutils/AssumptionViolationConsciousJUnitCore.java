@@ -1,5 +1,6 @@
 package com.github.dakusui.scriptiveunit.testutils;
 
+import com.github.dakusui.scriptiveunit.exceptions.ScriptiveUnitException;
 import org.junit.runner.Description;
 import org.junit.runner.JUnitCore;
 import org.junit.runner.Result;
@@ -7,7 +8,6 @@ import org.junit.runner.notification.Failure;
 import org.junit.runner.notification.RunListener;
 import org.junit.runner.notification.RunNotifier;
 
-import static com.github.dakusui.scriptiveunit.exceptions.ScriptiveUnitException.wrap;
 import static java.util.Objects.requireNonNull;
 
 /**
@@ -103,7 +103,7 @@ public class AssumptionViolationConsciousJUnitCore extends JUnitCore {
             target.testAssumptionFailure(failure);
             this.testIgnored(requireNonNull(this.description.get()));
           } catch (Exception e) {
-            throw wrap(e);
+            throw ScriptiveUnitException.wrapIfNecessary(e);
           }
         }
       };

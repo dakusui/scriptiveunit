@@ -392,7 +392,7 @@ public final class GroupedTestItemRunner extends ParentRunner<Action> {
           nop()
       );
     } catch (InitializationError initializationError) {
-      throw ScriptiveUnitException.wrap(initializationError);
+      throw ScriptiveUnitException.wrapIfNecessary(initializationError);
     }
   }
 
@@ -420,7 +420,7 @@ public final class GroupedTestItemRunner extends ParentRunner<Action> {
           )
       );
     } catch (InitializationError initializationError) {
-      throw ScriptiveUnitException.wrap(initializationError);
+      throw ScriptiveUnitException.wrapIfNecessary(initializationError);
     }
   }
 
@@ -440,7 +440,7 @@ public final class GroupedTestItemRunner extends ParentRunner<Action> {
           session.createTearDownActionForFixture(testSuiteDescriptor, fixture)
       );
     } catch (InitializationError initializationError) {
-      throw ScriptiveUnitException.wrap(initializationError);
+      throw ScriptiveUnitException.wrapIfNecessary(initializationError);
     }
   }
 

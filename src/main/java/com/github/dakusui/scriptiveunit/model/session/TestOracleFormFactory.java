@@ -16,10 +16,12 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.function.Function;
 import java.util.function.Predicate;
 
 import static com.github.dakusui.actionunit.core.ActionSupport.nop;
+import static com.github.dakusui.scriptiveunit.utils.StringUtils.alignLeft;
 import static com.github.dakusui.scriptiveunit.utils.StringUtils.indent;
 import static com.github.dakusui.scriptiveunit.utils.StringUtils.iterableToString;
 import static java.lang.String.format;
@@ -55,10 +57,9 @@ public interface TestOracleFormFactory {
           @Override
           public void describeTo(Description description) {
             description.appendText(
-                format("Precondition:<%s> was not satisfied by given input:<%s>:%n%s",
+                format("<%s>:%n%s",
                     definition.given().map(Statement::format)
                         .orElse("(unavailable)"),
-                    testItem.getTestCaseTuple(),
                     formListener.toString()
                 ));
           }
@@ -163,12 +164,34 @@ public interface TestOracleFormFactory {
           @Override
           public String toString() {
             StringBuilder b = new StringBuilder();
+            class CountForForm {
+              private Map<Form, Integer> map = new HashMap<>();
+
+              private Integer getAndIncrement(Form form) {
+                if (!map.containsKey(form))
+                  map.put(form, 0);
+                int ret = map.get(form);
+                try {
+                  return ret;
+                } finally {
+                  map.put(form, ret + 1);
+                }
+              }
+            }
+            CountForForm countFor = new CountForForm();
+            //noinspection RedundantCast
             history.stream()
                 .map(fl -> $(String.format("%s%s", indent(fl.level), fl.form.name()), fl.form))
-                .map(v -> $(String.format("%-60s", v[0]), v[1]))
-                .map(v -> String.format("%s:%s", v[0], values.get((Form) v[1])))
-                .forEach(v -> b.append(String.format("%s%n", v)));
+                .map(v -> $(formatFormName(v[0]), v[1]))
+                .map(v -> format("%s:%s",
+                    alignLeft((String) v[0], 60),
+                    values.get((Form) v[1]).get(countFor.getAndIncrement((Form) v[1]))))
+                .forEach((String v) -> b.append(v).append(String.format("%n")));
             return b.toString();
+          }
+
+          String formatFormName(Object o) {
+            return Objects.toString(o);
           }
 
           void addValue(Form form, Object value) {

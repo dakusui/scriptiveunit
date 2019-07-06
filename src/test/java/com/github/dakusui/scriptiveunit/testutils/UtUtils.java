@@ -61,7 +61,7 @@ public enum UtUtils {
     try {
       return Files.createTempDirectory("target").toFile();
     } catch (IOException e) {
-      throw ScriptiveUnitException.wrap(e);
+      throw ScriptiveUnitException.wrapIfNecessary(e);
     }
   }
 
