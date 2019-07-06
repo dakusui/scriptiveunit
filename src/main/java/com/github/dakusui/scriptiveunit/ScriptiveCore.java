@@ -45,7 +45,7 @@ public class ScriptiveCore {
       );
       return Utils.describeFunction(scriptiveUnit, driverClass.newInstance(), functionName);
     } catch (Throwable throwable) {
-      throw ScriptiveUnitException.wrap(throwable);
+      throw ScriptiveUnitException.wrapIfNecessary(throwable);
     }
   }
 
@@ -58,7 +58,7 @@ public class ScriptiveCore {
               .build()
       ), driverClass.newInstance());
     } catch (Throwable throwable) {
-      throw ScriptiveUnitException.wrap(throwable);
+      throw ScriptiveUnitException.wrapIfNecessary(throwable);
     }
   }
 
@@ -90,7 +90,7 @@ public class ScriptiveCore {
     try {
       return new JUnitCore().run(new ScriptiveUnit(driverClass, new Config.Builder(driverClass, new Properties()).withScriptResourceName(scriptResourceName).build()));
     } catch (Throwable throwable) {
-      throw ScriptiveUnitException.wrap(throwable);
+      throw ScriptiveUnitException.wrapIfNecessary(throwable);
     }
   }
 

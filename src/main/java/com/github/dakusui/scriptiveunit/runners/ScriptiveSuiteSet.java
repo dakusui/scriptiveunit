@@ -133,7 +133,7 @@ public class ScriptiveSuiteSet extends ParentRunner<Runner> {
     } catch (Error | RuntimeException e) {
       throw e;
     } catch (Throwable throwable) {
-      throw ScriptiveUnitException.wrap(throwable);
+      throw ScriptiveUnitException.wrapIfNecessary(throwable);
     }
   }
 
