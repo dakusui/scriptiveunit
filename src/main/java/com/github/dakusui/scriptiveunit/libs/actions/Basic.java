@@ -1,4 +1,4 @@
-package com.github.dakusui.scriptiveunit.drivers.actions;
+package com.github.dakusui.scriptiveunit.libs.actions;
 
 import com.github.dakusui.actionunit.core.Action;
 import com.github.dakusui.actionunit.core.ActionSupport;

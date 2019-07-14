@@ -2,7 +2,7 @@ package com.github.dakusui.scriptiveunit.utils;
 
 import com.github.dakusui.scriptiveunit.annotations.Import;
 import com.github.dakusui.scriptiveunit.annotations.Scriptable;
-import com.github.dakusui.scriptiveunit.drivers.Predicates;
+import com.github.dakusui.scriptiveunit.libs.Predicates;
 import com.github.dakusui.scriptiveunit.model.form.Form;
 
 import java.util.Arrays;

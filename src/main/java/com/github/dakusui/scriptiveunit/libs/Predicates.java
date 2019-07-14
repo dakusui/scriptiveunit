@@ -1,4 +1,4 @@
-package com.github.dakusui.scriptiveunit.drivers;
+package com.github.dakusui.scriptiveunit.libs;
 
 import com.github.dakusui.scriptiveunit.annotations.Doc;
 import com.github.dakusui.scriptiveunit.annotations.Scriptable;

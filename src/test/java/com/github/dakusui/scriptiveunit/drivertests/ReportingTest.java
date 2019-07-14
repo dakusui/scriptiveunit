@@ -1,7 +1,7 @@
 package com.github.dakusui.scriptiveunit.drivertests;
 
 import com.github.dakusui.actionunit.core.Action;
-import com.github.dakusui.scriptiveunit.drivers.extras.Reporting;
+import com.github.dakusui.scriptiveunit.libs.extras.Reporting;
 import com.github.dakusui.scriptiveunit.model.session.Stage;
 import org.junit.Test;
 

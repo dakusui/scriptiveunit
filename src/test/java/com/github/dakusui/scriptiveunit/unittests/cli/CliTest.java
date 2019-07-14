@@ -67,12 +67,12 @@ public class CliTest {
 
   @ParameterSource
   public Parameter.Simple.Factory<String> driver() {
-    return Parameter.Simple.Factory.of(asList("com.github.dakusui.scriptiveunit.testutils.drivers.Qapi", "'*'", "not.existing.Driver", "NOT_REQUIRED"));
+    return Parameter.Simple.Factory.of(asList("com.github.dakusui.scriptiveunit.testutils.libs.Qapi", "'*'", "not.existing.Driver", "NOT_REQUIRED"));
   }
 
   @ParameterSource
   public Parameter.Simple.Factory<String> suiteset() {
-    return Parameter.Simple.Factory.of(asList("com.github.dakusui.scriptiveunit.testutils.drivers.SuiteSetExample", "'*'", "not.existing.SuiteSet", "NOT_REQUIRED"));
+    return Parameter.Simple.Factory.of(asList("com.github.dakusui.scriptiveunit.testutils.libs.SuiteSetExample", "'*'", "not.existing.SuiteSet", "NOT_REQUIRED"));
   }
 
   @ParameterSource
