@@ -56,7 +56,25 @@
         <dependency>
             <groupId>com.github.dakusui</groupId>
             <artifactId>actionunit</artifactId>
-            <version>5.2.3</version>
+            <version>5.2.5</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.mockito</groupId>
+                    <artifactId>mockito-core</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.hamcrest</groupId>
+                    <artifactId>hamcrest-core</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.slf4j</groupId>
+                    <artifactId>slf4j-api</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.slf4j</groupId>
+                    <artifactId>slf4j-log4j12</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <dependency>
             <groupId>com.github.dakusui</groupId>
@@ -68,11 +86,11 @@
             <artifactId>faultsource</artifactId>
             <version>1.0.0</version>
         </dependency>
-        <dependency>
+        <!-- dependency>
             <groupId>com.github.dakusui</groupId>
             <artifactId>commandrunner</artifactId>
             <version>0.0.8</version>
-        </dependency>
+        </dependency -->
         <dependency>
             <groupId>org.codehaus.jackson</groupId>
             <artifactId>jackson-mapper-asl</artifactId>
@@ -86,12 +104,12 @@
         <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-api</artifactId>
-            <version>1.7.12</version>
+            <version>1.7.26</version>
         </dependency>
         <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-log4j12</artifactId>
-            <version>1.7.12</version>
+            <version>1.7.26</version>
         </dependency>
     </dependencies>
 
@@ -160,7 +178,7 @@
                         <goals>
                             <goal>site</goal>
                         </goals>
-                        <phase>site</phase>
+                        <phase>site-deploy</phase>
                         <configuration>
                             <!-- Make sure you have authentication for this server on .m2/settings.xml -->
                             <server>github</server>
