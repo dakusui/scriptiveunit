@@ -18,14 +18,20 @@ public interface Config {
   Reporting getReporting();
 
   class Default implements Config {
+    private final Object driverObject;
+
+    public Default(Object driverObject) {
+      this.driverObject = driverObject;
+    }
+
     @Override
     public Object getDriverObject() {
-      return null;
+      return this.driverObject;
     }
 
     @Override
     public String getScriptResourceNameKey() {
-      return null;
+      throw new UnsupportedOperationException();
     }
 
     @Override
@@ -36,6 +42,10 @@ public interface Config {
     @Override
     public Reporting getReporting() {
       return null;
+    }
+
+    static Config create(Object driverObject) {
+      return new Default(driverObject);
     }
   }
 

@@ -18,33 +18,33 @@ public class StatementTest extends TestBase {
   public void test() {
     Object atom = "hello";
 
-    Statement.Factory statementFactory = new Statement.Factory(createEmptyObjectMethodRegistry(), emptyMap());
+    Statement.Factory statementFactory = new Statement.Factory(createEmptyObjectMethodRegistry(new Standard()), emptyMap());
     Statement statement = statementFactory.create(atom);
-    Object value = statement.toForm().apply(createStage());
+    Object value = statement.toForm().apply(createStage(new Standard()));
     System.out.println(value);
   }
 
 
   @Test
-  public void test2() {
+  public void test2(Standard driverObject) {
     Object atom = asList("add", 1, 2);
 
-    Statement.Factory statementFactory = new Statement.Factory(createEmptyObjectMethodRegistry(), emptyMap());
+    Statement.Factory statementFactory = new Statement.Factory(createEmptyObjectMethodRegistry(new Standard()), emptyMap());
     Statement statement = statementFactory.create(atom);
 
-    System.out.println(statement.toForm().apply(createStage()));
+    System.out.println(statement.toForm().apply(createStage(driverObject)));
   }
 
-  private Stage createStage() {
-    return Stage.Factory.frameworkStageFor(createConfig(), new Tuple.Impl());
+  private Stage createStage(Standard driverObject) {
+    return Stage.Factory.frameworkStageFor(createConfig(driverObject), new Tuple.Impl());
   }
 
-  private Config createConfig() {
-    return new Config.Default();
+  private Config createConfig(Standard driverObject) {
+    return new Config.Default(driverObject);
   }
 
-  private ObjectMethodRegistry createEmptyObjectMethodRegistry() {
-    return ObjectMethodRegistry.load(new Standard());
+  private ObjectMethodRegistry createEmptyObjectMethodRegistry(Standard driverObject) {
+    return ObjectMethodRegistry.load(driverObject);
   }
 
   public static class Standard {
