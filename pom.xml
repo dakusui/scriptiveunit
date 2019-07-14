@@ -1,4 +1,5 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.github.dakusui</groupId>
@@ -7,7 +8,7 @@
     <version>0.4.0-SNAPSHOT</version>
     <description>A framework for building your own testing language</description>
     <name>scriptiveunit</name>
-    <url>https://github.com/dakusui/scriptunit</url>
+    <url>https://github.com/dakusui/scriptiveunit</url>
 
     <licenses>
         <license>
@@ -18,12 +19,12 @@
     </licenses>
 
     <scm>
-        <connection>scm:git:git@github.com/dakusui/scriptiveunit.git
+        <connection>scm:git:git@github.com:dakusui/scriptiveunit.git
         </connection>
         <developerConnection>scm:git:git@github.com:dakusui/scriptiveunit.git
         </developerConnection>
-        <url>http://dakusui.github.io/scriptiveunit</url>
-        <tag>scriptiveunit-0.2</tag>
+        <url>https://dakusui.github.io/scriptiveunit/</url>
+        <tag>scriptiveunit-0.4</tag>
     </scm>
 
     <developers>
@@ -85,12 +86,12 @@
         <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-api</artifactId>
-            <version>1.7.24</version>
+            <version>1.7.12</version>
         </dependency>
         <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-log4j12</artifactId>
-            <version>1.7.24</version>
+            <version>1.7.12</version>
         </dependency>
     </dependencies>
 
@@ -126,31 +127,94 @@
                 </configuration>
             </plugin>
             <plugin>
-                <!-- Run with mvn org.pitest:pitest-maven:mutationCoverage -->
                 <groupId>org.pitest</groupId>
                 <artifactId>pitest-maven</artifactId>
-                <version>1.1.7</version>
-                <configuration>
-                    <targetClasses>
-                        <param>com.github.dakusui.scriptiveunit.*</param>
-                    </targetClasses>
-                    <targetTests>
-                        <param>*Test</param>
-                    </targetTests>
-                </configuration>
             </plugin>
+            <plugin>
+                <artifactId>exec-maven-plugin</artifactId>
+                <groupId>org.codehaus.mojo</groupId>
+                <executions>
+                    <execution><!-- Run our version calculation script -->
+                        <id>package-info.java generation</id>
+                        <phase>generate-sources</phase>
+                        <goals>
+                            <goal>exec</goal>
+                        </goals>
+                        <configuration>
+                            <executable>bash</executable>
+                            <arguments>
+                                <argument>
+                                    ${basedir}/scripts/package-info-adoc_to_package-info-java.sh
+                                </argument>
+                            </arguments>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <!-- Deploy the web site -->
+                <groupId>com.github.github</groupId>
+                <artifactId>site-maven-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>site</goal>
+                        </goals>
+                        <phase>site</phase>
+                        <configuration>
+                            <!-- Make sure you have authentication for this server on .m2/settings.xml -->
+                            <server>github</server>
+                            <message>Building site for my project</message>
+                            <merge>true</merge>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+        <pluginManagement>
+            <plugins>
+                <plugin>
+                    <!-- Run with mvn org.pitest:pitest-maven:mutationCoverage -->
+                    <groupId>org.pitest</groupId>
+                    <artifactId>pitest-maven</artifactId>
+                    <version>1.1.7</version>
+                    <configuration>
+                        <targetClasses>
+                            <param>com.github.dakusui.scriptiveunit.*</param>
+                        </targetClasses>
+                        <targetTests>
+                            <param>*Test</param>
+                        </targetTests>
+                    </configuration>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-javadoc-plugin</artifactId>
+                    <version>2.10.4</version>
+                    <!--executions>
+                      <execution>
+                        <id>attach-javadocs</id>
+                        <goals>
+                          <goal>jar</goal>
+                        </goals>
+                      </execution>
+                    </executions -->
+                </plugin>
+                <plugin>
+                    <!-- Deploy the web site -->
+                    <groupId>com.github.github</groupId>
+                    <artifactId>site-maven-plugin</artifactId>
+                    <version>0.12</version>
+                </plugin>
+            </plugins>
+        </pluginManagement>
+    </build>
+
+    <reporting>
+        <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-javadoc-plugin</artifactId>
-                <version>2.10.4</version>
-                <executions>
-                    <execution>
-                        <id>attach-javadocs</id>
-                        <goals>
-                            <goal>jar</goal>
-                        </goals>
-                    </execution>
-                </executions>
                 <configuration>
                     <doclet>org.asciidoctor.Asciidoclet</doclet>
                     <docletArtifact>
@@ -168,29 +232,16 @@
                         --attribute data-uri
                     </additionalparam>
                 </configuration>
-            </plugin>
-            <plugin>
-                <artifactId>exec-maven-plugin</artifactId>
-                <groupId>org.codehaus.mojo</groupId>
-                <executions>
-                    <execution><!-- Run our version calculation script -->
-                        <id>package-info.java generation</id>
-                        <phase>generate-sources</phase>
-                        <goals>
-                            <goal>exec</goal>
-                        </goals>
-                        <configuration>
-                            <executable>bash</executable>
-                            <arguments>
-                                <argument>${basedir}/scripts/package-info-adoc_to_package-info-java.sh</argument>
-                            </arguments>
-                        </configuration>
-                    </execution>
-                </executions>
+                <reportSets>
+                    <reportSet>
+                        <reports>
+                            <report>javadoc</report>
+                        </reports>
+                    </reportSet>
+                </reportSets>
             </plugin>
         </plugins>
-    </build>
-
+    </reporting>
 
     <distributionManagement>
         <snapshotRepository>
