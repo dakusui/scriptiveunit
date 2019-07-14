@@ -3,7 +3,7 @@ package com.github.dakusui.scriptiveunit.model.session;
 import com.github.dakusui.jcunit.core.tuples.Tuple;
 import com.github.dakusui.scriptiveunit.core.Config;
 import com.github.dakusui.scriptiveunit.model.desc.testitem.TestItem;
-import com.github.dakusui.scriptiveunit.model.form.Value;
+import com.github.dakusui.scriptiveunit.model.form.value.Value;
 
 import java.util.Optional;
 import java.util.function.BiFunction;

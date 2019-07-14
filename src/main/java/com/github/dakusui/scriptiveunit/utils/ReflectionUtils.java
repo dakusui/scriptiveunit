@@ -1,7 +1,7 @@
 package com.github.dakusui.scriptiveunit.utils;
 
 import com.github.dakusui.scriptiveunit.core.ObjectField;
-import com.github.dakusui.scriptiveunit.model.form.handle.ValueResolver;
+import com.github.dakusui.scriptiveunit.model.form.Form;
 import com.github.dakusui.scriptiveunit.exceptions.ResourceException;
 import com.github.dakusui.scriptiveunit.exceptions.ScriptiveUnitException;
 import org.reflections.Reflections;
@@ -55,11 +55,11 @@ public enum ReflectionUtils {
         defaultInstance;
   }
 
-  public static List<ValueResolver> getAnnotatedMethods(Object object, Class<? extends Annotation> annotationClass,
+  public static List<Form> getAnnotatedMethods(Object object, Class<? extends Annotation> annotationClass,
       Map<String, String> aliases) {
     return Arrays.stream(object.getClass().getMethods())
         .filter(each -> each.isAnnotationPresent(annotationClass))
-        .map(each -> ValueResolver.create(object, each, aliases)).collect(toList());
+        .map(each -> Form.create(object, each, aliases)).collect(toList());
   }
 
   public static List<ObjectField> getAnnotatedFields(Object object, Class<? extends Annotation> annotationClass) {

@@ -1,8 +1,8 @@
 package com.github.dakusui.scriptiveunit.drivers;
 
 import com.github.dakusui.scriptiveunit.annotations.Scriptable;
-import com.github.dakusui.scriptiveunit.model.form.Value;
-import com.github.dakusui.scriptiveunit.model.form.ValueList;
+import com.github.dakusui.scriptiveunit.model.form.value.Value;
+import com.github.dakusui.scriptiveunit.model.form.value.ValueList;
 import com.github.dakusui.scriptiveunit.model.session.Stage;
 import com.github.dakusui.scriptiveunit.utils.CoreUtils;
 

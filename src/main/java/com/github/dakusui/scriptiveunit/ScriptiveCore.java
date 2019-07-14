@@ -3,7 +3,7 @@ package com.github.dakusui.scriptiveunit;
 import com.github.dakusui.scriptiveunit.core.Config;
 import com.github.dakusui.scriptiveunit.core.Description;
 import com.github.dakusui.scriptiveunit.exceptions.ScriptiveUnitException;
-import com.github.dakusui.scriptiveunit.model.form.handle.ValueResolver;
+import com.github.dakusui.scriptiveunit.model.form.Form;
 import com.github.dakusui.scriptiveunit.runners.RunningMode;
 import com.github.dakusui.scriptiveunit.runners.ScriptiveSuiteSet;
 import com.github.dakusui.scriptiveunit.runners.ScriptiveSuiteSet.SuiteScripts;
@@ -100,7 +100,7 @@ public class ScriptiveCore {
     public static Description describeForm(ScriptiveUnit scriptiveUnit, Object driverObject, String formName) {
       Optional<Description> value =
           Stream.concat(
-              DriverUtils.getValueResolversFromImportedFieldsInObject(driverObject).stream().map(ValueResolver::describe),
+              DriverUtils.getFormsFromImportedFieldsInObject(driverObject).stream().map(Form::describe),
               Private.getUserDefinedFormClauses(scriptiveUnit).entrySet().stream().map((Map.Entry<String, List<Object>> entry) -> Description.describe(entry.getKey(), entry.getValue()))
           ).filter(t -> formName.equals(t.name())).findFirst();
       if (value.isPresent())
@@ -110,9 +110,9 @@ public class ScriptiveCore {
 
     public static List<String> getFormNames(ScriptiveUnit scriptiveUnit, Object driverObject) {
       return Stream.concat(
-          DriverUtils.getValueResolversFromImportedFieldsInObject(driverObject)
+          DriverUtils.getFormsFromImportedFieldsInObject(driverObject)
               .stream()
-              .map(ValueResolver::getName),
+              .map(Form::getName),
           Private.getUserDefinedFormClauseNamesFromScript(scriptiveUnit).stream()).collect(toList());
     }
 

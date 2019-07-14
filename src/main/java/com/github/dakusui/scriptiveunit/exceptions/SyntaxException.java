@@ -55,7 +55,7 @@ public class SyntaxException extends ScriptiveUnitException {
   }
 
   public static SyntaxException parameterNameShouldBeSpecifiedWithConstant(Statement.Compound statement) {
-    throw new SyntaxException(format("Parameter name must be constant but not when accessor is used. (%s %s)", statement.getValueResolverHandle(), statement.getArguments()));
+    throw new SyntaxException(format("Parameter name must be constant but not when accessor is used. (%s %s)", statement.getFormHandle(), statement.getArguments()));
   }
 
   public static SyntaxException cyclicTemplatingFound(String context, Map<String, Object> map) {

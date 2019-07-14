@@ -11,7 +11,7 @@ import com.github.dakusui.scriptiveunit.model.desc.TestSuiteDescriptor;
 import com.github.dakusui.scriptiveunit.model.desc.testitem.IndexedTestCase;
 import com.github.dakusui.scriptiveunit.model.desc.testitem.TestItem;
 import com.github.dakusui.scriptiveunit.model.desc.testitem.TestOracle;
-import com.github.dakusui.scriptiveunit.model.form.handle.ValueUtils;
+import com.github.dakusui.scriptiveunit.model.form.value.ValueUtils;
 import com.github.dakusui.scriptiveunit.model.session.action.Pipe;
 import com.github.dakusui.scriptiveunit.model.session.action.Sink;
 import com.github.dakusui.scriptiveunit.model.session.action.Source;

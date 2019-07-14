@@ -2,10 +2,10 @@ package com.github.dakusui.scriptiveunit.model.statement;
 
 import com.github.dakusui.scriptiveunit.core.Config;
 import com.github.dakusui.scriptiveunit.exceptions.TypeMismatch;
-import com.github.dakusui.scriptiveunit.model.form.Value;
-import com.github.dakusui.scriptiveunit.model.form.handle.ValueResolverHandle;
-import com.github.dakusui.scriptiveunit.model.form.handle.ValueResolverHandleFactory;
-import com.github.dakusui.scriptiveunit.model.form.handle.ValueResolverRegistry;
+import com.github.dakusui.scriptiveunit.model.form.value.Value;
+import com.github.dakusui.scriptiveunit.model.form.FormHandle;
+import com.github.dakusui.scriptiveunit.model.form.FormHandleFactory;
+import com.github.dakusui.scriptiveunit.model.form.FormRegistry;
 import com.github.dakusui.scriptiveunit.model.session.Stage;
 import com.github.dakusui.scriptiveunit.utils.CoreUtils;
 
@@ -21,7 +21,7 @@ import static com.github.dakusui.scriptiveunit.exceptions.TypeMismatch.headOfCal
  */
 public interface Statement {
   static Factory createStatementFactory(Config config, Map<String, List<Object>> userDefinedFormClauseMap) {
-    return new Factory(ValueResolverRegistry.load(config.getDriverObject()), userDefinedFormClauseMap);
+    return new Factory(FormRegistry.load(config.getDriverObject()), userDefinedFormClauseMap);
   }
 
   <U> Value<U> toValue();
@@ -45,7 +45,7 @@ public interface Statement {
   }
 
   interface Compound extends Statement {
-    ValueResolverHandle getValueResolverHandle();
+    FormHandle getFormHandle();
 
     Arguments getArguments();
 
@@ -55,12 +55,12 @@ public interface Statement {
   }
 
   class Factory {
-    private final ValueResolverHandleFactory valueResolverHandleFactory;
+    private final FormHandleFactory formHandleFactory;
 
-    public Factory(ValueResolverRegistry valueResolverRegistry, Map<String, List<Object>> userDefinedFormClauses) {
+    public Factory(FormRegistry formRegistry, Map<String, List<Object>> userDefinedFormClauses) {
 
-      this.valueResolverHandleFactory = new ValueResolverHandleFactory(
-          valueResolverRegistry,
+      this.formHandleFactory = new FormHandleFactory(
+          formRegistry,
           StatementRegistry.create(this, userDefinedFormClauses));
     }
 
@@ -71,16 +71,16 @@ public interface Statement {
       Object car = CoreUtils.car(raw);
       if (car instanceof String) {
         Arguments arguments = Arguments.create(this, CoreUtils.cdr(raw));
-        ValueResolverHandle valueResolverHandle = this.valueResolverHandleFactory.create((String) car);
+        FormHandle formHandle = this.formHandleFactory.create((String) car);
         return new Compound() {
           @Override
           public <U> Value<U> toValue() {
-            return getValueResolverHandle().toValue(this);
+            return getFormHandle().toValue(this);
           }
 
           @Override
-          public ValueResolverHandle getValueResolverHandle() {
-            return valueResolverHandle;
+          public FormHandle getFormHandle() {
+            return formHandle;
           }
 
           @Override
@@ -183,7 +183,7 @@ public interface Statement {
       @Override
       public void visit(Compound compound) {
         b.append("(");
-        b.append(compound.getValueResolverHandle().toString());
+        b.append(compound.getFormHandle().toString());
         //
         StreamSupport.stream(compound.getArguments().spliterator(), false)
             .peek(each -> b.append(" "))

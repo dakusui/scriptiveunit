@@ -1,4 +1,4 @@
-package com.github.dakusui.scriptiveunit.model.form;
+package com.github.dakusui.scriptiveunit.model.form.value;
 
 import com.github.dakusui.scriptiveunit.model.session.Stage;
 

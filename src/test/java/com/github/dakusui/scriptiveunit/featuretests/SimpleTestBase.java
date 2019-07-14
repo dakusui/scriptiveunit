@@ -7,7 +7,7 @@ import com.github.dakusui.scriptiveunit.drivers.Core;
 import com.github.dakusui.scriptiveunit.drivers.Predicates;
 import com.github.dakusui.scriptiveunit.drivers.Strings;
 import com.github.dakusui.scriptiveunit.loaders.TestSuiteDescriptorLoader;
-import com.github.dakusui.scriptiveunit.model.form.Value;
+import com.github.dakusui.scriptiveunit.model.form.value.Value;
 import com.github.dakusui.scriptiveunit.loaders.preprocessing.ApplicationSpec;
 import com.github.dakusui.scriptiveunit.loaders.preprocessing.HostSpec;
 import com.github.dakusui.scriptiveunit.runners.ScriptiveUnit;

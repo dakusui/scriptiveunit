@@ -1,6 +1,6 @@
-package com.github.dakusui.scriptiveunit.model.form.handle;
+package com.github.dakusui.scriptiveunit.model.form;
 
-import com.github.dakusui.scriptiveunit.model.form.Value;
+import com.github.dakusui.scriptiveunit.model.form.value.Value;
 import com.github.dakusui.scriptiveunit.model.session.Stage;
 import com.github.dakusui.scriptiveunit.model.statement.Statement;
 import com.github.dakusui.scriptiveunit.utils.CoreUtils;
@@ -14,33 +14,33 @@ import static com.google.common.collect.Iterables.toArray;
 import static java.util.Objects.requireNonNull;
 import static java.util.stream.Collectors.toList;
 
-public interface ValueResolverHandle {
+public interface FormHandle {
   <U> Value<U> toValue(Statement.Compound statement);
 
   boolean isAccessor();
 
-  interface Default extends ValueResolverHandle {
+  interface Default extends FormHandle {
     @Override
     default boolean isAccessor() {
       return false;
     }
   }
 
-  abstract class Base implements ValueResolverHandle.Default {
+  abstract class Base implements FormHandle.Default {
     @Override
     public abstract String toString();
   }
 
   class MethodBased extends Base {
-    final ValueResolver valueResolver;
+    final Form form;
 
-    MethodBased(ValueResolver valueResolver) {
-      this.valueResolver = valueResolver;
+    MethodBased(Form form) {
+      this.form = form;
     }
 
-    static <U> Value<U> methodBasedValueResolverToValue(MethodBased formHandle, Statement.Compound compound) {
-      ValueResolver valueResolver = formHandle.valueResolver();
-      return valueResolver.resolveValue(
+    static <U> Value<U> methodBasedFormToValue(MethodBased formHandle, Statement.Compound compound) {
+      Form form = formHandle.form();
+      return form.resolveValue(
           iterableToStream(compound.getArguments())
               .map(Statement::toValue)
               .toArray(Value[]::new));
@@ -49,22 +49,22 @@ public interface ValueResolverHandle {
     @Override
     public <U> Value<U> toValue(Statement.Compound compound) {
       return Value.Named.create(
-          this.valueResolver.getName(),
-          methodBasedValueResolverToValue(this, compound));
+          this.form.getName(),
+          methodBasedFormToValue(this, compound));
     }
 
     @Override
     public boolean isAccessor() {
-      return this.valueResolver.isAccessor();
+      return this.form.isAccessor();
     }
 
     @Override
     public String toString() {
-      return this.valueResolver.getName();
+      return this.form.getName();
     }
 
-    ValueResolver valueResolver() {
-      return this.valueResolver;
+    Form form() {
+      return this.form;
     }
   }
 
@@ -76,11 +76,11 @@ public interface ValueResolverHandle {
     public <U> Value<U> toValue(Statement.Compound statement) {
       return Value.Named.create(
           "<lambda>",
-          lambdaValueResolverToValue(statement)
+          lambdaFormToValue(statement)
       );
     }
 
-    static <U> Value<U> lambdaValueResolverToValue(Statement.Compound compound) {
+    static <U> Value<U> lambdaFormToValue(Statement.Compound compound) {
       //noinspection unchecked
       return (Value<U>) (Value<Value<Object>>) (Stage ii) ->
           getOnlyElement(iterableToStream(compound.getArguments())

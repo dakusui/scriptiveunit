@@ -1,7 +1,6 @@
-package com.github.dakusui.scriptiveunit.model.form.handle;
+package com.github.dakusui.scriptiveunit.model.form.value;
 
 import com.github.dakusui.scriptiveunit.exceptions.SyntaxException;
-import com.github.dakusui.scriptiveunit.model.form.Value;
 import com.github.dakusui.scriptiveunit.model.statement.Statement;
 import com.google.common.collect.Lists;
 
@@ -35,7 +34,7 @@ public enum ValueUtils {
     if (statement instanceof Statement.Atom)
       return work;
     if (statement instanceof Statement.Compound) {
-      if (((Statement.Compound) statement).getValueResolverHandle().isAccessor()) {
+      if (((Statement.Compound) statement).getFormHandle().isAccessor()) {
         for (Statement each : ((Statement.Compound) statement).getArguments()) {
           if (each instanceof Statement.Atom) {
             /*

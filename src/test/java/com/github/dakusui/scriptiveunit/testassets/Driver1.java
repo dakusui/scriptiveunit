@@ -8,7 +8,7 @@ import com.github.dakusui.scriptiveunit.drivers.Arith;
 import com.github.dakusui.scriptiveunit.drivers.Core;
 import com.github.dakusui.scriptiveunit.drivers.Predicates;
 import com.github.dakusui.scriptiveunit.drivers.actions.Basic;
-import com.github.dakusui.scriptiveunit.model.form.Value;
+import com.github.dakusui.scriptiveunit.model.form.value.Value;
 import com.github.dakusui.scriptiveunit.model.session.Stage;
 import com.github.dakusui.scriptiveunit.runners.ScriptiveUnit;
 import org.junit.runner.RunWith;

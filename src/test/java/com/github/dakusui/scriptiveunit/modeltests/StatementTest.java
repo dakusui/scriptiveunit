@@ -4,7 +4,7 @@ import com.github.dakusui.jcunit.core.tuples.Tuple;
 import com.github.dakusui.scriptiveunit.annotations.Import;
 import com.github.dakusui.scriptiveunit.core.Config;
 import com.github.dakusui.scriptiveunit.drivers.Arith;
-import com.github.dakusui.scriptiveunit.model.form.handle.ValueResolverRegistry;
+import com.github.dakusui.scriptiveunit.model.form.FormRegistry;
 import com.github.dakusui.scriptiveunit.model.session.Stage;
 import com.github.dakusui.scriptiveunit.model.statement.Statement;
 import com.github.dakusui.scriptiveunit.testutils.TestBase;
@@ -44,8 +44,8 @@ public class StatementTest extends TestBase {
     return new Config.Default(driverObject);
   }
 
-  private ValueResolverRegistry createEmptyObjectMethodRegistry(Standard driverObject) {
-    return ValueResolverRegistry.load(driverObject);
+  private FormRegistry createEmptyObjectMethodRegistry(Standard driverObject) {
+    return FormRegistry.load(driverObject);
   }
 
   public static class Standard {

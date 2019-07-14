@@ -1,7 +1,7 @@
 package com.github.dakusui.scriptiveunit.drivers.extras;
 
 import com.github.dakusui.scriptiveunit.annotations.Scriptable;
-import com.github.dakusui.scriptiveunit.model.form.Value;
+import com.github.dakusui.scriptiveunit.model.form.value.Value;
 
 public class Reporting extends DataStore {
   @SuppressWarnings("unused")

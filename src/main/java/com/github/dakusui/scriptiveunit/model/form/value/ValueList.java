@@ -1,4 +1,4 @@
-package com.github.dakusui.scriptiveunit.model.form;
+package com.github.dakusui.scriptiveunit.model.form.value;
 
 import java.util.Iterator;
 import java.util.List;

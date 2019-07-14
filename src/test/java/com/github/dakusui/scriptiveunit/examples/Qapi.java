@@ -15,7 +15,7 @@ import com.github.dakusui.scriptiveunit.drivers.actions.Basic;
 import com.github.dakusui.scriptiveunit.loaders.preprocessing.PreprocessingUnit;
 import com.github.dakusui.scriptiveunit.loaders.json.JsonBasedTestSuiteDescriptorLoader;
 import com.github.dakusui.scriptiveunit.loaders.preprocessing.ApplicationSpec;
-import com.github.dakusui.scriptiveunit.model.form.Value;
+import com.github.dakusui.scriptiveunit.model.form.value.Value;
 import com.github.dakusui.scriptiveunit.runners.ScriptiveUnit;
 import com.github.dakusui.scriptiveunit.unittests.cli.MemoizationExample;
 import com.google.common.collect.Maps;
