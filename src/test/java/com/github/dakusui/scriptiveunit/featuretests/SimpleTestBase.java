@@ -7,7 +7,7 @@ import com.github.dakusui.scriptiveunit.drivers.Core;
 import com.github.dakusui.scriptiveunit.drivers.Predicates;
 import com.github.dakusui.scriptiveunit.drivers.Strings;
 import com.github.dakusui.scriptiveunit.loaders.TestSuiteDescriptorLoader;
-import com.github.dakusui.scriptiveunit.model.form.Form;
+import com.github.dakusui.scriptiveunit.model.form.Value;
 import com.github.dakusui.scriptiveunit.loaders.preprocessing.ApplicationSpec;
 import com.github.dakusui.scriptiveunit.loaders.preprocessing.HostSpec;
 import com.github.dakusui.scriptiveunit.runners.ScriptiveUnit;
@@ -72,7 +72,7 @@ public abstract class SimpleTestBase {
   public Object broken = new Broken();
   public static class Broken {
     @Scriptable
-    public Form<String> brokenForm() {
+    public Value<String> brokenForm() {
         throw new RuntimeException("brokenForm");
     }
   }

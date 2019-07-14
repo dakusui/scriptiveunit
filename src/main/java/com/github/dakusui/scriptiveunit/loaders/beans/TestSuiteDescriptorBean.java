@@ -11,7 +11,7 @@ import com.github.dakusui.scriptiveunit.model.desc.ParameterSpaceDescriptor;
 import com.github.dakusui.scriptiveunit.model.desc.TestSuiteDescriptor;
 import com.github.dakusui.scriptiveunit.model.desc.testitem.IndexedTestCase;
 import com.github.dakusui.scriptiveunit.model.desc.testitem.TestOracle;
-import com.github.dakusui.scriptiveunit.model.form.handle.FormUtils;
+import com.github.dakusui.scriptiveunit.model.form.handle.ValueUtils;
 import com.github.dakusui.scriptiveunit.model.session.Session;
 import com.github.dakusui.scriptiveunit.model.statement.Statement;
 import com.github.dakusui.scriptiveunit.runners.RunningMode;
@@ -134,7 +134,7 @@ public abstract class TestSuiteDescriptorBean {
         @Override
         public List<String> getInvolvedParameterNamesInSetUpAction() {
           return setUp()
-              .map(FormUtils::involvedParameters)
+              .map(ValueUtils::involvedParameters)
               .orElse(emptyList());
         }
 

@@ -6,23 +6,23 @@ import java.util.function.IntFunction;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
-public interface FormList<T> extends Iterable<Form<T>> {
-  Form<T> get(int i);
+public interface ValueList<T> extends Iterable<Value<T>> {
+  Value<T> get(int i);
 
   int size();
 
-  default Stream<Form<T>> stream() {
+  default Stream<Value<T>> stream() {
     return StreamSupport.stream(this.spliterator(), false);
   }
 
-  static <T> FormList<T> create(List<Form<T>> args) {
+  static <T> ValueList<T> create(List<Value<T>> args) {
     return create(args.size(), args::get);
   }
 
-  static <T> FormList<T> create(int size, IntFunction<Form<T>> formCreator) {
-    return new FormList<T>() {
+  static <T> ValueList<T> create(int size, IntFunction<Value<T>> formCreator) {
+    return new ValueList<T>() {
       @Override
-      public Form<T> get(int i) {
+      public Value<T> get(int i) {
         return formCreator.apply(i);
       }
 
@@ -33,8 +33,8 @@ public interface FormList<T> extends Iterable<Form<T>> {
 
       @SuppressWarnings("NullableProblems")
       @Override
-      public Iterator<Form<T>> iterator() {
-        return new Iterator<Form<T>>() {
+      public Iterator<Value<T>> iterator() {
+        return new Iterator<Value<T>>() {
           int i = 0;
 
           @Override
@@ -43,7 +43,7 @@ public interface FormList<T> extends Iterable<Form<T>> {
           }
 
           @Override
-          public Form<T> next() {
+          public Value<T> next() {
             return formCreator.apply(i++);
           }
         };

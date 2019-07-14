@@ -8,8 +8,8 @@ import java.util.function.Function;
 
 import static java.util.Objects.requireNonNull;
 
-public interface Func<O> extends Form<O> {
-  List<Form> parameters();
+public interface FuncValue<O> extends Value<O> {
+  List<Value> parameters();
 
   O apply(Stage input);
 
@@ -20,14 +20,14 @@ public interface Func<O> extends Form<O> {
   }
 
   final class Builder<O> {
-    private final List<Form>            parameters;
+    private final List<Value>           parameters;
     private       Function<Object[], O> body;
 
     public Builder() {
       this.parameters = new LinkedList<>();
     }
 
-    public Builder<O> addParameter(Form param) {
+    public Builder<O> addParameter(Value param) {
       this.parameters.add(requireNonNull(param));
       return this;
     }
@@ -37,14 +37,14 @@ public interface Func<O> extends Form<O> {
       return this;
     }
 
-    public Func<O> $() {
+    public FuncValue<O> $() {
       return build();
     }
 
-    public Func<O> build() {
-      return new Func<O>() {
+    public FuncValue<O> build() {
+      return new FuncValue<O>() {
         @Override
-        public List<Form> parameters() {
+        public List<Value> parameters() {
           return parameters;
         }
 

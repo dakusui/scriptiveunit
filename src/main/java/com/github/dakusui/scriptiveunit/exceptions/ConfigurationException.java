@@ -1,6 +1,6 @@
 package com.github.dakusui.scriptiveunit.exceptions;
 
-import com.github.dakusui.scriptiveunit.model.form.handle.ObjectMethod;
+import com.github.dakusui.scriptiveunit.model.form.handle.ValueResolver;
 
 import java.util.List;
 import java.util.Map;
@@ -19,7 +19,7 @@ public class ConfigurationException extends ScriptiveUnitException {
     );
   }
 
-  public static ConfigurationException duplicatedFormsAreFound(Map<String, List<ObjectMethod>> duplicatedObjectMethods) {
+  public static ConfigurationException duplicatedFormsAreFound(Map<String, List<ValueResolver>> duplicatedObjectMethods) {
     StringBuffer buf = new StringBuffer();
     duplicatedObjectMethods.forEach((s, objectMethods) -> {
       buf.append(format("%s:%n", s));

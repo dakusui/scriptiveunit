@@ -2,10 +2,10 @@ package com.github.dakusui.scriptiveunit.model.statement;
 
 import com.github.dakusui.scriptiveunit.core.Config;
 import com.github.dakusui.scriptiveunit.exceptions.TypeMismatch;
-import com.github.dakusui.scriptiveunit.model.form.Form;
+import com.github.dakusui.scriptiveunit.model.form.Value;
 import com.github.dakusui.scriptiveunit.model.form.handle.FormHandle;
 import com.github.dakusui.scriptiveunit.model.form.handle.FormHandleFactory;
-import com.github.dakusui.scriptiveunit.model.form.handle.ObjectMethodRegistry;
+import com.github.dakusui.scriptiveunit.model.form.handle.ValueResolverRegistry;
 import com.github.dakusui.scriptiveunit.model.session.Stage;
 import com.github.dakusui.scriptiveunit.utils.CoreUtils;
 
@@ -21,10 +21,10 @@ import static com.github.dakusui.scriptiveunit.exceptions.TypeMismatch.headOfCal
  */
 public interface Statement {
   static Factory createStatementFactory(Config config, Map<String, List<Object>> userDefinedFormClauses) {
-    return new Factory(ObjectMethodRegistry.load(config.getDriverObject()), userDefinedFormClauses);
+    return new Factory(ValueResolverRegistry.load(config.getDriverObject()), userDefinedFormClauses);
   }
 
-  <U> Form<U> toForm();
+  <U> Value<U> toForm();
 
   default void accept(Visitor visitor) {
     throw new UnsupportedOperationException();
@@ -57,10 +57,10 @@ public interface Statement {
   class Factory {
     private final FormHandleFactory formHandleFactory;
 
-    public Factory(ObjectMethodRegistry objectMethodRegistry, Map<String, List<Object>> userDefinedFormClauses) {
+    public Factory(ValueResolverRegistry valueResolverRegistry, Map<String, List<Object>> userDefinedFormClauses) {
 
       this.formHandleFactory = new FormHandleFactory(
-          objectMethodRegistry,
+          valueResolverRegistry,
           StatementRegistry.create(this, userDefinedFormClauses));
     }
 
@@ -74,8 +74,8 @@ public interface Statement {
         FormHandle formHandle = this.formHandleFactory.create((String) car);
         return new Compound() {
           @Override
-          public <U> Form<U> toForm() {
-            return getFormHandle().toForm(this);
+          public <U> Value<U> toForm() {
+            return getFormHandle().toValue(this);
           }
 
           @Override
@@ -96,12 +96,12 @@ public interface Statement {
           }
 
           @Override
-          public <U> Form<U> toForm() {
-            Form<U> form = input -> input.getArgument((this.value()));
-            return new Form<U>() {
+          public <U> Value<U> toForm() {
+            Value<U> value = input -> input.getArgument((this.value()));
+            return new Value<U>() {
               @Override
               public U apply(Stage stage) {
-                return Stage.applyForm(stage, form, Form::apply);
+                return Stage.applyForm(stage, value, Value::apply);
               }
 
               @Override
@@ -111,7 +111,7 @@ public interface Statement {
 
               @Override
               public String toString() {
-                return form.toString();
+                return value.toString();
               }
             };
           }
@@ -133,8 +133,8 @@ public interface Statement {
     Atom createAtom(Object object) {
       return new Atom() {
         @Override
-        public <U> Form<U> toForm() {
-          return new Form.Const<U>() {
+        public <U> Value<U> toForm() {
+          return new Value.Const<U>() {
             @Override
             public U apply(Stage stage) {
               return Stage.applyForm(stage, this, (f, s) -> value());

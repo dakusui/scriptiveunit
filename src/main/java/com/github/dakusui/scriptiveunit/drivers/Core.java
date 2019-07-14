@@ -7,8 +7,8 @@ import com.github.dakusui.scriptiveunit.core.Config;
 import com.github.dakusui.scriptiveunit.exceptions.ScriptiveUnitException;
 import com.github.dakusui.scriptiveunit.exceptions.SyntaxException;
 import com.github.dakusui.scriptiveunit.model.desc.testitem.TestItem;
-import com.github.dakusui.scriptiveunit.model.form.Form;
-import com.github.dakusui.scriptiveunit.model.form.FormList;
+import com.github.dakusui.scriptiveunit.model.form.Value;
+import com.github.dakusui.scriptiveunit.model.form.ValueList;
 import com.github.dakusui.scriptiveunit.model.session.Stage;
 
 import java.lang.reflect.InvocationTargetException;
@@ -32,7 +32,7 @@ public class Core {
   @SuppressWarnings("unused")
   @Scriptable
   @AccessesTestParameter
-  public <E> Form<E> attr(Form<String> attr) {
+  public <E> Value<E> attr(Value<String> attr) {
     return (Stage input) -> {
       Tuple testCase = input.getTestCaseTuple().orElseThrow(RuntimeException::new);
       String attrName = attr.apply(input);
@@ -54,7 +54,7 @@ public class Core {
    */
   @SuppressWarnings("unused")
   @Scriptable
-  public <E> Form<E> value(Form<String> entryName, Form<?> target) {
+  public <E> Value<E> value(Value<String> entryName, Value<?> target) {
     return (Stage input) -> {
       Object object = requireNonNull(target.apply(input));
       String methodName = requireNonNull(entryName.apply(input));
@@ -69,7 +69,7 @@ public class Core {
 
   @SuppressWarnings("unused")
   @Scriptable
-  public Form<Throwable> exception() {
+  public Value<Throwable> exception() {
     return stage ->
         stage.getThrowable()
             .orElseThrow(IllegalStateException::new);
@@ -77,7 +77,7 @@ public class Core {
 
   @SuppressWarnings("unused")
   @Scriptable
-  public Form<TestItem> testItem() {
+  public Value<TestItem> testItem() {
     return stage -> stage.getTestItem().orElseThrow(
         () -> new IllegalStateException(
             format("This method cannot be called on this stage:<%s>", stage)));
@@ -85,16 +85,16 @@ public class Core {
 
   @SuppressWarnings("unused")
   @Scriptable
-  public final Form<List<?>> quote(FormList<?> values) {
+  public final Value<List<?>> quote(ValueList<?> values) {
     return (Stage input) -> values
         .stream()
-        .map((Form<?> each) -> each instanceof Form.Const ? each.apply(input) : each)
+        .map((Value<?> each) -> each instanceof Value.Const ? each.apply(input) : each)
         .collect(toList());
   }
 
   @SuppressWarnings("unused")
   @Scriptable
-  public Form<Object> configAttr(Form<String> attrName) {
+  public Value<Object> configAttr(Value<String> attrName) {
     return input -> {
       String attr = requireNonNull(attrName.apply(input));
       Config config = input.getConfig();
@@ -118,13 +118,13 @@ public class Core {
 
   @SuppressWarnings("unused")
   @Scriptable
-  public Form<Object> systemProperty(Form<String> attrName) {
+  public Value<Object> systemProperty(Value<String> attrName) {
     return input -> System.getProperties().getProperty(requireNonNull(attrName.apply(input)));
   }
 
   @SuppressWarnings("unchecked")
   @Scriptable
-  public <T> Form<T> output() {
+  public <T> Value<T> output() {
     return input -> (T) input.response().orElseThrow(RuntimeException::new);
   }
 }

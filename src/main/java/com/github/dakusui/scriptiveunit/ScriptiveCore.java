@@ -3,7 +3,7 @@ package com.github.dakusui.scriptiveunit;
 import com.github.dakusui.scriptiveunit.core.Config;
 import com.github.dakusui.scriptiveunit.core.Description;
 import com.github.dakusui.scriptiveunit.exceptions.ScriptiveUnitException;
-import com.github.dakusui.scriptiveunit.model.form.handle.ObjectMethod;
+import com.github.dakusui.scriptiveunit.model.form.handle.ValueResolver;
 import com.github.dakusui.scriptiveunit.runners.RunningMode;
 import com.github.dakusui.scriptiveunit.runners.ScriptiveSuiteSet;
 import com.github.dakusui.scriptiveunit.runners.ScriptiveSuiteSet.SuiteScripts;
@@ -100,7 +100,7 @@ public class ScriptiveCore {
     public static Description describeFunction(ScriptiveUnit scriptiveUnit, Object driverObject, String functionName) {
       Optional<Description> value =
           Stream.concat(
-              DriverUtils.getObjectMethodsFromImportedFieldsInObject(driverObject).stream().map(ObjectMethod::describe),
+              DriverUtils.getObjectMethodsFromImportedFieldsInObject(driverObject).stream().map(ValueResolver::describe),
               Private.getUserDefinedFormClauses(scriptiveUnit).entrySet().stream().map((Map.Entry<String, List<Object>> entry) -> Description.describe(entry.getKey(), entry.getValue()))
           ).filter(t -> functionName.equals(t.name())).findFirst();
       if (value.isPresent())
@@ -112,7 +112,7 @@ public class ScriptiveCore {
       return Stream.concat(
           DriverUtils.getObjectMethodsFromImportedFieldsInObject(driverObject)
               .stream()
-              .map(ObjectMethod::getName),
+              .map(ValueResolver::getName),
           Private.getUserDefinedFormClauseNamesFromScript(scriptiveUnit).stream()).collect(toList());
     }
 

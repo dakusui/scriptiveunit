@@ -5,7 +5,7 @@ import com.github.dakusui.scriptiveunit.model.session.Stage;
 import java.util.function.Function;
 
 @FunctionalInterface
-public interface Form<O> extends Function<Stage, O> {
+public interface Value<O> extends Function<Stage, O> {
   @Override
   O apply(Stage input);
 
@@ -13,10 +13,10 @@ public interface Form<O> extends Function<Stage, O> {
     return "<noname>";
   }
 
-  interface Named<O> extends Form<O> {
+  interface Named<O> extends Value<O> {
     String name();
 
-    static <O> Named<O> create(String name, Form<O> form) {
+    static <O> Named<O> create(String name, Value<O> value) {
       return new Named<O>() {
         @Override
         public String name() {
@@ -25,7 +25,7 @@ public interface Form<O> extends Function<Stage, O> {
 
         @Override
         public O apply(Stage input) {
-          return form.apply(input);
+          return value.apply(input);
         }
       };
     }
@@ -38,14 +38,14 @@ public interface Form<O> extends Function<Stage, O> {
    *
    * @param <O> Type of output constant.
    */
-  interface Const<O> extends Form<O> {
+  interface Const<O> extends Value<O> {
   }
 
   interface Listener {
-    void enter(Form form);
+    void enter(Value value);
 
-    void leave(Form form, Object value);
+    void leave(Value form, Object value);
 
-    void fail(Form form, Throwable t);
+    void fail(Value value, Throwable t);
   }
 }

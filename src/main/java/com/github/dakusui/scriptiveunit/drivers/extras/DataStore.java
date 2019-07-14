@@ -2,7 +2,7 @@ package com.github.dakusui.scriptiveunit.drivers.extras;
 
 import com.github.dakusui.actionunit.core.Action;
 import com.github.dakusui.scriptiveunit.annotations.Scriptable;
-import com.github.dakusui.scriptiveunit.model.form.Form;
+import com.github.dakusui.scriptiveunit.model.form.Value;
 import com.github.dakusui.scriptiveunit.model.session.Stage;
 
 import static com.github.dakusui.actionunit.core.ActionSupport.simple;
@@ -10,7 +10,7 @@ import static com.github.dakusui.actionunit.core.ActionSupport.simple;
 public class DataStore {
   @SuppressWarnings("unused")
   @Scriptable
-  public Form<Object> put(Form<String> name, Form<Object> value) {
+  public Value<Object> put(Value<String> name, Value<Object> value) {
     return input -> {
       Object ret;
       input.getReport()
@@ -21,7 +21,7 @@ public class DataStore {
   }
 
   @Scriptable
-  public Form<Object> get(Form<String> name) {
+  public Value<Object> get(Value<String> name) {
     return input -> input.getReport()
         .orElseThrow(RuntimeException::new)
         .get(name.apply(input));
@@ -29,7 +29,7 @@ public class DataStore {
 
   @SuppressWarnings("unused")
   @Scriptable
-  public Form<Action> submit() {
+  public Value<Action> submit() {
     return (Stage input) -> simple("submit",
         (c) -> input.getReport()
             .orElseThrow(RuntimeException::new)

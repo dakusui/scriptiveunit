@@ -15,7 +15,7 @@ import com.github.dakusui.scriptiveunit.drivers.actions.Basic;
 import com.github.dakusui.scriptiveunit.loaders.preprocessing.PreprocessingUnit;
 import com.github.dakusui.scriptiveunit.loaders.json.JsonBasedTestSuiteDescriptorLoader;
 import com.github.dakusui.scriptiveunit.loaders.preprocessing.ApplicationSpec;
-import com.github.dakusui.scriptiveunit.model.form.Form;
+import com.github.dakusui.scriptiveunit.model.form.Value;
 import com.github.dakusui.scriptiveunit.runners.ScriptiveUnit;
 import com.github.dakusui.scriptiveunit.unittests.cli.MemoizationExample;
 import com.google.common.collect.Maps;
@@ -76,13 +76,13 @@ public class Qapi {
   public static class Misc {
     @SuppressWarnings("unused")
     @Scriptable
-    public Form<String> content(Form<Entry> entry) {
+    public Value<String> content(Value<Entry> entry) {
       return input -> entry.apply(input).content();
     }
 
     @SuppressWarnings("unused")
     @Scriptable
-    public Form<Boolean> evalintp(Form<Integer> value, Form<Form<Boolean>> predicate) {
+    public Value<Boolean> evalintp(Value<Integer> value, Value<Value<Boolean>> predicate) {
       return input -> predicate.apply(input).apply(Collections.wrapValueAsArgumentInStage(input, value));
     }
   }

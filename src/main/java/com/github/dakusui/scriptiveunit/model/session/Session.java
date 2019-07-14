@@ -11,7 +11,7 @@ import com.github.dakusui.scriptiveunit.model.desc.TestSuiteDescriptor;
 import com.github.dakusui.scriptiveunit.model.desc.testitem.IndexedTestCase;
 import com.github.dakusui.scriptiveunit.model.desc.testitem.TestItem;
 import com.github.dakusui.scriptiveunit.model.desc.testitem.TestOracle;
-import com.github.dakusui.scriptiveunit.model.form.handle.FormUtils;
+import com.github.dakusui.scriptiveunit.model.form.handle.ValueUtils;
 import com.github.dakusui.scriptiveunit.model.session.action.Pipe;
 import com.github.dakusui.scriptiveunit.model.session.action.Sink;
 import com.github.dakusui.scriptiveunit.model.session.action.Source;
@@ -93,7 +93,7 @@ public interface Session {
           format("Suite level set up: %s", testSuiteDescriptor.getDescription()),
           testSuiteDescriptor
               .setUpBeforeAll()
-              .map(FormUtils.INSTANCE::<Action>toForm)
+              .map(ValueUtils.INSTANCE::<Action>toForm)
               .map(f -> f.apply(this.createSuiteLevelStage(commonFixtureTuple)))
               .orElse(nop()));
     }
@@ -104,7 +104,7 @@ public interface Session {
           "Fixture set up",
           testSuiteDescriptor
               .setUp()
-              .map(FormUtils.INSTANCE::<Action>toForm)
+              .map(ValueUtils.INSTANCE::<Action>toForm)
               .map(f -> f.apply(this.createFixtureLevelStage(fixtureTuple)))
               .orElse(nop()));
     }
@@ -136,7 +136,7 @@ public interface Session {
           "Fixture tear down",
           testSuiteDescriptor
               .tearDown()
-              .map(FormUtils.INSTANCE::<Action>toForm)
+              .map(ValueUtils.INSTANCE::<Action>toForm)
               .map(f -> f.apply(this.createSuiteLevelStage(fixtureTuple)))
               .orElse(nop()));
     }
@@ -147,7 +147,7 @@ public interface Session {
           format("Suite level tear down: %s", testSuiteDescriptor.getDescription()),
           testSuiteDescriptor
               .tearDownAfterAll()
-              .map(FormUtils.INSTANCE::<Action>toForm)
+              .map(ValueUtils.INSTANCE::<Action>toForm)
               .map(f -> f.apply(this.createSuiteLevelStage(commonFixtureTuple)))
               .orElse(nop()));
     }

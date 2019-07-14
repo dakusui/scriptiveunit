@@ -1,6 +1,6 @@
 package com.github.dakusui.scriptiveunit.model.form.handle;
 
-import com.github.dakusui.scriptiveunit.model.form.Form;
+import com.github.dakusui.scriptiveunit.model.form.Value;
 import com.github.dakusui.scriptiveunit.model.session.Stage;
 import com.github.dakusui.scriptiveunit.model.statement.Statement;
 import com.github.dakusui.scriptiveunit.model.statement.StatementRegistry;
@@ -12,11 +12,11 @@ import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
 
 public class FormHandleFactory {
-  private final StatementRegistry    statementRegistryForUserForms;
-  private final ObjectMethodRegistry objectMethodRegistry;
+  private final StatementRegistry     statementRegistryForUserForms;
+  private final ValueResolverRegistry valueResolverRegistry;
 
-  public FormHandleFactory(ObjectMethodRegistry objectMethodRegistry, StatementRegistry statementRegistryForUserForms) {
-    this.objectMethodRegistry = objectMethodRegistry;
+  public FormHandleFactory(ValueResolverRegistry valueResolverRegistry, StatementRegistry statementRegistryForUserForms) {
+    this.valueResolverRegistry = valueResolverRegistry;
     this.statementRegistryForUserForms = requireNonNull(statementRegistryForUserForms);
   }
 
@@ -28,9 +28,9 @@ public class FormHandleFactory {
                   .orElseThrow(undefinedForm(name))));
 
       @Override
-      public <U> Form<U> toForm(Statement.Compound statement) {
-        Form<U> form = formHandle.toForm(statement);
-        return stage -> Stage.applyForm(stage, form, Form::apply);
+      public <U> Value<U> toValue(Statement.Compound statement) {
+        Value<U> value = formHandle.toValue(statement);
+        return stage -> Stage.applyForm(stage, value, Value::apply);
       }
 
       @Override
@@ -69,7 +69,7 @@ public class FormHandleFactory {
     return this.statementRegistryForUserForms.lookUp(name);
   }
 
-  private Optional<ObjectMethod> getObjectMethodFromDriver(String methodName) {
-    return this.objectMethodRegistry.lookUp(methodName);
+  private Optional<ValueResolver> getObjectMethodFromDriver(String methodName) {
+    return this.valueResolverRegistry.lookUp(methodName);
   }
 }

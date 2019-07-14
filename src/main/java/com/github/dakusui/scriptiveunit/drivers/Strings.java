@@ -1,10 +1,9 @@
 package com.github.dakusui.scriptiveunit.drivers;
 
 import com.github.dakusui.scriptiveunit.annotations.Scriptable;
-import com.github.dakusui.scriptiveunit.model.form.Form;
-import com.github.dakusui.scriptiveunit.model.form.FormList;
+import com.github.dakusui.scriptiveunit.model.form.Value;
+import com.github.dakusui.scriptiveunit.model.form.ValueList;
 
-import java.util.Arrays;
 import java.util.stream.Collectors;
 
 import static java.util.Objects.requireNonNull;
@@ -12,7 +11,7 @@ import static java.util.Objects.requireNonNull;
 public class Strings {
   @SuppressWarnings("unused")
   @Scriptable
-  public Form<String> substr(Form<String> str, Form<Integer> begin, Form<Integer> end) {
+  public Value<String> substr(Value<String> str, Value<Integer> begin, Value<Integer> end) {
     return input -> requireNonNull(str.apply(input)).substring(
         requireNonNull(begin.apply(input)),
         requireNonNull(end.apply(input)));
@@ -20,30 +19,30 @@ public class Strings {
 
   @SuppressWarnings("unused")
   @Scriptable
-  public Form<Integer> length(Form<String> str) {
+  public Value<Integer> length(Value<String> str) {
     return input -> requireNonNull(str.apply(input)).length();
   }
 
   @SuppressWarnings("unused")
   @Scriptable
-  public Form<Boolean> endsWith(Form<String> str, Form<String> a) {
+  public Value<Boolean> endsWith(Value<String> str, Value<String> a) {
     return input -> requireNonNull(str.apply(input)).endsWith(requireNonNull(a.apply(input)));
   }
 
   @SuppressWarnings("unused")
   @Scriptable
-  public Form<Boolean> startsWith(Form<String> str, Form<String> a) {
+  public Value<Boolean> startsWith(Value<String> str, Value<String> a) {
     return input -> requireNonNull(str.apply(input)).startsWith(requireNonNull(a.apply(input)));
   }
 
   @SuppressWarnings("unused")
   @Scriptable
-  public Form<Boolean> matches(Form<String> str, Form<String> regex) {
+  public Value<Boolean> matches(Value<String> str, Value<String> regex) {
     return input -> requireNonNull(str.apply(input)).matches(requireNonNull(regex.apply(input)));
   }
 
   @Scriptable
-  public final Form<String> format(Form<String> in, FormList<Object> args) {
+  public final Value<String> format(Value<String> in, ValueList<Object> args) {
     return input -> String.format(requireNonNull(in.apply(input)),
         args.stream()
             .map(each -> each.apply(input))

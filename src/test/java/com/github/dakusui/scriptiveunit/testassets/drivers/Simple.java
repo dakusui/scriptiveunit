@@ -11,7 +11,7 @@ import com.github.dakusui.scriptiveunit.drivers.Predicates;
 import com.github.dakusui.scriptiveunit.drivers.Strings;
 import com.github.dakusui.scriptiveunit.drivers.actions.Basic;
 import com.github.dakusui.scriptiveunit.drivers.extras.Reporting;
-import com.github.dakusui.scriptiveunit.model.form.Form;
+import com.github.dakusui.scriptiveunit.model.form.Value;
 import com.github.dakusui.scriptiveunit.model.session.Stage;
 import com.github.dakusui.scriptiveunit.runners.ScriptiveSuiteSet;
 import com.github.dakusui.scriptiveunit.runners.ScriptiveSuiteSet.SuiteScripts;
@@ -78,25 +78,25 @@ public class Simple {
   public static class Additional {
     @SuppressWarnings("unused")
     @Scriptable
-    public Form<String> request() {
+    public Value<String> request() {
       return (Stage input) -> buildRequest(input.getTestCaseTuple().orElseThrow(RuntimeException::new));
     }
 
     @SuppressWarnings("unused")
     @Scriptable
-    public Form<String> response() {
+    public Value<String> response() {
       return (Stage input) -> (String) input.response().orElseThrow(RuntimeException::new);
     }
 
     @SuppressWarnings("unused")
     @Scriptable
-    public Form<String> service(Form<String> request) {
+    public Value<String> service(Value<String> request) {
       return (Stage input) -> Additional.this.service(request.apply(input));
     }
 
     @SuppressWarnings("unused")
     @Scriptable
-    public Form<String> override(Form<Map<String, Object>> values, Form<String> request) {
+    public Value<String> override(Value<Map<String, Object>> values, Value<String> request) {
       return (Stage input) -> override(values.apply(input), request.apply(input));
     }
 

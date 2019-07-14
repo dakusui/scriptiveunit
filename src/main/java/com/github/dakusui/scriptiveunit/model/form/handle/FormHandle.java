@@ -1,6 +1,6 @@
 package com.github.dakusui.scriptiveunit.model.form.handle;
 
-import com.github.dakusui.scriptiveunit.model.form.Form;
+import com.github.dakusui.scriptiveunit.model.form.Value;
 import com.github.dakusui.scriptiveunit.model.session.Stage;
 import com.github.dakusui.scriptiveunit.model.statement.Statement;
 import com.github.dakusui.scriptiveunit.utils.CoreUtils;
@@ -15,7 +15,7 @@ import static java.util.Objects.requireNonNull;
 import static java.util.stream.Collectors.toList;
 
 public interface FormHandle {
-  <U> Form<U> toForm(Statement.Compound statement);
+  <U> Value<U> toValue(Statement.Compound statement);
 
   boolean isAccessor();
 
@@ -32,39 +32,39 @@ public interface FormHandle {
   }
 
   class MethodBased extends Base {
-    final ObjectMethod objectMethod;
+    final ValueResolver valueResolver;
 
-    MethodBased(ObjectMethod objectMethod) {
-      this.objectMethod = objectMethod;
+    MethodBased(ValueResolver valueResolver) {
+      this.valueResolver = valueResolver;
     }
 
-    static <U> Form<U> methodBasedFormHandleToForm(MethodBased formHandle, Statement.Compound compound) {
-      ObjectMethod objectMethod = formHandle.objectMethod();
-      return objectMethod.createForm(
+    static <U> Value<U> methodBasedFormHandleToForm(MethodBased formHandle, Statement.Compound compound) {
+      ValueResolver valueResolver = formHandle.objectMethod();
+      return valueResolver.resolveValue(
           iterableToStream(compound.getArguments())
               .map(Statement::toForm)
-              .toArray(Form[]::new));
+              .toArray(Value[]::new));
     }
 
     @Override
-    public <U> Form<U> toForm(Statement.Compound compound) {
-      return Form.Named.create(
-          this.objectMethod.getName(),
+    public <U> Value<U> toValue(Statement.Compound compound) {
+      return Value.Named.create(
+          this.valueResolver.getName(),
           methodBasedFormHandleToForm(this, compound));
     }
 
     @Override
     public boolean isAccessor() {
-      return this.objectMethod.isAccessor();
+      return this.valueResolver.isAccessor();
     }
 
     @Override
     public String toString() {
-      return this.objectMethod.getName();
+      return this.valueResolver.getName();
     }
 
-    ObjectMethod objectMethod() {
-      return this.objectMethod;
+    ValueResolver objectMethod() {
+      return this.valueResolver;
     }
   }
 
@@ -73,16 +73,16 @@ public interface FormHandle {
     }
 
     @Override
-    public <U> Form<U> toForm(Statement.Compound statement) {
-      return Form.Named.create(
+    public <U> Value<U> toValue(Statement.Compound statement) {
+      return Value.Named.create(
           "<lambda>",
           lambdaFormHandleToForm(statement)
       );
     }
 
-    static <U> Form<U> lambdaFormHandleToForm(Statement.Compound compound) {
+    static <U> Value<U> lambdaFormHandleToForm(Statement.Compound compound) {
       //noinspection unchecked
-      return (Form<U>) (Form<Form<Object>>) (Stage ii) ->
+      return (Value<U>) (Value<Value<Object>>) (Stage ii) ->
           getOnlyElement(iterableToStream(compound.getArguments())
               .map(Statement::toForm)
               .collect(toList()));
@@ -102,18 +102,18 @@ public interface FormHandle {
     }
 
     @Override
-    public <U> Form<U> toForm(Statement.Compound statement) {
+    public <U> Value<U> toValue(Statement.Compound statement) {
       return userFormHandleToForm(this, statement);
     }
 
-    private static <U> Form<U> userFormHandleToForm(User formHandle, Statement.Compound compound) {
+    private static <U> Value<U> userFormHandleToForm(User formHandle, Statement.Compound compound) {
       //noinspection unchecked
-      return (Form<U>) createUserFunc(toArray(
+      return (Value<U>) createUserFunc(toArray(
           Stream.concat(
-              Stream.of((Form<Statement>) input -> formHandle.statement()),
+              Stream.of((Value<Statement>) input -> formHandle.statement()),
               iterableToStream(compound.getArguments()).map(Statement::toForm))
               .collect(toList()),
-          Form.class));
+          Value.class));
     }
 
     private Statement statement() {
@@ -121,12 +121,12 @@ public interface FormHandle {
     }
 
     @SuppressWarnings("unchecked")
-    private static Form<Object> createUserFunc(Form[] args) {
-      return Form.Named.create("<user>", userFunc(CoreUtils.car(args), CoreUtils.cdr(args)));
+    private static Value<Object> createUserFunc(Value[] args) {
+      return Value.Named.create("<user>", userFunc(CoreUtils.car(args), CoreUtils.cdr(args)));
     }
 
-    private static Form<Object> userFunc(Form<Statement> statementForm, Form<?>... args) {
-      return input -> statementForm
+    private static Value<Object> userFunc(Value<Statement> statementValue, Value<?>... args) {
+      return input -> statementValue
           .apply(input)
           .toForm()
           .apply(createWrappedStage(input, args));

@@ -1,7 +1,7 @@
 package com.github.dakusui.scriptiveunit.model.form.handle;
 
 import com.github.dakusui.scriptiveunit.exceptions.SyntaxException;
-import com.github.dakusui.scriptiveunit.model.form.Form;
+import com.github.dakusui.scriptiveunit.model.form.Value;
 import com.github.dakusui.scriptiveunit.model.statement.Statement;
 import com.google.common.collect.Lists;
 
@@ -10,7 +10,7 @@ import java.util.Objects;
 
 import static java.util.Objects.requireNonNull;
 
-public enum FormUtils {
+public enum ValueUtils {
   INSTANCE;
 
   /**
@@ -27,7 +27,7 @@ public enum FormUtils {
     return involvedParameters(statement, ret);
   }
 
-  public <U> Form<U> toForm(Statement statement) {
+  public <U> Value<U> toForm(Statement statement) {
     return statement.toForm();
   }
 

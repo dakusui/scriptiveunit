@@ -2,15 +2,15 @@ package com.github.dakusui.scriptiveunit.unittests.cli;
 
 import com.github.dakusui.scriptiveunit.annotations.Memoized;
 import com.github.dakusui.scriptiveunit.annotations.Scriptable;
-import com.github.dakusui.scriptiveunit.model.form.Form;
-import com.github.dakusui.scriptiveunit.model.form.Func;
+import com.github.dakusui.scriptiveunit.model.form.Value;
+import com.github.dakusui.scriptiveunit.model.form.FuncValue;
 
 public class MemoizationExample {
   private int increment = 0;
 
   @Scriptable
-  public final Func<Integer> increment() {
-    return new Func.Builder<Integer>()
+  public final FuncValue<Integer> increment() {
+    return new FuncValue.Builder<Integer>()
         .func(any -> increment++)
         .build();
   }
@@ -19,8 +19,8 @@ public class MemoizationExample {
 
   @Memoized
   @Scriptable
-  public final Func<Integer> op(Form<Integer> a, Form<Integer> b) {
-    return Func.body(objects -> (Integer) objects[0] + (Integer) objects[1] + op++)
+  public final FuncValue<Integer> op(Value<Integer> a, Value<Integer> b) {
+    return FuncValue.body(objects -> (Integer) objects[0] + (Integer) objects[1] + op++)
         .addParameter(a)
         .addParameter(b)
         .$();

@@ -5,7 +5,7 @@ import com.github.dakusui.actionunit.core.Context;
 import com.github.dakusui.jcunit.core.tuples.Tuple;
 import com.github.dakusui.scriptiveunit.model.desc.testitem.TestItem;
 import com.github.dakusui.scriptiveunit.model.desc.testitem.TestOracle;
-import com.github.dakusui.scriptiveunit.model.form.Form;
+import com.github.dakusui.scriptiveunit.model.form.Value;
 import com.github.dakusui.scriptiveunit.model.session.action.Sink;
 import com.github.dakusui.scriptiveunit.model.statement.Statement;
 import org.hamcrest.BaseMatcher;
@@ -29,29 +29,29 @@ import static java.util.Objects.requireNonNull;
 
 public interface TestOracleFormFactory {
   static TestOracleFormFactory createTestOracleFormFactory(TestItem testItem, TestOracle.Definition definition, Function<Tuple, String> testCaseFormatter) {
-    Form<Action> beforeForm = definition.before()
+    Value<Action> beforeValue = definition.before()
         .map(Statement::<Action>toForm)
         .orElse((Stage s) -> nop());
-    Form<Boolean> givenForm = definition.given()
+    Value<Boolean> givenValue = definition.given()
         .map(Statement::<Boolean>toForm)
         .orElse((Stage stage) -> true);
-    Form<Object> whenForm = (Stage stage) -> definition.when().toForm().apply(stage);
+    Value<Object> whenValue = (Stage stage) -> definition.when().toForm().apply(stage);
     final Statement thenStatement = definition.then();
-    Form<Boolean> thenForm = thenStatement.toForm();
+    Value<Boolean> thenValue = thenStatement.toForm();
     return new TestOracleFormFactory() {
       @Override
-      public Form<Action> beforeFactory() {
-        return beforeForm;
+      public Value<Action> beforeFactory() {
+        return beforeValue;
       }
 
       @Override
-      public Form<Matcher<Tuple>> givenFactory() {
+      public Value<Matcher<Tuple>> givenFactory() {
         return (Stage stage) -> new BaseMatcher<Tuple>() {
-          Form.Listener formListener = createFormListener();
+          Value.Listener formListener = createFormListener();
 
           @Override
           public boolean matches(Object item) {
-            return givenForm.apply(Stage.Factory.createFormListeningStage(stage, formListener));
+            return givenValue.apply(Stage.Factory.createFormListeningStage(stage, formListener));
           }
 
           @Override
@@ -67,16 +67,16 @@ public interface TestOracleFormFactory {
       }
 
       @Override
-      public Form<Object> whenFactory() {
-        return whenForm;
+      public Value<Object> whenFactory() {
+        return whenValue;
       }
 
       @Override
-      public Form<Function<Object, Matcher<Stage>>> thenFactory() {
+      public Value<Function<Object, Matcher<Stage>>> thenFactory() {
         return stage -> out -> new BaseMatcher<Stage>() {
-          Predicate<Stage> p = s -> requireNonNull(thenForm)
+          Predicate<Stage> p = s -> requireNonNull(thenValue)
               .apply(s);
-          Form.Listener formListener = createFormListener();
+          Value.Listener formListener = createFormListener();
 
           @Override
           public boolean matches(Object item) {
@@ -107,7 +107,7 @@ public interface TestOracleFormFactory {
       }
 
       @Override
-      public Form<Sink<AssertionError>> errorHandlerFactory() {
+      public Value<Sink<AssertionError>> errorHandlerFactory() {
         return definition.onFailure()
             .map(Statement::<Sink<AssertionError>>toForm)
             .orElse((Stage) -> (AssertionError assertionError, Context context) -> {
@@ -116,7 +116,7 @@ public interface TestOracleFormFactory {
       }
 
       @Override
-      public Form<Action> afterFactory() {
+      public Value<Action> afterFactory() {
         return definition.after()
             .map(Statement::<Action>toForm)
             .orElse((Stage s) -> nop());
@@ -127,47 +127,47 @@ public interface TestOracleFormFactory {
         return testCaseFormatter.apply(testCaseTuple);
       }
 
-      private Form.Listener createFormListener() {
-        return new Form.Listener() {
+      private Value.Listener createFormListener() {
+        return new Value.Listener() {
           class FormLevel {
-            Form form;
-            int  level;
+            Value value;
+            int   level;
 
-            FormLevel(Form form, int level) {
-              this.form = form;
+            FormLevel(Value value, int level) {
+              this.value = value;
               this.level = level;
             }
           }
 
           List<FormLevel> history = new LinkedList<>();
-          Map<Form, List<Object>> values = new HashMap<>();
+          Map<Value, List<Object>> values = new HashMap<>();
 
           int level = 0;
 
           @Override
-          public void enter(Form form) {
-            this.history.add(new FormLevel(form, level++));
+          public void enter(Value value) {
+            this.history.add(new FormLevel(value, level++));
           }
 
           @Override
-          public void leave(Form form, Object value) {
+          public void leave(Value form, Object value) {
             level--;
             addValue(form, value);
           }
 
           @Override
-          public void fail(Form form, Throwable t) {
+          public void fail(Value value, Throwable t) {
             level--;
-            addValue(form, t.getMessage());
+            addValue(value, t.getMessage());
           }
 
           @Override
           public String toString() {
             StringBuilder b = new StringBuilder();
             class CountForForm {
-              private Map<Form, Integer> map = new HashMap<>();
+              private Map<Value, Integer> map = new HashMap<>();
 
-              private Integer getAndIncrement(Form form) {
+              private Integer getAndIncrement(Value form) {
                 if (!map.containsKey(form))
                   map.put(form, 0);
                 int ret = map.get(form);
@@ -181,11 +181,11 @@ public interface TestOracleFormFactory {
             CountForForm countFor = new CountForForm();
             //noinspection RedundantCast
             history.stream()
-                .map(fl -> $(String.format("%s%s", indent(fl.level), fl.form.name()), fl.form))
+                .map(fl -> $(String.format("%s%s", indent(fl.level), fl.value.name()), fl.value))
                 .map(v -> $(formatFormName(v[0]), v[1]))
                 .map(v -> format("%s:%s",
                     alignLeft((String) v[0], 60),
-                    values.get((Form) v[1]).get(countFor.getAndIncrement((Form) v[1]))))
+                    values.get((Value) v[1]).get(countFor.getAndIncrement((Value) v[1]))))
                 .forEach((String v) -> b.append(v).append(String.format("%n")));
             return b.toString();
           }
@@ -194,7 +194,7 @@ public interface TestOracleFormFactory {
             return Objects.toString(o);
           }
 
-          void addValue(Form form, Object value) {
+          void addValue(Value form, Object value) {
             this.values.computeIfAbsent(form, f -> new LinkedList<>());
             this.values.get(form).add(value);
           }
@@ -207,17 +207,17 @@ public interface TestOracleFormFactory {
     };
   }
 
-  Form<Action> beforeFactory();
+  Value<Action> beforeFactory();
 
-  Form<Matcher<Tuple>> givenFactory();
+  Value<Matcher<Tuple>> givenFactory();
 
-  Form<Object> whenFactory();
+  Value<Object> whenFactory();
 
-  Form<Function<Object, Matcher<Stage>>> thenFactory();
+  Value<Function<Object, Matcher<Stage>>> thenFactory();
 
-  Form<Sink<AssertionError>> errorHandlerFactory();
+  Value<Sink<AssertionError>> errorHandlerFactory();
 
-  Form<Action> afterFactory();
+  Value<Action> afterFactory();
 
   String describeTestCase(Tuple testCaseTuple);
 

@@ -5,9 +5,9 @@ import com.github.dakusui.scriptiveunit.annotations.Doc;
 import com.github.dakusui.scriptiveunit.annotations.Import;
 import com.github.dakusui.scriptiveunit.annotations.Memoized;
 import com.github.dakusui.scriptiveunit.core.Description;
-import com.github.dakusui.scriptiveunit.model.form.Form;
-import com.github.dakusui.scriptiveunit.model.form.FormList;
-import com.github.dakusui.scriptiveunit.model.form.Func;
+import com.github.dakusui.scriptiveunit.model.form.Value;
+import com.github.dakusui.scriptiveunit.model.form.ValueList;
+import com.github.dakusui.scriptiveunit.model.form.FuncValue;
 import com.github.dakusui.scriptiveunit.model.session.Stage;
 
 import java.lang.reflect.InvocationTargetException;
@@ -27,13 +27,13 @@ import static java.util.Objects.requireNonNull;
  * An interface that represents a pair of a method and object on which it should
  * be invoked.
  */
-public interface ObjectMethod {
+public interface ValueResolver {
   /*
-   * args is an array can only contain Form or Form[]. Only the last element in it
-   * can become Form[] it is because only the last argument of a method can become
+   * args is an array can only contain Value or Value[]. Only the last element in it
+   * can become Value[] it is because only the last argument of a method can become
    * a varargs.
    */
-  <V> Form<V> createForm(Form[] args);
+  <V> Value<V> resolveValue(Value[] args);
 
   String getName();
 
@@ -45,9 +45,15 @@ public interface ObjectMethod {
 
   Doc doc();
 
+  /**
+   * Returns {@code true} if this object represents an "accessor", which retrieves a data in
+   * a test case tuple.
+   *
+   * @return {@code true} - this object is an accessor / {@code false} - otherwise.
+   */
   boolean isAccessor();
 
-  static ObjectMethod create(Object driverObject, Method method, Map<String, String> aliases) {
+  static ValueResolver create(Object driverObject, Method method, Map<String, String> aliases) {
     String baseName = method.getName();
     String methodName = aliases.containsKey(baseName) ?
         aliases.get(baseName) :
@@ -61,7 +67,7 @@ public interface ObjectMethod {
     } else
       memo = null;
 
-    return new ObjectMethod() {
+    return new ValueResolver() {
       private final Class<?>[] parameterTypes = method.getParameterTypes();
 
       @Override
@@ -95,7 +101,7 @@ public interface ObjectMethod {
        */
       @SuppressWarnings("unchecked")
       @Override
-      public <V> Form<V> createForm(Form[] args) {
+      public <V> Value<V> resolveValue(Value[] args) {
         Object returnedValue = this.invokeMethod(composeArgs(args));
         /*
          * By using dynamic proxy, we are making it possible to print structured pretty log.
@@ -103,10 +109,10 @@ public interface ObjectMethod {
         return createForm(requireValueIsForm(returnedValue));
       }
 
-      private Form requireValueIsForm(Object returnedValue) {
-        return (Form) check(
+      private Value requireValueIsForm(Object returnedValue) {
+        return (Value) check(
             returnedValue,
-            (Object o) -> o instanceof Form,
+            (Object o) -> o instanceof Value,
             () -> valueReturnedByScriptableMethodMustBeFunc(this.getName(), returnedValue)
         );
       }
@@ -142,30 +148,30 @@ public interface ObjectMethod {
       }
 
       boolean isVarargs() {
-        return parameterTypes.length > 0 && FormList.class.isAssignableFrom(parameterTypes[parameterTypes.length - 1]);
+        return parameterTypes.length > 0 && ValueList.class.isAssignableFrom(parameterTypes[parameterTypes.length - 1]);
       }
 
-      <T> Object[] composeArgs(Form<T>[] args) {
+      <T> Object[] composeArgs(Value<T>[] args) {
         Object[] argValues;
         if (isVarargs()) {
           int parameterCount = this.getParameterCount();
           List<Object> work = new ArrayList<>(args.length);
           work.addAll(asList(args).subList(0, parameterCount - 1));
-          work.add(FormList.create(asList(args).subList(parameterCount - 1, args.length)));
+          work.add(ValueList.create(asList(args).subList(parameterCount - 1, args.length)));
           argValues = work.toArray();
         } else
           argValues = args;
         return argValues;
       }
 
-      <V> Form<V> createForm(Form<V> target_) {
+      <V> Value<V> createForm(Value<V> target_) {
         if (memo == null)
           return target_;
-        return new Func<V>() {
-          Func<V> target = (Func<V>) target_;
+        return new FuncValue<V>() {
+          FuncValue<V> target = (FuncValue<V>) target_;
 
           @Override
-          public List<Form> parameters() {
+          public List<Value> parameters() {
             return target.parameters();
           }
 
@@ -200,22 +206,22 @@ public interface ObjectMethod {
   static void requireReturnedValueAssignableToFunc(Method method) {
     check(
         method,
-        m -> Func.class.isAssignableFrom(m.getReturnType()),
+        m -> FuncValue.class.isAssignableFrom(m.getReturnType()),
         "'%s' is expected to return a class assignable to '%s'", method,
-        Func.class.getCanonicalName());
+        FuncValue.class.getCanonicalName());
   }
 
-  static Description describe(ObjectMethod objectMethod) {
-    requireNonNull(objectMethod);
+  static Description describe(ValueResolver valueResolver) {
+    requireNonNull(valueResolver);
     return new Description() {
       @Override
       public String name() {
-        return objectMethod.getName();
+        return valueResolver.getName();
       }
 
       @Override
       public List<String> content() {
-        return asList(objectMethod.doc().value());
+        return asList(valueResolver.doc().value());
       }
 
       @Override
@@ -226,12 +232,12 @@ public interface ObjectMethod {
             return new Description() {
               @Override
               public String name() {
-                return String.format("[%d] %s", index, objectMethod.getParameterTypes()[index].getName());
+                return String.format("[%d] %s", index, valueResolver.getParameterTypes()[index].getName());
               }
 
               @Override
               public List<String> content() {
-                return asList(objectMethod.getParameterDoc(index).value());
+                return asList(valueResolver.getParameterDoc(index).value());
               }
 
               @Override
@@ -243,7 +249,7 @@ public interface ObjectMethod {
 
           @Override
           public int size() {
-            return objectMethod.getParameterCount();
+            return valueResolver.getParameterCount();
           }
         };
       }

@@ -5,8 +5,8 @@ import com.github.dakusui.actionunit.core.ActionSupport;
 import com.github.dakusui.actionunit.core.context.ContextConsumer;
 import com.github.dakusui.scriptiveunit.annotations.Doc;
 import com.github.dakusui.scriptiveunit.annotations.Scriptable;
-import com.github.dakusui.scriptiveunit.model.form.Form;
-import com.github.dakusui.scriptiveunit.model.form.FormList;
+import com.github.dakusui.scriptiveunit.model.form.Value;
+import com.github.dakusui.scriptiveunit.model.form.ValueList;
 import com.github.dakusui.scriptiveunit.model.session.Stage;
 import com.github.dakusui.scriptiveunit.utils.ActionUtils;
 import org.slf4j.Logger;
@@ -32,13 +32,13 @@ public class Basic {
 
   @SuppressWarnings("unused")
   @Scriptable
-  public Form<Action> nop() {
+  public Value<Action> nop() {
     return input -> ActionSupport.nop();
   }
 
   @SuppressWarnings("unused")
   @Scriptable
-  public final Form<Action> sequential(FormList<Action> actions) {
+  public final Value<Action> sequential(ValueList<Action> actions) {
     return (Stage input) -> ActionSupport.sequential(
         actions.stream()
             .map(each -> each.apply(input))
@@ -48,7 +48,7 @@ public class Basic {
 
   @SuppressWarnings("unused")
   @Scriptable
-  public final Form<Action> concurrent(FormList<Action> actions) {
+  public final Value<Action> concurrent(ValueList<Action> actions) {
     return (Stage input) -> ActionSupport.parallel(
         actions.stream()
             .map(each -> each.apply(input))
@@ -58,7 +58,7 @@ public class Basic {
 
   @SuppressWarnings("unused")
   @Scriptable
-  public Form<Action> fail(Form<String> in) {
+  public Value<Action> fail(Value<String> in) {
     return input -> simple("fail", (c) -> {
       throw new RuntimeException(in.apply(input));
     });
@@ -66,7 +66,7 @@ public class Basic {
 
   @SuppressWarnings("unused")
   @Scriptable
-  public Form<Action> print(Form<?> in) {
+  public Value<Action> print(Value<?> in) {
     return input -> leaf(
         ContextConsumer.of(() -> "print", c -> {
           String s = in.apply(input).toString();
@@ -80,7 +80,7 @@ public class Basic {
       "using the static field 'out' and returns the value.")
   @SuppressWarnings("unused")
   @Scriptable
-  public <T> Form<T> debug(Form<String> msg, Form<T> in) {
+  public <T> Value<T> debug(Value<String> msg, Value<T> in) {
     return input -> {
       T ret = in.apply(input);
       out.accept(msg.apply(input) + ":" + ret);
@@ -91,7 +91,7 @@ public class Basic {
   @Doc("Prints to a given value to a 'dumb' output, which doesn't do anything.")
   @SuppressWarnings("unused")
   @Scriptable
-  public Form<Action> dumb(@Doc("A value to be printed") Form<?> in) {
+  public Value<Action> dumb(@Doc("A value to be printed") Value<?> in) {
     return (Stage input) -> simple(
         "dumb",
         // Even if it doesn't go anywhere, we must do 'apply'.
@@ -100,7 +100,7 @@ public class Basic {
 
   @SuppressWarnings("unused")
   @Scriptable
-  public final Form<Action> tag(Form<String> string) {
+  public final Value<Action> tag(Value<String> string) {
     return input -> simple(
         Objects.toString(string.apply(input)),
         (c) -> {
@@ -109,7 +109,7 @@ public class Basic {
 
   @SuppressWarnings("unused")
   @Scriptable
-  public final Form<Boolean> perform(FormList<Action> actions) {
+  public final Value<Boolean> perform(ValueList<Action> actions) {
     return input -> {
       ActionUtils.performActionWithLogging(
           ActionSupport.sequential(

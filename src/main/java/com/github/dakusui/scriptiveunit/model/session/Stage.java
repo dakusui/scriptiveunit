@@ -3,7 +3,7 @@ package com.github.dakusui.scriptiveunit.model.session;
 import com.github.dakusui.jcunit.core.tuples.Tuple;
 import com.github.dakusui.scriptiveunit.core.Config;
 import com.github.dakusui.scriptiveunit.model.desc.testitem.TestItem;
-import com.github.dakusui.scriptiveunit.model.form.Form;
+import com.github.dakusui.scriptiveunit.model.form.Value;
 
 import java.util.Optional;
 import java.util.function.BiFunction;
@@ -15,15 +15,15 @@ import static com.github.dakusui.scriptiveunit.utils.Checks.check;
  * A stage is a part of session, where various activities defined as Funcs are
  * executed.
  */
-public interface Stage extends Form.Listener{
-  static <U> U applyForm(Stage stage, Form<U> form, BiFunction<Form<U>, Stage, U> applier) {
-    stage.enter(form);
+public interface Stage extends Value.Listener{
+  static <U> U applyForm(Stage stage, Value<U> value, BiFunction<Value<U>, Stage, U> applier) {
+    stage.enter(value);
     try {
-      U ret = applier.apply(form, stage);
-      stage.leave(form, ret);
+      U ret = applier.apply(value, stage);
+      stage.leave(value, ret);
       return ret;
     } catch (RuntimeException | Error e) {
-      stage.fail(form, e);
+      stage.fail(value, e);
       throw e;
     }
   }
@@ -51,17 +51,17 @@ public interface Stage extends Form.Listener{
     }
 
     @Override
-    default void enter(Form form) {
+    default void enter(Value value) {
 
     }
 
     @Override
-    default void leave(Form form, Object value) {
+    default void leave(Value form, Object value) {
 
     }
 
     @Override
-    default void fail(Form form, Throwable t) {
+    default void fail(Value value, Throwable t) {
     }
   }
 
@@ -81,7 +81,7 @@ public interface Stage extends Form.Listener{
       return new FrameworkStage<>(fixture, config);
     }
 
-    static Stage createWrappedStage(Stage stage, Form<?>... args) {
+    static Stage createWrappedStage(Stage stage, Value<?>... args) {
       return new Delegating(stage) {
         @Override
         public <U> U getArgument(int index) {
@@ -96,23 +96,23 @@ public interface Stage extends Form.Listener{
         }
 
         @Override
-        public void enter(Form form) {
-          stage.enter(form);
+        public void enter(Value value) {
+          stage.enter(value);
         }
 
         @Override
-        public void leave(Form form, Object value) {
+        public void leave(Value form, Object value) {
           stage.leave(form, value);
         }
 
         @Override
-        public void fail(Form form, Throwable t) {
-          stage.fail(form, t);
+        public void fail(Value value, Throwable t) {
+          stage.fail(value, t);
         }
       };
     }
 
-    static Stage createFormListeningStage(Stage stage, Form.Listener formListener) {
+    static Stage createFormListeningStage(Stage stage, Value.Listener formListener) {
       return new Stage() {
         @Override
         public Config getConfig() {
@@ -155,18 +155,18 @@ public interface Stage extends Form.Listener{
         }
 
         @Override
-        public void enter(Form form) {
-          formListener.enter(form);
+        public void enter(Value value) {
+          formListener.enter(value);
         }
 
         @Override
-        public void leave(Form form, Object value) {
+        public void leave(Value form, Object value) {
           formListener.leave(form, value);
         }
 
         @Override
-        public void fail(Form form, Throwable t) {
-          formListener.fail(form, t);
+        public void fail(Value value, Throwable t) {
+          formListener.fail(value, t);
         }
       };
     }

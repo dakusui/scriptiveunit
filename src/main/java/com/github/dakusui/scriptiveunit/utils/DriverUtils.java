@@ -3,7 +3,7 @@ package com.github.dakusui.scriptiveunit.utils;
 import com.github.dakusui.scriptiveunit.annotations.Import;
 import com.github.dakusui.scriptiveunit.annotations.Scriptable;
 import com.github.dakusui.scriptiveunit.drivers.Predicates;
-import com.github.dakusui.scriptiveunit.model.form.handle.ObjectMethod;
+import com.github.dakusui.scriptiveunit.model.form.handle.ValueResolver;
 
 import java.util.Arrays;
 import java.util.List;
@@ -16,7 +16,7 @@ import static java.util.stream.Collectors.toMap;
 public enum DriverUtils {
   ;
 
-  public static List<ObjectMethod> getObjectMethodsFromImportedFieldsInObject(Object object) {
+  public static List<ValueResolver> getObjectMethodsFromImportedFieldsInObject(Object object) {
     return ReflectionUtils.getAnnotatedFields(object, Import.class)
         .stream()
         .map(

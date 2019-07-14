@@ -10,7 +10,7 @@ import com.github.dakusui.scriptiveunit.featuretests.AssertionMessageTest;
 import com.github.dakusui.scriptiveunit.model.desc.testitem.IndexedTestCase;
 import com.github.dakusui.scriptiveunit.model.desc.testitem.TestItem;
 import com.github.dakusui.scriptiveunit.model.desc.testitem.TestOracle;
-import com.github.dakusui.scriptiveunit.model.form.Form;
+import com.github.dakusui.scriptiveunit.model.form.Value;
 import com.github.dakusui.scriptiveunit.model.session.Report;
 import com.github.dakusui.scriptiveunit.model.session.Stage;
 import com.github.dakusui.scriptiveunit.model.statement.Statement;
@@ -32,7 +32,7 @@ public enum UtUtils {
       "target/report_base",
       new SimpleDateFormat("yyyy-MM-dd'T'HH_mm_ss.SSSZ"	).format(new Date()));
 
-  public static <T> Form<T> createForm(T value) {
+  public static <T> Value<T> createForm(T value) {
     return s -> value;
   }
 
@@ -131,7 +131,7 @@ public enum UtUtils {
   private static Statement createEmptyStatement() {
     return new Statement() {
       @Override
-      public <U> Form<U> toForm() {
+      public <U> Value<U> toForm() {
         return input -> {
           throw new UnsupportedOperationException();
         };
