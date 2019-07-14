@@ -33,7 +33,7 @@ public abstract class TestSuiteDescriptorBean {
   private final List<? extends TestOracleBean> testOracleBeanList;
   private final String                         description;
   private final RunningMode                    runnerMode;
-  private final Map<String, List<Object>>      userDefinedFormClauses;
+  private final Map<String, List<Object>>      userDefinedFormClauseMap;
   private final List<Object>                   setUpClause;
   private final List<Object>                   setUpBeforeAllClause;
   private final List<Object>                   tearDownClause;
@@ -43,7 +43,7 @@ public abstract class TestSuiteDescriptorBean {
       String description,
       FactorSpaceDescriptorBean factorSpaceBean,
       String runnerType,
-      Map<String, List<Object>> userDefinedFormClauses,
+      Map<String, List<Object>> userDefinedFormClauseMap,
       List<Object> setUpBeforeAllClause,
       List<Object> setUpClause,
       List<? extends TestOracleBean> testOracleBeanList,
@@ -52,7 +52,7 @@ public abstract class TestSuiteDescriptorBean {
     this.description = description;
     this.runnerMode = RunningMode.valueOf(StringUtils.toALL_CAPS(runnerType));
     this.factorSpaceBean = factorSpaceBean;
-    this.userDefinedFormClauses = userDefinedFormClauses;
+    this.userDefinedFormClauseMap = userDefinedFormClauseMap;
     this.setUpBeforeAllClause = setUpBeforeAllClause;
     this.setUpClause = setUpClause;
     this.testOracleBeanList = testOracleBeanList;
@@ -128,7 +128,7 @@ public abstract class TestSuiteDescriptorBean {
 
         @Override
         public Map<String, List<Object>> getUserDefinedFormClauses() {
-          return userDefinedFormClauses;
+          return userDefinedFormClauseMap;
         }
 
         @Override

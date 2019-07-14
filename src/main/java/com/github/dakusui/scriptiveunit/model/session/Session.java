@@ -93,7 +93,7 @@ public interface Session {
           format("Suite level set up: %s", testSuiteDescriptor.getDescription()),
           testSuiteDescriptor
               .setUpBeforeAll()
-              .map(ValueUtils.INSTANCE::<Action>toForm)
+              .map(ValueUtils.INSTANCE::<Action>toValue)
               .map(f -> f.apply(this.createSuiteLevelStage(commonFixtureTuple)))
               .orElse(nop()));
     }
@@ -104,7 +104,7 @@ public interface Session {
           "Fixture set up",
           testSuiteDescriptor
               .setUp()
-              .map(ValueUtils.INSTANCE::<Action>toForm)
+              .map(ValueUtils.INSTANCE::<Action>toValue)
               .map(f -> f.apply(this.createFixtureLevelStage(fixtureTuple)))
               .orElse(nop()));
     }
@@ -112,7 +112,7 @@ public interface Session {
     @Override
     public Action createMainAction(TestOracle testOracle, IndexedTestCase indexedTestCase) {
       TestItem testItem = TestItem.create(indexedTestCase, testOracle);
-      TestOracleFormFactory definition = testItem.testOracleActionFactory(
+      TestOracleValuesFactory definition = testItem.testOracleActionFactory(
           tuple -> formatTestName(tuple, testSuiteDescriptor, testOracle.getDescription().orElse("noname")));
       Tuple testCaseTuple = testItem.getTestCaseTuple();
       Report report = createReport(testItem);
@@ -136,7 +136,7 @@ public interface Session {
           "Fixture tear down",
           testSuiteDescriptor
               .tearDown()
-              .map(ValueUtils.INSTANCE::<Action>toForm)
+              .map(ValueUtils.INSTANCE::<Action>toValue)
               .map(f -> f.apply(this.createSuiteLevelStage(fixtureTuple)))
               .orElse(nop()));
     }
@@ -147,14 +147,14 @@ public interface Session {
           format("Suite level tear down: %s", testSuiteDescriptor.getDescription()),
           testSuiteDescriptor
               .tearDownAfterAll()
-              .map(ValueUtils.INSTANCE::<Action>toForm)
+              .map(ValueUtils.INSTANCE::<Action>toValue)
               .map(f -> f.apply(this.createSuiteLevelStage(commonFixtureTuple)))
               .orElse(nop()));
     }
 
-    Action createBefore(TestItem testItem, TestOracleFormFactory testOracleFormFactory, Report report) {
+    Action createBefore(TestItem testItem, TestOracleValuesFactory testOracleValuesFactory, Report report) {
       Stage beforeStage = this.createOracleLevelStage(testItem, report);
-      return testOracleFormFactory.beforeFactory().apply(beforeStage);
+      return testOracleValuesFactory.beforeFactory().apply(beforeStage);
     }
 
     Source<Tuple> createGiven(
@@ -197,7 +197,7 @@ public interface Session {
       return this.reportCreator.apply(testItem);
     }
 
-    Sink<AssertionError> createErrorHandler(TestItem testItem, TestOracleFormFactory definition, Report report) {
+    Sink<AssertionError> createErrorHandler(TestItem testItem, TestOracleValuesFactory definition, Report report) {
       return (input, context) -> {
         Stage onFailureStage = createOracleFailureHandlingStage(testItem, input, report);
         definition.errorHandlerFactory().apply(onFailureStage);
@@ -205,7 +205,7 @@ public interface Session {
       };
     }
 
-    Action createAfter(TestItem testItem, TestOracleFormFactory definition, Report report) {
+    Action createAfter(TestItem testItem, TestOracleValuesFactory definition, Report report) {
       Stage afterStage = this.createOracleLevelStage(testItem, report);
       return definition.afterFactory().apply(afterStage);
     }

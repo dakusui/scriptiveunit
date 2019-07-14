@@ -20,7 +20,7 @@ public class StatementTest extends TestBase {
 
     Statement.Factory statementFactory = new Statement.Factory(createEmptyObjectMethodRegistry(new Standard()), emptyMap());
     Statement statement = statementFactory.create(atom);
-    Object value = statement.toForm().apply(createStage(new Standard()));
+    Object value = statement.toValue().apply(createStage(new Standard()));
     System.out.println(value);
   }
 
@@ -33,7 +33,7 @@ public class StatementTest extends TestBase {
     Statement.Factory statementFactory = new Statement.Factory(createEmptyObjectMethodRegistry(new Standard()), emptyMap());
     Statement statement = statementFactory.create(atom);
 
-    System.out.println(statement.toForm().apply(createStage(driverObject)));
+    System.out.println(statement.toValue().apply(createStage(driverObject)));
   }
 
   private Stage createStage(Standard driverObject) {

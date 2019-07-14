@@ -15,24 +15,24 @@ public interface ValueResolverRegistry {
   Optional<ValueResolver> lookUp(String name);
 
   static ValueResolverRegistry load(Object driverObject) {
-    Map<String, List<ValueResolver>> allFoundObjectMedhods = new HashMap<>();
-    Map<String, ValueResolver> objectMethodMap = new HashMap<>();
-    DriverUtils.getObjectMethodsFromImportedFieldsInObject(driverObject)
+    Map<String, List<ValueResolver>> allFoundValueResolvers = new HashMap<>();
+    Map<String, ValueResolver> valueResolverMap = new HashMap<>();
+    DriverUtils.getValueResolversFromImportedFieldsInObject(driverObject)
         .stream()
         .peek((ValueResolver each) -> {
-          allFoundObjectMedhods.computeIfAbsent(each.getName(), name -> new LinkedList<>());
-          allFoundObjectMedhods.get(each.getName()).add(each);
+          allFoundValueResolvers.computeIfAbsent(each.getName(), name -> new LinkedList<>());
+          allFoundValueResolvers.get(each.getName()).add(each);
         })
         .forEach((ValueResolver each) -> {
-          objectMethodMap.put(each.getName(), each);
+          valueResolverMap.put(each.getName(), each);
         });
-    Map<String, List<ValueResolver>> duplicatedObjectMethods = allFoundObjectMedhods
+    Map<String, List<ValueResolver>> duplicatedValueResolvers = allFoundValueResolvers
         .entrySet()
         .stream()
         .filter((Map.Entry<String, List<ValueResolver>> each) -> each.getValue().size() > 1)
         .collect(toMap(Map.Entry::getKey, Map.Entry::getValue));
-    if (!duplicatedObjectMethods.isEmpty())
-      throw ConfigurationException.duplicatedFormsAreFound(duplicatedObjectMethods);
-    return name -> Optional.ofNullable(objectMethodMap.get(name));
+    if (!duplicatedValueResolvers.isEmpty())
+      throw ConfigurationException.duplicatedValueResolversAreFound(duplicatedValueResolvers);
+    return name -> Optional.ofNullable(valueResolverMap.get(name));
   }
 }

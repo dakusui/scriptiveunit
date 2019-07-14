@@ -3,8 +3,8 @@ package com.github.dakusui.scriptiveunit.model.statement;
 import com.github.dakusui.scriptiveunit.core.Config;
 import com.github.dakusui.scriptiveunit.exceptions.TypeMismatch;
 import com.github.dakusui.scriptiveunit.model.form.Value;
-import com.github.dakusui.scriptiveunit.model.form.handle.FormHandle;
-import com.github.dakusui.scriptiveunit.model.form.handle.FormHandleFactory;
+import com.github.dakusui.scriptiveunit.model.form.handle.ValueResolverHandle;
+import com.github.dakusui.scriptiveunit.model.form.handle.ValueResolverHandleFactory;
 import com.github.dakusui.scriptiveunit.model.form.handle.ValueResolverRegistry;
 import com.github.dakusui.scriptiveunit.model.session.Stage;
 import com.github.dakusui.scriptiveunit.utils.CoreUtils;
@@ -20,11 +20,11 @@ import static com.github.dakusui.scriptiveunit.exceptions.TypeMismatch.headOfCal
  * An interface that represents a lexical structure of a script element.
  */
 public interface Statement {
-  static Factory createStatementFactory(Config config, Map<String, List<Object>> userDefinedFormClauses) {
-    return new Factory(ValueResolverRegistry.load(config.getDriverObject()), userDefinedFormClauses);
+  static Factory createStatementFactory(Config config, Map<String, List<Object>> userDefinedFormClauseMap) {
+    return new Factory(ValueResolverRegistry.load(config.getDriverObject()), userDefinedFormClauseMap);
   }
 
-  <U> Value<U> toForm();
+  <U> Value<U> toValue();
 
   default void accept(Visitor visitor) {
     throw new UnsupportedOperationException();
@@ -45,7 +45,7 @@ public interface Statement {
   }
 
   interface Compound extends Statement {
-    FormHandle getFormHandle();
+    ValueResolverHandle getValueResolverHandle();
 
     Arguments getArguments();
 
@@ -55,11 +55,11 @@ public interface Statement {
   }
 
   class Factory {
-    private final FormHandleFactory formHandleFactory;
+    private final ValueResolverHandleFactory valueResolverHandleFactory;
 
     public Factory(ValueResolverRegistry valueResolverRegistry, Map<String, List<Object>> userDefinedFormClauses) {
 
-      this.formHandleFactory = new FormHandleFactory(
+      this.valueResolverHandleFactory = new ValueResolverHandleFactory(
           valueResolverRegistry,
           StatementRegistry.create(this, userDefinedFormClauses));
     }
@@ -71,16 +71,16 @@ public interface Statement {
       Object car = CoreUtils.car(raw);
       if (car instanceof String) {
         Arguments arguments = Arguments.create(this, CoreUtils.cdr(raw));
-        FormHandle formHandle = this.formHandleFactory.create((String) car);
+        ValueResolverHandle valueResolverHandle = this.valueResolverHandleFactory.create((String) car);
         return new Compound() {
           @Override
-          public <U> Value<U> toForm() {
-            return getFormHandle().toValue(this);
+          public <U> Value<U> toValue() {
+            return getValueResolverHandle().toValue(this);
           }
 
           @Override
-          public FormHandle getFormHandle() {
-            return formHandle;
+          public ValueResolverHandle getValueResolverHandle() {
+            return valueResolverHandle;
           }
 
           @Override
@@ -96,12 +96,12 @@ public interface Statement {
           }
 
           @Override
-          public <U> Value<U> toForm() {
+          public <U> Value<U> toValue() {
             Value<U> value = input -> input.getArgument((this.value()));
             return new Value<U>() {
               @Override
               public U apply(Stage stage) {
-                return Stage.applyForm(stage, value, Value::apply);
+                return Stage.evaluateValue(stage, value, Value::apply);
               }
 
               @Override
@@ -133,11 +133,11 @@ public interface Statement {
     Atom createAtom(Object object) {
       return new Atom() {
         @Override
-        public <U> Value<U> toForm() {
+        public <U> Value<U> toValue() {
           return new Value.Const<U>() {
             @Override
             public U apply(Stage stage) {
-              return Stage.applyForm(stage, this, (f, s) -> value());
+              return Stage.evaluateValue(stage, this, (f, s) -> value());
             }
 
             @Override
@@ -183,7 +183,7 @@ public interface Statement {
       @Override
       public void visit(Compound compound) {
         b.append("(");
-        b.append(compound.getFormHandle().toString());
+        b.append(compound.getValueResolverHandle().toString());
         //
         StreamSupport.stream(compound.getArguments().spliterator(), false)
             .peek(each -> b.append(" "))

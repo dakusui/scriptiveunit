@@ -1,7 +1,7 @@
 package com.github.dakusui.scriptiveunit.model.desc.testitem;
 
 import com.github.dakusui.jcunit.core.tuples.Tuple;
-import com.github.dakusui.scriptiveunit.model.session.TestOracleFormFactory;
+import com.github.dakusui.scriptiveunit.model.session.TestOracleValuesFactory;
 
 import java.util.Optional;
 import java.util.function.Function;
@@ -15,7 +15,7 @@ public interface TestItem {
 
   int getTestOracleId();
 
-  TestOracleFormFactory testOracleActionFactory(Function<Tuple, String> testCaseFormatter);
+  TestOracleValuesFactory testOracleActionFactory(Function<Tuple, String> testCaseFormatter);
 
   class Impl implements TestItem {
     private final IndexedTestCase indexedTestCase;
@@ -47,8 +47,8 @@ public interface TestItem {
     }
 
     @Override
-    public TestOracleFormFactory testOracleActionFactory(Function<Tuple, String> testCaseFormatter) {
-      return TestOracleFormFactory.createTestOracleFormFactory(
+    public TestOracleValuesFactory testOracleActionFactory(Function<Tuple, String> testCaseFormatter) {
+      return TestOracleValuesFactory.createTestOracleValuesFactory(
           this,
           this.testOracle.definition(),
           testCaseFormatter

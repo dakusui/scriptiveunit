@@ -43,7 +43,7 @@ public class ScriptiveCore {
               .withScriptResourceName(scriptResourceName)
               .build()
       );
-      return Utils.describeFunction(scriptiveUnit, driverClass.newInstance(), functionName);
+      return Utils.describeForm(scriptiveUnit, driverClass.newInstance(), functionName);
     } catch (Throwable throwable) {
       throw ScriptiveUnitException.wrapIfNecessary(throwable);
     }
@@ -97,20 +97,20 @@ public class ScriptiveCore {
   enum Utils {
     ;
 
-    public static Description describeFunction(ScriptiveUnit scriptiveUnit, Object driverObject, String functionName) {
+    public static Description describeForm(ScriptiveUnit scriptiveUnit, Object driverObject, String formName) {
       Optional<Description> value =
           Stream.concat(
-              DriverUtils.getObjectMethodsFromImportedFieldsInObject(driverObject).stream().map(ValueResolver::describe),
+              DriverUtils.getValueResolversFromImportedFieldsInObject(driverObject).stream().map(ValueResolver::describe),
               Private.getUserDefinedFormClauses(scriptiveUnit).entrySet().stream().map((Map.Entry<String, List<Object>> entry) -> Description.describe(entry.getKey(), entry.getValue()))
-          ).filter(t -> functionName.equals(t.name())).findFirst();
+          ).filter(t -> formName.equals(t.name())).findFirst();
       if (value.isPresent())
         return value.get();
-      throw functionNotFound(functionName);
+      throw functionNotFound(formName);
     }
 
     public static List<String> getFormNames(ScriptiveUnit scriptiveUnit, Object driverObject) {
       return Stream.concat(
-          DriverUtils.getObjectMethodsFromImportedFieldsInObject(driverObject)
+          DriverUtils.getValueResolversFromImportedFieldsInObject(driverObject)
               .stream()
               .map(ValueResolver::getName),
           Private.getUserDefinedFormClauseNamesFromScript(scriptiveUnit).stream()).collect(toList());

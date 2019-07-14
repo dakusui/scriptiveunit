@@ -16,7 +16,7 @@ import java.util.*;
 import java.util.function.Function;
 
 import static com.github.dakusui.scriptiveunit.exceptions.ScriptiveUnitException.wrap;
-import static com.github.dakusui.scriptiveunit.exceptions.TypeMismatch.valueReturnedByScriptableMethodMustBeFunc;
+import static com.github.dakusui.scriptiveunit.exceptions.TypeMismatch.valueReturnedByScriptableMethodWasNotValueObject;
 import static com.github.dakusui.scriptiveunit.utils.Checks.check;
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
@@ -106,14 +106,14 @@ public interface ValueResolver {
         /*
          * By using dynamic proxy, we are making it possible to print structured pretty log.
          */
-        return createForm(requireValueIsForm(returnedValue));
+        return createValue(requireReturnedValueIsValueObject(returnedValue));
       }
 
-      private Value requireValueIsForm(Object returnedValue) {
+      private Value requireReturnedValueIsValueObject(Object returnedValue) {
         return (Value) check(
             returnedValue,
             (Object o) -> o instanceof Value,
-            () -> valueReturnedByScriptableMethodMustBeFunc(this.getName(), returnedValue)
+            () -> valueReturnedByScriptableMethodWasNotValueObject(this.getName(), returnedValue)
         );
       }
 
@@ -164,7 +164,7 @@ public interface ValueResolver {
         return argValues;
       }
 
-      <V> Value<V> createForm(Value<V> target_) {
+      <V> Value<V> createValue(Value<V> target_) {
         if (memo == null)
           return target_;
         return new FuncValue<V>() {

@@ -16,7 +16,7 @@ import static com.github.dakusui.scriptiveunit.utils.Checks.check;
  * executed.
  */
 public interface Stage extends Value.Listener{
-  static <U> U applyForm(Stage stage, Value<U> value, BiFunction<Value<U>, Stage, U> applier) {
+  static <U> U evaluateValue(Stage stage, Value<U> value, BiFunction<Value<U>, Stage, U> applier) {
     stage.enter(value);
     try {
       U ret = applier.apply(value, stage);
@@ -112,7 +112,7 @@ public interface Stage extends Value.Listener{
       };
     }
 
-    static Stage createFormListeningStage(Stage stage, Value.Listener formListener) {
+    static Stage createValueListeningStage(Stage stage, Value.Listener formListener) {
       return new Stage() {
         @Override
         public Config getConfig() {

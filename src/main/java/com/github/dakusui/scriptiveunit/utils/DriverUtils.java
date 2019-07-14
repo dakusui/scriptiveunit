@@ -16,7 +16,7 @@ import static java.util.stream.Collectors.toMap;
 public enum DriverUtils {
   ;
 
-  public static List<ValueResolver> getObjectMethodsFromImportedFieldsInObject(Object object) {
+  public static List<ValueResolver> getValueResolversFromImportedFieldsInObject(Object object) {
     return ReflectionUtils.getAnnotatedFields(object, Import.class)
         .stream()
         .map(
@@ -25,7 +25,7 @@ public enum DriverUtils {
                 Scriptable.class,
                 createAliasMap(each.getField().getAnnotation(Import.class).value())))
         .flatMap(List::stream)
-        .filter(objectMethod -> objectMethod.getName() != null)
+        .filter((ValueResolver valueResolver) -> valueResolver.getName() != null)
         .collect(toList());
   }
 
@@ -37,7 +37,7 @@ public enum DriverUtils {
   }
 
   public static void main(String... args) {
-    getObjectMethodsFromImportedFieldsInObject(new DriverExample())
+    getValueResolversFromImportedFieldsInObject(new DriverExample())
         .forEach(System.out::println);
   }
 

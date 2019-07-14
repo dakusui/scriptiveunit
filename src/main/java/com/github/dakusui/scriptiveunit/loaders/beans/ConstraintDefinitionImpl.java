@@ -18,7 +18,7 @@ public class ConstraintDefinitionImpl implements ConstraintDefinition {
 
   @Override
   public boolean test(Stage stage) {
-    return requireNonNull(statement.<Boolean>toForm()).apply(stage);
+    return requireNonNull(statement.<Boolean>toValue()).apply(stage);
   }
 
   @Override

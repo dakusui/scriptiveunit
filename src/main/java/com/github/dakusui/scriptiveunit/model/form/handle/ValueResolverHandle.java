@@ -14,19 +14,19 @@ import static com.google.common.collect.Iterables.toArray;
 import static java.util.Objects.requireNonNull;
 import static java.util.stream.Collectors.toList;
 
-public interface FormHandle {
+public interface ValueResolverHandle {
   <U> Value<U> toValue(Statement.Compound statement);
 
   boolean isAccessor();
 
-  interface Default extends FormHandle {
+  interface Default extends ValueResolverHandle {
     @Override
     default boolean isAccessor() {
       return false;
     }
   }
 
-  abstract class Base implements FormHandle.Default {
+  abstract class Base implements ValueResolverHandle.Default {
     @Override
     public abstract String toString();
   }
@@ -38,11 +38,11 @@ public interface FormHandle {
       this.valueResolver = valueResolver;
     }
 
-    static <U> Value<U> methodBasedFormHandleToForm(MethodBased formHandle, Statement.Compound compound) {
-      ValueResolver valueResolver = formHandle.objectMethod();
+    static <U> Value<U> methodBasedValueResolverToValue(MethodBased formHandle, Statement.Compound compound) {
+      ValueResolver valueResolver = formHandle.valueResolver();
       return valueResolver.resolveValue(
           iterableToStream(compound.getArguments())
-              .map(Statement::toForm)
+              .map(Statement::toValue)
               .toArray(Value[]::new));
     }
 
@@ -50,7 +50,7 @@ public interface FormHandle {
     public <U> Value<U> toValue(Statement.Compound compound) {
       return Value.Named.create(
           this.valueResolver.getName(),
-          methodBasedFormHandleToForm(this, compound));
+          methodBasedValueResolverToValue(this, compound));
     }
 
     @Override
@@ -63,7 +63,7 @@ public interface FormHandle {
       return this.valueResolver.getName();
     }
 
-    ValueResolver objectMethod() {
+    ValueResolver valueResolver() {
       return this.valueResolver;
     }
   }
@@ -76,15 +76,15 @@ public interface FormHandle {
     public <U> Value<U> toValue(Statement.Compound statement) {
       return Value.Named.create(
           "<lambda>",
-          lambdaFormHandleToForm(statement)
+          lambdaValueResolverToValue(statement)
       );
     }
 
-    static <U> Value<U> lambdaFormHandleToForm(Statement.Compound compound) {
+    static <U> Value<U> lambdaValueResolverToValue(Statement.Compound compound) {
       //noinspection unchecked
       return (Value<U>) (Value<Value<Object>>) (Stage ii) ->
           getOnlyElement(iterableToStream(compound.getArguments())
-              .map(Statement::toForm)
+              .map(Statement::toValue)
               .collect(toList()));
     }
 
@@ -103,15 +103,15 @@ public interface FormHandle {
 
     @Override
     public <U> Value<U> toValue(Statement.Compound statement) {
-      return userFormHandleToForm(this, statement);
+      return resolveValue(this, statement);
     }
 
-    private static <U> Value<U> userFormHandleToForm(User formHandle, Statement.Compound compound) {
+    private static <U> Value<U> resolveValue(User formHandle, Statement.Compound compound) {
       //noinspection unchecked
       return (Value<U>) createUserFunc(toArray(
           Stream.concat(
               Stream.of((Value<Statement>) input -> formHandle.statement()),
-              iterableToStream(compound.getArguments()).map(Statement::toForm))
+              iterableToStream(compound.getArguments()).map(Statement::toValue))
               .collect(toList()),
           Value.class));
     }
@@ -128,7 +128,7 @@ public interface FormHandle {
     private static Value<Object> userFunc(Value<Statement> statementValue, Value<?>... args) {
       return input -> statementValue
           .apply(input)
-          .toForm()
+          .toValue()
           .apply(createWrappedStage(input, args));
     }
 

@@ -131,7 +131,7 @@ public enum UtUtils {
   private static Statement createEmptyStatement() {
     return new Statement() {
       @Override
-      public <U> Value<U> toForm() {
+      public <U> Value<U> toValue() {
         return input -> {
           throw new UnsupportedOperationException();
         };

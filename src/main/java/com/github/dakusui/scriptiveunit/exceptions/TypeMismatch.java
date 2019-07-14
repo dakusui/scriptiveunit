@@ -9,7 +9,7 @@ public class TypeMismatch extends ScriptiveUnitException {
     super(format(format, args));
   }
 
-  public static TypeMismatch valueReturnedByScriptableMethodMustBeFunc(String methodName, Object returnedValue) {
+  public static TypeMismatch valueReturnedByScriptableMethodWasNotValueObject(String methodName, Object returnedValue) {
     throw new TypeMismatch("Value '%s' returned by '%s' must be an instance of '%s'", returnedValue, methodName, Value.class.getCanonicalName());
   }
 

@@ -27,15 +27,15 @@ public enum ValueUtils {
     return involvedParameters(statement, ret);
   }
 
-  public <U> Value<U> toForm(Statement statement) {
-    return statement.toForm();
+  public <U> Value<U> toValue(Statement statement) {
+    return statement.toValue();
   }
 
   private static List<String> involvedParameters(Statement statement, List<String> work) {
     if (statement instanceof Statement.Atom)
       return work;
     if (statement instanceof Statement.Compound) {
-      if (((Statement.Compound) statement).getFormHandle().isAccessor()) {
+      if (((Statement.Compound) statement).getValueResolverHandle().isAccessor()) {
         for (Statement each : ((Statement.Compound) statement).getArguments()) {
           if (each instanceof Statement.Atom) {
             /*
@@ -43,7 +43,7 @@ public enum ValueUtils {
              * the statement by evaluating it, it is valid to pass a fresh
              * memo object to an invoker.
              */
-            work.add(Objects.toString(each.toForm()));
+            work.add(Objects.toString(each.toValue()));
           } else {
             throw SyntaxException.parameterNameShouldBeSpecifiedWithConstant((Statement.Compound) statement);
           }

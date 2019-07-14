@@ -19,7 +19,7 @@ public class ConfigurationException extends ScriptiveUnitException {
     );
   }
 
-  public static ConfigurationException duplicatedFormsAreFound(Map<String, List<ValueResolver>> duplicatedObjectMethods) {
+  public static ConfigurationException duplicatedValueResolversAreFound(Map<String, List<ValueResolver>> duplicatedObjectMethods) {
     StringBuffer buf = new StringBuffer();
     duplicatedObjectMethods.forEach((s, objectMethods) -> {
       buf.append(format("%s:%n", s));
