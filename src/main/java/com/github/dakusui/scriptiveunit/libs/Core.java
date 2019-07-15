@@ -105,7 +105,10 @@ public class Core {
         retValue = config.getScriptResourceName();
         break;
       case "scriptResourceNameKey":
-        retValue = config.getScriptResourceNameKey();
+        if (config instanceof Config.Builder.DriverClassBasedConfig)
+          retValue = ((Config.Builder.DriverClassBasedConfig) config).getScriptResourceNameKey();
+        else
+          throw ScriptiveUnitException.noScriptResourceNameKeyWasGiven();
         break;
       default:
         throw SyntaxException.systemAttributeNotFound(attr, input);

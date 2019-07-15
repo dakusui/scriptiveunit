@@ -8,10 +8,10 @@ import java.io.File;
 import java.util.Optional;
 import java.util.Properties;
 
+import static java.util.Objects.requireNonNull;
+
 public interface Config {
   Object getDriverObject();
-
-  Optional<String> getScriptResourceNameKey();
 
   Optional<String> getScriptResourceName();
 
@@ -27,11 +27,6 @@ public interface Config {
     @Override
     public Object getDriverObject() {
       return this.driverObject;
-    }
-
-    @Override
-    public Optional<String> getScriptResourceNameKey() {
-      return Optional.empty();
     }
 
     @Override
@@ -66,11 +61,6 @@ public interface Config {
     }
 
     @Override
-    public Optional<String> getScriptResourceNameKey() {
-      return base.getScriptResourceNameKey();
-    }
-
-    @Override
     public Optional<String> getScriptResourceName() {
       return base.getScriptResourceName();
     }
@@ -98,39 +88,51 @@ public interface Config {
       return this;
     }
 
-    public Config build() {
-      try {
-        return new Config() {
-          private Reporting reporting = new Reporting("report.json", new File("."));
-          Object driverObject = Builder.this.driverClass.newInstance();
+    public DriverClassBasedConfig build() {
+      return new DriverClassBasedConfig(this);
+    }
 
-          @Override
-          public Object getDriverObject() {
-            return driverObject;
-          }
+    public static class DriverClassBasedConfig implements Config {
+      private       Reporting reporting = new Reporting("report.json", new File("."));
+      private final Object    driverObject;
+      ;
+      private final Builder builder;
 
-          @Override
-          public Optional<String> getScriptResourceNameKey() {
-            return Optional.of(loadAnnotation.scriptSystemPropertyKey());
-          }
+      DriverClassBasedConfig(Builder builder) {
+        this.builder = requireNonNull(builder);
+        this.driverObject = createDriverObject(this.builder);
+      }
 
-          @Override
-          public Optional<String> getScriptResourceName() {
-            String work = properties.getProperty(
-                getScriptResourceNameKey().orElseThrow(ScriptiveUnitException::noScriptResourceNameKeyWasGiven),
-                Builder.this.loadAnnotation.script());
-            return Load.SCRIPT_NOT_SPECIFIED.equals(work) ?
-                Optional.empty() :
-                Optional.of(work);
-          }
+      @Override
+      public Object getDriverObject() {
+        return driverObject;
+      }
 
-          @Override
-          public Optional<Reporting> getReporting() {
-            return Optional.of(reporting);
-          }
-        };
-      } catch (InstantiationException | IllegalAccessException e) {
-        throw ScriptiveUnitException.wrapIfNecessary(e);
+      @Override
+      public Optional<String> getScriptResourceName() {
+        String work = builder.properties.getProperty(
+            getScriptResourceNameKey().orElseThrow(ScriptiveUnitException::noScriptResourceNameKeyWasGiven),
+            builder.loadAnnotation.script());
+        return Load.SCRIPT_NOT_SPECIFIED.equals(work) ?
+            Optional.empty() :
+            Optional.of(work);
+      }
+
+      @Override
+      public Optional<Reporting> getReporting() {
+        return Optional.of(reporting);
+      }
+
+      public Optional<String> getScriptResourceNameKey() {
+        return Optional.of(builder.loadAnnotation.scriptSystemPropertyKey());
+      }
+
+      private static Object createDriverObject(Builder builder) {
+        try {
+          return builder.driverClass.newInstance();
+        } catch (InstantiationException | IllegalAccessException e) {
+          throw ScriptiveUnitException.wrapIfNecessary(e);
+        }
       }
     }
   }

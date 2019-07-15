@@ -57,5 +57,4 @@ public class BugfixesTest {
     configureScriptNameSystemProperty(testItem.getTestInput(), Simple.class);
     assertThat(JUnitCore.runClasses(Simple.class), testItem.getOracle(this));
   }
-
 }
