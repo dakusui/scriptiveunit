@@ -88,7 +88,8 @@ public interface Preprocessor {
 
 
         ApplicationSpec.Dictionary readScriptHandlingInheritance(String scriptResourceName, ApplicationSpec applicationSpec) {
-          return applicationSpec.removeInheritanceDirective(readApplicationDictionaryWithMerging(scriptResourceName, applicationSpec));
+          return applicationSpec.removeInheritanceDirective(
+              readApplicationDictionaryWithMerging(scriptResourceName, applicationSpec));
         }
 
         ApplicationSpec.Dictionary preprocess(ApplicationSpec.Dictionary inputNode, List<PreprocessingUnit> preprocessingUnits) {
