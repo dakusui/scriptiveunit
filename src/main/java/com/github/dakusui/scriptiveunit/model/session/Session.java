@@ -66,14 +66,13 @@ public interface Session {
       Reporting reporting = getConfig()
           .getReporting()
           .orElseThrow(ScriptiveUnitException::noReportingObjectIsAvailable);
-      this.reportCreator = testItem -> {
-        return Report.create(
-            null,
-            reporting.reportBaseDirectory,
-            getConfig().getScriptResourceName().orElse("__noname__"),
-            testItem,
-            reporting.reportFileName);
-      };
+      this.reportCreator = testItem -> Report.create(
+          null,
+          reporting.reportBaseDirectory,
+          // Only name of a test script is wanted here.
+          getConfig().getScriptResourceName().orElse("__noname__"),
+          testItem,
+          reporting.reportFileName);
       this.testSuiteDescriptor = testSuiteDescriptorLoader.loadTestSuiteDescriptor(this);
     }
 

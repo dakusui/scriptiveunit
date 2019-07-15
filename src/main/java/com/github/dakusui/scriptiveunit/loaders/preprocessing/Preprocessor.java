@@ -47,7 +47,9 @@ public interface Preprocessor {
             ApplicationSpec.Dictionary defaultValues,
             ApplicationSpec applicationSpec,
             HostSpec<NODE, OBJECT, ARRAY, ATOM> hostSpec) {
-          return applicationSpec.deepMerge(readScriptHandlingInheritance(scriptResourceName, applicationSpec, hostSpec), defaultValues);
+          return applicationSpec.deepMerge(
+              readScriptHandlingInheritance(scriptResourceName, applicationSpec, hostSpec),
+              defaultValues);
         }
 
         ApplicationSpec.Dictionary readApplicationDictionaryWithMerging(
