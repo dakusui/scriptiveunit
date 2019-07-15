@@ -80,8 +80,8 @@ public interface FormHandle {
       );
     }
 
+    @SuppressWarnings("unchecked")
     static <U> Value<U> lambdaFormToValue(Statement.Compound compound) {
-      //noinspection unchecked
       return (Value<U>) (Value<Value<Object>>) (Stage ii) ->
           getOnlyElement(iterableToStream(compound.getArguments())
               .map(Statement::toValue)
@@ -106,8 +106,8 @@ public interface FormHandle {
       return resolveValue(this, statement);
     }
 
+    @SuppressWarnings("unchecked")
     private static <U> Value<U> resolveValue(User formHandle, Statement.Compound compound) {
-      //noinspection unchecked
       return (Value<U>) createUserFunc(toArray(
           Stream.concat(
               Stream.of((Value<Statement>) input -> formHandle.statement()),

@@ -123,13 +123,12 @@ public class Predicates {
     return input -> requireNonNull(requireNonNull(compare(a, b)).apply(input)) == 0;
   }
 
-  @SuppressWarnings({"unused", "WeakerAccess"})
+  @SuppressWarnings({ "unused", "WeakerAccess", "unchecked" })
   @Scriptable
   public <U> Value<Integer> compare(Value<Comparable<U>> a, Value<U> b) {
     return (Stage input) -> {
       Comparable valueOfA = requireNonNull((Comparable) toBigDecimalIfPossible(a.apply(input)));
       Object valueOfB = requireNonNull(toBigDecimalIfPossible(b.apply(input)));
-      //noinspection unchecked
       return valueOfA.compareTo(valueOfB);
     };
   }

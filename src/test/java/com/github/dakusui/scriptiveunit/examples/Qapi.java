@@ -188,9 +188,9 @@ public class Qapi {
     private final Map<String, Object> fixture;
     private final Term[]              terms;
 
+    @SuppressWarnings("unchecked")
     Request(Map<String, Object> fixture) {
       this.fixture = unmodifiableMap(fixture);
-      //noinspection unchecked
       this.terms = ((List<String>) this.fixture.get("terms"))
           .stream()
           .map((Object input) -> new Term((String) input))

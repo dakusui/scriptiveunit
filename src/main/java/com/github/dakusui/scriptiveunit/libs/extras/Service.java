@@ -25,10 +25,9 @@ public abstract class Service<REQUEST, RESPONSE> extends Core {
     return (Stage input) -> buildRequest(input.getTestCaseTuple().orElseThrow(RuntimeException::new));
   }
 
-  @SuppressWarnings("unused")
+  @SuppressWarnings({ "unused", "unchecked" })
   @Scriptable
   public Value<RESPONSE> response() {
-    //noinspection unchecked
     return (Stage input) -> (RESPONSE) input.response().orElseThrow(RuntimeException::new);
   }
 

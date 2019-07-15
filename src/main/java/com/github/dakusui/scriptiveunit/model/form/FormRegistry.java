@@ -1,31 +1,26 @@
 package com.github.dakusui.scriptiveunit.model.form;
 
 import com.github.dakusui.scriptiveunit.exceptions.ConfigurationException;
-import com.github.dakusui.scriptiveunit.utils.DriverUtils;
 
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 
+import static com.github.dakusui.scriptiveunit.utils.DriverUtils.getFormsFromImportedFieldsInObject;
 import static java.util.stream.Collectors.toMap;
 
 public interface FormRegistry {
   Optional<Form> lookUp(String name);
 
   static FormRegistry load(Object driverObject) {
+    return getFormRegistry(driverObject);
+  }
+
+  static FormRegistry getFormRegistry(Object driverObject) {
+    Map<String, Form> formMap = loadFormMapFromDriverObject(driverObject);
     Map<String, List<Form>> allFoundForms = new HashMap<>();
-    Map<String, Form> formMap = new HashMap<>();
-    DriverUtils.getFormsFromImportedFieldsInObject(driverObject)
-        .stream()
-        .peek((Form each) -> {
-          allFoundForms.computeIfAbsent(each.getName(), name -> new LinkedList<>());
-          allFoundForms.get(each.getName()).add(each);
-        })
-        .forEach((Form each) -> {
-          formMap.put(each.getName(), each);
-        });
+    formMap.values().forEach((Form each) -> {
+      allFoundForms.computeIfAbsent(each.getName(), name -> new LinkedList<>());
+      allFoundForms.get(each.getName()).add(each);
+    });
     Map<String, List<Form>> duplicatedForms = allFoundForms
         .entrySet()
         .stream()
@@ -34,5 +29,14 @@ public interface FormRegistry {
     if (!duplicatedForms.isEmpty())
       throw ConfigurationException.duplicatedFormsAreFound(duplicatedForms);
     return name -> Optional.ofNullable(formMap.get(name));
+  }
+
+  static Map<String, Form> loadFormMapFromDriverObject(Object driverObject) {
+    Map<String, Form> formMap = new HashMap<>();
+    getFormsFromImportedFieldsInObject(driverObject)
+        .forEach((Form each) -> {
+          formMap.put(each.getName(), each);
+        });
+    return formMap;
   }
 }

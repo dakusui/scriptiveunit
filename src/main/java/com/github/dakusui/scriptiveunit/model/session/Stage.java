@@ -15,7 +15,7 @@ import static com.github.dakusui.scriptiveunit.utils.Checks.check;
  * A stage is a part of session, where various activities defined as Funcs are
  * executed.
  */
-public interface Stage extends Value.Listener{
+public interface Stage extends Value.Listener {
   static <U> U evaluateValue(Stage stage, Value<U> value, BiFunction<Value<U>, Stage, U> applier) {
     stage.enter(value);
     try {
@@ -65,28 +65,21 @@ public interface Stage extends Value.Listener{
     }
   }
 
-  enum ExecutionLevel {
-    SUITE,
-    FIXTURE,
-    ORACLE,
-    ;
-  }
-
   interface Factory {
     static <RESPONSE> Stage oracleLevelStageFor(Config config, TestItem testItem, RESPONSE response, Throwable throwable, Report report) {
       return new OracleLevelStage<>(response, throwable, config, report, testItem);
     }
 
-    static Stage frameworkStageFor( Config config, Tuple fixture) {
+    static Stage frameworkStageFor(Config config, Tuple fixture) {
       return new FrameworkStage<>(fixture, config);
     }
 
     static Stage createWrappedStage(Stage stage, Value<?>... args) {
       return new Delegating(stage) {
+        @SuppressWarnings("unchecked")
         @Override
         public <U> U getArgument(int index) {
           check(index < sizeOfArguments(), () -> indexOutOfBounds(index, sizeOfArguments()));
-          //noinspection unchecked
           return (U) args[index].apply(stage);
         }
 

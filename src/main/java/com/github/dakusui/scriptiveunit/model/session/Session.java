@@ -5,6 +5,8 @@ import com.github.dakusui.actionunit.core.ActionSupport;
 import com.github.dakusui.jcunit.core.tuples.Tuple;
 import com.github.dakusui.jcunit8.factorspace.Constraint;
 import com.github.dakusui.scriptiveunit.core.Config;
+import com.github.dakusui.scriptiveunit.core.Reporting;
+import com.github.dakusui.scriptiveunit.exceptions.ScriptiveUnitException;
 import com.github.dakusui.scriptiveunit.loaders.TestSuiteDescriptorLoader;
 import com.github.dakusui.scriptiveunit.model.desc.ConstraintDefinition;
 import com.github.dakusui.scriptiveunit.model.desc.TestSuiteDescriptor;
@@ -61,12 +63,17 @@ public interface Session {
     @SuppressWarnings("WeakerAccess")
     protected Impl(Config config, TestSuiteDescriptorLoader testSuiteDescriptorLoader) {
       this.config = config;
-      this.reportCreator = testItem -> Report.create(
-          null,
-          getConfig().getReporting().reportBaseDirectory,
-          getConfig().getScriptResourceName().orElse("__noname__"),
-          testItem,
-          getConfig().getReporting().reportFileName);
+      Reporting reporting = getConfig()
+          .getReporting()
+          .orElseThrow(ScriptiveUnitException::noReportingObjectIsAvailable);
+      this.reportCreator = testItem -> {
+        return Report.create(
+            null,
+            reporting.reportBaseDirectory,
+            getConfig().getScriptResourceName().orElse("__noname__"),
+            testItem,
+            reporting.reportFileName);
+      };
       this.testSuiteDescriptor = testSuiteDescriptorLoader.loadTestSuiteDescriptor(this);
     }
 

@@ -51,6 +51,10 @@ public class ScriptiveUnitException extends RuntimeException {
     throw exceptionFactory.apply(validator.toString());
   }
 
+  public static ScriptiveUnitException noReportingObjectIsAvailable() {
+    throw new ScriptiveUnitException("No reporting object is available in this session.");
+  }
+
   interface Validator extends BooleanSupplier {
     /**
      * Creates and returns a validator for {@code target} object.
@@ -62,9 +66,9 @@ public class ScriptiveUnitException extends RuntimeException {
      */
     static <T> Validator create(String format, T target, Predicate/*<T>*/... predicates) {
       return new Validator() {
+        @SuppressWarnings("unchecked")
         @Override
         public boolean getAsBoolean() {
-          //noinspection unchecked
           for (Predicate<T> each : predicates) {
             if (!each.test(target))
               return false;
@@ -72,12 +76,12 @@ public class ScriptiveUnitException extends RuntimeException {
           return true;
         }
 
+        @SuppressWarnings("unchecked")
         @Override
         public String toString() {
           StringBuilder builder = new StringBuilder(format(format, target));
           builder.append(format("%n"));
           boolean failureAlreadyFound = false;
-          //noinspection unchecked
           for (Predicate<T> each : predicates) {
             if (failureAlreadyFound) {
               builder.append(format("[--] %s%n", each));

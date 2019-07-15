@@ -39,9 +39,9 @@ public abstract class JUnitResultMatcher extends BaseMatcher<Result> {
 
   private <T, U> Matcher<T> translate(Function<T, U> translator, Matcher<U> matcher) {
     return new BaseMatcher<T>() {
+      @SuppressWarnings("unchecked")
       @Override
       public boolean matches(Object item) {
-        //noinspection unchecked
         return matcher.matches(translator.apply((T) item));
       }
 
@@ -168,9 +168,7 @@ public abstract class JUnitResultMatcher extends BaseMatcher<Result> {
 
         @Override
         protected EntryMatcher forEntryAt(int index) {
-          return failureMatchers.containsKey(index) ?
-              failureMatchers.get(index) :
-              EntryMatcher.MATCHES_ALWAYS;
+          return failureMatchers.getOrDefault(index, EntryMatcher.MATCHES_ALWAYS);
         }
       };
       return new Impl(

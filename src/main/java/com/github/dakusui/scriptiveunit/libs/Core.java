@@ -29,7 +29,7 @@ public class Core {
    * @param attr Attribute name whose value should be returned
    * @param <E>  Type of attribute value to be returned.
    */
-  @SuppressWarnings("unused")
+  @SuppressWarnings({ "unused", "unchecked" })
   @Scriptable
   @AccessesTestParameter
   public <E> Value<E> attr(Value<String> attr) {
@@ -39,7 +39,6 @@ public class Core {
       check(
           testCase.containsKey(attrName),
           attributeNotFound(attrName, input, testCase.keySet()));
-      //noinspection unchecked
       return (E) testCase.get(attrName);
     };
   }
@@ -52,14 +51,13 @@ public class Core {
    * @param entryName A name of method to be invoked.
    * @param target    A target from which value of {@code entryName} will be returned.
    */
-  @SuppressWarnings("unused")
+  @SuppressWarnings({ "unused", "unchecked" })
   @Scriptable
   public <E> Value<E> value(Value<String> entryName, Value<?> target) {
     return (Stage input) -> {
       Object object = requireNonNull(target.apply(input));
       String methodName = requireNonNull(entryName.apply(input));
       try {
-        //noinspection unchecked
         return (E) object.getClass().getMethod(methodName).invoke(object);
       } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
         throw ScriptiveUnitException.wrapIfNecessary(e);

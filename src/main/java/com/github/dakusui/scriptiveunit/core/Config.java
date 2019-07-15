@@ -15,12 +15,12 @@ public interface Config {
 
   Optional<String> getScriptResourceName();
 
-  Reporting getReporting();
+  Optional<Reporting> getReporting();
 
   class Default implements Config {
     private final Object driverObject;
 
-    public Default(Object driverObject) {
+    Default(Object driverObject) {
       this.driverObject = driverObject;
     }
 
@@ -40,11 +40,11 @@ public interface Config {
     }
 
     @Override
-    public Reporting getReporting() {
-      return null;
+    public Optional<Reporting> getReporting() {
+      return Optional.empty();
     }
 
-    static Config create(Object driverObject) {
+    public static Config create(Object driverObject) {
       return new Default(driverObject);
     }
   }
@@ -76,7 +76,7 @@ public interface Config {
     }
 
     @Override
-    public Reporting getReporting() {
+    public Optional<Reporting> getReporting() {
       return base.getReporting();
     }
   }
@@ -125,8 +125,8 @@ public interface Config {
           }
 
           @Override
-          public Reporting getReporting() {
-            return reporting;
+          public Optional<Reporting> getReporting() {
+            return Optional.of(reporting);
           }
         };
       } catch (InstantiationException | IllegalAccessException e) {

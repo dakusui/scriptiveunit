@@ -17,7 +17,6 @@ abstract class StageBase<RESPONSE> implements Stage.Default {
     this.report = report;
   }
 
-  @SuppressWarnings("unchecked")
   @Override
   public Optional<RESPONSE> response() {
     return Optional.ofNullable(response);

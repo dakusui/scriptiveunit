@@ -18,7 +18,7 @@ public class StatementTest extends TestBase {
   public void test() {
     Object atom = "hello";
 
-    Statement.Factory statementFactory = new Statement.Factory(createEmptyObjectMethodRegistry(new Standard()), emptyMap());
+    Statement.Factory statementFactory = new Statement.Factory(createFormRegistry(new Standard()), emptyMap());
     Statement statement = statementFactory.create(atom);
     Object value = statement.toValue().apply(createStage(new Standard()));
     System.out.println(value);
@@ -28,11 +28,10 @@ public class StatementTest extends TestBase {
   @Test
   public void test2() {
     Standard driverObject = new Standard();
+    Statement.Factory statementFactory = new Statement.Factory(createFormRegistry(driverObject), emptyMap());
+
     Object atom = asList("add", 1, 2);
-
-    Statement.Factory statementFactory = new Statement.Factory(createEmptyObjectMethodRegistry(new Standard()), emptyMap());
     Statement statement = statementFactory.create(atom);
-
     System.out.println(statement.toValue().apply(createStage(driverObject)));
   }
 
@@ -41,10 +40,10 @@ public class StatementTest extends TestBase {
   }
 
   private Config createConfig(Standard driverObject) {
-    return new Config.Default(driverObject);
+    return Config.Default.create(driverObject);
   }
 
-  private FormRegistry createEmptyObjectMethodRegistry(Standard driverObject) {
+  private FormRegistry createFormRegistry(Standard driverObject) {
     return FormRegistry.load(driverObject);
   }
 
