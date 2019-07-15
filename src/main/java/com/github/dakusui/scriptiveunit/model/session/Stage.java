@@ -67,11 +67,11 @@ public interface Stage extends Value.Listener {
 
   interface Factory {
     static <RESPONSE> Stage oracleLevelStageFor(Config config, TestItem testItem, RESPONSE response, Throwable throwable, Report report) {
-      return new OracleLevelStage<>(response, throwable, config, report, testItem);
+      return new OracleLevelStage(response, throwable, config, report, testItem);
     }
 
     static Stage frameworkStageFor(Config config, Tuple fixture) {
-      return new FrameworkStage<>(fixture, config);
+      return new FrameworkStage(fixture, config);
     }
 
     static Stage createWrappedStage(Stage stage, Value<?>... args) {

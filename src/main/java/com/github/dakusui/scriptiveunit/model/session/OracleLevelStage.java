@@ -6,10 +6,10 @@ import com.github.dakusui.scriptiveunit.model.desc.testitem.TestItem;
 
 import java.util.Optional;
 
-class OracleLevelStage<RESPONSE> extends StageBase<RESPONSE> {
+class OracleLevelStage extends StageBase {
   private final TestItem testItem;
 
-  OracleLevelStage(RESPONSE response, Throwable throwable, Config config, Report report, TestItem testItem) {
+  OracleLevelStage(Object response, Throwable throwable, Config config, Report report, TestItem testItem) {
     super(response, throwable, config, report);
     this.testItem = testItem;
   }

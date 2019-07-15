@@ -5,10 +5,10 @@ import com.github.dakusui.scriptiveunit.core.Config;
 
 import java.util.Optional;
 
-class FrameworkStage<RESPONSE> extends StageBase<RESPONSE> {
+class FrameworkStage extends StageBase {
   private final Tuple testCase;
 
-  FrameworkStage(Tuple testCase,  Config config) {
+  FrameworkStage(Tuple testCase, Config config) {
     super(null, null, config, null);
     this.testCase = testCase;
   }
