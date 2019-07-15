@@ -1,9 +1,9 @@
 package com.github.dakusui.scriptiveunit.testutils;
 
 import com.github.dakusui.scriptiveunit.core.Config;
+import com.github.dakusui.scriptiveunit.exceptions.ScriptiveUnitException;
 import org.junit.runner.Result;
 
-import java.io.IOException;
 import java.io.OutputStream;
 import java.io.PrintStream;
 
@@ -15,7 +15,8 @@ public enum TestUtils {
   }
 
   public static void configureScriptNameSystemProperty(String scriptName, Class driverClass) {
-    String scriptSystemPropertyKey = new Config.Builder(driverClass, System.getProperties()).build().getScriptResourceNameKey();
+    String scriptSystemPropertyKey = new Config.Builder(driverClass, System.getProperties()).build()
+        .getScriptResourceNameKey().orElseThrow(ScriptiveUnitException::noScriptResourceNameKeyWasGiven);
     System.setProperty(scriptSystemPropertyKey, scriptName);
   }
 

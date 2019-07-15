@@ -51,7 +51,8 @@ public interface TestSuiteDescriptorLoader {
               preprocessor.readScript(
                   session.getConfig()
                       .getScriptResourceName()
-                      .orElseThrow(() -> scriptNotSpecified(session.getConfig().getScriptResourceNameKey())))))
+                      .orElseThrow(() -> scriptNotSpecified(session.getConfig().getScriptResourceNameKey()
+                          .orElseThrow(ScriptiveUnitException::noScriptResourceNameKeyWasGiven))))))
           .create(session);
     }
 

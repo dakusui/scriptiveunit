@@ -55,6 +55,10 @@ public class ScriptiveUnitException extends RuntimeException {
     throw new ScriptiveUnitException("No reporting object is available in this session.");
   }
 
+  public static ScriptiveUnitException noScriptResourceNameKeyWasGiven() {
+    throw new ScriptiveUnitException("No script resource key was given in this session.");
+  }
+
   interface Validator extends BooleanSupplier {
     /**
      * Creates and returns a validator for {@code target} object.

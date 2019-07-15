@@ -11,7 +11,7 @@ import java.util.Properties;
 public interface Config {
   Object getDriverObject();
 
-  String getScriptResourceNameKey();
+  Optional<String> getScriptResourceNameKey();
 
   Optional<String> getScriptResourceName();
 
@@ -30,8 +30,8 @@ public interface Config {
     }
 
     @Override
-    public String getScriptResourceNameKey() {
-      throw new UnsupportedOperationException();
+    public Optional<String> getScriptResourceNameKey() {
+      return Optional.empty();
     }
 
     @Override
@@ -66,7 +66,7 @@ public interface Config {
     }
 
     @Override
-    public String getScriptResourceNameKey() {
+    public Optional<String> getScriptResourceNameKey() {
       return base.getScriptResourceNameKey();
     }
 
@@ -110,14 +110,14 @@ public interface Config {
           }
 
           @Override
-          public String getScriptResourceNameKey() {
-            return loadAnnotation.scriptSystemPropertyKey();
+          public Optional<String> getScriptResourceNameKey() {
+            return Optional.of(loadAnnotation.scriptSystemPropertyKey());
           }
 
           @Override
           public Optional<String> getScriptResourceName() {
             String work = properties.getProperty(
-                getScriptResourceNameKey(),
+                getScriptResourceNameKey().orElseThrow(ScriptiveUnitException::noScriptResourceNameKeyWasGiven),
                 Builder.this.loadAnnotation.script());
             return Load.SCRIPT_NOT_SPECIFIED.equals(work) ?
                 Optional.empty() :
