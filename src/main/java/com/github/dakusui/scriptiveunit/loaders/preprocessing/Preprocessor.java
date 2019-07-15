@@ -6,7 +6,13 @@ import static com.github.dakusui.scriptiveunit.loaders.preprocessing.Application
 import static java.util.Objects.requireNonNull;
 
 public interface Preprocessor {
-  ApplicationSpec.Dictionary readScript(String scriptResourceName);
+  default ApplicationSpec.Dictionary readScript(String scriptResourceName) {
+    return preprocess(readRawScript(scriptResourceName));
+  }
+
+  ApplicationSpec.Dictionary readRawScript(String scriptResourceName);
+
+  ApplicationSpec.Dictionary preprocess(ApplicationSpec.Dictionary rawScript);
 
   class Builder<NODE, OBJECT extends NODE, ARRAY extends NODE, ATOM extends NODE> {
     private ApplicationSpec applicationSpec;
@@ -31,6 +37,7 @@ public interface Preprocessor {
 
     public Preprocessor build() {
       requireNonNull(applicationSpec);
+      requireNonNull(hostSpec);
       requireNonNull(rawScriptReader);
       return new Preprocessor() {
         @Override
@@ -38,37 +45,50 @@ public interface Preprocessor {
           return readScript(
               scriptResourceName,
               applicationSpec.createDefaultValues(),
-              applicationSpec,
-              hostSpec);
+              applicationSpec
+          );
+        }
+
+        /**
+         * WIP
+         * @param rawScript
+         * @return
+         */
+        @Override
+        public ApplicationSpec.Dictionary preprocess(ApplicationSpec.Dictionary rawScript) {
+          return null;
         }
 
         ApplicationSpec.Dictionary readScript(
             String scriptResourceName,
             ApplicationSpec.Dictionary defaultValues,
-            ApplicationSpec applicationSpec,
-            HostSpec<NODE, OBJECT, ARRAY, ATOM> hostSpec) {
+            ApplicationSpec applicationSpec) {
           return applicationSpec.deepMerge(
-              readScriptHandlingInheritance(scriptResourceName, applicationSpec, hostSpec),
+              readScriptHandlingInheritance(scriptResourceName, applicationSpec),
               defaultValues);
         }
 
         ApplicationSpec.Dictionary readApplicationDictionaryWithMerging(
             String resourceName,
-            ApplicationSpec applicationSpec,
-            HostSpec<NODE, OBJECT, ARRAY, ATOM> hostSpec) {
+            ApplicationSpec applicationSpec) {
           ApplicationSpec.Dictionary child = preprocess(
-              rawScriptReader.apply(resourceName, hostSpec),
+              readRawScript(resourceName),
               applicationSpec.preprocessors());
 
           ApplicationSpec.Dictionary work_ = dict();
           for (String s : applicationSpec.parentsOf(child))
-            work_ = applicationSpec.deepMerge(readApplicationDictionaryWithMerging(s, applicationSpec, hostSpec), work_);
+            work_ = applicationSpec.deepMerge(readApplicationDictionaryWithMerging(s, applicationSpec), work_);
           return applicationSpec.deepMerge(child, work_);
         }
 
+        @Override
+        public ApplicationSpec.Dictionary readRawScript(String resourceName) {
+          return rawScriptReader.apply(resourceName, hostSpec);
+        }
 
-        ApplicationSpec.Dictionary readScriptHandlingInheritance(String scriptResourceName, ApplicationSpec applicationSpec, HostSpec<NODE, OBJECT, ARRAY, ATOM> hostSpec) {
-          return applicationSpec.removeInheritanceDirective(readApplicationDictionaryWithMerging(scriptResourceName, applicationSpec, hostSpec));
+
+        ApplicationSpec.Dictionary readScriptHandlingInheritance(String scriptResourceName, ApplicationSpec applicationSpec) {
+          return applicationSpec.removeInheritanceDirective(readApplicationDictionaryWithMerging(scriptResourceName, applicationSpec));
         }
 
         ApplicationSpec.Dictionary preprocess(ApplicationSpec.Dictionary inputNode, List<PreprocessingUnit> preprocessingUnits) {
