@@ -3,7 +3,6 @@ package com.github.dakusui.scriptiveunit.loaders;
 import com.github.dakusui.scriptiveunit.core.Config;
 import com.github.dakusui.scriptiveunit.exceptions.ScriptiveUnitException;
 import com.github.dakusui.scriptiveunit.loaders.json.JsonTestSuiteDescriptorBean;
-import com.github.dakusui.scriptiveunit.loaders.preprocessing.ApplicationSpec;
 import com.github.dakusui.scriptiveunit.loaders.preprocessing.HostSpec;
 import com.github.dakusui.scriptiveunit.model.desc.TestSuiteDescriptor;
 import com.github.dakusui.scriptiveunit.model.session.Session;
@@ -24,7 +23,7 @@ public interface TestSuiteDescriptorLoader {
 
   TestSuiteDescriptor loadTestSuiteDescriptor(Session session);
 
-  abstract class Base<NODE, OBJECT extends NODE, ARRAY extends NODE, ATOM extends NODE>
+  abstract class Base
       implements TestSuiteDescriptorLoader {
     private final Config config;
 
@@ -43,17 +42,6 @@ public interface TestSuiteDescriptorLoader {
               .toHostObject(getConfig().readScriptResource()))
           .create(session);
     }
-
-    abstract protected ApplicationSpec createApplicationSpec();
-
-    abstract protected HostSpec<NODE, OBJECT, ARRAY, ATOM> createHostSpec();
-
-    protected ApplicationSpec.Dictionary readRawScriptResource(
-        String resourceName,
-        HostSpec<NODE, OBJECT, ARRAY, ATOM> hostSpec) {
-      return hostSpec.toApplicationDictionary(hostSpec.readObjectNode(resourceName));
-    }
-
 
     static private JsonTestSuiteDescriptorBean mapObjectNodeToJsonTestSuiteDescriptorBean(ObjectNode rootNode) {
       try {

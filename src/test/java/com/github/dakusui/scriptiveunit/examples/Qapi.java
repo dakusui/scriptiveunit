@@ -9,12 +9,10 @@ import com.github.dakusui.scriptiveunit.core.Config;
 import com.github.dakusui.scriptiveunit.libs.Arith;
 import com.github.dakusui.scriptiveunit.libs.Collections;
 import com.github.dakusui.scriptiveunit.libs.Predicates;
-import com.github.dakusui.scriptiveunit.libs.extras.QueryApi;
 import com.github.dakusui.scriptiveunit.libs.Strings;
 import com.github.dakusui.scriptiveunit.libs.actions.Basic;
-import com.github.dakusui.scriptiveunit.loaders.preprocessing.PreprocessingUnit;
+import com.github.dakusui.scriptiveunit.libs.extras.QueryApi;
 import com.github.dakusui.scriptiveunit.loaders.json.JsonBasedTestSuiteDescriptorLoader;
-import com.github.dakusui.scriptiveunit.loaders.preprocessing.ApplicationSpec;
 import com.github.dakusui.scriptiveunit.model.form.value.Value;
 import com.github.dakusui.scriptiveunit.runners.ScriptiveUnit;
 import com.github.dakusui.scriptiveunit.unittests.cli.MemoizationExample;
@@ -26,12 +24,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
-import static com.github.dakusui.scriptiveunit.loaders.preprocessing.PreprocessingUnit.Utils.pathMatcher;
-import static com.github.dakusui.scriptiveunit.loaders.preprocessing.ApplicationSpec.$;
-import static com.github.dakusui.scriptiveunit.loaders.preprocessing.ApplicationSpec.Utils.requireDictionary;
-import static com.github.dakusui.scriptiveunit.loaders.preprocessing.ApplicationSpec.array;
-import static com.github.dakusui.scriptiveunit.loaders.preprocessing.ApplicationSpec.atom;
-import static com.github.dakusui.scriptiveunit.loaders.preprocessing.ApplicationSpec.dict;
 import static java.lang.String.format;
 import static java.util.Collections.unmodifiableMap;
 import static java.util.Objects.requireNonNull;
@@ -43,33 +35,8 @@ import static java.util.Objects.requireNonNull;
 @RunWith(ScriptiveUnit.class)
 public class Qapi {
   public static class Loader extends JsonBasedTestSuiteDescriptorLoader {
-    private static ApplicationSpec applicationSpec = new ApplicationSpec.Standard();
-
-    @Override
-    protected ApplicationSpec createApplicationSpec() {
-      return new ApplicationSpec.Standard() {
-        @Override
-        public List<PreprocessingUnit> preprocessors() {
-          return new LinkedList<PreprocessingUnit>(super.preprocessors()) {{
-            add(PreprocessingUnit.preprocessor(
-                Loader::getModelNode,
-                pathMatcher("testOracles", ".*")));
-          }};
-        }
-      };
-    }
-
-    @SuppressWarnings("WeakerAccess")
     public Loader(Config config) {
       super(config);
-    }
-
-    static ApplicationSpec.Node getModelNode(ApplicationSpec.Node node) {
-      return applicationSpec.deepMerge(
-          requireDictionary(node),
-          dict(
-              $("after", array(atom("nop")))
-          ));
     }
   }
 

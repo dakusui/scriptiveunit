@@ -7,9 +7,8 @@ import com.github.dakusui.scriptiveunit.libs.Core;
 import com.github.dakusui.scriptiveunit.libs.Predicates;
 import com.github.dakusui.scriptiveunit.libs.Strings;
 import com.github.dakusui.scriptiveunit.loaders.TestSuiteDescriptorLoader;
-import com.github.dakusui.scriptiveunit.model.form.value.Value;
 import com.github.dakusui.scriptiveunit.loaders.preprocessing.ApplicationSpec;
-import com.github.dakusui.scriptiveunit.loaders.preprocessing.HostSpec;
+import com.github.dakusui.scriptiveunit.model.form.value.Value;
 import com.github.dakusui.scriptiveunit.runners.ScriptiveUnit;
 import org.junit.runner.RunWith;
 
@@ -45,35 +44,26 @@ public abstract class SimpleTestBase {
     }
   }
 
-  public abstract static class Loader extends TestSuiteDescriptorLoader.Base implements SyntaxSugar {
+  abstract static class Loader extends TestSuiteDescriptorLoader.Base implements SyntaxSugar {
     Loader(Config config) {
       super(config);
-    }
-
-    @Override
-    protected ApplicationSpec createApplicationSpec() {
-      return new ApplicationSpec.Standard();
-    }
-
-    @Override
-    protected HostSpec createHostSpec() {
-      return new HostSpec.Json();
     }
   }
 
   @Import
-  public Object core = new Core();
+  public Object core       = new Core();
   @Import
   public Object predicates = new Predicates();
   @Import
-  public Object strings = new Strings();
+  public Object strings    = new Strings();
 
   @Import
   public Object broken = new Broken();
+
   public static class Broken {
     @Scriptable
     public Value<String> brokenForm() {
-        throw new RuntimeException("brokenForm");
+      throw new RuntimeException("brokenForm");
     }
   }
 }
