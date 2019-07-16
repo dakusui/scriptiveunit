@@ -6,12 +6,13 @@ import com.github.dakusui.jcunit8.runners.junit4.annotations.Condition;
 import com.github.dakusui.jcunit8.runners.junit4.annotations.From;
 import com.github.dakusui.jcunit8.runners.junit4.annotations.Given;
 import com.github.dakusui.jcunit8.runners.junit4.annotations.ParameterSource;
-import com.github.dakusui.scriptiveunit.runners.ScriptiveUnit;
 import com.github.dakusui.scriptiveunit.core.Config;
-import com.github.dakusui.scriptiveunit.utils.JsonUtils;
+import com.github.dakusui.scriptiveunit.loaders.preprocessing.ApplicationSpec;
+import com.github.dakusui.scriptiveunit.runners.ScriptiveUnit;
 import com.github.dakusui.scriptiveunit.testassets.drivers.Loader;
 import com.github.dakusui.scriptiveunit.testassets.drivers.Simple;
 import com.github.dakusui.scriptiveunit.testutils.Resource;
+import com.github.dakusui.scriptiveunit.utils.JsonUtils;
 import org.codehaus.jackson.node.ObjectNode;
 import org.junit.Test;
 import org.junit.runner.JUnitCore;
@@ -29,7 +30,9 @@ import static com.github.dakusui.scriptiveunit.utils.ReflectionUtils.allScriptsU
 
 @RunWith(JCUnit8.class)
 public class VariationTest {
-  private Parameter.Factory<Resource<ObjectNode>> createResourceParameterFactory(String resourcePackagePrefix, String suffix) {
+  private Parameter.Factory<Resource<ObjectNode>> createResourceParameterFactory(
+      String resourcePackagePrefix,
+      String suffix) {
     List<String> resourceNames = allScriptsUnderMatching(
         resourcePackagePrefix,
         Pattern.compile(".+\\." + suffix + "$")
@@ -159,19 +162,26 @@ public class VariationTest {
       Resource<ObjectNode> setUpBeforeAll,
       Resource<ObjectNode> testOracles
   ) throws Throwable {
+    Config.Builder.DriverClassBasedConfig baseConfig = new Config.Builder(Simple.class, new Properties()).withScriptResourceName("components/root.json").build();
     new JUnitCore().run(
         new ScriptiveUnit(
             Simple.class,
-            Loader.create(
-                new Config.Builder(Simple.class, new Properties()).withScriptResourceName("components/root.json").build(),
-                _extends,
-                description,
-                factors,
-                constraints,
-                runnerType,
-                setUp,
-                setUpBeforeAll,
-                testOracles
-            )));
+            new Config.Delegating(baseConfig) {
+              @Override
+              public ApplicationSpec.Dictionary readScriptResource() {
+                return Loader.create(
+                    baseConfig.createApplicationSpec(),
+                    _extends,
+                    description,
+                    factors,
+                    constraints,
+                    runnerType,
+                    setUp,
+                    setUpBeforeAll,
+                    testOracles
+                ).createDefaultValues();
+              }
+            }
+        ));
   }
 }

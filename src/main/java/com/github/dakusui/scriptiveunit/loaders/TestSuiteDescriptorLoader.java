@@ -14,8 +14,6 @@ import org.codehaus.jackson.node.ObjectNode;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 
-import static com.github.dakusui.scriptiveunit.exceptions.ConfigurationException.scriptNotSpecified;
-
 public interface TestSuiteDescriptorLoader {
   static TestSuiteDescriptorLoader createTestSuiteDescriptorLoader(
       Class<? extends TestSuiteDescriptorLoader> loaderClass,
@@ -47,12 +45,8 @@ public interface TestSuiteDescriptorLoader {
     @Override
     public TestSuiteDescriptor loadTestSuiteDescriptor(Session session) {
       return mapObjectNodeToJsonTestSuiteDescriptorBean(
-          new HostSpec.Json().toHostObject(
-              preprocessor.preprocess(
-                  preprocessor.readRawScript(
-                      session.getConfig()
-                          .getScriptResourceName()
-                          .orElseThrow(() -> scriptNotSpecified(session.getConfig()))))))
+          new HostSpec.Json()
+              .toHostObject(getConfig().readScriptResource()))
           .create(session);
     }
 
@@ -63,8 +57,7 @@ public interface TestSuiteDescriptorLoader {
     protected ApplicationSpec.Dictionary readRawScriptResource(
         String resourceName,
         HostSpec<NODE, OBJECT, ARRAY, ATOM> hostSpec) {
-      return hostSpec.toApplicationDictionary(
-          hostSpec.readObjectNode(resourceName));
+      return hostSpec.toApplicationDictionary(hostSpec.readObjectNode(resourceName));
     }
 
 

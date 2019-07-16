@@ -83,7 +83,10 @@ public abstract class TestSuiteDescriptorBean {
 
         private List<TestOracle> createTestOracles() {
           AtomicInteger i = new AtomicInteger(0);
-          return testOracleBeanList.stream().map((TestOracleBean each) -> each.createTestOracle(i.getAndIncrement(), this)).collect(toList());
+          return testOracleBeanList
+              .stream()
+              .map((TestOracleBean each) -> each.createTestOracle(i.getAndIncrement(), this))
+              .collect(toList());
         }
 
         @Override

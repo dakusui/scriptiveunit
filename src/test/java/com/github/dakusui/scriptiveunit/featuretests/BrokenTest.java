@@ -4,11 +4,10 @@ import com.github.dakusui.scriptiveunit.annotations.Load;
 import com.github.dakusui.scriptiveunit.core.Config;
 import com.github.dakusui.scriptiveunit.exceptions.ScriptiveUnitException;
 import com.github.dakusui.scriptiveunit.loaders.preprocessing.ApplicationSpec;
-import com.github.dakusui.scriptiveunit.loaders.preprocessing.HostSpec;
+import com.github.dakusui.scriptiveunit.loaders.preprocessing.Preprocessor;
 import org.junit.Test;
 
 import java.lang.reflect.InvocationTargetException;
-import java.util.Optional;
 
 import static com.github.dakusui.crest.Crest.allOf;
 import static com.github.dakusui.crest.Crest.asObject;
@@ -44,20 +43,22 @@ public class BrokenTest {
       public Loader(Config config) {
         super(new Config.Delegating(config) {
           @Override
-          public Optional<String> getScriptResourceName() {
-            return Optional.of("(dummy)");
+          public ApplicationSpec.Dictionary readScriptResource() {
+            Preprocessor preprocessor = this.createPreprocessor();
+            return preprocessor.preprocess(
+                new SyntaxSugar() {
+                  ApplicationSpec.Dictionary create() {
+                    return dict(
+                        $("testOracles", array(
+                            dict(
+                                $("when", array("brokenForm")),
+                                $("then", array("matches", array("output"), "bye"))
+                            ))));
+                  }
+                }.create()
+            );
           }
         });
-      }
-
-      @Override
-      protected ApplicationSpec.Dictionary readRawScriptResource(String scriptResourceName, HostSpec hostSpec) {
-        return dict(
-            $("testOracles", array(
-                dict(
-                    $("when", array("brokenForm")),
-                    $("then", array("matches", array("output"), "bye"))
-                ))));
       }
     }
   }

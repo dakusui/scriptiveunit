@@ -2,20 +2,51 @@ package com.github.dakusui.scriptiveunit.core;
 
 import com.github.dakusui.scriptiveunit.annotations.Load;
 import com.github.dakusui.scriptiveunit.exceptions.ScriptiveUnitException;
+import com.github.dakusui.scriptiveunit.loaders.preprocessing.ApplicationSpec;
+import com.github.dakusui.scriptiveunit.loaders.preprocessing.HostSpec;
+import com.github.dakusui.scriptiveunit.loaders.preprocessing.Preprocessor;
 import com.github.dakusui.scriptiveunit.utils.ReflectionUtils;
+import org.codehaus.jackson.JsonNode;
+import org.codehaus.jackson.node.ArrayNode;
+import org.codehaus.jackson.node.ObjectNode;
 
 import java.io.File;
 import java.util.Optional;
 import java.util.Properties;
 
+import static com.github.dakusui.scriptiveunit.exceptions.ConfigurationException.scriptNotSpecified;
 import static java.util.Objects.requireNonNull;
 
-public interface Config {
+public interface Config extends IConfig<JsonNode, ObjectNode, ArrayNode, JsonNode> {
   Object getDriverObject();
 
   Optional<String> getScriptResourceName();
 
   Optional<Reporting> getReporting();
+
+  @Override
+  default ApplicationSpec.Dictionary readScriptResource() {
+    Preprocessor preprocessor = createPreprocessor();
+    return preprocessor.preprocess(preprocessor.readRawScript(
+        getScriptResourceName().orElseThrow(() -> scriptNotSpecified(this))
+    ));
+  }
+
+  @Override
+  default ApplicationSpec.Dictionary readRawScriptResource(String resourceName, HostSpec<JsonNode, ObjectNode, ArrayNode, JsonNode> hostSpec) {
+    return hostSpec.toApplicationDictionary(
+        hostSpec.readObjectNode(resourceName));
+  }
+
+  @Override
+  default ApplicationSpec createApplicationSpec() {
+    return new ApplicationSpec.Standard();
+  }
+
+  @Override
+  default HostSpec<JsonNode, ObjectNode, ArrayNode, JsonNode> createHostSpec() {
+    return new HostSpec.Json();
+  }
 
   class Default implements Config {
     private final Object driverObject;
@@ -69,6 +100,31 @@ public interface Config {
     public Optional<Reporting> getReporting() {
       return base.getReporting();
     }
+
+    @Override
+    public ApplicationSpec.Dictionary readScriptResource() {
+      return base.readScriptResource();
+    }
+
+    @Override
+    public ApplicationSpec.Dictionary readRawScriptResource(String resourceName, HostSpec<JsonNode, ObjectNode, ArrayNode, JsonNode> hostSpec) {
+      return base.readRawScriptResource(resourceName, hostSpec);
+    }
+
+    @Override
+    public ApplicationSpec createApplicationSpec() {
+      return base.createApplicationSpec();
+    }
+
+    @Override
+    public HostSpec<JsonNode, ObjectNode, ArrayNode, JsonNode> createHostSpec() {
+      return base.createHostSpec();
+    }
+
+    @Override
+    public Preprocessor createPreprocessor() {
+      return base.createPreprocessor();
+    }
   }
 
   class Builder {
@@ -95,8 +151,7 @@ public interface Config {
     public static class DriverClassBasedConfig implements Config {
       private       Reporting reporting = new Reporting("report.json", new File("."));
       private final Object    driverObject;
-      ;
-      private final Builder builder;
+      private final Builder   builder;
 
       DriverClassBasedConfig(Builder builder) {
         this.builder = requireNonNull(builder);
