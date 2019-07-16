@@ -12,7 +12,7 @@ import com.github.dakusui.scriptiveunit.libs.Predicates;
 import com.github.dakusui.scriptiveunit.libs.Strings;
 import com.github.dakusui.scriptiveunit.libs.actions.Basic;
 import com.github.dakusui.scriptiveunit.libs.extras.QueryApi;
-import com.github.dakusui.scriptiveunit.loaders.json.JsonBasedTestSuiteDescriptorLoader;
+import com.github.dakusui.scriptiveunit.loaders.TestSuiteDescriptorLoader;
 import com.github.dakusui.scriptiveunit.model.form.value.Value;
 import com.github.dakusui.scriptiveunit.runners.ScriptiveUnit;
 import com.github.dakusui.scriptiveunit.unittests.cli.MemoizationExample;
@@ -34,7 +34,7 @@ import static java.util.Objects.requireNonNull;
 @Load(with = Qapi.Loader.class)
 @RunWith(ScriptiveUnit.class)
 public class Qapi {
-  public static class Loader extends JsonBasedTestSuiteDescriptorLoader {
+  public static class Loader extends TestSuiteDescriptorLoader.Impl {
     public Loader(Config config) {
       super(config);
     }
@@ -153,7 +153,7 @@ public class Qapi {
     }
 
     private final Map<String, Object> fixture;
-    private final Term[]              terms;
+    private final Term[] terms;
 
     @SuppressWarnings("unchecked")
     Request(Map<String, Object> fixture) {
@@ -216,7 +216,7 @@ public class Qapi {
     ;
 
     private final String content;
-    private final int    price;
+    private final int price;
 
     Entry(String content, int price) {
       this.content = requireNonNull(content);

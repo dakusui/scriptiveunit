@@ -23,11 +23,10 @@ public interface TestSuiteDescriptorLoader {
 
   TestSuiteDescriptor loadTestSuiteDescriptor(Session session);
 
-  abstract class Base
-      implements TestSuiteDescriptorLoader {
+  class Impl implements TestSuiteDescriptorLoader {
     private final Config config;
 
-    protected Base(Config config) {
+    public Impl(Config config) {
       this.config = config;
     }
 

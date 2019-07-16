@@ -44,7 +44,7 @@ public abstract class SimpleTestBase {
     }
   }
 
-  abstract static class Loader extends TestSuiteDescriptorLoader.Base implements SyntaxSugar {
+  abstract static class Loader extends TestSuiteDescriptorLoader.Impl implements SyntaxSugar {
     Loader(Config config) {
       super(config);
     }
