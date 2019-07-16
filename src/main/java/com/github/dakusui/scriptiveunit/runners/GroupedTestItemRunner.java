@@ -191,7 +191,7 @@ public final class GroupedTestItemRunner extends ParentRunner<Action> {
         .stream()
         .map((Function<TestOracle, Runner>) input ->
             createRunnerForTestOracle(
-                session.getConfig().getDriverObject().getClass(),
+                session.getConfig().getTestClass(),
                 id.getAndIncrement(),
                 input,
                 session,
@@ -205,7 +205,7 @@ public final class GroupedTestItemRunner extends ParentRunner<Action> {
         .stream()
         .map(
             (Function<IndexedTestCase, Runner>) (IndexedTestCase testCase) -> createRunnerForTestCase(
-                session.getConfig().getDriverObject().getClass(),
+                session.getConfig().getTestClass(),
                 testCase,
                 session,
                 testSuiteDescriptor)
@@ -230,7 +230,7 @@ public final class GroupedTestItemRunner extends ParentRunner<Action> {
     List<Tuple> fixtures = buildFixtures(usedInSetUp, testCases);
     return fixtures.stream().map(
         (Function<Tuple, Runner>) fixture -> createRunnerForTestFixture(
-            session.getConfig().getDriverObject().getClass(),
+            session.getConfig().getTestClass(),
             fixtures.indexOf(fixture),
             fixture,
             testCases.stream().filter((IndexedTestCase indexedTestCase) ->

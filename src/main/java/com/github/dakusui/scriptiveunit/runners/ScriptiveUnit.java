@@ -51,7 +51,7 @@ public class ScriptiveUnit extends Parameterized {
   public ScriptiveUnit(Class<?> klass, Config config) throws Throwable {
     this(klass, TestSuiteDescriptorLoader.createTestSuiteDescriptorLoader(
         ReflectionUtils.getAnnotationWithDefault(
-            config.getDriverObject().getClass(),
+            config.getTestClass(),
             Load.DEFAULT_INSTANCE).with(),
         config));
   }

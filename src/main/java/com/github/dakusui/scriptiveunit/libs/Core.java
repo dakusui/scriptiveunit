@@ -99,7 +99,7 @@ public class Core {
       final Object retValue;
       switch (attr) {
       case "driverClass":
-        retValue = config.getDriverObject().getClass().getCanonicalName();
+        retValue = config.getTestClass().getCanonicalName();
         break;
       case "scriptResourceName":
         retValue = config.getScriptResourceName();

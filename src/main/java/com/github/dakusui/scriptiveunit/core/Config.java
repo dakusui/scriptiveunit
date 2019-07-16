@@ -5,6 +5,7 @@ import com.github.dakusui.scriptiveunit.exceptions.ScriptiveUnitException;
 import com.github.dakusui.scriptiveunit.loaders.preprocessing.ApplicationSpec;
 import com.github.dakusui.scriptiveunit.loaders.preprocessing.HostSpec;
 import com.github.dakusui.scriptiveunit.loaders.preprocessing.Preprocessor;
+import com.github.dakusui.scriptiveunit.model.form.FormRegistry;
 import com.github.dakusui.scriptiveunit.utils.ReflectionUtils;
 import org.codehaus.jackson.JsonNode;
 import org.codehaus.jackson.node.ArrayNode;
@@ -18,6 +19,10 @@ import static com.github.dakusui.scriptiveunit.exceptions.ConfigurationException
 import static java.util.Objects.requireNonNull;
 
 public interface Config extends IConfig<JsonNode, ObjectNode, ArrayNode, JsonNode> {
+  Class getTestClass();
+
+  FormRegistry formRegistry();
+
   Object getDriverObject();
 
   Optional<String> getScriptResourceName();
@@ -50,10 +55,22 @@ public interface Config extends IConfig<JsonNode, ObjectNode, ArrayNode, JsonNod
   }
 
   class Default implements Config {
-    private final Object                                              driverObject;
+    private final Object driverObject;
+    private final FormRegistry formRegistry;
 
     Default(Object driverObject) {
       this.driverObject = driverObject;
+      this.formRegistry = FormRegistry.getFormRegistry(driverObject);
+    }
+
+    @Override
+    public Class getTestClass() {
+      return this.driverObject.getClass();
+    }
+
+    @Override
+    public FormRegistry formRegistry() {
+      return this.formRegistry;
     }
 
     @Override
@@ -90,6 +107,16 @@ public interface Config extends IConfig<JsonNode, ObjectNode, ArrayNode, JsonNod
 
     protected Config base() {
       return this.base;
+    }
+
+    @Override
+    public Class getTestClass() {
+      return this.base.getTestClass();
+    }
+
+    @Override
+    public FormRegistry formRegistry() {
+      return base.formRegistry();
     }
 
     @Override
@@ -140,8 +167,8 @@ public interface Config extends IConfig<JsonNode, ObjectNode, ArrayNode, JsonNod
 
   class Builder {
     private final Properties properties;
-    final         Load       loadAnnotation;
-    private final Class<?>   driverClass;
+    final Load loadAnnotation;
+    private final Class<?> driverClass;
 
     public Builder(Class<?> driverClass, Properties properties) {
       this.driverClass = driverClass;
@@ -160,13 +187,25 @@ public interface Config extends IConfig<JsonNode, ObjectNode, ArrayNode, JsonNod
     }
 
     public static class DriverClassBasedConfig implements Config {
-      private       Reporting reporting = new Reporting("report.json", new File("."));
-      private final Object    driverObject;
-      private final Builder   builder;
+      private final FormRegistry formRegistry;
+      private Reporting reporting = new Reporting("report.json", new File("."));
+      private final Object driverObject;
+      private final Builder builder;
 
       DriverClassBasedConfig(Builder builder) {
         this.builder = requireNonNull(builder);
         this.driverObject = createDriverObject(this.builder);
+        this.formRegistry = FormRegistry.getFormRegistry(driverObject);
+      }
+
+      @Override
+      public Class getTestClass() {
+        return this.driverObject.getClass();
+      }
+
+      @Override
+      public FormRegistry formRegistry() {
+        return this.formRegistry;
       }
 
       @Override
