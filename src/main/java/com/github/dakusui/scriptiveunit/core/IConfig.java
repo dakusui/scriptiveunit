@@ -8,7 +8,6 @@ public interface IConfig<NODE, OBJECT extends NODE, ARRAY extends NODE, ATOM ext
   default Preprocessor createPreprocessor() {
     return new Preprocessor.Builder<>(createHostSpec())
         .applicationSpec(createApplicationSpec())
-        .rawScriptReader(this::readRawScriptResource)
         .build();
   }
 

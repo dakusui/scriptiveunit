@@ -24,20 +24,17 @@ public interface Config extends IConfig<JsonNode, ObjectNode, ArrayNode, JsonNod
 
   Optional<Reporting> getReporting();
 
+  ApplicationSpec.Dictionary readRawBaseScript();
+
   @Override
   default ApplicationSpec.Dictionary readScriptResource() {
-    Preprocessor preprocessor = createPreprocessor();
-    return preprocessor.preprocess(readRawBaseScript(preprocessor));
-  }
-
-  default ApplicationSpec.Dictionary readRawBaseScript(Preprocessor preprocessor) {
-    return preprocessor.readRawScript(
-        getScriptResourceName().orElseThrow(() -> scriptNotSpecified(this))
-    );
+    return createPreprocessor().preprocess(readRawBaseScript());
   }
 
   @Override
-  default ApplicationSpec.Dictionary readRawScriptResource(String resourceName, HostSpec<JsonNode, ObjectNode, ArrayNode, JsonNode> hostSpec) {
+  default ApplicationSpec.Dictionary readRawScriptResource(
+      String resourceName,
+      HostSpec<JsonNode, ObjectNode, ArrayNode, JsonNode> hostSpec) {
     return hostSpec.toApplicationDictionary(
         hostSpec.readObjectNode(resourceName));
   }
@@ -53,7 +50,7 @@ public interface Config extends IConfig<JsonNode, ObjectNode, ArrayNode, JsonNod
   }
 
   class Default implements Config {
-    private final Object driverObject;
+    private final Object                                              driverObject;
 
     Default(Object driverObject) {
       this.driverObject = driverObject;
@@ -72,6 +69,11 @@ public interface Config extends IConfig<JsonNode, ObjectNode, ArrayNode, JsonNod
     @Override
     public Optional<Reporting> getReporting() {
       return Optional.empty();
+    }
+
+    @Override
+    public ApplicationSpec.Dictionary readRawBaseScript() {
+      throw new UnsupportedOperationException();
     }
 
     public static Config create(Object driverObject) {
@@ -106,8 +108,8 @@ public interface Config extends IConfig<JsonNode, ObjectNode, ArrayNode, JsonNod
     }
 
     @Override
-    public ApplicationSpec.Dictionary readRawBaseScript(Preprocessor preprocessor) {
-      return base.readRawBaseScript(preprocessor);
+    public ApplicationSpec.Dictionary readRawBaseScript() {
+      return base.readRawBaseScript();
     }
 
     @Override
@@ -185,6 +187,13 @@ public interface Config extends IConfig<JsonNode, ObjectNode, ArrayNode, JsonNod
       @Override
       public Optional<Reporting> getReporting() {
         return Optional.of(reporting);
+      }
+
+      @Override
+      public ApplicationSpec.Dictionary readRawBaseScript() {
+        return createHostSpec()
+            .readRawScript(
+                getScriptResourceName().orElseThrow(() -> scriptNotSpecified(this)));
       }
 
       public Optional<String> getScriptResourceNameKey() {

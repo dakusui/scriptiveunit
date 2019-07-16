@@ -4,7 +4,6 @@ import com.github.dakusui.scriptiveunit.annotations.Load;
 import com.github.dakusui.scriptiveunit.core.Config;
 import com.github.dakusui.scriptiveunit.exceptions.ScriptiveUnitException;
 import com.github.dakusui.scriptiveunit.loaders.preprocessing.ApplicationSpec;
-import com.github.dakusui.scriptiveunit.loaders.preprocessing.Preprocessor;
 import org.junit.Test;
 
 import java.lang.reflect.InvocationTargetException;
@@ -44,19 +43,21 @@ public class BrokenTest {
         super(new Config.Delegating(config) {
           @Override
           public ApplicationSpec.Dictionary readScriptResource() {
-            Preprocessor preprocessor = this.createPreprocessor();
-            return preprocessor.preprocess(
-                new SyntaxSugar() {
-                  ApplicationSpec.Dictionary create() {
-                    return dict(
-                        $("testOracles", array(
-                            dict(
-                                $("when", array("brokenForm")),
-                                $("then", array("matches", array("output"), "bye"))
-                            ))));
-                  }
-                }.create()
-            );
+            return createPreprocessor().preprocess(readRawBaseScript());
+          }
+
+          @Override
+          public ApplicationSpec.Dictionary readRawBaseScript() {
+            return new SyntaxSugar() {
+              ApplicationSpec.Dictionary create() {
+                return dict(
+                    $("testOracles", array(
+                        dict(
+                            $("when", array("brokenForm")),
+                            $("then", array("matches", array("output"), "bye"))
+                        ))));
+              }
+            }.create();
           }
         });
       }

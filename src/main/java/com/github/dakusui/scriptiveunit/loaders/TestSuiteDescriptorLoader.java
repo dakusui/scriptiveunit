@@ -29,7 +29,6 @@ public interface TestSuiteDescriptorLoader {
       implements TestSuiteDescriptorLoader {
     private final Preprocessor preprocessor = new Preprocessor.Builder<>(createHostSpec())
         .applicationSpec(createApplicationSpec())
-        .rawScriptReader(this::readRawScriptResource)
         .build();
 
     private final Config config;

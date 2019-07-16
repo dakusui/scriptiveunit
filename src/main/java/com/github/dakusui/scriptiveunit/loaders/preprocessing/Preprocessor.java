@@ -8,12 +8,11 @@ import static java.util.Objects.requireNonNull;
 public interface Preprocessor {
   ApplicationSpec.Dictionary preprocess(ApplicationSpec.Dictionary rawScript);
 
-  ApplicationSpec.Dictionary readRawScript(String scriptResourceName);
+//  ApplicationSpec.Dictionary readRawScript(String scriptResourceName);
 
   class Builder<NODE, OBJECT extends NODE, ARRAY extends NODE, ATOM extends NODE> {
     private ApplicationSpec applicationSpec;
 
-    private RawScriptReader<NODE, OBJECT, ARRAY, ATOM> rawScriptReader;
 
     private final HostSpec<NODE, OBJECT, ARRAY, ATOM> hostSpec;
 
@@ -26,15 +25,9 @@ public interface Preprocessor {
       return this;
     }
 
-    public Builder<NODE, OBJECT, ARRAY, ATOM> rawScriptReader(RawScriptReader<NODE, OBJECT, ARRAY, ATOM> rawScriptReader) {
-      this.rawScriptReader = requireNonNull(rawScriptReader);
-      return this;
-    }
-
     public Preprocessor build() {
       requireNonNull(applicationSpec);
       requireNonNull(hostSpec);
-      requireNonNull(rawScriptReader);
       return new Preprocessor() {
         @Override
         public ApplicationSpec.Dictionary preprocess(ApplicationSpec.Dictionary rawScript) {
@@ -54,18 +47,13 @@ public interface Preprocessor {
             String resourceName,
             ApplicationSpec applicationSpec) {
           ApplicationSpec.Dictionary resource = preprocess(
-              readRawScript(resourceName),
+              hostSpec.readRawScript(resourceName),
               applicationSpec.preprocessors());
 
           ApplicationSpec.Dictionary work_ = dict();
           for (String s : applicationSpec.parentsOf(resource))
             work_ = applicationSpec.deepMerge(readApplicationDictionaryWithMerging(s, applicationSpec), work_);
           return applicationSpec.deepMerge(resource, work_);
-        }
-
-        @Override
-        public ApplicationSpec.Dictionary readRawScript(String resourceName) {
-          return hostSpec.toApplicationDictionary(hostSpec.readObjectNode(resourceName));
         }
 
         ApplicationSpec.Dictionary preprocess(ApplicationSpec.Dictionary inputNode, List<PreprocessingUnit> preprocessingUnits) {
