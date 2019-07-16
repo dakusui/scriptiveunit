@@ -65,7 +65,7 @@ public interface Preprocessor {
 
         @Override
         public ApplicationSpec.Dictionary readRawScript(String resourceName) {
-          return rawScriptReader.apply(resourceName, hostSpec);
+          return hostSpec.toApplicationDictionary(hostSpec.readObjectNode(resourceName));
         }
 
         ApplicationSpec.Dictionary preprocess(ApplicationSpec.Dictionary inputNode, List<PreprocessingUnit> preprocessingUnits) {

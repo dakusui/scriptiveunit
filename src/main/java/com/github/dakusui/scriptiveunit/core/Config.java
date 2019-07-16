@@ -27,9 +27,13 @@ public interface Config extends IConfig<JsonNode, ObjectNode, ArrayNode, JsonNod
   @Override
   default ApplicationSpec.Dictionary readScriptResource() {
     Preprocessor preprocessor = createPreprocessor();
-    return preprocessor.preprocess(preprocessor.readRawScript(
+    return preprocessor.preprocess(readRawBaseScript(preprocessor));
+  }
+
+  default ApplicationSpec.Dictionary readRawBaseScript(Preprocessor preprocessor) {
+    return preprocessor.readRawScript(
         getScriptResourceName().orElseThrow(() -> scriptNotSpecified(this))
-    ));
+    );
   }
 
   @Override
@@ -99,6 +103,11 @@ public interface Config extends IConfig<JsonNode, ObjectNode, ArrayNode, JsonNod
     @Override
     public Optional<Reporting> getReporting() {
       return base.getReporting();
+    }
+
+    @Override
+    public ApplicationSpec.Dictionary readRawBaseScript(Preprocessor preprocessor) {
+      return base.readRawBaseScript(preprocessor);
     }
 
     @Override
