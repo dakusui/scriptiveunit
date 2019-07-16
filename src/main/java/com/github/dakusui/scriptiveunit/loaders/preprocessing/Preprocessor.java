@@ -40,13 +40,12 @@ public interface Preprocessor {
       requireNonNull(hostSpec);
       requireNonNull(rawScriptReader);
       return new Preprocessor() {
-        @Override
-        public ApplicationSpec.Dictionary readScript(String scriptResourceName) {
+        //@Override
+        public ApplicationSpec.Dictionary _readScript(String scriptResourceName) {
           return readScript(
               scriptResourceName,
               applicationSpec.createDefaultValues(),
-              applicationSpec
-          );
+              applicationSpec);
         }
 
         /**
@@ -56,7 +55,14 @@ public interface Preprocessor {
          */
         @Override
         public ApplicationSpec.Dictionary preprocess(ApplicationSpec.Dictionary rawScript) {
-          return null;
+          ApplicationSpec.Dictionary ret = rawScript;
+          for (String parent : applicationSpec.parentsOf(rawScript)) {
+            ret = applicationSpec.deepMerge(
+                readApplicationDictionaryWithMerging(parent, applicationSpec),
+                ret
+            );
+          }
+          return applicationSpec.removeInheritanceDirective(ret);
         }
 
         ApplicationSpec.Dictionary readScript(
@@ -71,14 +77,14 @@ public interface Preprocessor {
         ApplicationSpec.Dictionary readApplicationDictionaryWithMerging(
             String resourceName,
             ApplicationSpec applicationSpec) {
-          ApplicationSpec.Dictionary child = preprocess(
+          ApplicationSpec.Dictionary resource = preprocess(
               readRawScript(resourceName),
               applicationSpec.preprocessors());
 
           ApplicationSpec.Dictionary work_ = dict();
-          for (String s : applicationSpec.parentsOf(child))
+          for (String s : applicationSpec.parentsOf(resource))
             work_ = applicationSpec.deepMerge(readApplicationDictionaryWithMerging(s, applicationSpec), work_);
-          return applicationSpec.deepMerge(child, work_);
+          return applicationSpec.deepMerge(resource, work_);
         }
 
         @Override
@@ -98,7 +104,6 @@ public interface Preprocessor {
           }
           return inputNode;
         }
-
       };
     }
   }
