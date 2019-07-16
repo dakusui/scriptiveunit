@@ -5,7 +5,6 @@ import com.github.dakusui.scriptiveunit.exceptions.ScriptiveUnitException;
 import com.github.dakusui.scriptiveunit.loaders.json.JsonTestSuiteDescriptorBean;
 import com.github.dakusui.scriptiveunit.loaders.preprocessing.ApplicationSpec;
 import com.github.dakusui.scriptiveunit.loaders.preprocessing.HostSpec;
-import com.github.dakusui.scriptiveunit.loaders.preprocessing.Preprocessor;
 import com.github.dakusui.scriptiveunit.model.desc.TestSuiteDescriptor;
 import com.github.dakusui.scriptiveunit.model.session.Session;
 import org.codehaus.jackson.map.ObjectMapper;
@@ -27,10 +26,6 @@ public interface TestSuiteDescriptorLoader {
 
   abstract class Base<NODE, OBJECT extends NODE, ARRAY extends NODE, ATOM extends NODE>
       implements TestSuiteDescriptorLoader {
-    private final Preprocessor preprocessor = new Preprocessor.Builder<>(createHostSpec())
-        .applicationSpec(createApplicationSpec())
-        .build();
-
     private final Config config;
 
     protected Base(Config config) {
