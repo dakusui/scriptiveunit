@@ -6,13 +6,9 @@ import static com.github.dakusui.scriptiveunit.loaders.preprocessing.Application
 import static java.util.Objects.requireNonNull;
 
 public interface Preprocessor {
-  default ApplicationSpec.Dictionary readScript(String scriptResourceName) {
-    return preprocess(readRawScript(scriptResourceName));
-  }
+  ApplicationSpec.Dictionary preprocess(ApplicationSpec.Dictionary rawScript);
 
   ApplicationSpec.Dictionary readRawScript(String scriptResourceName);
-
-  ApplicationSpec.Dictionary preprocess(ApplicationSpec.Dictionary rawScript);
 
   class Builder<NODE, OBJECT extends NODE, ARRAY extends NODE, ATOM extends NODE> {
     private ApplicationSpec applicationSpec;
@@ -40,19 +36,6 @@ public interface Preprocessor {
       requireNonNull(hostSpec);
       requireNonNull(rawScriptReader);
       return new Preprocessor() {
-        //@Override
-        public ApplicationSpec.Dictionary _readScript(String scriptResourceName) {
-          return readScript(
-              scriptResourceName,
-              applicationSpec.createDefaultValues(),
-              applicationSpec);
-        }
-
-        /**
-         * WIP
-         * @param rawScript
-         * @return
-         */
         @Override
         public ApplicationSpec.Dictionary preprocess(ApplicationSpec.Dictionary rawScript) {
           ApplicationSpec.Dictionary ret = applicationSpec.deepMerge(
@@ -65,15 +48,6 @@ public interface Preprocessor {
             );
           }
           return applicationSpec.removeInheritanceDirective(ret);
-        }
-
-        ApplicationSpec.Dictionary readScript(
-            String scriptResourceName,
-            ApplicationSpec.Dictionary defaultValues,
-            ApplicationSpec applicationSpec) {
-          return applicationSpec.deepMerge(
-              readScriptHandlingInheritance(scriptResourceName, applicationSpec),
-              defaultValues);
         }
 
         ApplicationSpec.Dictionary readApplicationDictionaryWithMerging(
@@ -92,12 +66,6 @@ public interface Preprocessor {
         @Override
         public ApplicationSpec.Dictionary readRawScript(String resourceName) {
           return rawScriptReader.apply(resourceName, hostSpec);
-        }
-
-
-        ApplicationSpec.Dictionary readScriptHandlingInheritance(String scriptResourceName, ApplicationSpec applicationSpec) {
-          return applicationSpec.removeInheritanceDirective(
-              readApplicationDictionaryWithMerging(scriptResourceName, applicationSpec));
         }
 
         ApplicationSpec.Dictionary preprocess(ApplicationSpec.Dictionary inputNode, List<PreprocessingUnit> preprocessingUnits) {

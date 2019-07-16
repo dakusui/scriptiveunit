@@ -69,7 +69,9 @@ public class ScriptiveUnit extends Parameterized {
 
   @Override
   public String getName() {
-    return this.session.getConfig().getScriptResourceName().orElse(getTestClass().getName())
+    return this.session.getConfig()
+        .getScriptResourceName()
+        .orElse(getTestClass().getName())
         .replaceAll(".+/", "")
         .replaceAll("\\.[^.]*$", "")
         + ":" + getTestSuiteDescriptor().getDescription();

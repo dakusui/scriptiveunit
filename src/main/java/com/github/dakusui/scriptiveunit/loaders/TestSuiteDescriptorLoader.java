@@ -48,10 +48,11 @@ public interface TestSuiteDescriptorLoader {
     public TestSuiteDescriptor loadTestSuiteDescriptor(Session session) {
       return mapObjectNodeToJsonTestSuiteDescriptorBean(
           new HostSpec.Json().toHostObject(
-              preprocessor.readScript(
-                  session.getConfig()
-                      .getScriptResourceName()
-                      .orElseThrow(() -> scriptNotSpecified(session.getConfig())))))
+              preprocessor.preprocess(
+                  preprocessor.readRawScript(
+                      session.getConfig()
+                          .getScriptResourceName()
+                          .orElseThrow(() -> scriptNotSpecified(session.getConfig()))))))
           .create(session);
     }
 

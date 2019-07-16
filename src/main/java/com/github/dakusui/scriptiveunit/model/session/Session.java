@@ -20,6 +20,7 @@ import com.github.dakusui.scriptiveunit.model.session.action.Source;
 import com.github.dakusui.scriptiveunit.utils.ActionUtils;
 import org.hamcrest.Matcher;
 
+import java.util.function.BiFunction;
 import java.util.function.Function;
 
 import static com.github.dakusui.actionunit.core.ActionSupport.attempt;
@@ -56,9 +57,9 @@ public interface Session {
   }
 
   class Impl implements Session {
-    private final Config                     config;
-    private final Function<TestItem, Report> reportCreator;
-    private final TestSuiteDescriptor        testSuiteDescriptor;
+    private final Config                               config;
+    private final BiFunction<TestItem, String, Report> reportCreator;
+    private final TestSuiteDescriptor                  testSuiteDescriptor;
 
     @SuppressWarnings("WeakerAccess")
     protected Impl(Config config, TestSuiteDescriptorLoader testSuiteDescriptorLoader) {
@@ -66,11 +67,11 @@ public interface Session {
       Reporting reporting = getConfig()
           .getReporting()
           .orElseThrow(ScriptiveUnitException::noReportingObjectIsAvailable);
-      this.reportCreator = testItem -> Report.create(
+      this.reportCreator = (testItem, scriptResourceName) -> Report.create(
           null,
           reporting.reportBaseDirectory,
           // Only name of a test script is wanted here.
-          getConfig().getScriptResourceName().orElse("__noname__"),
+          scriptResourceName,
           testItem,
           reporting.reportFileName);
       this.testSuiteDescriptor = testSuiteDescriptorLoader.loadTestSuiteDescriptor(this);
@@ -200,7 +201,11 @@ public interface Session {
     }
 
     Report createReport(TestItem testItem) {
-      return this.reportCreator.apply(testItem);
+      return this.reportCreator.apply(
+          testItem,
+          getConfig()
+              .getScriptResourceName()
+              .orElse("__noname__"));
     }
 
     Sink<AssertionError> createErrorHandler(TestItem testItem, TestOracleValuesFactory definition, Report report) {
