@@ -8,6 +8,7 @@ import com.github.dakusui.scriptiveunit.loaders.preprocessing.HostSpec;
 import org.junit.Test;
 
 import java.lang.reflect.InvocationTargetException;
+import java.util.Optional;
 
 import static com.github.dakusui.crest.Crest.allOf;
 import static com.github.dakusui.crest.Crest.asObject;
@@ -41,7 +42,12 @@ public class BrokenTest {
   public static class Broken extends SimpleTestBase {
     public static class Loader extends SimpleTestBase.Loader {
       public Loader(Config config) {
-        super(config);
+        super(new Config.Delegating(config) {
+          @Override
+          public Optional<String> getScriptResourceName() {
+            return Optional.of("(dummy)");
+          }
+        });
       }
 
       @Override

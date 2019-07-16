@@ -55,7 +55,9 @@ public interface Preprocessor {
          */
         @Override
         public ApplicationSpec.Dictionary preprocess(ApplicationSpec.Dictionary rawScript) {
-          ApplicationSpec.Dictionary ret = rawScript;
+          ApplicationSpec.Dictionary ret = applicationSpec.deepMerge(
+              preprocess(rawScript, applicationSpec.preprocessors()),
+              applicationSpec.createDefaultValues());
           for (String parent : applicationSpec.parentsOf(rawScript)) {
             ret = applicationSpec.deepMerge(
                 readApplicationDictionaryWithMerging(parent, applicationSpec),
