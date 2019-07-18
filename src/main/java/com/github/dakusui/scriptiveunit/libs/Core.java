@@ -4,6 +4,7 @@ import com.github.dakusui.jcunit.core.tuples.Tuple;
 import com.github.dakusui.scriptiveunit.annotations.AccessesTestParameter;
 import com.github.dakusui.scriptiveunit.annotations.Scriptable;
 import com.github.dakusui.scriptiveunit.core.Config;
+import com.github.dakusui.scriptiveunit.exceptions.ConfigurationException;
 import com.github.dakusui.scriptiveunit.exceptions.ScriptiveUnitException;
 import com.github.dakusui.scriptiveunit.exceptions.SyntaxException;
 import com.github.dakusui.scriptiveunit.model.desc.testitem.TestItem;
@@ -29,7 +30,7 @@ public class Core {
    * @param attr Attribute name whose value should be returned
    * @param <E>  Type of attribute value to be returned.
    */
-  @SuppressWarnings({ "unused", "unchecked" })
+  @SuppressWarnings({"unused", "unchecked"})
   @Scriptable
   @AccessesTestParameter
   public <E> Value<E> attr(Value<String> attr) {
@@ -51,7 +52,7 @@ public class Core {
    * @param entryName A name of method to be invoked.
    * @param target    A target from which value of {@code entryName} will be returned.
    */
-  @SuppressWarnings({ "unused", "unchecked" })
+  @SuppressWarnings({"unused", "unchecked"})
   @Scriptable
   public <E> Value<E> value(Value<String> entryName, Value<?> target) {
     return (Stage input) -> {
@@ -95,23 +96,23 @@ public class Core {
   public Value<Object> configAttr(Value<String> attrName) {
     return input -> {
       String attr = requireNonNull(attrName.apply(input));
-      Config config = input.getConfig();
+      Config work = input.getConfig();
+      if (!(work instanceof Config.Standard))
+        throw ConfigurationException.nonStandardConfig(work);
+      Config.Standard config = (Config.Standard) work;
       final Object retValue;
       switch (attr) {
-      case "driverClass":
-        retValue = config.getTestClass().getCanonicalName();
-        break;
-      case "scriptResourceName":
-        retValue = config.getScriptResourceName();
-        break;
-      case "scriptResourceNameKey":
-        if (config instanceof Config.Builder.DriverClassBasedConfig)
-          retValue = ((Config.Builder.DriverClassBasedConfig) config).getScriptResourceNameKey();
-        else
-          throw ScriptiveUnitException.noScriptResourceNameKeyWasGiven();
-        break;
-      default:
-        throw SyntaxException.systemAttributeNotFound(attr, input);
+        case "driverClass":
+          retValue = config.getTestClass().getCanonicalName();
+          break;
+        case "scriptResourceName":
+          retValue = config.getScriptResourceName();
+          break;
+        case "scriptResourceNameKey":
+            retValue = config.getScriptResourceNameKey();
+          break;
+        default:
+          throw SyntaxException.systemAttributeNotFound(attr, input);
       }
       return retValue;
     };

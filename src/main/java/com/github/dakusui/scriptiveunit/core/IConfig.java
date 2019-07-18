@@ -18,4 +18,6 @@ public interface IConfig<NODE, OBJECT extends NODE, ARRAY extends NODE, ATOM ext
   ApplicationSpec createApplicationSpec();
 
   HostSpec<NODE, OBJECT, ARRAY, ATOM> createHostSpec();
+
+  String name();
 }

@@ -7,6 +7,7 @@ import com.github.dakusui.jcunit8.runners.junit4.annotations.From;
 import com.github.dakusui.jcunit8.runners.junit4.annotations.Given;
 import com.github.dakusui.jcunit8.runners.junit4.annotations.ParameterSource;
 import com.github.dakusui.scriptiveunit.core.Config;
+import com.github.dakusui.scriptiveunit.loaders.TestSuiteDescriptorLoader;
 import com.github.dakusui.scriptiveunit.loaders.preprocessing.ApplicationSpec;
 import com.github.dakusui.scriptiveunit.runners.ScriptiveUnit;
 import com.github.dakusui.scriptiveunit.testassets.drivers.Loader;
@@ -90,7 +91,7 @@ public class VariationTest {
     return createResourceParameterFactory("components/testOracles", "json");
   }
 
-  @Given({ "isFactorsAttributePresent", "!isConstraintsAttributePresent" })
+  @Given({"isFactorsAttributePresent", "!isConstraintsAttributePresent"})
   @Test
   public void whenRunTest$thenTerminatesNormally(
       @From("_extends") Resource<ObjectNode> _extends,
@@ -162,26 +163,27 @@ public class VariationTest {
       Resource<ObjectNode> setUpBeforeAll,
       Resource<ObjectNode> testOracles
   ) throws Throwable {
-    Config.Builder.DriverClassBasedConfig baseConfig = new Config.Builder(Simple.class, new Properties()).withScriptResourceName("components/root.json").build();
+    Config.Standard baseConfig = new Config.Builder(Simple.class, new Properties()).withScriptResourceName("components/root.json").build();
     new JUnitCore().run(
         new ScriptiveUnit(
             Simple.class,
-            new Config.Delegating(baseConfig) {
-              @Override
-              public ApplicationSpec.Dictionary readScriptResource() {
-                return Loader.create(
-                    baseConfig.createApplicationSpec(),
-                    _extends,
-                    description,
-                    factors,
-                    constraints,
-                    runnerType,
-                    setUp,
-                    setUpBeforeAll,
-                    testOracles
-                ).createDefaultValues();
-              }
-            }
-        ));
+            new TestSuiteDescriptorLoader.Impl(
+                new Config.Delegating(baseConfig) {
+                  @Override
+                  public ApplicationSpec.Dictionary readScriptResource() {
+                    return Loader.create(
+                        baseConfig.createApplicationSpec(),
+                        _extends,
+                        description,
+                        factors,
+                        constraints,
+                        runnerType,
+                        setUp,
+                        setUpBeforeAll,
+                        testOracles
+                    ).createDefaultValues();
+                  }
+                }
+            )));
   }
 }

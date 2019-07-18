@@ -48,7 +48,7 @@ public class ScriptiveUnit extends Parameterized {
    * @param klass  A test class
    * @param config A config object.
    */
-  public ScriptiveUnit(Class<?> klass, Config config) throws Throwable {
+  public ScriptiveUnit(Class<?> klass, Config.Standard config) throws Throwable {
     this(klass, TestSuiteDescriptorLoader.createTestSuiteDescriptorLoader(
         ReflectionUtils.getAnnotationWithDefault(
             config.getTestClass(),
@@ -70,8 +70,7 @@ public class ScriptiveUnit extends Parameterized {
   @Override
   public String getName() {
     return this.session.getConfig()
-        .getScriptResourceName()
-        .orElse(getTestClass().getName())
+        .name()
         .replaceAll(".+/", "")
         .replaceAll("\\.[^.]*$", "")
         + ":" + getTestSuiteDescriptor().getDescription();

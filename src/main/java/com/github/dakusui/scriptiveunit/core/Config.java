@@ -19,13 +19,7 @@ import static com.github.dakusui.scriptiveunit.exceptions.ConfigurationException
 import static java.util.Objects.requireNonNull;
 
 public interface Config extends IConfig<JsonNode, ObjectNode, ArrayNode, JsonNode> {
-  Class getTestClass();
-
   FormRegistry formRegistry();
-
-  Object getDriverObject();
-
-  Optional<String> getScriptResourceName();
 
   Optional<Reporting> getReporting();
 
@@ -64,23 +58,8 @@ public interface Config extends IConfig<JsonNode, ObjectNode, ArrayNode, JsonNod
     }
 
     @Override
-    public Class getTestClass() {
-      return this.driverObject.getClass();
-    }
-
-    @Override
     public FormRegistry formRegistry() {
       return this.formRegistry;
-    }
-
-    @Override
-    public Object getDriverObject() {
-      return this.driverObject;
-    }
-
-    @Override
-    public Optional<String> getScriptResourceName() {
-      return Optional.empty();
     }
 
     @Override
@@ -91,6 +70,11 @@ public interface Config extends IConfig<JsonNode, ObjectNode, ArrayNode, JsonNod
     @Override
     public ApplicationSpec.Dictionary readRawBaseScript() {
       throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public String name() {
+      return driverObject.getClass().getCanonicalName();
     }
 
     public static Config create(Object driverObject) {
@@ -110,23 +94,8 @@ public interface Config extends IConfig<JsonNode, ObjectNode, ArrayNode, JsonNod
     }
 
     @Override
-    public Class getTestClass() {
-      return this.base.getTestClass();
-    }
-
-    @Override
     public FormRegistry formRegistry() {
       return base.formRegistry();
-    }
-
-    @Override
-    public Object getDriverObject() {
-      return base.getDriverObject();
-    }
-
-    @Override
-    public Optional<String> getScriptResourceName() {
-      return base.getScriptResourceName();
     }
 
     @Override
@@ -160,6 +129,11 @@ public interface Config extends IConfig<JsonNode, ObjectNode, ArrayNode, JsonNod
     }
 
     @Override
+    public String name() {
+      return base.name();
+    }
+
+    @Override
     public Preprocessor createPreprocessor() {
       return base.createPreprocessor();
     }
@@ -182,23 +156,24 @@ public interface Config extends IConfig<JsonNode, ObjectNode, ArrayNode, JsonNod
       return this;
     }
 
-    public DriverClassBasedConfig build() {
-      return new DriverClassBasedConfig(this);
+    public Config.Standard build() {
+      return new Config.Standard(this);
     }
 
-    public static class DriverClassBasedConfig implements Config {
-      private final FormRegistry formRegistry;
-      private Reporting reporting = new Reporting("report.json", new File("."));
-      private final Object driverObject;
-      private final Builder builder;
+  }
 
-      DriverClassBasedConfig(Builder builder) {
-        this.builder = requireNonNull(builder);
-        this.driverObject = createDriverObject(this.builder);
-        this.formRegistry = FormRegistry.getFormRegistry(driverObject);
-      }
+  class Standard implements Config {
+    private final FormRegistry formRegistry;
+    private Reporting reporting = new Reporting("report.json", new File("."));
+    private final Object driverObject;
+    private final Builder builder;
 
-      @Override
+    Standard(Builder builder) {
+      this.builder = requireNonNull(builder);
+      this.driverObject = createDriverObject(this.builder);
+      this.formRegistry = FormRegistry.getFormRegistry(driverObject);
+    }
+
       public Class getTestClass() {
         return this.driverObject.getClass();
       }
@@ -208,44 +183,42 @@ public interface Config extends IConfig<JsonNode, ObjectNode, ArrayNode, JsonNod
         return this.formRegistry;
       }
 
-      @Override
-      public Object getDriverObject() {
-        return driverObject;
-      }
+    public Optional<String> getScriptResourceName() {
+      String work = builder.properties.getProperty(
+          getScriptResourceNameKey().orElseThrow(ScriptiveUnitException::noScriptResourceNameKeyWasGiven),
+          builder.loadAnnotation.script());
+      return Load.SCRIPT_NOT_SPECIFIED.equals(work) ?
+          Optional.empty() :
+          Optional.of(work);
+    }
 
-      @Override
-      public Optional<String> getScriptResourceName() {
-        String work = builder.properties.getProperty(
-            getScriptResourceNameKey().orElseThrow(ScriptiveUnitException::noScriptResourceNameKeyWasGiven),
-            builder.loadAnnotation.script());
-        return Load.SCRIPT_NOT_SPECIFIED.equals(work) ?
-            Optional.empty() :
-            Optional.of(work);
-      }
+    @Override
+    public Optional<Reporting> getReporting() {
+      return Optional.of(reporting);
+    }
 
-      @Override
-      public Optional<Reporting> getReporting() {
-        return Optional.of(reporting);
-      }
+    @Override
+    public ApplicationSpec.Dictionary readRawBaseScript() {
+      return createHostSpec()
+          .readRawScript(
+              getScriptResourceName().orElseThrow(() -> scriptNotSpecified(this)));
+    }
 
-      @Override
-      public ApplicationSpec.Dictionary readRawBaseScript() {
-        return createHostSpec()
-            .readRawScript(
-                getScriptResourceName().orElseThrow(() -> scriptNotSpecified(this)));
-      }
+    public Optional<String> getScriptResourceNameKey() {
+      return Optional.of(builder.loadAnnotation.scriptSystemPropertyKey());
+    }
 
-      public Optional<String> getScriptResourceNameKey() {
-        return Optional.of(builder.loadAnnotation.scriptSystemPropertyKey());
+    private static Object createDriverObject(Builder builder) {
+      try {
+        return builder.driverClass.newInstance();
+      } catch (InstantiationException | IllegalAccessException e) {
+        throw ScriptiveUnitException.wrapIfNecessary(e);
       }
+    }
 
-      private static Object createDriverObject(Builder builder) {
-        try {
-          return builder.driverClass.newInstance();
-        } catch (InstantiationException | IllegalAccessException e) {
-          throw ScriptiveUnitException.wrapIfNecessary(e);
-        }
-      }
+    @Override
+    public String name() {
+      return this.getScriptResourceName().orElseThrow(RuntimeException::new);
     }
   }
 }

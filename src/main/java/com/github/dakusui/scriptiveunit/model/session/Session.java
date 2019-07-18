@@ -203,7 +203,7 @@ public interface Session {
     Report createReport(TestItem testItem) {
       return this.reportCreator.apply(
           testItem,
-          getConfig().getScriptResourceName().orElse("__noname__"));
+          getConfig().name());
     }
 
     Sink<AssertionError> createErrorHandler(TestItem testItem, TestOracleValuesFactory definition, Report report) {

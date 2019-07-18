@@ -14,8 +14,8 @@ public class ConfigurationException extends ScriptiveUnitException {
   }
 
   public static ConfigurationException scriptNotSpecified(Config config) {
-    if (config instanceof Config.Builder.DriverClassBasedConfig) {
-      String key = ((Config.Builder.DriverClassBasedConfig) config).getScriptResourceNameKey()
+    if (config instanceof Config.Standard) {
+      String key = ((Config.Standard) config).getScriptResourceNameKey()
           .orElseThrow(ScriptiveUnitException::noScriptResourceNameKeyWasGiven);
       throw new ConfigurationException(format(
           "Script to be run was not specified. Give -D%s={FQCN of your script} to your command line as a VM option.",
@@ -40,5 +40,9 @@ public class ConfigurationException extends ScriptiveUnitException {
 
   private static ScriptiveUnitException noScriptResourceWasGiven() {
     throw new ScriptiveUnitException("No script was given in this session.");
+  }
+
+  public static ScriptiveUnitException nonStandardConfig(Config config) {
+    throw new ScriptiveUnitException(format("Non-standard config:<%s> was given", config));
   }
 }
