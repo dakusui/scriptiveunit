@@ -1,6 +1,7 @@
 package com.github.dakusui.scriptiveunit.loaders;
 
 import com.github.dakusui.scriptiveunit.core.JsonScript;
+import com.github.dakusui.scriptiveunit.core.Script;
 import com.github.dakusui.scriptiveunit.exceptions.ScriptiveUnitException;
 import com.github.dakusui.scriptiveunit.loaders.json.JsonTestSuiteDescriptorBean;
 import com.github.dakusui.scriptiveunit.loaders.preprocessing.HostSpec;
@@ -12,22 +13,23 @@ import org.codehaus.jackson.node.ObjectNode;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 
-public interface TestSuiteDescriptorLoader {
-  static TestSuiteDescriptorLoader createTestSuiteDescriptorLoader(
-      Class<? extends TestSuiteDescriptorLoader> loaderClass,
-      JsonScript script) {
-    return createInstance(loaderClass, script);
-  }
+public interface ScriptCompiler {
+  TestSuiteDescriptor compile(Session session, Script script);
 
-  JsonScript getScript();
-
-  TestSuiteDescriptor loadTestSuiteDescriptor(Session session);
-
-  class Impl implements TestSuiteDescriptorLoader {
+  class Impl implements ScriptCompiler {
     private final JsonScript script;
 
     public Impl(JsonScript script) {
       this.script = script;
+    }
+
+    @SuppressWarnings("JavaReflectionInvocation")
+    public static ScriptCompiler createInstance(Class<? extends ScriptCompiler.Impl> klass, Script script) {
+      try {
+        return klass.getConstructor(JsonScript.class).newInstance(script);
+      } catch (InstantiationException | IllegalAccessException | InvocationTargetException | NoSuchMethodException e) {
+        throw ScriptiveUnitException.wrapIfNecessary(e);
+      }
     }
 
     public JsonScript getScript() {
@@ -35,10 +37,10 @@ public interface TestSuiteDescriptorLoader {
     }
 
     @Override
-    public TestSuiteDescriptor loadTestSuiteDescriptor(Session session) {
+    public TestSuiteDescriptor compile(Session session, Script script) {
       return mapObjectNodeToJsonTestSuiteDescriptorBean(
           new HostSpec.Json()
-              .toHostObject(getScript().readScriptResource()))
+              .toHostObject(script.readScriptResource()))
           .create(session);
     }
 
@@ -53,11 +55,4 @@ public interface TestSuiteDescriptorLoader {
     }
   }
 
-  static TestSuiteDescriptorLoader createInstance(Class<? extends TestSuiteDescriptorLoader> klass, JsonScript script) {
-    try {
-      return klass.getConstructor(JsonScript.class).newInstance(script);
-    } catch (InstantiationException | IllegalAccessException | InvocationTargetException | NoSuchMethodException e) {
-      throw ScriptiveUnitException.wrapIfNecessary(e);
-    }
-  }
 }

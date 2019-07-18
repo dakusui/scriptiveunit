@@ -3,7 +3,7 @@ package com.github.dakusui.scriptiveunit.examples;
 
 import com.github.dakusui.scriptiveunit.annotations.Import;
 import com.github.dakusui.scriptiveunit.annotations.Import.Alias;
-import com.github.dakusui.scriptiveunit.annotations.Load;
+import com.github.dakusui.scriptiveunit.annotations.Compile;
 import com.github.dakusui.scriptiveunit.annotations.Scriptable;
 import com.github.dakusui.scriptiveunit.core.JsonScript;
 import com.github.dakusui.scriptiveunit.libs.Arith;
@@ -12,7 +12,7 @@ import com.github.dakusui.scriptiveunit.libs.Predicates;
 import com.github.dakusui.scriptiveunit.libs.Strings;
 import com.github.dakusui.scriptiveunit.libs.actions.Basic;
 import com.github.dakusui.scriptiveunit.libs.extras.QueryApi;
-import com.github.dakusui.scriptiveunit.loaders.TestSuiteDescriptorLoader;
+import com.github.dakusui.scriptiveunit.loaders.ScriptCompiler;
 import com.github.dakusui.scriptiveunit.model.form.value.Value;
 import com.github.dakusui.scriptiveunit.runners.ScriptiveUnit;
 import com.github.dakusui.scriptiveunit.unittests.cli.MemoizationExample;
@@ -31,10 +31,10 @@ import static java.util.Objects.requireNonNull;
 /**
  * A driver example.
  */
-@Load(with = Qapi.Loader.class)
+@Compile(with = Qapi.Loader.class)
 @RunWith(ScriptiveUnit.class)
 public class Qapi {
-  public static class Loader extends TestSuiteDescriptorLoader.Impl {
+  public static class Loader extends ScriptCompiler.Impl {
     public Loader(JsonScript script) {
       super(script);
     }

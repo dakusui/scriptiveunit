@@ -7,7 +7,7 @@ import com.github.dakusui.jcunit8.runners.junit4.annotations.From;
 import com.github.dakusui.jcunit8.runners.junit4.annotations.Given;
 import com.github.dakusui.jcunit8.runners.junit4.annotations.ParameterSource;
 import com.github.dakusui.scriptiveunit.core.JsonScript;
-import com.github.dakusui.scriptiveunit.loaders.TestSuiteDescriptorLoader;
+import com.github.dakusui.scriptiveunit.loaders.ScriptCompiler;
 import com.github.dakusui.scriptiveunit.loaders.preprocessing.ApplicationSpec;
 import com.github.dakusui.scriptiveunit.runners.ScriptiveUnit;
 import com.github.dakusui.scriptiveunit.testassets.drivers.Loader;
@@ -164,26 +164,27 @@ public class VariationTest {
       Resource<ObjectNode> testOracles
   ) throws Throwable {
     JsonScript.Standard baseConfig = new JsonScript.Standard.Builder(Simple.class, new Properties()).withScriptResourceName("components/root.json").build();
+    final ScriptCompiler.Impl impl = new ScriptCompiler.Impl(
+        new JsonScript.Delegating(baseConfig) {
+          @Override
+          public ApplicationSpec.Dictionary readScriptResource() {
+            return Loader.create(
+                baseConfig.createApplicationSpec(),
+                _extends,
+                description,
+                factors,
+                constraints,
+                runnerType,
+                setUp,
+                setUpBeforeAll,
+                testOracles
+            ).createDefaultValues();
+          }
+        }
+    );
     new JUnitCore().run(
         new ScriptiveUnit(
             Simple.class,
-            new TestSuiteDescriptorLoader.Impl(
-                new JsonScript.Delegating(baseConfig) {
-                  @Override
-                  public ApplicationSpec.Dictionary readScriptResource() {
-                    return Loader.create(
-                        baseConfig.createApplicationSpec(),
-                        _extends,
-                        description,
-                        factors,
-                        constraints,
-                        runnerType,
-                        setUp,
-                        setUpBeforeAll,
-                        testOracles
-                    ).createDefaultValues();
-                  }
-                }
-            )));
+            impl, impl.getScript()));
   }
 }

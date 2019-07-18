@@ -1,6 +1,5 @@
 package com.github.dakusui.scriptiveunit.model.desc;
 
-import com.github.dakusui.scriptiveunit.core.JsonScript;
 import com.github.dakusui.scriptiveunit.model.desc.testitem.IndexedTestCase;
 import com.github.dakusui.scriptiveunit.model.desc.testitem.TestOracle;
 import com.github.dakusui.scriptiveunit.model.statement.Statement;
@@ -32,8 +31,6 @@ public interface TestSuiteDescriptor {
   Optional<Statement> tearDownAfterAll();
 
   List<String> getInvolvedParameterNamesInSetUpAction();
-
-  JsonScript getConfig();
 
   Statement.Factory statementFactory();
 }

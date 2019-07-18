@@ -1,6 +1,7 @@
 package com.github.dakusui.scriptiveunit.exceptions;
 
 import com.github.dakusui.scriptiveunit.core.JsonScript;
+import com.github.dakusui.scriptiveunit.core.Script;
 import com.github.dakusui.scriptiveunit.model.form.Form;
 
 import java.util.List;
@@ -42,7 +43,7 @@ public class ConfigurationException extends ScriptiveUnitException {
     throw new ScriptiveUnitException("No script was given in this session.");
   }
 
-  public static ScriptiveUnitException nonStandardConfig(JsonScript script) {
+  public static ScriptiveUnitException nonStandardScript(Script script) {
     throw new ScriptiveUnitException(format("Non-standard config:<%s> was given", script));
   }
 }

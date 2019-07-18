@@ -1,6 +1,6 @@
 package com.github.dakusui.scriptiveunit.featuretests;
 
-import com.github.dakusui.scriptiveunit.annotations.Load;
+import com.github.dakusui.scriptiveunit.annotations.Compile;
 import com.github.dakusui.scriptiveunit.core.JsonScript;
 import com.github.dakusui.scriptiveunit.loaders.preprocessing.ApplicationSpec;
 import com.github.dakusui.scriptiveunit.runners.ScriptiveUnit;
@@ -98,13 +98,13 @@ public class AssertionMessageTest extends TestBase {
     }
   }
 
-  @Load(with = Simple.Compiler.class)
+  @Compile(with = Simple.Compiler.class)
   public static class Simple extends SimpleTestBase {
     public static class Compiler extends SimpleTestBase.Compiler implements SyntaxSugar {
       public Compiler(JsonScript script) {
         super(new JsonScript.Delegating(script) {
           @Override
-          public ApplicationSpec.Dictionary readScriptResource() {
+          public ApplicationSpec.Dictionary readRawBaseScript() {
             return new SyntaxSugar() {
               ApplicationSpec.Dictionary createDictionary() {
                 return createPreprocessor().preprocess(dict(

@@ -1,9 +1,10 @@
 package com.github.dakusui.scriptiveunit.runners;
 
 import com.github.dakusui.jcunit.core.tuples.Tuple;
-import com.github.dakusui.scriptiveunit.annotations.Load;
+import com.github.dakusui.scriptiveunit.annotations.Compile;
 import com.github.dakusui.scriptiveunit.core.JsonScript;
-import com.github.dakusui.scriptiveunit.loaders.TestSuiteDescriptorLoader;
+import com.github.dakusui.scriptiveunit.core.Script;
+import com.github.dakusui.scriptiveunit.loaders.ScriptCompiler;
 import com.github.dakusui.scriptiveunit.model.desc.TestSuiteDescriptor;
 import com.github.dakusui.scriptiveunit.model.session.Session;
 import com.github.dakusui.scriptiveunit.utils.ReflectionUtils;
@@ -46,19 +47,20 @@ public class ScriptiveUnit extends Parameterized {
    * A constructor for testing.
    *
    * @param klass  A test class
-   * @param config A config object.
+   * @param script A config object.
    */
-  public ScriptiveUnit(Class<?> klass, JsonScript.Standard config) throws Throwable {
-    this(klass, TestSuiteDescriptorLoader.createTestSuiteDescriptorLoader(
-        ReflectionUtils.getAnnotationWithDefault(
-            config.getTestClass(),
-            Load.DEFAULT_INSTANCE).with(),
-        config));
+  public ScriptiveUnit(Class<?> klass, JsonScript.Standard script) throws Throwable {
+    this(klass,
+        ScriptCompiler.Impl.createInstance(
+            ReflectionUtils.getAnnotationWithDefault(
+                script.getTestClass(),
+                Compile.DEFAULT_INSTANCE).with(), script),
+        script);
   }
 
-  public ScriptiveUnit(Class<?> klass, TestSuiteDescriptorLoader loader) throws Throwable {
+  public ScriptiveUnit(Class<?> klass, ScriptCompiler scriptCompiler, Script script) throws Throwable {
     super(klass);
-    this.session = Session.create(loader.getScript(), loader);
+    this.session = Session.create(script, scriptCompiler);
     this.runners = newLinkedList(createRunners());
     this.commonFixture = TupleUtils.createCommonFixture(getTestSuiteDescriptor().getFactorSpaceDescriptor().getParameters());
   }

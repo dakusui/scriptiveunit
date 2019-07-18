@@ -4,10 +4,10 @@ import com.github.dakusui.actionunit.core.Action;
 import com.github.dakusui.actionunit.core.ActionSupport;
 import com.github.dakusui.jcunit.core.tuples.Tuple;
 import com.github.dakusui.jcunit8.factorspace.Constraint;
-import com.github.dakusui.scriptiveunit.core.JsonScript;
 import com.github.dakusui.scriptiveunit.core.Reporting;
+import com.github.dakusui.scriptiveunit.core.Script;
 import com.github.dakusui.scriptiveunit.exceptions.ScriptiveUnitException;
-import com.github.dakusui.scriptiveunit.loaders.TestSuiteDescriptorLoader;
+import com.github.dakusui.scriptiveunit.loaders.ScriptCompiler;
 import com.github.dakusui.scriptiveunit.model.desc.ConstraintDefinition;
 import com.github.dakusui.scriptiveunit.model.desc.TestSuiteDescriptor;
 import com.github.dakusui.scriptiveunit.model.desc.testitem.IndexedTestCase;
@@ -36,7 +36,7 @@ import static org.junit.Assume.assumeThat;
 
 public interface Session {
 
-  JsonScript getScript();
+  Script getScript();
 
   TestSuiteDescriptor getTestSuiteDescriptor();
 
@@ -52,20 +52,18 @@ public interface Session {
 
   Action createTearDownAfterAllAction(Tuple commonFixtureTuple);
 
-  static Session create(JsonScript script, TestSuiteDescriptorLoader testSuiteDescriptorLoader) {
-    return new Impl(script, testSuiteDescriptorLoader);
+  static Session create(Script script, ScriptCompiler scriptCompiler) {
+    return new Impl(script, scriptCompiler);
   }
 
   class Impl implements Session {
-    private final JsonScript                           script;
+    private final Script<?, ?, ?, ?>                   script;
     private final BiFunction<TestItem, String, Report> reportCreator;
     private final TestSuiteDescriptor                  testSuiteDescriptor;
 
-    @SuppressWarnings("WeakerAccess")
-    protected Impl(JsonScript script, TestSuiteDescriptorLoader testSuiteDescriptorLoader) {
+    protected Impl(Script<?, ?, ?, ?> script, ScriptCompiler scriptCompiler) {
       this.script = script;
-      Reporting reporting = getScript()
-          .getReporting()
+      Reporting reporting = this.script.getReporting()
           .orElseThrow(ScriptiveUnitException::noReportingObjectIsAvailable);
       this.reportCreator = (testItem, scriptResourceName) -> Report.create(
           null,
@@ -74,11 +72,11 @@ public interface Session {
           scriptResourceName,
           testItem,
           reporting.reportFileName);
-      this.testSuiteDescriptor = testSuiteDescriptorLoader.loadTestSuiteDescriptor(this);
+      this.testSuiteDescriptor = scriptCompiler.compile(this, script);
     }
 
     @Override
-    public JsonScript getScript() {
+    public Script getScript() {
       return this.script;
     }
 

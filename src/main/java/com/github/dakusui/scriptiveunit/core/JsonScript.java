@@ -1,6 +1,6 @@
 package com.github.dakusui.scriptiveunit.core;
 
-import com.github.dakusui.scriptiveunit.annotations.Load;
+import com.github.dakusui.scriptiveunit.annotations.Compile;
 import com.github.dakusui.scriptiveunit.exceptions.ScriptiveUnitException;
 import com.github.dakusui.scriptiveunit.loaders.preprocessing.ApplicationSpec;
 import com.github.dakusui.scriptiveunit.loaders.preprocessing.HostSpec;
@@ -128,9 +128,9 @@ public interface JsonScript extends Script<JsonNode, ObjectNode, ArrayNode, Json
 
   class Standard implements JsonScript {
     private final FormRegistry formRegistry;
-    private Reporting reporting = new Reporting("report.json", new File("."));
-    private final Object driverObject;
-    private final Builder builder;
+    private       Reporting    reporting = new Reporting("report.json", new File("."));
+    private final Object       driverObject;
+    private final Builder      builder;
 
     Standard(Builder builder) {
       this.builder = requireNonNull(builder);
@@ -138,20 +138,20 @@ public interface JsonScript extends Script<JsonNode, ObjectNode, ArrayNode, Json
       this.formRegistry = FormRegistry.getFormRegistry(driverObject);
     }
 
-      public Class getTestClass() {
-        return this.driverObject.getClass();
-      }
+    public Class getTestClass() {
+      return this.driverObject.getClass();
+    }
 
-      @Override
-      public FormRegistry formRegistry() {
-        return this.formRegistry;
-      }
+    @Override
+    public FormRegistry formRegistry() {
+      return this.formRegistry;
+    }
 
     public Optional<String> getScriptResourceName() {
       String work = builder.properties.getProperty(
           getScriptResourceNameKey().orElseThrow(ScriptiveUnitException::noScriptResourceNameKeyWasGiven),
-          builder.loadAnnotation.script());
-      return Load.SCRIPT_NOT_SPECIFIED.equals(work) ?
+          builder.compileAnnotation.script());
+      return Compile.SCRIPT_NOT_SPECIFIED.equals(work) ?
           Optional.empty() :
           Optional.of(work);
     }
@@ -169,7 +169,7 @@ public interface JsonScript extends Script<JsonNode, ObjectNode, ArrayNode, Json
     }
 
     public Optional<String> getScriptResourceNameKey() {
-      return Optional.of(builder.loadAnnotation.scriptSystemPropertyKey());
+      return Optional.of(builder.compileAnnotation.scriptSystemPropertyKey());
     }
 
     private static Object createDriverObject(Builder builder) {
@@ -182,18 +182,18 @@ public interface JsonScript extends Script<JsonNode, ObjectNode, ArrayNode, Json
 
     public static class Builder {
       private final Properties properties;
-      final Load loadAnnotation;
-      private final Class<?> driverClass;
+      final         Compile    compileAnnotation;
+      private final Class<?>   driverClass;
 
       public Builder(Class<?> driverClass, Properties properties) {
         this.driverClass = driverClass;
         this.properties = new Properties();
         this.properties.putAll(properties);
-        this.loadAnnotation = ReflectionUtils.getAnnotation(driverClass, Load.class, Load.DEFAULT_INSTANCE);
+        this.compileAnnotation = ReflectionUtils.getAnnotation(driverClass, Compile.class, Compile.DEFAULT_INSTANCE);
       }
 
       public Builder withScriptResourceName(String scriptResourceName) {
-        this.properties.put(loadAnnotation.scriptSystemPropertyKey(), scriptResourceName);
+        this.properties.put(compileAnnotation.scriptSystemPropertyKey(), scriptResourceName);
         return this;
       }
 

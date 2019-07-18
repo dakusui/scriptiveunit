@@ -1,6 +1,6 @@
 package com.github.dakusui.scriptiveunit.annotations;
 
-import com.github.dakusui.scriptiveunit.loaders.TestSuiteDescriptorLoader;
+import com.github.dakusui.scriptiveunit.loaders.ScriptCompiler;
 
 import java.lang.annotation.Annotation;
 import java.lang.annotation.Retention;
@@ -8,13 +8,13 @@ import java.lang.annotation.Retention;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 @Retention(RUNTIME)
-public @interface Load {
-  String SCRIPT_NOT_SPECIFIED = "";
-  String DEFAULT_SCRIPT_SYSTEM_PROPERTY_KEY = "scriptiveunit.target";
-  Load DEFAULT_INSTANCE = new Load() {
+public @interface Compile {
+  String  SCRIPT_NOT_SPECIFIED               = "";
+  String  DEFAULT_SCRIPT_SYSTEM_PROPERTY_KEY = "scriptiveunit.target";
+  Compile DEFAULT_INSTANCE                   = new Compile() {
     @Override
     public Class<? extends Annotation> annotationType() {
-      return Load.class;
+      return Compile.class;
     }
 
     @Override
@@ -28,8 +28,8 @@ public @interface Load {
     }
 
     @Override
-    public Class<? extends TestSuiteDescriptorLoader> with() {
-      return TestSuiteDescriptorLoader.Impl.class;
+    public Class<? extends ScriptCompiler.Impl> with() {
+      return ScriptCompiler.Impl.class;
     }
   };
 
@@ -37,5 +37,5 @@ public @interface Load {
 
   String scriptSystemPropertyKey() default DEFAULT_SCRIPT_SYSTEM_PROPERTY_KEY;
 
-  Class<? extends TestSuiteDescriptorLoader> with() default TestSuiteDescriptorLoader.Impl.class;
+  Class<? extends ScriptCompiler.Impl> with() default ScriptCompiler.Impl.class;
 }

@@ -1,7 +1,7 @@
 package com.github.dakusui.scriptiveunit.model.session;
 
 import com.github.dakusui.jcunit.core.tuples.Tuple;
-import com.github.dakusui.scriptiveunit.core.JsonScript;
+import com.github.dakusui.scriptiveunit.core.Script;
 import com.github.dakusui.scriptiveunit.model.desc.testitem.TestItem;
 
 import java.util.Optional;
@@ -41,7 +41,7 @@ abstract class Delegating implements Stage {
   }
 
   @Override
-  public JsonScript getScript() {
+  public Script getScript() {
     return this.target.getScript();
   }
 
