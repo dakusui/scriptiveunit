@@ -5,7 +5,7 @@ import com.github.dakusui.jcunit8.factorspace.ParameterSpace;
 import com.github.dakusui.jcunit8.pipeline.Pipeline;
 import com.github.dakusui.jcunit8.pipeline.Requirement;
 import com.github.dakusui.jcunit8.testsuite.TestCase;
-import com.github.dakusui.scriptiveunit.core.Config;
+import com.github.dakusui.scriptiveunit.core.Script;
 import com.github.dakusui.scriptiveunit.exceptions.ScriptiveUnitException;
 import com.github.dakusui.scriptiveunit.model.desc.ParameterSpaceDescriptor;
 import com.github.dakusui.scriptiveunit.model.desc.TestSuiteDescriptor;
@@ -64,7 +64,7 @@ public abstract class TestSuiteDescriptorBean {
     try {
       return new TestSuiteDescriptor() {
         private final Statement.Factory statementFactory =
-            createStatementFactory(session.getConfig(), this.getUserDefinedFormClauses());
+            createStatementFactory(session.getScript(), this.getUserDefinedFormClauses());
         private Statement setUpBeforeAllStatement = setUpBeforeAllClause != null ?
             statementFactory.create(setUpBeforeAllClause) :
             null;
@@ -142,8 +142,8 @@ public abstract class TestSuiteDescriptorBean {
         }
 
         @Override
-        public Config getConfig() {
-          return session.getConfig();
+        public Script getConfig() {
+          return session.getScript();
         }
 
         @Override

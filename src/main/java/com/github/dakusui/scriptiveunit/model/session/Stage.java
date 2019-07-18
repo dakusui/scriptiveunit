@@ -1,7 +1,7 @@
 package com.github.dakusui.scriptiveunit.model.session;
 
 import com.github.dakusui.jcunit.core.tuples.Tuple;
-import com.github.dakusui.scriptiveunit.core.Config;
+import com.github.dakusui.scriptiveunit.core.Script;
 import com.github.dakusui.scriptiveunit.model.desc.testitem.TestItem;
 import com.github.dakusui.scriptiveunit.model.form.value.Value;
 
@@ -28,7 +28,7 @@ public interface Stage extends Value.Listener {
     }
   }
 
-  Config getConfig();
+  Script getScript();
 
   int sizeOfArguments();
 
@@ -66,12 +66,12 @@ public interface Stage extends Value.Listener {
   }
 
   interface Factory {
-    static <RESPONSE> Stage oracleLevelStageFor(Config config, TestItem testItem, RESPONSE response, Throwable throwable, Report report) {
-      return new OracleLevelStage(response, throwable, config, report, testItem);
+    static <RESPONSE> Stage oracleLevelStageFor(Script script, TestItem testItem, RESPONSE response, Throwable throwable, Report report) {
+      return new OracleLevelStage(response, throwable, script, report, testItem);
     }
 
-    static Stage frameworkStageFor(Config config, Tuple fixture) {
-      return new FrameworkStage(fixture, config);
+    static Stage frameworkStageFor(Script script, Tuple fixture) {
+      return new FrameworkStage(fixture, script);
     }
 
     static Stage createWrappedStage(Stage stage, Value<?>... args) {
@@ -108,8 +108,8 @@ public interface Stage extends Value.Listener {
     static Stage createValueListeningStage(Stage stage, Value.Listener formListener) {
       return new Stage() {
         @Override
-        public Config getConfig() {
-          return stage.getConfig();
+        public Script getScript() {
+          return stage.getScript();
         }
 
         @Override

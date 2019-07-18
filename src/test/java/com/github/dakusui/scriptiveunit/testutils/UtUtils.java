@@ -4,7 +4,7 @@ import com.github.dakusui.jcunit.core.tuples.Tuple;
 import com.github.dakusui.jcunit8.factorspace.Constraint;
 import com.github.dakusui.jcunit8.testsuite.TestCase;
 import com.github.dakusui.scriptiveunit.annotations.Load;
-import com.github.dakusui.scriptiveunit.core.Config;
+import com.github.dakusui.scriptiveunit.core.Script;
 import com.github.dakusui.scriptiveunit.exceptions.ScriptiveUnitException;
 import com.github.dakusui.scriptiveunit.featuretests.AssertionMessageTest;
 import com.github.dakusui.scriptiveunit.model.desc.testitem.IndexedTestCase;
@@ -51,8 +51,8 @@ public enum UtUtils {
     );
   }
 
-  static Config config() {
-    return new Config.Standard.Builder(DummyDriver.class, new Properties())
+  static Script config() {
+    return new Script.Standard.Builder(DummyDriver.class, new Properties())
         .withScriptResourceName("(none)")
         .build();
   }
@@ -158,7 +158,7 @@ public enum UtUtils {
     };
   }
 
-  @Load(with = DummyDriver.Loader.class)
+  @Load(with = AssertionMessageTest.Simple.Compiler.class)
   public static class DummyDriver extends AssertionMessageTest.Simple {
   }
 

@@ -1,7 +1,7 @@
 package com.github.dakusui.scriptiveunit.featuretests;
 
 import com.github.dakusui.scriptiveunit.annotations.Load;
-import com.github.dakusui.scriptiveunit.core.Config;
+import com.github.dakusui.scriptiveunit.core.Script;
 import com.github.dakusui.scriptiveunit.exceptions.ScriptiveUnitException;
 import com.github.dakusui.scriptiveunit.loaders.preprocessing.ApplicationSpec;
 import org.junit.Test;
@@ -36,11 +36,16 @@ public class BrokenTest {
     }
   }
 
-  @Load(with = Broken.Loader.class)
+  @Load(with = Broken.Compiler.class)
   public static class Broken extends SimpleTestBase {
-    public static class Loader extends SimpleTestBase.Loader {
-      public Loader(Config config) {
-        super(new Config.Delegating(config) {
+    public static class Compiler extends SimpleTestBase.Compiler {
+      public Compiler(Script script) {
+        super(new Script.Delegating(script) {
+          @Override
+          public String name() {
+            return Compiler.class.getCanonicalName();
+          }
+
           @Override
           public ApplicationSpec.Dictionary readScriptResource() {
             return createPreprocessor().preprocess(readRawBaseScript());

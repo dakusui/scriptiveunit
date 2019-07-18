@@ -1,6 +1,6 @@
 package com.github.dakusui.scriptiveunit.exceptions;
 
-import com.github.dakusui.scriptiveunit.core.Config;
+import com.github.dakusui.scriptiveunit.core.Script;
 import com.github.dakusui.scriptiveunit.model.form.Form;
 
 import java.util.List;
@@ -13,9 +13,9 @@ public class ConfigurationException extends ScriptiveUnitException {
     super(message);
   }
 
-  public static ConfigurationException scriptNotSpecified(Config config) {
-    if (config instanceof Config.Standard) {
-      String key = ((Config.Standard) config).getScriptResourceNameKey()
+  public static ConfigurationException scriptNotSpecified(Script script) {
+    if (script instanceof Script.Standard) {
+      String key = ((Script.Standard) script).getScriptResourceNameKey()
           .orElseThrow(ScriptiveUnitException::noScriptResourceNameKeyWasGiven);
       throw new ConfigurationException(format(
           "Script to be run was not specified. Give -D%s={FQCN of your script} to your command line as a VM option.",
@@ -42,7 +42,7 @@ public class ConfigurationException extends ScriptiveUnitException {
     throw new ScriptiveUnitException("No script was given in this session.");
   }
 
-  public static ScriptiveUnitException nonStandardConfig(Config config) {
-    throw new ScriptiveUnitException(format("Non-standard config:<%s> was given", config));
+  public static ScriptiveUnitException nonStandardConfig(Script script) {
+    throw new ScriptiveUnitException(format("Non-standard config:<%s> was given", script));
   }
 }

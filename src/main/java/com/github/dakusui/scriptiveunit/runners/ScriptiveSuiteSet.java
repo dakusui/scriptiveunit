@@ -1,6 +1,6 @@
 package com.github.dakusui.scriptiveunit.runners;
 
-import com.github.dakusui.scriptiveunit.core.Config;
+import com.github.dakusui.scriptiveunit.core.Script;
 import com.github.dakusui.scriptiveunit.exceptions.ScriptiveUnitException;
 import com.github.dakusui.scriptiveunit.utils.ReflectionUtils;
 import org.junit.runner.Description;
@@ -129,7 +129,7 @@ public class ScriptiveSuiteSet extends ParentRunner<Runner> {
 
   private static Runner createRunner(String scriptResourceName, Class<?> klass) {
     try {
-      return new ScriptiveUnit(klass, new Config.Standard.Builder(klass, System.getProperties()).withScriptResourceName(scriptResourceName).build());
+      return new ScriptiveUnit(klass, new Script.Standard.Builder(klass, System.getProperties()).withScriptResourceName(scriptResourceName).build());
     } catch (Error | RuntimeException e) {
       throw e;
     } catch (Throwable throwable) {

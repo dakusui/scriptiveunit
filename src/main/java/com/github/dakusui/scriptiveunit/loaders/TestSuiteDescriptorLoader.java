@@ -1,6 +1,6 @@
 package com.github.dakusui.scriptiveunit.loaders;
 
-import com.github.dakusui.scriptiveunit.core.Config;
+import com.github.dakusui.scriptiveunit.core.Script;
 import com.github.dakusui.scriptiveunit.exceptions.ScriptiveUnitException;
 import com.github.dakusui.scriptiveunit.loaders.json.JsonTestSuiteDescriptorBean;
 import com.github.dakusui.scriptiveunit.loaders.preprocessing.HostSpec;
@@ -15,30 +15,30 @@ import java.lang.reflect.InvocationTargetException;
 public interface TestSuiteDescriptorLoader {
   static TestSuiteDescriptorLoader createTestSuiteDescriptorLoader(
       Class<? extends TestSuiteDescriptorLoader> loaderClass,
-      Config config) {
-    return createInstance(loaderClass, config);
+      Script script) {
+    return createInstance(loaderClass, script);
   }
 
-  Config getConfig();
+  Script getScript();
 
   TestSuiteDescriptor loadTestSuiteDescriptor(Session session);
 
   class Impl implements TestSuiteDescriptorLoader {
-    private final Config config;
+    private final Script script;
 
-    public Impl(Config config) {
-      this.config = config;
+    public Impl(Script script) {
+      this.script = script;
     }
 
-    public Config getConfig() {
-      return this.config;
+    public Script getScript() {
+      return this.script;
     }
 
     @Override
     public TestSuiteDescriptor loadTestSuiteDescriptor(Session session) {
       return mapObjectNodeToJsonTestSuiteDescriptorBean(
           new HostSpec.Json()
-              .toHostObject(getConfig().readScriptResource()))
+              .toHostObject(getScript().readScriptResource()))
           .create(session);
     }
 
@@ -53,9 +53,9 @@ public interface TestSuiteDescriptorLoader {
     }
   }
 
-  static TestSuiteDescriptorLoader createInstance(Class<? extends TestSuiteDescriptorLoader> klass, Config config) {
+  static TestSuiteDescriptorLoader createInstance(Class<? extends TestSuiteDescriptorLoader> klass, Script script) {
     try {
-      return klass.getConstructor(Config.class).newInstance(config);
+      return klass.getConstructor(Script.class).newInstance(script);
     } catch (InstantiationException | IllegalAccessException | InvocationTargetException | NoSuchMethodException e) {
       throw ScriptiveUnitException.wrapIfNecessary(e);
     }

@@ -1,6 +1,6 @@
 package com.github.dakusui.scriptiveunit.model.desc;
 
-import com.github.dakusui.scriptiveunit.core.Config;
+import com.github.dakusui.scriptiveunit.core.Script;
 import com.github.dakusui.scriptiveunit.model.desc.testitem.IndexedTestCase;
 import com.github.dakusui.scriptiveunit.model.desc.testitem.TestOracle;
 import com.github.dakusui.scriptiveunit.model.statement.Statement;
@@ -33,7 +33,7 @@ public interface TestSuiteDescriptor {
 
   List<String> getInvolvedParameterNamesInSetUpAction();
 
-  Config getConfig();
+  Script getConfig();
 
   Statement.Factory statementFactory();
 }

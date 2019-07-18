@@ -4,7 +4,7 @@ import com.github.dakusui.actionunit.core.Action;
 import com.github.dakusui.actionunit.core.ActionSupport;
 import com.github.dakusui.jcunit.core.tuples.Tuple;
 import com.github.dakusui.jcunit8.factorspace.Constraint;
-import com.github.dakusui.scriptiveunit.core.Config;
+import com.github.dakusui.scriptiveunit.core.Script;
 import com.github.dakusui.scriptiveunit.core.Reporting;
 import com.github.dakusui.scriptiveunit.exceptions.ScriptiveUnitException;
 import com.github.dakusui.scriptiveunit.loaders.TestSuiteDescriptorLoader;
@@ -36,7 +36,7 @@ import static org.junit.Assume.assumeThat;
 
 public interface Session {
 
-  Config getConfig();
+  Script getScript();
 
   TestSuiteDescriptor getTestSuiteDescriptor();
 
@@ -52,19 +52,19 @@ public interface Session {
 
   Action createTearDownAfterAllAction(Tuple commonFixtureTuple);
 
-  static Session create(Config config, TestSuiteDescriptorLoader testSuiteDescriptorLoader) {
-    return new Impl(config, testSuiteDescriptorLoader);
+  static Session create(Script script, TestSuiteDescriptorLoader testSuiteDescriptorLoader) {
+    return new Impl(script, testSuiteDescriptorLoader);
   }
 
   class Impl implements Session {
-    private final Config                               config;
+    private final Script                               script;
     private final BiFunction<TestItem, String, Report> reportCreator;
     private final TestSuiteDescriptor                  testSuiteDescriptor;
 
     @SuppressWarnings("WeakerAccess")
-    protected Impl(Config config, TestSuiteDescriptorLoader testSuiteDescriptorLoader) {
-      this.config = config;
-      Reporting reporting = getConfig()
+    protected Impl(Script script, TestSuiteDescriptorLoader testSuiteDescriptorLoader) {
+      this.script = script;
+      Reporting reporting = getScript()
           .getReporting()
           .orElseThrow(ScriptiveUnitException::noReportingObjectIsAvailable);
       this.reportCreator = (testItem, scriptResourceName) -> Report.create(
@@ -78,8 +78,8 @@ public interface Session {
     }
 
     @Override
-    public Config getConfig() {
-      return this.config;
+    public Script getScript() {
+      return this.script;
     }
 
     @Override
@@ -203,7 +203,7 @@ public interface Session {
     Report createReport(TestItem testItem) {
       return this.reportCreator.apply(
           testItem,
-          getConfig().name());
+          getScript().name());
     }
 
     Sink<AssertionError> createErrorHandler(TestItem testItem, TestOracleValuesFactory definition, Report report) {
@@ -220,16 +220,16 @@ public interface Session {
     }
 
     Stage createSuiteLevelStage(Tuple suiteLevelTuple) {
-      return Stage.Factory.frameworkStageFor(this.getConfig(), suiteLevelTuple);
+      return Stage.Factory.frameworkStageFor(this.getScript(), suiteLevelTuple);
     }
 
     Stage createFixtureLevelStage(Tuple fixtureLevelTuple) {
-      return Stage.Factory.frameworkStageFor(this.getConfig(), fixtureLevelTuple);
+      return Stage.Factory.frameworkStageFor(this.getScript(), fixtureLevelTuple);
     }
 
     Stage createOracleLevelStage(TestItem testItem, Report report) {
       return Stage.Factory.oracleLevelStageFor(
-          this.getConfig(),
+          this.getScript(),
           testItem,
           null,
           null,
@@ -238,7 +238,7 @@ public interface Session {
 
     <RESPONSE> Stage createOracleVerificationStage(TestItem testItem, RESPONSE response, Report report) {
       return Stage.Factory.oracleLevelStageFor(
-          getConfig(),
+          getScript(),
           testItem,
           requireNonNull(response),
           null,
@@ -247,7 +247,7 @@ public interface Session {
 
     Stage createOracleFailureHandlingStage(TestItem testItem, Throwable throwable, Report report) {
       return Stage.Factory.oracleLevelStageFor(
-          getConfig(),
+          getScript(),
           testItem,
           null,
           throwable,

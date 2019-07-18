@@ -1,6 +1,6 @@
 package com.github.dakusui.scriptiveunit;
 
-import com.github.dakusui.scriptiveunit.core.Config;
+import com.github.dakusui.scriptiveunit.core.Script;
 import com.github.dakusui.scriptiveunit.core.Description;
 import com.github.dakusui.scriptiveunit.exceptions.ScriptiveUnitException;
 import com.github.dakusui.scriptiveunit.model.form.Form;
@@ -39,7 +39,7 @@ public class ScriptiveCore {
     try {
       final ScriptiveUnit scriptiveUnit = new ScriptiveUnit(
           validateDriverClass(driverClass),
-          new Config.Standard.Builder(driverClass, new Properties())
+          new Script.Standard.Builder(driverClass, new Properties())
               .withScriptResourceName(scriptResourceName)
               .build()
       );
@@ -53,7 +53,7 @@ public class ScriptiveCore {
     try {
       return Utils.getFormNames(new ScriptiveUnit(
           validateDriverClass(driverClass),
-          new Config.Standard.Builder(driverClass, new Properties())
+          new Script.Standard.Builder(driverClass, new Properties())
               .withScriptResourceName(scriptResourceName)
               .build()
       ), driverClass.newInstance());
@@ -88,7 +88,7 @@ public class ScriptiveCore {
 
   public Result runScript(Class<?> driverClass, String scriptResourceName) {
     try {
-      return new JUnitCore().run(new ScriptiveUnit(driverClass, new Config.Standard.Builder(driverClass, new Properties()).withScriptResourceName(scriptResourceName).build()));
+      return new JUnitCore().run(new ScriptiveUnit(driverClass, new Script.Standard.Builder(driverClass, new Properties()).withScriptResourceName(scriptResourceName).build()));
     } catch (Throwable throwable) {
       throw ScriptiveUnitException.wrapIfNecessary(throwable);
     }

@@ -3,7 +3,7 @@ package com.github.dakusui.scriptiveunit.libs;
 import com.github.dakusui.jcunit.core.tuples.Tuple;
 import com.github.dakusui.scriptiveunit.annotations.AccessesTestParameter;
 import com.github.dakusui.scriptiveunit.annotations.Scriptable;
-import com.github.dakusui.scriptiveunit.core.Config;
+import com.github.dakusui.scriptiveunit.core.Script;
 import com.github.dakusui.scriptiveunit.exceptions.ConfigurationException;
 import com.github.dakusui.scriptiveunit.exceptions.ScriptiveUnitException;
 import com.github.dakusui.scriptiveunit.exceptions.SyntaxException;
@@ -96,10 +96,10 @@ public class Core {
   public Value<Object> configAttr(Value<String> attrName) {
     return input -> {
       String attr = requireNonNull(attrName.apply(input));
-      Config work = input.getConfig();
-      if (!(work instanceof Config.Standard))
+      Script work = input.getScript();
+      if (!(work instanceof Script.Standard))
         throw ConfigurationException.nonStandardConfig(work);
-      Config.Standard config = (Config.Standard) work;
+      Script.Standard config = (Script.Standard) work;
       final Object retValue;
       switch (attr) {
         case "driverClass":

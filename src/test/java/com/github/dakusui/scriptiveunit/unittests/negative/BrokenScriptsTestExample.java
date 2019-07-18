@@ -1,6 +1,6 @@
 package com.github.dakusui.scriptiveunit.unittests.negative;
 
-import com.github.dakusui.scriptiveunit.core.Config;
+import com.github.dakusui.scriptiveunit.core.Script;
 import com.github.dakusui.scriptiveunit.exceptions.ScriptiveUnitException;
 import com.github.dakusui.scriptiveunit.testutils.TestBase;
 import com.github.dakusui.scriptiveunit.examples.Qapi;
@@ -71,7 +71,7 @@ public class BrokenScriptsTestExample extends TestBase {
 
 
   private void use(String s) {
-    String scriptSystemPropertyKey = new Config.Standard.Builder(Qapi.class, System.getProperties())
+    String scriptSystemPropertyKey = new Script.Standard.Builder(Qapi.class, System.getProperties())
         .build()
         .getScriptResourceNameKey()
         .orElseThrow(ScriptiveUnitException::noScriptResourceNameKeyWasGiven);

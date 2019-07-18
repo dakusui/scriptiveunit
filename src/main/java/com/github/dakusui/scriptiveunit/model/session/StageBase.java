@@ -1,19 +1,19 @@
 package com.github.dakusui.scriptiveunit.model.session;
 
-import com.github.dakusui.scriptiveunit.core.Config;
+import com.github.dakusui.scriptiveunit.core.Script;
 
 import java.util.Optional;
 
 abstract class StageBase implements Stage.Default {
-  private final Object response;
+  private final Object    response;
   private final Throwable throwable;
-  private final Config config;
-  private final Report report;
+  private final Script    script;
+  private final Report    report;
 
-  StageBase(Object response, Throwable throwable, Config config, Report report) {
+  StageBase(Object response, Throwable throwable, Script script, Report report) {
     this.response = response;
     this.throwable = throwable;
-    this.config = config;
+    this.script = script;
     this.report = report;
   }
 
@@ -39,8 +39,8 @@ abstract class StageBase implements Stage.Default {
   }
 
   @Override
-  public Config getConfig() {
-    return config;
+  public Script getScript() {
+    return script;
   }
 
   @Override

@@ -2,7 +2,7 @@ package com.github.dakusui.scriptiveunit.modeltests;
 
 import com.github.dakusui.jcunit.core.tuples.Tuple;
 import com.github.dakusui.scriptiveunit.annotations.Import;
-import com.github.dakusui.scriptiveunit.core.Config;
+import com.github.dakusui.scriptiveunit.core.Script;
 import com.github.dakusui.scriptiveunit.libs.Arith;
 import com.github.dakusui.scriptiveunit.model.form.FormRegistry;
 import com.github.dakusui.scriptiveunit.model.session.Stage;
@@ -39,8 +39,8 @@ public class StatementTest extends TestBase {
     return Stage.Factory.frameworkStageFor(createConfig(driverObject), new Tuple.Impl());
   }
 
-  private Config createConfig(Standard driverObject) {
-    return Config.Default.create(driverObject);
+  private Script createConfig(Standard driverObject) {
+    return Script.Default.create(driverObject);
   }
 
   private FormRegistry createFormRegistry(Standard driverObject) {

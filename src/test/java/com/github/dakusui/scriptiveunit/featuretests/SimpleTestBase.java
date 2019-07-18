@@ -2,7 +2,7 @@ package com.github.dakusui.scriptiveunit.featuretests;
 
 import com.github.dakusui.scriptiveunit.annotations.Import;
 import com.github.dakusui.scriptiveunit.annotations.Scriptable;
-import com.github.dakusui.scriptiveunit.core.Config;
+import com.github.dakusui.scriptiveunit.core.Script;
 import com.github.dakusui.scriptiveunit.libs.Core;
 import com.github.dakusui.scriptiveunit.libs.Predicates;
 import com.github.dakusui.scriptiveunit.libs.Strings;
@@ -44,9 +44,9 @@ public abstract class SimpleTestBase {
     }
   }
 
-  abstract static class Loader extends TestSuiteDescriptorLoader.Impl implements SyntaxSugar {
-    Loader(Config config) {
-      super(config);
+  abstract static class Compiler extends TestSuiteDescriptorLoader.Impl implements SyntaxSugar {
+    Compiler(Script script) {
+      super(script);
     }
   }
 

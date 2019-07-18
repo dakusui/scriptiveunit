@@ -18,7 +18,7 @@ import java.util.Properties;
 import static com.github.dakusui.scriptiveunit.exceptions.ConfigurationException.scriptNotSpecified;
 import static java.util.Objects.requireNonNull;
 
-public interface Config extends IConfig<JsonNode, ObjectNode, ArrayNode, JsonNode> {
+public interface Script extends IConfig<JsonNode, ObjectNode, ArrayNode, JsonNode> {
   FormRegistry formRegistry();
 
   Optional<Reporting> getReporting();
@@ -48,7 +48,7 @@ public interface Config extends IConfig<JsonNode, ObjectNode, ArrayNode, JsonNod
     return new HostSpec.Json();
   }
 
-  class Default implements Config {
+  class Default implements Script {
     private final Object driverObject;
     private final FormRegistry formRegistry;
 
@@ -77,19 +77,19 @@ public interface Config extends IConfig<JsonNode, ObjectNode, ArrayNode, JsonNod
       return driverObject.getClass().getCanonicalName();
     }
 
-    public static Config create(Object driverObject) {
+    public static Script create(Object driverObject) {
       return new Default(driverObject);
     }
   }
 
-  class Delegating implements Config {
-    private final Config base;
+  class Delegating implements Script {
+    private final Script base;
 
-    protected Delegating(Config base) {
+    protected Delegating(Script base) {
       this.base = base;
     }
 
-    protected Config base() {
+    protected Script base() {
       return this.base;
     }
 
@@ -139,7 +139,7 @@ public interface Config extends IConfig<JsonNode, ObjectNode, ArrayNode, JsonNod
     }
   }
 
-  class Standard implements Config {
+  class Standard implements Script {
     private final FormRegistry formRegistry;
     private Reporting reporting = new Reporting("report.json", new File("."));
     private final Object driverObject;
