@@ -2,7 +2,7 @@ package com.github.dakusui.scriptiveunit.runners;
 
 import com.github.dakusui.jcunit.core.tuples.Tuple;
 import com.github.dakusui.scriptiveunit.annotations.Load;
-import com.github.dakusui.scriptiveunit.core.Script;
+import com.github.dakusui.scriptiveunit.core.JsonScript;
 import com.github.dakusui.scriptiveunit.loaders.TestSuiteDescriptorLoader;
 import com.github.dakusui.scriptiveunit.model.desc.TestSuiteDescriptor;
 import com.github.dakusui.scriptiveunit.model.session.Session;
@@ -39,7 +39,7 @@ public class ScriptiveUnit extends Parameterized {
    */
   @SuppressWarnings("unused")
   public ScriptiveUnit(Class<?> klass) throws Throwable {
-    this(klass, new Script.Standard.Builder(klass, System.getProperties()).build());
+    this(klass, new JsonScript.Standard.Builder(klass, System.getProperties()).build());
   }
 
   /**
@@ -48,7 +48,7 @@ public class ScriptiveUnit extends Parameterized {
    * @param klass  A test class
    * @param config A config object.
    */
-  public ScriptiveUnit(Class<?> klass, Script.Standard config) throws Throwable {
+  public ScriptiveUnit(Class<?> klass, JsonScript.Standard config) throws Throwable {
     this(klass, TestSuiteDescriptorLoader.createTestSuiteDescriptorLoader(
         ReflectionUtils.getAnnotationWithDefault(
             config.getTestClass(),

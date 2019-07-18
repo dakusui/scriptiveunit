@@ -1,7 +1,7 @@
 package com.github.dakusui.scriptiveunit.model.session;
 
 import com.github.dakusui.jcunit.core.tuples.Tuple;
-import com.github.dakusui.scriptiveunit.core.Script;
+import com.github.dakusui.scriptiveunit.core.JsonScript;
 import com.github.dakusui.scriptiveunit.model.desc.testitem.TestItem;
 import com.github.dakusui.scriptiveunit.model.form.value.Value;
 
@@ -28,7 +28,7 @@ public interface Stage extends Value.Listener {
     }
   }
 
-  Script getScript();
+  JsonScript getScript();
 
   int sizeOfArguments();
 
@@ -66,11 +66,11 @@ public interface Stage extends Value.Listener {
   }
 
   interface Factory {
-    static <RESPONSE> Stage oracleLevelStageFor(Script script, TestItem testItem, RESPONSE response, Throwable throwable, Report report) {
+    static <RESPONSE> Stage oracleLevelStageFor(JsonScript script, TestItem testItem, RESPONSE response, Throwable throwable, Report report) {
       return new OracleLevelStage(response, throwable, script, report, testItem);
     }
 
-    static Stage frameworkStageFor(Script script, Tuple fixture) {
+    static Stage frameworkStageFor(JsonScript script, Tuple fixture) {
       return new FrameworkStage(fixture, script);
     }
 
@@ -108,7 +108,7 @@ public interface Stage extends Value.Listener {
     static Stage createValueListeningStage(Stage stage, Value.Listener formListener) {
       return new Stage() {
         @Override
-        public Script getScript() {
+        public JsonScript getScript() {
           return stage.getScript();
         }
 

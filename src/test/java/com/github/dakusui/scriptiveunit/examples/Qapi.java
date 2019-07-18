@@ -5,7 +5,7 @@ import com.github.dakusui.scriptiveunit.annotations.Import;
 import com.github.dakusui.scriptiveunit.annotations.Import.Alias;
 import com.github.dakusui.scriptiveunit.annotations.Load;
 import com.github.dakusui.scriptiveunit.annotations.Scriptable;
-import com.github.dakusui.scriptiveunit.core.Script;
+import com.github.dakusui.scriptiveunit.core.JsonScript;
 import com.github.dakusui.scriptiveunit.libs.Arith;
 import com.github.dakusui.scriptiveunit.libs.Collections;
 import com.github.dakusui.scriptiveunit.libs.Predicates;
@@ -35,7 +35,7 @@ import static java.util.Objects.requireNonNull;
 @RunWith(ScriptiveUnit.class)
 public class Qapi {
   public static class Loader extends TestSuiteDescriptorLoader.Impl {
-    public Loader(Script script) {
+    public Loader(JsonScript script) {
       super(script);
     }
   }

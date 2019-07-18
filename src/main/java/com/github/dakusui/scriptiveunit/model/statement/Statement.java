@@ -1,6 +1,6 @@
 package com.github.dakusui.scriptiveunit.model.statement;
 
-import com.github.dakusui.scriptiveunit.core.Script;
+import com.github.dakusui.scriptiveunit.core.JsonScript;
 import com.github.dakusui.scriptiveunit.exceptions.TypeMismatch;
 import com.github.dakusui.scriptiveunit.model.form.value.Value;
 import com.github.dakusui.scriptiveunit.model.form.FormHandle;
@@ -20,7 +20,7 @@ import static com.github.dakusui.scriptiveunit.exceptions.TypeMismatch.headOfCal
  * An interface that represents a lexical structure of a script element.
  */
 public interface Statement {
-  static Factory createStatementFactory(Script script, Map<String, List<Object>> userDefinedFormClauseMap) {
+  static Factory createStatementFactory(JsonScript script, Map<String, List<Object>> userDefinedFormClauseMap) {
     return new Factory(script.formRegistry(), userDefinedFormClauseMap);
   }
 

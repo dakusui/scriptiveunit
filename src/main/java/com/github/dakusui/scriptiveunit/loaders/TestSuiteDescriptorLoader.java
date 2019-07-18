@@ -1,6 +1,6 @@
 package com.github.dakusui.scriptiveunit.loaders;
 
-import com.github.dakusui.scriptiveunit.core.Script;
+import com.github.dakusui.scriptiveunit.core.JsonScript;
 import com.github.dakusui.scriptiveunit.exceptions.ScriptiveUnitException;
 import com.github.dakusui.scriptiveunit.loaders.json.JsonTestSuiteDescriptorBean;
 import com.github.dakusui.scriptiveunit.loaders.preprocessing.HostSpec;
@@ -15,22 +15,22 @@ import java.lang.reflect.InvocationTargetException;
 public interface TestSuiteDescriptorLoader {
   static TestSuiteDescriptorLoader createTestSuiteDescriptorLoader(
       Class<? extends TestSuiteDescriptorLoader> loaderClass,
-      Script script) {
+      JsonScript script) {
     return createInstance(loaderClass, script);
   }
 
-  Script getScript();
+  JsonScript getScript();
 
   TestSuiteDescriptor loadTestSuiteDescriptor(Session session);
 
   class Impl implements TestSuiteDescriptorLoader {
-    private final Script script;
+    private final JsonScript script;
 
-    public Impl(Script script) {
+    public Impl(JsonScript script) {
       this.script = script;
     }
 
-    public Script getScript() {
+    public JsonScript getScript() {
       return this.script;
     }
 
@@ -53,9 +53,9 @@ public interface TestSuiteDescriptorLoader {
     }
   }
 
-  static TestSuiteDescriptorLoader createInstance(Class<? extends TestSuiteDescriptorLoader> klass, Script script) {
+  static TestSuiteDescriptorLoader createInstance(Class<? extends TestSuiteDescriptorLoader> klass, JsonScript script) {
     try {
-      return klass.getConstructor(Script.class).newInstance(script);
+      return klass.getConstructor(JsonScript.class).newInstance(script);
     } catch (InstantiationException | IllegalAccessException | InvocationTargetException | NoSuchMethodException e) {
       throw ScriptiveUnitException.wrapIfNecessary(e);
     }

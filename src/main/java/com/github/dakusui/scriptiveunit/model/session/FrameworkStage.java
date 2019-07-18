@@ -1,14 +1,14 @@
 package com.github.dakusui.scriptiveunit.model.session;
 
 import com.github.dakusui.jcunit.core.tuples.Tuple;
-import com.github.dakusui.scriptiveunit.core.Script;
+import com.github.dakusui.scriptiveunit.core.JsonScript;
 
 import java.util.Optional;
 
 class FrameworkStage extends StageBase {
   private final Tuple testCase;
 
-  FrameworkStage(Tuple testCase, Script script) {
+  FrameworkStage(Tuple testCase, JsonScript script) {
     super(null, null, script, null);
     this.testCase = testCase;
   }

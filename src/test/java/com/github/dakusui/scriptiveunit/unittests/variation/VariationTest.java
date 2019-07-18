@@ -6,7 +6,7 @@ import com.github.dakusui.jcunit8.runners.junit4.annotations.Condition;
 import com.github.dakusui.jcunit8.runners.junit4.annotations.From;
 import com.github.dakusui.jcunit8.runners.junit4.annotations.Given;
 import com.github.dakusui.jcunit8.runners.junit4.annotations.ParameterSource;
-import com.github.dakusui.scriptiveunit.core.Script;
+import com.github.dakusui.scriptiveunit.core.JsonScript;
 import com.github.dakusui.scriptiveunit.loaders.TestSuiteDescriptorLoader;
 import com.github.dakusui.scriptiveunit.loaders.preprocessing.ApplicationSpec;
 import com.github.dakusui.scriptiveunit.runners.ScriptiveUnit;
@@ -163,12 +163,12 @@ public class VariationTest {
       Resource<ObjectNode> setUpBeforeAll,
       Resource<ObjectNode> testOracles
   ) throws Throwable {
-    Script.Standard baseConfig = new Script.Standard.Builder(Simple.class, new Properties()).withScriptResourceName("components/root.json").build();
+    JsonScript.Standard baseConfig = new JsonScript.Standard.Builder(Simple.class, new Properties()).withScriptResourceName("components/root.json").build();
     new JUnitCore().run(
         new ScriptiveUnit(
             Simple.class,
             new TestSuiteDescriptorLoader.Impl(
-                new Script.Delegating(baseConfig) {
+                new JsonScript.Delegating(baseConfig) {
                   @Override
                   public ApplicationSpec.Dictionary readScriptResource() {
                     return Loader.create(

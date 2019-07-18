@@ -4,7 +4,7 @@ import com.github.dakusui.actionunit.core.Action;
 import com.github.dakusui.actionunit.core.ActionSupport;
 import com.github.dakusui.jcunit.core.tuples.Tuple;
 import com.github.dakusui.jcunit8.factorspace.Constraint;
-import com.github.dakusui.scriptiveunit.core.Script;
+import com.github.dakusui.scriptiveunit.core.JsonScript;
 import com.github.dakusui.scriptiveunit.core.Reporting;
 import com.github.dakusui.scriptiveunit.exceptions.ScriptiveUnitException;
 import com.github.dakusui.scriptiveunit.loaders.TestSuiteDescriptorLoader;
@@ -36,7 +36,7 @@ import static org.junit.Assume.assumeThat;
 
 public interface Session {
 
-  Script getScript();
+  JsonScript getScript();
 
   TestSuiteDescriptor getTestSuiteDescriptor();
 
@@ -52,17 +52,17 @@ public interface Session {
 
   Action createTearDownAfterAllAction(Tuple commonFixtureTuple);
 
-  static Session create(Script script, TestSuiteDescriptorLoader testSuiteDescriptorLoader) {
+  static Session create(JsonScript script, TestSuiteDescriptorLoader testSuiteDescriptorLoader) {
     return new Impl(script, testSuiteDescriptorLoader);
   }
 
   class Impl implements Session {
-    private final Script                               script;
+    private final JsonScript                           script;
     private final BiFunction<TestItem, String, Report> reportCreator;
     private final TestSuiteDescriptor                  testSuiteDescriptor;
 
     @SuppressWarnings("WeakerAccess")
-    protected Impl(Script script, TestSuiteDescriptorLoader testSuiteDescriptorLoader) {
+    protected Impl(JsonScript script, TestSuiteDescriptorLoader testSuiteDescriptorLoader) {
       this.script = script;
       Reporting reporting = getScript()
           .getReporting()
@@ -78,7 +78,7 @@ public interface Session {
     }
 
     @Override
-    public Script getScript() {
+    public JsonScript getScript() {
       return this.script;
     }
 

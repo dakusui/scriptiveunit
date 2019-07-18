@@ -4,7 +4,7 @@ import com.github.dakusui.jcunit.core.tuples.Tuple;
 import com.github.dakusui.jcunit8.factorspace.Constraint;
 import com.github.dakusui.jcunit8.testsuite.TestCase;
 import com.github.dakusui.scriptiveunit.annotations.Load;
-import com.github.dakusui.scriptiveunit.core.Script;
+import com.github.dakusui.scriptiveunit.core.JsonScript;
 import com.github.dakusui.scriptiveunit.exceptions.ScriptiveUnitException;
 import com.github.dakusui.scriptiveunit.featuretests.AssertionMessageTest;
 import com.github.dakusui.scriptiveunit.model.desc.testitem.IndexedTestCase;
@@ -51,8 +51,8 @@ public enum UtUtils {
     );
   }
 
-  static Script config() {
-    return new Script.Standard.Builder(DummyDriver.class, new Properties())
+  static JsonScript config() {
+    return new JsonScript.Standard.Builder(DummyDriver.class, new Properties())
         .withScriptResourceName("(none)")
         .build();
   }

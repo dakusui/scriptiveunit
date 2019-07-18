@@ -2,7 +2,7 @@ package com.github.dakusui.scriptiveunit.featuretests;
 
 import com.github.dakusui.scriptiveunit.annotations.Import;
 import com.github.dakusui.scriptiveunit.annotations.Scriptable;
-import com.github.dakusui.scriptiveunit.core.Script;
+import com.github.dakusui.scriptiveunit.core.JsonScript;
 import com.github.dakusui.scriptiveunit.libs.Core;
 import com.github.dakusui.scriptiveunit.libs.Predicates;
 import com.github.dakusui.scriptiveunit.libs.Strings;
@@ -45,7 +45,7 @@ public abstract class SimpleTestBase {
   }
 
   abstract static class Compiler extends TestSuiteDescriptorLoader.Impl implements SyntaxSugar {
-    Compiler(Script script) {
+    Compiler(JsonScript script) {
       super(script);
     }
   }

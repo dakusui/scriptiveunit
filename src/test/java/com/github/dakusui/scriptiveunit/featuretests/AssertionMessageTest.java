@@ -1,7 +1,7 @@
 package com.github.dakusui.scriptiveunit.featuretests;
 
 import com.github.dakusui.scriptiveunit.annotations.Load;
-import com.github.dakusui.scriptiveunit.core.Script;
+import com.github.dakusui.scriptiveunit.core.JsonScript;
 import com.github.dakusui.scriptiveunit.loaders.preprocessing.ApplicationSpec;
 import com.github.dakusui.scriptiveunit.runners.ScriptiveUnit;
 import com.github.dakusui.scriptiveunit.testutils.TestBase;
@@ -101,12 +101,8 @@ public class AssertionMessageTest extends TestBase {
   @Load(with = Simple.Compiler.class)
   public static class Simple extends SimpleTestBase {
     public static class Compiler extends SimpleTestBase.Compiler implements SyntaxSugar {
-      public Compiler(Script script) {
-        super(new Script.Delegating(script) {
-          @Override
-          public String name() {
-            return Compiler.class.getCanonicalName();
-          }
+      public Compiler(JsonScript script) {
+        super(new JsonScript.Delegating(script) {
           @Override
           public ApplicationSpec.Dictionary readScriptResource() {
             return new SyntaxSugar() {

@@ -1,16 +1,16 @@
 package com.github.dakusui.scriptiveunit.model.session;
 
-import com.github.dakusui.scriptiveunit.core.Script;
+import com.github.dakusui.scriptiveunit.core.JsonScript;
 
 import java.util.Optional;
 
 abstract class StageBase implements Stage.Default {
-  private final Object    response;
-  private final Throwable throwable;
-  private final Script    script;
-  private final Report    report;
+  private final Object     response;
+  private final Throwable  throwable;
+  private final JsonScript script;
+  private final Report     report;
 
-  StageBase(Object response, Throwable throwable, Script script, Report report) {
+  StageBase(Object response, Throwable throwable, JsonScript script, Report report) {
     this.response = response;
     this.throwable = throwable;
     this.script = script;
@@ -39,7 +39,7 @@ abstract class StageBase implements Stage.Default {
   }
 
   @Override
-  public Script getScript() {
+  public JsonScript getScript() {
     return script;
   }
 
