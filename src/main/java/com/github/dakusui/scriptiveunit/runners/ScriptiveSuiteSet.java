@@ -129,7 +129,7 @@ public class ScriptiveSuiteSet extends ParentRunner<Runner> {
 
   private static Runner createRunner(String scriptResourceName, Class<?> klass) {
     try {
-      return new ScriptiveUnit(klass, new Config.Builder(klass, System.getProperties()).withScriptResourceName(scriptResourceName).build());
+      return new ScriptiveUnit(klass, new Config.Standard.Builder(klass, System.getProperties()).withScriptResourceName(scriptResourceName).build());
     } catch (Error | RuntimeException e) {
       throw e;
     } catch (Throwable throwable) {

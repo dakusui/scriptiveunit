@@ -52,7 +52,7 @@ public enum UtUtils {
   }
 
   static Config config() {
-    return new Config.Builder(DummyDriver.class, new Properties())
+    return new Config.Standard.Builder(DummyDriver.class, new Properties())
         .withScriptResourceName("(none)")
         .build();
   }

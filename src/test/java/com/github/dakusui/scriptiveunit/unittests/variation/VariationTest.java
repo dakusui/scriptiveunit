@@ -163,7 +163,7 @@ public class VariationTest {
       Resource<ObjectNode> setUpBeforeAll,
       Resource<ObjectNode> testOracles
   ) throws Throwable {
-    Config.Standard baseConfig = new Config.Builder(Simple.class, new Properties()).withScriptResourceName("components/root.json").build();
+    Config.Standard baseConfig = new Config.Standard.Builder(Simple.class, new Properties()).withScriptResourceName("components/root.json").build();
     new JUnitCore().run(
         new ScriptiveUnit(
             Simple.class,

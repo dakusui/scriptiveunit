@@ -71,7 +71,7 @@ public class BrokenScriptsTestExample extends TestBase {
 
 
   private void use(String s) {
-    String scriptSystemPropertyKey = new Config.Builder(Qapi.class, System.getProperties())
+    String scriptSystemPropertyKey = new Config.Standard.Builder(Qapi.class, System.getProperties())
         .build()
         .getScriptResourceNameKey()
         .orElseThrow(ScriptiveUnitException::noScriptResourceNameKeyWasGiven);

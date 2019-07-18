@@ -139,29 +139,6 @@ public interface Config extends IConfig<JsonNode, ObjectNode, ArrayNode, JsonNod
     }
   }
 
-  class Builder {
-    private final Properties properties;
-    final Load loadAnnotation;
-    private final Class<?> driverClass;
-
-    public Builder(Class<?> driverClass, Properties properties) {
-      this.driverClass = driverClass;
-      this.properties = new Properties();
-      this.properties.putAll(properties);
-      this.loadAnnotation = ReflectionUtils.getAnnotation(driverClass, Load.class, Load.DEFAULT_INSTANCE);
-    }
-
-    public Builder withScriptResourceName(String scriptResourceName) {
-      this.properties.put(loadAnnotation.scriptSystemPropertyKey(), scriptResourceName);
-      return this;
-    }
-
-    public Config.Standard build() {
-      return new Config.Standard(this);
-    }
-
-  }
-
   class Standard implements Config {
     private final FormRegistry formRegistry;
     private Reporting reporting = new Reporting("report.json", new File("."));
@@ -219,6 +196,29 @@ public interface Config extends IConfig<JsonNode, ObjectNode, ArrayNode, JsonNod
     @Override
     public String name() {
       return this.getScriptResourceName().orElseThrow(RuntimeException::new);
+    }
+
+    public static class Builder {
+      private final Properties properties;
+      final Load loadAnnotation;
+      private final Class<?> driverClass;
+
+      public Builder(Class<?> driverClass, Properties properties) {
+        this.driverClass = driverClass;
+        this.properties = new Properties();
+        this.properties.putAll(properties);
+        this.loadAnnotation = ReflectionUtils.getAnnotation(driverClass, Load.class, Load.DEFAULT_INSTANCE);
+      }
+
+      public Builder withScriptResourceName(String scriptResourceName) {
+        this.properties.put(loadAnnotation.scriptSystemPropertyKey(), scriptResourceName);
+        return this;
+      }
+
+      public Standard build() {
+        return new Standard(this);
+      }
+
     }
   }
 }

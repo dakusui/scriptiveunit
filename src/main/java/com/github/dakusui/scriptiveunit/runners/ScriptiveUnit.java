@@ -39,7 +39,7 @@ public class ScriptiveUnit extends Parameterized {
    */
   @SuppressWarnings("unused")
   public ScriptiveUnit(Class<?> klass) throws Throwable {
-    this(klass, new Config.Builder(klass, System.getProperties()).build());
+    this(klass, new Config.Standard.Builder(klass, System.getProperties()).build());
   }
 
   /**

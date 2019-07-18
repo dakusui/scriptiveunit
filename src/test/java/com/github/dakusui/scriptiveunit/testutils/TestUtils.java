@@ -15,7 +15,7 @@ public enum TestUtils {
   }
 
   public static void configureScriptNameSystemProperty(String scriptName, Class driverClass) {
-    String scriptSystemPropertyKey = new Config.Builder(driverClass, System.getProperties()).build()
+    String scriptSystemPropertyKey = new Config.Standard.Builder(driverClass, System.getProperties()).build()
         .getScriptResourceNameKey().orElseThrow(ScriptiveUnitException::noScriptResourceNameKeyWasGiven);
     System.setProperty(scriptSystemPropertyKey, scriptName);
   }
