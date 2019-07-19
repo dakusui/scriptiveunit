@@ -12,15 +12,19 @@ import org.reflections.scanners.TypeAnnotationsScanner;
 import java.io.InputStream;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.AnnotatedElement;
+import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
+import static com.github.dakusui.scriptiveunit.exceptions.ScriptiveUnitException.wrapIfNecessary;
 import static java.lang.ClassLoader.getSystemResourceAsStream;
 import static java.util.stream.Collectors.toList;
 
@@ -91,5 +95,39 @@ public enum ReflectionUtils {
     } catch (IllegalAccessException e) {
       throw ScriptiveUnitException.wrapIfNecessary(e);
     }
+  }
+
+  @SuppressWarnings("unchecked")
+  public static <T> T createInstance(Class<? extends T> value, Object[] args) {
+    try {
+      return (T) chooseConstructor(
+          value.getConstructors(),
+          args).orElseThrow(RuntimeException::new)
+          .newInstance(args);
+    } catch (InstantiationException | IllegalAccessException | InvocationTargetException e) {
+      throw wrapIfNecessary(e);
+    }
+  }
+
+  static Optional<Constructor<?>> chooseConstructor(Constructor<?>[] constructors, Object[] args) {
+    Class<?>[] argTypes = Arrays.stream(args)
+        .map(arg -> arg == null ? null : arg.getClass())
+        .toArray(i -> (Class<?>[]) new Class[i]);
+    return Arrays.stream(constructors)
+        .filter(each -> typesMatch(each.getParameterTypes(), argTypes))
+        .findFirst();
+  }
+
+  private static boolean typesMatch(Class<?>[] parameterTypes, Class<?>[] argTypes) {
+    if (parameterTypes.length != argTypes.length)
+      return false;
+    for (int i = 0; i < parameterTypes.length; i++) {
+      if (argTypes[i] == null)
+        continue;
+      ;
+      if (!parameterTypes[i].isAssignableFrom(argTypes[i]))
+        return false;
+    }
+    return true;
   }
 }

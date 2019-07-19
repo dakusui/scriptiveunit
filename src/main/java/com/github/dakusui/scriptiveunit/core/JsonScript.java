@@ -16,7 +16,6 @@ import java.util.Optional;
 import java.util.Properties;
 
 import static com.github.dakusui.scriptiveunit.exceptions.ConfigurationException.scriptNotSpecified;
-import static java.util.Objects.requireNonNull;
 
 public interface JsonScript extends Script<JsonNode, ObjectNode, ArrayNode, JsonNode> {
   @Override
@@ -130,12 +129,20 @@ public interface JsonScript extends Script<JsonNode, ObjectNode, ArrayNode, Json
     private final FormRegistry formRegistry;
     private       Reporting    reporting = new Reporting("report.json", new File("."));
     private final Object       driverObject;
-    private final Builder      builder;
+    private final Properties   properties;
+    final         CompatLoad   loadAnnotation;
 
-    Standard(Builder builder) {
-      this.builder = requireNonNull(builder);
-      this.driverObject = createDriverObject(this.builder);
-      this.formRegistry = FormRegistry.getFormRegistry(driverObject);
+    public Standard(Class<?> driverClass, Properties properties) {
+      this.driverObject = createDriverObject(driverClass);
+      this.formRegistry = this.createFormRegistry();
+      this.properties = new Properties();
+      this.properties.putAll(properties);
+      this.loadAnnotation = ReflectionUtils.getAnnotation(driverClass, CompatLoad.class, CompatLoad.DEFAULT_INSTANCE);
+    }
+
+    public Standard(Class<?> driverClass, Properties properties, String scriptResourceName) {
+      this(driverClass, properties);
+      this.properties.put(this.loadAnnotation.scriptSystemPropertyKey(), scriptResourceName);
     }
 
     public Class getTestClass() {
@@ -148,12 +155,24 @@ public interface JsonScript extends Script<JsonNode, ObjectNode, ArrayNode, Json
     }
 
     public Optional<String> getScriptResourceName() {
-      String work = builder.properties.getProperty(
+      String work = this.properties.getProperty(
           getScriptResourceNameKey().orElseThrow(ScriptiveUnitException::noScriptResourceNameKeyWasGiven),
-          builder.loadAnnotation.script());
+          this.loadAnnotation.script());
       return CompatLoad.SCRIPT_NOT_SPECIFIED.equals(work) ?
           Optional.empty() :
           Optional.of(work);
+    }
+
+    private FormRegistry createFormRegistry() {
+      return FormRegistry.getFormRegistry(this.driverObject);
+    }
+
+    private static Object createDriverObject(Class<?> driverClass) {
+      try {
+        return driverClass.newInstance();
+      } catch (InstantiationException | IllegalAccessException e) {
+        throw ScriptiveUnitException.wrapIfNecessary(e);
+      }
     }
 
     @Override
@@ -169,38 +188,7 @@ public interface JsonScript extends Script<JsonNode, ObjectNode, ArrayNode, Json
     }
 
     public Optional<String> getScriptResourceNameKey() {
-      return Optional.of(builder.loadAnnotation.scriptSystemPropertyKey());
-    }
-
-    private static Object createDriverObject(Builder builder) {
-      try {
-        return builder.driverClass.newInstance();
-      } catch (InstantiationException | IllegalAccessException e) {
-        throw ScriptiveUnitException.wrapIfNecessary(e);
-      }
-    }
-
-    public static class Builder {
-      private final Properties properties;
-      final CompatLoad loadAnnotation;
-      private final Class<?>   driverClass;
-
-      public Builder(Class<?> driverClass, Properties properties) {
-        this.driverClass = driverClass;
-        this.properties = new Properties();
-        this.properties.putAll(properties);
-        this.loadAnnotation = ReflectionUtils.getAnnotation(driverClass, CompatLoad.class, CompatLoad.DEFAULT_INSTANCE);
-      }
-
-      public Builder withScriptResourceName(String scriptResourceName) {
-        this.properties.put(loadAnnotation.scriptSystemPropertyKey(), scriptResourceName);
-        return this;
-      }
-
-      public Standard build() {
-        return new Standard(this);
-      }
-
+      return Optional.of(loadAnnotation.scriptSystemPropertyKey());
     }
   }
 }

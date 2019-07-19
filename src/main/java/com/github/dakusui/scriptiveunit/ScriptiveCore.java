@@ -1,7 +1,7 @@
 package com.github.dakusui.scriptiveunit;
 
-import com.github.dakusui.scriptiveunit.core.JsonScript;
 import com.github.dakusui.scriptiveunit.core.Description;
+import com.github.dakusui.scriptiveunit.core.JsonScript;
 import com.github.dakusui.scriptiveunit.exceptions.ScriptiveUnitException;
 import com.github.dakusui.scriptiveunit.model.form.Form;
 import com.github.dakusui.scriptiveunit.runners.RunningMode;
@@ -39,9 +39,7 @@ public class ScriptiveCore {
     try {
       final ScriptiveUnit scriptiveUnit = new ScriptiveUnit(
           validateDriverClass(driverClass),
-          new JsonScript.Standard.Builder(driverClass, new Properties())
-              .withScriptResourceName(scriptResourceName)
-              .build()
+          new JsonScript.Standard(driverClass, new Properties(), scriptResourceName)
       );
       return Utils.describeForm(scriptiveUnit, driverClass.newInstance(), functionName);
     } catch (Throwable throwable) {
@@ -53,9 +51,7 @@ public class ScriptiveCore {
     try {
       return Utils.getFormNames(new ScriptiveUnit(
           validateDriverClass(driverClass),
-          new JsonScript.Standard.Builder(driverClass, new Properties())
-              .withScriptResourceName(scriptResourceName)
-              .build()
+          new JsonScript.Standard(driverClass, new Properties(), scriptResourceName)
       ), driverClass.newInstance());
     } catch (Throwable throwable) {
       throw ScriptiveUnitException.wrapIfNecessary(throwable);
@@ -88,7 +84,7 @@ public class ScriptiveCore {
 
   public Result runScript(Class<?> driverClass, String scriptResourceName) {
     try {
-      return new JUnitCore().run(new ScriptiveUnit(driverClass, new JsonScript.Standard.Builder(driverClass, new Properties()).withScriptResourceName(scriptResourceName).build()));
+      return new JUnitCore().run(new ScriptiveUnit(driverClass, new JsonScript.Standard(driverClass, new Properties(), scriptResourceName)));
     } catch (Throwable throwable) {
       throw ScriptiveUnitException.wrapIfNecessary(throwable);
     }

@@ -52,9 +52,10 @@ public enum UtUtils {
   }
 
   static JsonScript config() {
-    return new JsonScript.Standard.Builder(DummyDriver.class, new Properties())
-        .withScriptResourceName("(none)")
-        .build();
+    return new JsonScript.Standard(
+        DummyDriver.class,
+        new Properties(),
+        "(none)");
   }
 
   private static File createTemporaryDirectory() {

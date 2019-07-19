@@ -44,7 +44,7 @@ public abstract class SimpleTestBase {
     }
   }
 
-  abstract static class Compiler extends ScriptCompiler.Impl implements SyntaxSugar {
+  abstract static class Compiler extends ScriptCompiler.Compat implements SyntaxSugar {
     Compiler(JsonScript script) {
       super(script);
     }

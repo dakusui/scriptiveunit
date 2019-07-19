@@ -163,8 +163,11 @@ public class VariationTest {
       Resource<ObjectNode> setUpBeforeAll,
       Resource<ObjectNode> testOracles
   ) throws Throwable {
-    JsonScript.Standard baseConfig = new JsonScript.Standard.Builder(Simple.class, new Properties()).withScriptResourceName("components/root.json").build();
-    final ScriptCompiler.Impl impl = new ScriptCompiler.Impl(
+    JsonScript.Standard baseConfig = new JsonScript.Standard(
+        Simple.class,
+        new Properties(),
+        "components/root.json");
+    final ScriptCompiler.Compat compat = new ScriptCompiler.Compat(
         new JsonScript.Delegating(baseConfig) {
           @Override
           public ApplicationSpec.Dictionary readScriptResource() {
@@ -185,6 +188,6 @@ public class VariationTest {
     new JUnitCore().run(
         new ScriptiveUnit(
             Simple.class,
-            impl, impl.getScript()));
+            compat, compat.getScript()));
   }
 }

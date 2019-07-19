@@ -17,14 +17,34 @@ public interface ScriptCompiler {
   TestSuiteDescriptor compile(Session session, Script script);
 
   class Impl implements ScriptCompiler {
+    @Override
+    public TestSuiteDescriptor compile(Session session, Script script) {
+      return mapObjectNodeToJsonTestSuiteDescriptorBean(
+          new HostSpec.Json()
+              .toHostObject(script.readScriptResource()))
+          .create(session);
+    }
+
+    static JsonTestSuiteDescriptorBean mapObjectNodeToJsonTestSuiteDescriptorBean(ObjectNode rootNode) {
+      try {
+        return new ObjectMapper().readValue(
+            rootNode,
+            JsonTestSuiteDescriptorBean.class);
+      } catch (IOException e) {
+        throw ScriptiveUnitException.wrapIfNecessary(e);
+      }
+    }
+  }
+
+  class Compat extends Impl {
     private final JsonScript script;
 
-    public Impl(JsonScript script) {
+    public Compat(JsonScript script) {
       this.script = script;
     }
 
     @SuppressWarnings("JavaReflectionInvocation")
-    public static ScriptCompiler createInstance(Class<? extends ScriptCompiler.Impl> klass, Script script) {
+    public static ScriptCompiler createInstance(Class<? extends Compat> klass, Script script) {
       try {
         return klass.getConstructor(JsonScript.class).newInstance(script);
       } catch (InstantiationException | IllegalAccessException | InvocationTargetException | NoSuchMethodException e) {
@@ -34,24 +54,6 @@ public interface ScriptCompiler {
 
     public JsonScript getScript() {
       return this.script;
-    }
-
-    @Override
-    public TestSuiteDescriptor compile(Session session, Script script) {
-      return mapObjectNodeToJsonTestSuiteDescriptorBean(
-          new HostSpec.Json()
-              .toHostObject(script.readScriptResource()))
-          .create(session);
-    }
-
-    static private JsonTestSuiteDescriptorBean mapObjectNodeToJsonTestSuiteDescriptorBean(ObjectNode rootNode) {
-      try {
-        return new ObjectMapper().readValue(
-            rootNode,
-            JsonTestSuiteDescriptorBean.class);
-      } catch (IOException e) {
-        throw ScriptiveUnitException.wrapIfNecessary(e);
-      }
     }
   }
 

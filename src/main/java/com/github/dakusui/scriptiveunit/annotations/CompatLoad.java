@@ -28,8 +28,8 @@ public @interface CompatLoad {
     }
 
     @Override
-    public Class<? extends ScriptCompiler.Impl> with() {
-      return ScriptCompiler.Impl.class;
+    public Class<? extends ScriptCompiler.Compat> with() {
+      return ScriptCompiler.Compat.class;
     }
   };
 
@@ -37,5 +37,5 @@ public @interface CompatLoad {
 
   String scriptSystemPropertyKey() default DEFAULT_SCRIPT_SYSTEM_PROPERTY_KEY;
 
-  Class<? extends ScriptCompiler.Impl> with() default ScriptCompiler.Impl.class;
+  Class<? extends ScriptCompiler.Compat> with() default ScriptCompiler.Compat.class;
 }

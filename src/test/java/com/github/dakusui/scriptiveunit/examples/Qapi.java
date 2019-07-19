@@ -34,7 +34,7 @@ import static java.util.Objects.requireNonNull;
 @CompatLoad(with = Qapi.Loader.class)
 @RunWith(ScriptiveUnit.class)
 public class Qapi {
-  public static class Loader extends ScriptCompiler.Impl {
+  public static class Loader extends ScriptCompiler.Compat {
     public Loader(JsonScript script) {
       super(script);
     }

@@ -13,7 +13,7 @@ import org.junit.runner.RunWith;
 @CompatLoad(with = MemoizationDriverExample.Loader.class)
 @RunWith(ScriptiveUnit.class)
 public class MemoizationDriverExample {
-  public static class Loader extends ScriptCompiler.Impl {
+  public static class Loader extends ScriptCompiler.Compat {
     public Loader(JsonScript script) {
       super(script);
     }

@@ -1,9 +1,9 @@
 package com.github.dakusui.scriptiveunit.unittests.negative;
 
 import com.github.dakusui.scriptiveunit.core.JsonScript;
+import com.github.dakusui.scriptiveunit.examples.Qapi;
 import com.github.dakusui.scriptiveunit.exceptions.ScriptiveUnitException;
 import com.github.dakusui.scriptiveunit.testutils.TestBase;
-import com.github.dakusui.scriptiveunit.examples.Qapi;
 import org.junit.Test;
 import org.junit.runner.Description;
 import org.junit.runner.JUnitCore;
@@ -20,7 +20,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 public class BrokenScriptsTestExample extends TestBase {
   @Test
   public void runBrokenScript() {
-    use("tests/negative/01-malformed-script/script.json");
+    useMalformedScript();
     Result result = JUnitCore.runClasses(Qapi.class);
     assertThat(
         asStrings(result),
@@ -69,12 +69,10 @@ public class BrokenScriptsTestExample extends TestBase {
 
   }
 
-
-  private void use(String s) {
-    String scriptSystemPropertyKey = new JsonScript.Standard.Builder(Qapi.class, System.getProperties())
-        .build()
+  private void useMalformedScript() {
+    String scriptSystemPropertyKey = new JsonScript.Standard(Qapi.class, System.getProperties())
         .getScriptResourceNameKey()
         .orElseThrow(ScriptiveUnitException::noScriptResourceNameKeyWasGiven);
-    System.setProperty(scriptSystemPropertyKey, s);
+    System.setProperty(scriptSystemPropertyKey, "tests/negative/01-malformed-script/script.json");
   }
 }
