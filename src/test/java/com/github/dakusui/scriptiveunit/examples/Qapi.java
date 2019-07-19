@@ -3,7 +3,7 @@ package com.github.dakusui.scriptiveunit.examples;
 
 import com.github.dakusui.scriptiveunit.annotations.Import;
 import com.github.dakusui.scriptiveunit.annotations.Import.Alias;
-import com.github.dakusui.scriptiveunit.annotations.Compile;
+import com.github.dakusui.scriptiveunit.annotations.CompatLoad;
 import com.github.dakusui.scriptiveunit.annotations.Scriptable;
 import com.github.dakusui.scriptiveunit.core.JsonScript;
 import com.github.dakusui.scriptiveunit.libs.Arith;
@@ -31,7 +31,7 @@ import static java.util.Objects.requireNonNull;
 /**
  * A driver example.
  */
-@Compile(with = Qapi.Loader.class)
+@CompatLoad(with = Qapi.Loader.class)
 @RunWith(ScriptiveUnit.class)
 public class Qapi {
   public static class Loader extends ScriptCompiler.Impl {

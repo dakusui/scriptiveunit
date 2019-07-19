@@ -1,6 +1,6 @@
 package com.github.dakusui.scriptiveunit.core;
 
-import com.github.dakusui.scriptiveunit.annotations.Compile;
+import com.github.dakusui.scriptiveunit.annotations.CompatLoad;
 import com.github.dakusui.scriptiveunit.exceptions.ScriptiveUnitException;
 import com.github.dakusui.scriptiveunit.loaders.preprocessing.ApplicationSpec;
 import com.github.dakusui.scriptiveunit.loaders.preprocessing.HostSpec;
@@ -150,8 +150,8 @@ public interface JsonScript extends Script<JsonNode, ObjectNode, ArrayNode, Json
     public Optional<String> getScriptResourceName() {
       String work = builder.properties.getProperty(
           getScriptResourceNameKey().orElseThrow(ScriptiveUnitException::noScriptResourceNameKeyWasGiven),
-          builder.compileAnnotation.script());
-      return Compile.SCRIPT_NOT_SPECIFIED.equals(work) ?
+          builder.loadAnnotation.script());
+      return CompatLoad.SCRIPT_NOT_SPECIFIED.equals(work) ?
           Optional.empty() :
           Optional.of(work);
     }
@@ -169,7 +169,7 @@ public interface JsonScript extends Script<JsonNode, ObjectNode, ArrayNode, Json
     }
 
     public Optional<String> getScriptResourceNameKey() {
-      return Optional.of(builder.compileAnnotation.scriptSystemPropertyKey());
+      return Optional.of(builder.loadAnnotation.scriptSystemPropertyKey());
     }
 
     private static Object createDriverObject(Builder builder) {
@@ -182,18 +182,18 @@ public interface JsonScript extends Script<JsonNode, ObjectNode, ArrayNode, Json
 
     public static class Builder {
       private final Properties properties;
-      final         Compile    compileAnnotation;
+      final CompatLoad loadAnnotation;
       private final Class<?>   driverClass;
 
       public Builder(Class<?> driverClass, Properties properties) {
         this.driverClass = driverClass;
         this.properties = new Properties();
         this.properties.putAll(properties);
-        this.compileAnnotation = ReflectionUtils.getAnnotation(driverClass, Compile.class, Compile.DEFAULT_INSTANCE);
+        this.loadAnnotation = ReflectionUtils.getAnnotation(driverClass, CompatLoad.class, CompatLoad.DEFAULT_INSTANCE);
       }
 
       public Builder withScriptResourceName(String scriptResourceName) {
-        this.properties.put(compileAnnotation.scriptSystemPropertyKey(), scriptResourceName);
+        this.properties.put(loadAnnotation.scriptSystemPropertyKey(), scriptResourceName);
         return this;
       }
 

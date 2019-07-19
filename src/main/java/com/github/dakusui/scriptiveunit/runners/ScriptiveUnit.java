@@ -1,7 +1,7 @@
 package com.github.dakusui.scriptiveunit.runners;
 
 import com.github.dakusui.jcunit.core.tuples.Tuple;
-import com.github.dakusui.scriptiveunit.annotations.Compile;
+import com.github.dakusui.scriptiveunit.annotations.CompatLoad;
 import com.github.dakusui.scriptiveunit.core.JsonScript;
 import com.github.dakusui.scriptiveunit.core.Script;
 import com.github.dakusui.scriptiveunit.loaders.ScriptCompiler;
@@ -54,7 +54,7 @@ public class ScriptiveUnit extends Parameterized {
         ScriptCompiler.Impl.createInstance(
             ReflectionUtils.getAnnotationWithDefault(
                 script.getTestClass(),
-                Compile.DEFAULT_INSTANCE).with(), script),
+                CompatLoad.DEFAULT_INSTANCE).with(), script),
         script);
   }
 

@@ -1,6 +1,6 @@
 package com.github.dakusui.scriptiveunit.featuretests;
 
-import com.github.dakusui.scriptiveunit.annotations.Compile;
+import com.github.dakusui.scriptiveunit.annotations.CompatLoad;
 import com.github.dakusui.scriptiveunit.core.JsonScript;
 import com.github.dakusui.scriptiveunit.exceptions.ScriptiveUnitException;
 import com.github.dakusui.scriptiveunit.loaders.preprocessing.ApplicationSpec;
@@ -36,7 +36,7 @@ public class BrokenTest {
     }
   }
 
-  @Compile(with = Broken.Compiler.class)
+  @CompatLoad(with = Broken.Compiler.class)
   public static class Broken extends SimpleTestBase {
     public static class Compiler extends SimpleTestBase.Compiler {
       public Compiler(JsonScript script) {
