@@ -108,26 +108,26 @@ public class AssertionMessageTest extends TestBase {
     public static class Loader extends ScriptLoader.Base {
       @Override
       public JsonScript load(Class<?> driverClass) {
-        return JsonScript.createScript(driverClass,
-            new ApplicationSpec.Dictionary.Factory() {
-              ApplicationSpec.Dictionary createDictionary() {
-                return dict(
-                    $("testOracles", array(
-                        dict(
-                            $("description", "shouldPass"),
-                            $("when", array("format", "hello")),
-                            $("then", array("matches", array("output"), ".*ell.*"))),
-                        dict(
-                            $("description", "shouldFail"),
-                            $("when", array("format", "hello")),
-                            $("then", array("matches", array("output"), ".*ELLO"))),
-                        dict(
-                            $("description", "shouldBeIgnored"),
-                            $("given", array("not", array("always"))),
-                            $("when", array("format", "hello")),
-                            $("then", array("matches", array("output"), ".*Ell.*"))))));
-              }
-            }.createDictionary());
+        return JsonScript.Utils.createScript(new ApplicationSpec.Dictionary.Factory() {
+          ApplicationSpec.Dictionary createDictionary() {
+            return dict(
+                $("testOracles", array(
+                    dict(
+                        $("description", "shouldPass"),
+                        $("when", array("format", "hello")),
+                        $("then", array("matches", array("output"), ".*ell.*"))),
+                    dict(
+                        $("description", "shouldFail"),
+                        $("when", array("format", "hello")),
+                        $("then", array("matches", array("output"), ".*ELLO"))),
+                    dict(
+                        $("description", "shouldBeIgnored"),
+                        $("given", array("not", array("always"))),
+                        $("when", array("format", "hello")),
+                        $("then", array("matches", array("output"), ".*Ell.*"))))));
+          }
+        }.createDictionary(), driverClass
+        );
       }
     }
 

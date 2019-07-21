@@ -44,20 +44,6 @@ public enum DriverUtils {
         .forEach(System.out::println);
   }
 
-  public static JsonScript.Default createJsonScriptFromResource(Class<?> driverClass, String scriptResourceName) {
-    return createJsonScriptFromResource(JsonScript.Default.createLanguageSpecFromDriverClass(driverClass), scriptResourceName);
-  }
-
-  public static JsonScript.Default createJsonScriptFromResource(
-      LanguageSpec.ForJson languageSpecFromDriverClass,
-      String scriptResourceName) {
-    return JsonScript.Default.createFromResource(
-        scriptResourceName,
-        Reporting.create(),
-        languageSpecFromDriverClass
-    );
-  }
-
   public static class DriverExample {
     @Import({
         @Import.Alias(value = "*"),

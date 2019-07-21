@@ -3,7 +3,6 @@ package com.github.dakusui.scriptiveunit.core;
 import com.github.dakusui.scriptiveunit.annotations.RunScript;
 import com.github.dakusui.scriptiveunit.annotations.Utils;
 import com.github.dakusui.scriptiveunit.annotations.Value;
-import com.github.dakusui.scriptiveunit.utils.DriverUtils;
 import com.github.dakusui.scriptiveunit.utils.ReflectionUtils;
 
 import static java.util.Objects.requireNonNull;
@@ -23,7 +22,7 @@ public interface ScriptLoader {
 
     @Override
     public JsonScript load(Class<?> driverClass) {
-      return DriverUtils.createJsonScriptFromResource(driverClass, scriptResourceName);
+      return JsonScript.Utils.createScriptFromResource(driverClass, scriptResourceName);
     }
   }
 

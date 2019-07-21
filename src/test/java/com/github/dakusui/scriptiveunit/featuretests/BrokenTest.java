@@ -57,7 +57,7 @@ public class BrokenTest {
                     ))));
           }
         }.create();
-        return JsonScript.createScript(driverClass, dictionary);
+        return JsonScript.Utils.createScript(dictionary, driverClass);
       }
 
     }

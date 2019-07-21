@@ -23,7 +23,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Stream;
 
-import static com.github.dakusui.scriptiveunit.utils.DriverUtils.createJsonScriptFromResource;
+import static com.github.dakusui.scriptiveunit.core.JsonScript.Utils.createScriptFromResource;
 import static com.github.dakusui.scriptiveunit.exceptions.FacadeException.validateDriverClass;
 import static com.github.dakusui.scriptiveunit.exceptions.FacadeException.validateSuiteSetClass;
 import static com.github.dakusui.scriptiveunit.exceptions.ResourceException.functionNotFound;
@@ -38,7 +38,7 @@ public class ScriptiveCore {
 
   public Description describeFunction(Class<?> driverClass, String scriptResourceName, String functionName) {
     try {
-      JsonScript script = createJsonScriptFromResource(driverClass, scriptResourceName);
+      JsonScript script = JsonScript.Utils.createScriptFromResource(driverClass, scriptResourceName);
       final ScriptiveUnit scriptiveUnit = new ScriptiveUnit(
           validateDriverClass(driverClass),
           new ScriptCompiler.Default(),
@@ -52,7 +52,7 @@ public class ScriptiveCore {
 
   public List<String> listFunctions(Class<?> driverClass, String scriptResourceName) {
     try {
-      JsonScript script = createJsonScriptFromResource(driverClass, scriptResourceName);
+      JsonScript script = JsonScript.Utils.createScriptFromResource(driverClass, scriptResourceName);
       return Utils.getFormNames(new ScriptiveUnit(
           validateDriverClass(driverClass),
           new ScriptCompiler.Default(),
@@ -89,7 +89,7 @@ public class ScriptiveCore {
 
   public Result runScript(Class<?> driverClass, String scriptResourceName) {
     try {
-      JsonScript script = createJsonScriptFromResource(driverClass, scriptResourceName);
+      JsonScript script = JsonScript.Utils.createScriptFromResource(driverClass, scriptResourceName);
       return new JUnitCore().run(new ScriptiveUnit(
           driverClass,
           new ScriptCompiler.Default(),

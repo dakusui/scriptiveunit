@@ -10,37 +10,10 @@ import org.codehaus.jackson.node.ArrayNode;
 import org.codehaus.jackson.node.ObjectNode;
 
 import java.util.Optional;
-import java.util.Properties;
 
 import static java.util.Objects.requireNonNull;
 
 public interface JsonScript extends Script<JsonNode, ObjectNode, ArrayNode, JsonNode> {
-  static JsonScript createScript(Class<?> driverClass, ApplicationSpec.Dictionary dictionary) {
-    return getJsonScript(dictionary, Default.createLanguageSpecFromDriverClass(driverClass));
-  }
-
-  static JsonScript getJsonScript(ApplicationSpec.Dictionary dictionary, final LanguageSpec.ForJson languageSpecFromDriverClass) {
-    return new Base() {
-      private LanguageSpec<JsonNode, ObjectNode, ArrayNode, JsonNode> languageSpec = languageSpecFromDriverClass;
-      Reporting reporting = Reporting.create();
-
-      @Override
-      public Optional<Reporting> getReporting() {
-        return Optional.of(reporting);
-      }
-
-      @Override
-      public ApplicationSpec.Dictionary readRawBaseScript() {
-        return dictionary;
-      }
-
-      @Override
-      public LanguageSpec<JsonNode, ObjectNode, ArrayNode, JsonNode> languageSpec() {
-        return languageSpec;
-      }
-    };
-  }
-
   @Override
   default ApplicationSpec.Dictionary readScriptResource() {
     return createPreprocessor().preprocess(readRawBaseScript());
@@ -129,22 +102,6 @@ public interface JsonScript extends Script<JsonNode, ObjectNode, ArrayNode, Json
       return this.scriptResourceName;
     }
 
-    public static LanguageSpec.ForJson createLanguageSpecFromDriverClass(Class<?> driverClass) {
-      return LanguageSpec.ForJson.create(FormRegistry.getFormRegistry(createDriverObject(driverClass)));
-    }
-
-    private static LanguageSpec.ForJson createLanguageSpecFrom(Object driverObject) {
-      return LanguageSpec.ForJson.create(FormRegistry.getFormRegistry(driverObject));
-    }
-
-    private static Object createDriverObject(Class<?> driverClass) {
-      try {
-        return driverClass.newInstance();
-      } catch (InstantiationException | IllegalAccessException e) {
-        throw ScriptiveUnitException.wrapIfNecessary(e);
-      }
-    }
-
     @Override
     public Optional<Reporting> getReporting() {
       return Optional.ofNullable(reporting);
@@ -160,37 +117,6 @@ public interface JsonScript extends Script<JsonNode, ObjectNode, ArrayNode, Json
       return languageSpec;
     }
 
-    public static Default createFromResource(
-        String resourceName,
-        Reporting reporting,
-        LanguageSpec.ForJson languageSpec) {
-      return new Default(
-          languageSpec,
-          reporting,
-          resourceName);
-    }
-
-    public static Default createFromResourceSpecifiedByPropertyKey(
-        String propertyKey,
-        Reporting reporting,
-        Properties properties,
-        LanguageSpec.ForJson languageSpec) {
-      return createFromResource(
-          properties.getProperty(propertyKey),
-          reporting, languageSpec
-      );
-    }
-
-    static Default createFromResourceSpecifiedBySystemPropertyKey(
-        String systemPropertyKey,
-        Reporting reporting,
-        LanguageSpec.ForJson languageSpec) {
-      return createFromResourceSpecifiedByPropertyKey(
-          systemPropertyKey,
-          reporting,
-          System.getProperties(),
-          languageSpec);
-    }
   }
 
   class FromDriverClass extends Default {
@@ -198,7 +124,7 @@ public interface JsonScript extends Script<JsonNode, ObjectNode, ArrayNode, Json
     private final String   scriptResourceNameKey;
 
     public FromDriverClass(Class<?> driverClass, String scriptResourceName) {
-      super(Default.createLanguageSpecFrom(Default.createDriverObject(driverClass)),
+      super(Utils.createLanguageSpecFrom(Utils.createDriverObject(driverClass)),
           Reporting.create(),
           scriptResourceName
       );
@@ -212,6 +138,76 @@ public interface JsonScript extends Script<JsonNode, ObjectNode, ArrayNode, Json
 
     public Class getTestClass() {
       return this.driverClass;
+    }
+  }
+
+  enum Utils {
+    ;
+
+    public static JsonScript createScript(ApplicationSpec.Dictionary dictionary, Class<?> driverClass) {
+      return createScript(dictionary, createLanguageSpecFromDriverClass(driverClass));
+    }
+
+    public static JsonScript createScript(ApplicationSpec.Dictionary dictionary, final LanguageSpec.ForJson languageSpecFromDriverClass) {
+      return new Base() {
+        private LanguageSpec<JsonNode, ObjectNode, ArrayNode, JsonNode> languageSpec = languageSpecFromDriverClass;
+        Reporting reporting = Reporting.create();
+
+        @Override
+        public Optional<Reporting> getReporting() {
+          return Optional.of(reporting);
+        }
+
+        @Override
+        public ApplicationSpec.Dictionary readRawBaseScript() {
+          return dictionary;
+        }
+
+        @Override
+        public LanguageSpec<JsonNode, ObjectNode, ArrayNode, JsonNode> languageSpec() {
+          return languageSpec;
+        }
+      };
+    }
+
+    public static Default createScriptFromResource(Class<?> driverClass, String scriptResourceName) {
+      return createScriptFromResource(createLanguageSpecFromDriverClass(driverClass), scriptResourceName);
+    }
+
+    public static Default createScriptFromResource(
+        LanguageSpec.ForJson languageSpecFromDriverClass,
+        String scriptResourceName) {
+      return createScriptFromResource(
+          scriptResourceName,
+          Reporting.create(),
+          languageSpecFromDriverClass
+      );
+    }
+
+    public static Default createScriptFromResource(
+        String resourceName,
+        Reporting reporting,
+        LanguageSpec.ForJson languageSpec) {
+      return new Default(
+          languageSpec,
+          reporting,
+          resourceName);
+    }
+
+    private static LanguageSpec.ForJson createLanguageSpecFromDriverClass(Class<?> driverClass) {
+      return LanguageSpec.ForJson.create(FormRegistry.getFormRegistry(createDriverObject(driverClass)));
+    }
+
+    private static LanguageSpec.ForJson createLanguageSpecFrom(Object driverObject) {
+      return LanguageSpec.ForJson.create(FormRegistry.getFormRegistry(driverObject));
+    }
+
+    private static Object createDriverObject(Class<?> driverClass) {
+      try {
+        return driverClass.newInstance();
+      } catch (InstantiationException | IllegalAccessException e) {
+        throw ScriptiveUnitException.wrapIfNecessary(e);
+      }
     }
   }
 }
