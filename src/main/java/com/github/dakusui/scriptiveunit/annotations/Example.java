@@ -2,9 +2,9 @@ package com.github.dakusui.scriptiveunit.annotations;
 
 import com.github.dakusui.scriptiveunit.core.ScriptLoader;
 
-@Compile()
-@Load(
-    with = ScriptLoader.class,
+@CompileWith()
+@LoadBy(
+    value = ScriptLoader.class,
     args = @Value("")
 )
 public class Example {

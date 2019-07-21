@@ -4,6 +4,7 @@ import com.github.dakusui.scriptiveunit.loaders.preprocessing.ApplicationSpec;
 import com.github.dakusui.scriptiveunit.loaders.preprocessing.HostSpec;
 import com.github.dakusui.scriptiveunit.loaders.preprocessing.Preprocessor;
 
+import java.util.Objects;
 import java.util.Optional;
 
 public interface Script<NODE, OBJECT extends NODE, ARRAY extends NODE, ATOM extends NODE> {
@@ -32,6 +33,6 @@ public interface Script<NODE, OBJECT extends NODE, ARRAY extends NODE, ATOM exte
   }
 
   default String name() {
-    return this.getClass().getCanonicalName();
+    return Objects.toString(this.getClass().getCanonicalName());
   }
 }

@@ -1,8 +1,8 @@
 package com.github.dakusui.scriptiveunit.unittests.negative;
 
-import com.github.dakusui.scriptiveunit.core.JsonScript;
 import com.github.dakusui.scriptiveunit.examples.Qapi;
 import com.github.dakusui.scriptiveunit.testutils.TestBase;
+import com.github.dakusui.scriptiveunit.testutils.TestUtils;
 import org.junit.Test;
 import org.junit.runner.Description;
 import org.junit.runner.JUnitCore;
@@ -69,12 +69,8 @@ public class BrokenScriptsTestExample extends TestBase {
   }
 
   private void useMalformedScript() {
-    String scriptSystemPropertyKey = new JsonScript.Compat(
-        Qapi.class,
-        System.getProperties())
-        .getScriptResourceNameKey();
-    System.setProperty(
-        scriptSystemPropertyKey,
-        "tests/negative/01-malformed-script/script.json");
+    TestUtils.configureScriptNameSystemProperty(
+        "tests/negative/01-malformed-script/script.json",
+        Qapi.class);
   }
 }

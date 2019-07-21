@@ -21,7 +21,6 @@ import org.junit.runner.RunWith;
 
 import java.io.InputStream;
 import java.util.List;
-import java.util.Properties;
 import java.util.function.Function;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -165,7 +164,6 @@ public class VariationTest {
   ) throws Throwable {
     JsonScript.Compat baseScript = new JsonScript.Compat(
         Simple.class,
-        new Properties(),
         "components/root.json");
     new JUnitCore().run(
         new ScriptiveUnit(

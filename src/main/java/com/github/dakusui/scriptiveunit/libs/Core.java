@@ -31,7 +31,7 @@ public class Core {
    * @param attr Attribute name whose value should be returned
    * @param <E>  Type of attribute value to be returned.
    */
-  @SuppressWarnings({"unused", "unchecked"})
+  @SuppressWarnings({ "unused", "unchecked" })
   @Scriptable
   @AccessesTestParameter
   public <E> Value<E> attr(Value<String> attr) {
@@ -53,7 +53,7 @@ public class Core {
    * @param entryName A name of method to be invoked.
    * @param target    A target from which value of {@code entryName} will be returned.
    */
-  @SuppressWarnings({"unused", "unchecked"})
+  @SuppressWarnings({ "unused", "unchecked" })
   @Scriptable
   public <E> Value<E> value(Value<String> entryName, Value<?> target) {
     return (Stage input) -> {
@@ -103,17 +103,14 @@ public class Core {
       JsonScript.Compat config = (JsonScript.Compat) work;
       final Object retValue;
       switch (attr) {
-        case "driverClass":
-          retValue = config.getTestClass().getCanonicalName();
-          break;
-        case "scriptResourceName":
-          retValue = config.getScriptResourceName();
-          break;
-        case "scriptResourceNameKey":
-            retValue = config.getScriptResourceNameKey();
-          break;
-        default:
-          throw SyntaxException.systemAttributeNotFound(attr, input);
+      case "driverClass":
+        retValue = config.getTestClass().getCanonicalName();
+        break;
+      case "scriptResourceName":
+        retValue = config.getScriptResourceName();
+        break;
+      default:
+        throw SyntaxException.systemAttributeNotFound(attr, input);
       }
       return retValue;
     };

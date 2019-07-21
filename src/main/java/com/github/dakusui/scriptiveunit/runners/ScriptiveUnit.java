@@ -6,7 +6,7 @@ import com.github.dakusui.scriptiveunit.core.Script;
 import com.github.dakusui.scriptiveunit.loaders.ScriptCompiler;
 import com.github.dakusui.scriptiveunit.model.desc.TestSuiteDescriptor;
 import com.github.dakusui.scriptiveunit.model.session.Session;
-import com.github.dakusui.scriptiveunit.utils.DriverUtils;
+import com.github.dakusui.scriptiveunit.utils.ReflectionUtils;
 import com.github.dakusui.scriptiveunit.utils.TupleUtils;
 import org.junit.internal.runners.statements.RunBefores;
 import org.junit.runner.Runner;
@@ -18,6 +18,8 @@ import java.util.Collections;
 import java.util.List;
 
 import static com.github.dakusui.jcunit8.core.Utils.createTestClassMock;
+import static com.github.dakusui.scriptiveunit.annotations.Utils.createScriptCompilerFrom;
+import static com.github.dakusui.scriptiveunit.annotations.Utils.createScriptLoaderFrom;
 import static com.github.dakusui.scriptiveunit.utils.ActionUtils.performActionWithLogging;
 import static com.google.common.collect.Lists.newLinkedList;
 
@@ -40,8 +42,9 @@ public class ScriptiveUnit extends Parameterized {
   @SuppressWarnings("unused")
   public ScriptiveUnit(Class<?> klass) throws Throwable {
     this(klass,
-        new ScriptCompiler.Default(),
-        DriverUtils.createScript(klass, RunScript.Utils.getScriptResourceNameFrom(klass, System.getProperties())));
+        createScriptCompilerFrom(ReflectionUtils.getAnnotation(klass, RunScript.class).orElseThrow(RuntimeException::new).compiler()),
+        createScriptLoaderFrom(ReflectionUtils.getAnnotation(klass, RunScript.class).orElseThrow(RuntimeException::new).loader()).load(klass)
+    );
   }
 
   public ScriptiveUnit(Class<?> klass, ScriptCompiler scriptCompiler, Script script) throws Throwable {

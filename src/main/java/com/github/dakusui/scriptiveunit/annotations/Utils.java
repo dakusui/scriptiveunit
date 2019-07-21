@@ -11,16 +11,16 @@ import static com.github.dakusui.scriptiveunit.exceptions.ScriptiveUnitException
 public enum Utils {
   ;
 
-  static ScriptCompiler createScriptCompilerFrom(Compile compileAnnotation) {
-    return ReflectionUtils.createInstance(compileAnnotation.with(), argValues(compileAnnotation.args()));
+  public static ScriptCompiler createScriptCompilerFrom(CompileWith compileWithAnnotation) {
+    return ReflectionUtils.createInstance(compileWithAnnotation.with(), argValues(compileWithAnnotation.args()));
   }
 
-  static ScriptLoader createScriptLoaderFrom(Load loadAnnotation) {
-    return ReflectionUtils.createInstance(loadAnnotation.with(), argValues(loadAnnotation.args()));
+  public static ScriptLoader createScriptLoaderFrom(LoadBy loadByAnnotation) {
+    return ReflectionUtils.createInstance(loadByAnnotation.value(), argValues(loadByAnnotation.args()));
   }
 
   @SuppressWarnings("unchecked")
-  static Object[] argValues(Value[] values) {
+  public static Object[] argValues(Value[] values) {
     return Arrays.stream(values)
         .map(each -> {
           try {
@@ -31,4 +31,5 @@ public enum Utils {
         })
         .toArray(Object[]::new);
   }
+
 }

@@ -1,6 +1,5 @@
 package com.github.dakusui.scriptiveunit.core;
 
-import com.github.dakusui.scriptiveunit.annotations.RunScript;
 import com.github.dakusui.scriptiveunit.exceptions.ScriptiveUnitException;
 import com.github.dakusui.scriptiveunit.loaders.preprocessing.ApplicationSpec;
 import com.github.dakusui.scriptiveunit.loaders.preprocessing.HostSpec;
@@ -10,7 +9,6 @@ import org.codehaus.jackson.JsonNode;
 import org.codehaus.jackson.node.ArrayNode;
 import org.codehaus.jackson.node.ObjectNode;
 
-import java.io.File;
 import java.util.Optional;
 import java.util.Properties;
 
@@ -89,26 +87,15 @@ public interface JsonScript extends Script<JsonNode, ObjectNode, ArrayNode, Json
   }
 
   abstract class Base implements JsonScript {
-    private final LanguageSpec.ForJson languageSpec;
 
-    Base(LanguageSpec.ForJson languageSpec) {
-      this.languageSpec = requireNonNull(languageSpec);
-    }
-
-    @Override
-    public LanguageSpec<JsonNode, ObjectNode, ArrayNode, JsonNode> languageSpec() {
-      return this.languageSpec;
-    }
   }
 
-  class Default extends Base {
-
+  class Default implements JsonScript {
     private final LanguageSpec.ForJson languageSpec;
     private final Reporting            reporting;
     private final String               scriptResourceName;
 
     Default(LanguageSpec.ForJson languageSpec, Reporting reporting, String scriptResourceName) {
-      super(languageSpec);
       this.languageSpec = languageSpec;
       this.reporting = reporting;
       this.scriptResourceName = requireNonNull(scriptResourceName);
@@ -178,26 +165,19 @@ public interface JsonScript extends Script<JsonNode, ObjectNode, ArrayNode, Json
     }
   }
 
-  class Compat extends Base {
-    private final Reporting  reporting;
-    private final Class<?>   driverClass;
-    private final Properties properties;
-    private final String     scriptResourceNameKey;
+  class Compat extends Default {
+    private final Class<?> driverClass;
+    private final String   scriptResourceNameKey;
+    private final String   scriptResourceName;
 
-    public Compat(Class<?> driverClass, Properties properties) {
-      this(driverClass, properties, null);
-    }
-
-    public Compat(Class<?> driverClass, Properties properties, String scriptResourceName) {
-      super(Default.createLanguageSpecFrom(Default.createDriverObject(driverClass)));
-      final RunScript loadAnnotation = RunScript.Utils.getLoadAnnotation(driverClass);
-      this.properties = scriptResourceName != null ?
-          RunScript.Utils.createPropertiesFor(loadAnnotation, scriptResourceName) :
-          new Properties();
-      this.properties.putAll(properties);
+    public Compat(Class<?> driverClass, String scriptResourceName) {
+      super(Default.createLanguageSpecFrom(Default.createDriverObject(driverClass)),
+          Reporting.create(),
+          scriptResourceName
+      );
+      this.scriptResourceName = scriptResourceName;
       this.driverClass = requireNonNull(driverClass);
-      this.reporting = new Reporting("report.json", new File("."));
-      this.scriptResourceNameKey = loadAnnotation.scriptSystemPropertyKey();
+      this.scriptResourceNameKey = ScriptLoader.FromResourceSpecifiedBySystemProperty.getScriptResourceNameKey(driverClass);
     }
 
     public String getScriptResourceNameKey() {
@@ -205,21 +185,11 @@ public interface JsonScript extends Script<JsonNode, ObjectNode, ArrayNode, Json
     }
 
     public Optional<String> getScriptResourceName() {
-      String work = this.properties.getProperty(
-          getScriptResourceNameKey(),
-          RunScript.SCRIPT_NOT_SPECIFIED);
-      return RunScript.SCRIPT_NOT_SPECIFIED.equals(work) ?
-          Optional.empty() :
-          Optional.of(work);
+      return Optional.ofNullable(scriptResourceName);
     }
 
     public Class getTestClass() {
       return this.driverClass;
-    }
-
-    @Override
-    public Optional<Reporting> getReporting() {
-      return Optional.of(reporting);
     }
 
     @Override
@@ -228,6 +198,5 @@ public interface JsonScript extends Script<JsonNode, ObjectNode, ArrayNode, Json
           .readRawScript(
               getScriptResourceName().orElseThrow(() -> scriptNotSpecified(this)));
     }
-
   }
 }

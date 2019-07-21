@@ -1,12 +1,20 @@
 package com.github.dakusui.scriptiveunit.featuretests;
 
+import com.github.dakusui.scriptiveunit.annotations.LoadBy;
 import com.github.dakusui.scriptiveunit.annotations.RunScript;
 import com.github.dakusui.scriptiveunit.core.JsonScript;
+import com.github.dakusui.scriptiveunit.core.LanguageSpec;
+import com.github.dakusui.scriptiveunit.core.Reporting;
+import com.github.dakusui.scriptiveunit.core.ScriptLoader;
 import com.github.dakusui.scriptiveunit.exceptions.ScriptiveUnitException;
 import com.github.dakusui.scriptiveunit.loaders.preprocessing.ApplicationSpec;
+import org.codehaus.jackson.JsonNode;
+import org.codehaus.jackson.node.ArrayNode;
+import org.codehaus.jackson.node.ObjectNode;
 import org.junit.Test;
 
 import java.lang.reflect.InvocationTargetException;
+import java.util.Optional;
 
 import static com.github.dakusui.crest.Crest.allOf;
 import static com.github.dakusui.crest.Crest.asObject;
@@ -36,19 +44,21 @@ public class BrokenTest {
     }
   }
 
-  @RunScript(compileWith = Broken.Compiler.class)
+  @RunScript(
+      loader = @LoadBy(Broken.Loader.class),
+      compileWith = Broken.Compiler.class)
   public static class Broken extends SimpleTestBase {
-    public static class Compiler extends SimpleTestBase.Compiler {
-      public Compiler() {
-        super();
-      }
+    public static class Loader extends ScriptLoader.Base {
 
+      @Override
+      public JsonScript load(Class<?> driverClass) {
+        return new JsonScript.Base() {
+          private LanguageSpec<JsonNode, ObjectNode, ArrayNode, JsonNode> languageSpec = JsonScript.Default.createLanguageSpecFromDriverClass(driverClass);
+          Reporting reporting = Reporting.create();
 
-      JsonScript createScript(JsonScript script) {
-        return new JsonScript.Delegating(script) {
           @Override
-          public ApplicationSpec.Dictionary readScriptResource() {
-            return createPreprocessor().preprocess(readRawBaseScript());
+          public Optional<Reporting> getReporting() {
+            return Optional.of(reporting);
           }
 
           @Override
@@ -64,7 +74,18 @@ public class BrokenTest {
               }
             }.create();
           }
+
+          @Override
+          public LanguageSpec<JsonNode, ObjectNode, ArrayNode, JsonNode> languageSpec() {
+            return languageSpec;
+          }
         };
+      }
+    }
+
+    public static class Compiler extends SimpleTestBase.Compiler {
+      public Compiler() {
+        super();
       }
     }
   }

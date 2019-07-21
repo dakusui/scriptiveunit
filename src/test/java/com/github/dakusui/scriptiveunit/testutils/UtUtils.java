@@ -22,7 +22,6 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
-import java.util.Properties;
 
 import static java.util.Collections.emptyList;
 
@@ -30,7 +29,7 @@ public enum UtUtils {
   ;
   private static final File BASE_DIR = new File(
       "target/report_base",
-      new SimpleDateFormat("yyyy-MM-dd'T'HH_mm_ss.SSSZ"	).format(new Date()));
+      new SimpleDateFormat("yyyy-MM-dd'T'HH_mm_ss.SSSZ").format(new Date()));
 
   public static <T> Value<T> createForm(T value) {
     return s -> value;
@@ -52,10 +51,7 @@ public enum UtUtils {
   }
 
   static JsonScript config() {
-    return new JsonScript.Compat(
-        DummyDriver.class,
-        new Properties(),
-        "(none)");
+    return new JsonScript.Compat(DummyDriver.class, "(none)");
   }
 
   private static File createTemporaryDirectory() {

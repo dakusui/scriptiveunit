@@ -1,9 +1,9 @@
 package com.github.dakusui.scriptiveunit.utils;
 
 import com.github.dakusui.scriptiveunit.core.ObjectField;
-import com.github.dakusui.scriptiveunit.model.form.Form;
 import com.github.dakusui.scriptiveunit.exceptions.ResourceException;
 import com.github.dakusui.scriptiveunit.exceptions.ScriptiveUnitException;
+import com.github.dakusui.scriptiveunit.model.form.Form;
 import org.reflections.Reflections;
 import org.reflections.scanners.ResourcesScanner;
 import org.reflections.scanners.SubTypesScanner;
@@ -46,17 +46,15 @@ public enum ReflectionUtils {
   /**
    * Returns an annotation element of a specified type ({@code annotationClass})
    * attached to {@code annotatedElement}.
-   * If it is not present, {@code defaultInstance} will be returned.
+   * If it is not present, an empty {@code Optinal} will be returned.
    *
    * @param annotatedElement An element from which annotation object to be returned is retrieved.
    * @param annotationClass  An annotation class of the instance to be returned.
-   * @param defaultInstance  An annotation object to be returned in the {@code annotatedElement} doesn't have it.
    */
-  public static <T extends Annotation> T getAnnotation(AnnotatedElement annotatedElement, Class<T> annotationClass,
-      T defaultInstance) {
+  public static <T extends Annotation> Optional<T> getAnnotation(AnnotatedElement annotatedElement, Class<T> annotationClass) {
     return annotatedElement.isAnnotationPresent(annotationClass) ?
-        annotatedElement.getAnnotation(annotationClass) :
-        defaultInstance;
+        Optional.of(annotatedElement.getAnnotation(annotationClass)) :
+        Optional.empty();
   }
 
   public static List<Form> getAnnotatedMethods(Object object, Class<? extends Annotation> annotationClass,

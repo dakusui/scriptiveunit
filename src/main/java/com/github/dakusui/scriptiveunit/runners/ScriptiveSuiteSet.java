@@ -131,7 +131,7 @@ public class ScriptiveSuiteSet extends ParentRunner<Runner> {
 
   private static Runner createRunner(String scriptResourceName, Class<?> klass) {
     try {
-      JsonScript script = DriverUtils.createScript(klass, scriptResourceName);
+      JsonScript script = DriverUtils.createJsonScriptFromResource(klass, scriptResourceName);
       return new ScriptiveUnit(
           klass,
           new ScriptCompiler.Default(),
