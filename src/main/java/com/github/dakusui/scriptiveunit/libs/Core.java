@@ -98,9 +98,9 @@ public class Core {
     return input -> {
       String attr = requireNonNull(attrName.apply(input));
       Script work = input.getScript();
-      if (!(work instanceof JsonScript.Standard))
+      if (!(work instanceof JsonScript.Compat))
         throw ConfigurationException.nonStandardScript(work);
-      JsonScript.Standard config = (JsonScript.Standard) work;
+      JsonScript.Compat config = (JsonScript.Compat) work;
       final Object retValue;
       switch (attr) {
         case "driverClass":

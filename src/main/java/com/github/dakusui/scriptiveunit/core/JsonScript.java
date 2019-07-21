@@ -16,6 +16,7 @@ import java.util.Optional;
 import java.util.Properties;
 
 import static com.github.dakusui.scriptiveunit.exceptions.ConfigurationException.scriptNotSpecified;
+import static java.util.Objects.requireNonNull;
 
 public interface JsonScript extends Script<JsonNode, ObjectNode, ArrayNode, JsonNode> {
   @Override
@@ -29,43 +30,6 @@ public interface JsonScript extends Script<JsonNode, ObjectNode, ArrayNode, Json
       HostSpec<JsonNode, ObjectNode, ArrayNode, JsonNode> hostSpec) {
     return hostSpec.toApplicationDictionary(
         hostSpec.readObjectNode(resourceName));
-  }
-
-  @Override
-  default ApplicationSpec createApplicationSpec() {
-    return new ApplicationSpec.Standard();
-  }
-
-  @Override
-  default HostSpec<JsonNode, ObjectNode, ArrayNode, JsonNode> createHostSpec() {
-    return new HostSpec.Json();
-  }
-
-  class Default implements JsonScript {
-    private final FormRegistry formRegistry;
-
-    Default(FormRegistry formRegistry) {
-      this.formRegistry = formRegistry;
-    }
-
-    @Override
-    public FormRegistry formRegistry() {
-      return this.formRegistry;
-    }
-
-    @Override
-    public Optional<Reporting> getReporting() {
-      return Optional.empty();
-    }
-
-    @Override
-    public ApplicationSpec.Dictionary readRawBaseScript() {
-      throw new UnsupportedOperationException();
-    }
-
-    public static JsonScript create(FormRegistry formRegistry) {
-      return new Default(formRegistry);
-    }
   }
 
   class Delegating implements JsonScript {
@@ -105,13 +69,18 @@ public interface JsonScript extends Script<JsonNode, ObjectNode, ArrayNode, Json
     }
 
     @Override
-    public ApplicationSpec createApplicationSpec() {
-      return base.createApplicationSpec();
+    public LanguageSpec<JsonNode, ObjectNode, ArrayNode, JsonNode> languageSpec() {
+      return base.languageSpec();
     }
 
     @Override
-    public HostSpec<JsonNode, ObjectNode, ArrayNode, JsonNode> createHostSpec() {
-      return base.createHostSpec();
+    public ApplicationSpec applicationSpec() {
+      return base.applicationSpec();
+    }
+
+    @Override
+    public HostSpec<JsonNode, ObjectNode, ArrayNode, JsonNode> hostSpec() {
+      return base.hostSpec();
     }
 
     @Override
@@ -125,33 +94,116 @@ public interface JsonScript extends Script<JsonNode, ObjectNode, ArrayNode, Json
     }
   }
 
-  class Standard implements JsonScript {
+  abstract class Base implements JsonScript {
     private final FormRegistry formRegistry;
-    private       Reporting    reporting = new Reporting("report.json", new File("."));
-    private final Object       driverObject;
-    private final Properties   properties;
-    final         CompatLoad   loadAnnotation;
 
-    public Standard(Class<?> driverClass, Properties properties) {
+    Base(FormRegistry formRegistry) {
+      this.formRegistry = formRegistry;
+    }
+
+    @Override
+    public FormRegistry formRegistry() {
+      return this.formRegistry;
+    }
+
+  }
+
+  class Default2 extends Base {
+
+    private final LanguageSpec.ForJson languageSpec;
+    private final Reporting            reporting;
+
+    Default2(LanguageSpec.ForJson languageSpec, Reporting reporting) {
+      super(languageSpec.formRegistry());
+      this.languageSpec = languageSpec;
+      this.reporting = reporting;
+    }
+
+    @Override
+    public Optional<Reporting> getReporting() {
+      return Optional.ofNullable(reporting);
+    }
+
+    @Override
+    public ApplicationSpec.Dictionary readRawBaseScript() {
+      return null;
+    }
+
+    @Override
+    public LanguageSpec<JsonNode, ObjectNode, ArrayNode, JsonNode> languageSpec() {
+      return languageSpec;
+    }
+
+    static Default2 createFromJsonScriptResource(
+        String resourceName,
+        FormRegistry formRegistry,
+        Reporting reporting) {
+      return new Default2(
+          LanguageSpec.ForJson.create(formRegistry),
+          reporting);
+    }
+
+  }
+
+  class Default extends Base {
+
+    private final ApplicationSpec.Dictionary scriptBody;
+    private final Reporting                  reporting;
+    private final LanguageSpec.ForJson       languageSpec;
+
+    Default(
+        ApplicationSpec.Dictionary scriptBody,
+        FormRegistry formRegistry,
+        Reporting reporting,
+        LanguageSpec.ForJson languageSpec
+    ) {
+      super(formRegistry);
+      this.scriptBody = requireNonNull(scriptBody);
+      this.reporting = reporting;
+      this.languageSpec = languageSpec;
+    }
+
+    @Override
+    public Optional<Reporting> getReporting() {
+      return Optional.ofNullable(reporting);
+    }
+
+    @Override
+    public ApplicationSpec.Dictionary readRawBaseScript() {
+      return scriptBody;
+    }
+
+    @Override
+    public LanguageSpec<JsonNode, ObjectNode, ArrayNode, JsonNode> languageSpec() {
+      return this.languageSpec;
+    }
+  }
+
+  class Compat extends Base {
+    private       Reporting  reporting = new Reporting("report.json", new File("."));
+    private final Object     driverObject;
+    private final Properties properties;
+    final         CompatLoad loadAnnotation;
+
+    public Compat(Class<?> driverClass, Properties properties) {
+      super(createFormRegistry(createDriverObject(driverClass)));
       this.driverObject = createDriverObject(driverClass);
-      this.formRegistry = this.createFormRegistry();
       this.properties = new Properties();
       this.properties.putAll(properties);
       this.loadAnnotation = ReflectionUtils.getAnnotation(driverClass, CompatLoad.class, CompatLoad.DEFAULT_INSTANCE);
     }
 
-    public Standard(Class<?> driverClass, Properties properties, String scriptResourceName) {
+    private static FormRegistry createFormRegistry(Object driverObject) {
+      return FormRegistry.getFormRegistry(driverObject);
+    }
+
+    public Compat(Class<?> driverClass, Properties properties, String scriptResourceName) {
       this(driverClass, properties);
       this.properties.put(this.loadAnnotation.scriptSystemPropertyKey(), scriptResourceName);
     }
 
     public Class getTestClass() {
       return this.driverObject.getClass();
-    }
-
-    @Override
-    public FormRegistry formRegistry() {
-      return this.formRegistry;
     }
 
     public Optional<String> getScriptResourceName() {
@@ -161,10 +213,6 @@ public interface JsonScript extends Script<JsonNode, ObjectNode, ArrayNode, Json
       return CompatLoad.SCRIPT_NOT_SPECIFIED.equals(work) ?
           Optional.empty() :
           Optional.of(work);
-    }
-
-    private FormRegistry createFormRegistry() {
-      return FormRegistry.getFormRegistry(this.driverObject);
     }
 
     private static Object createDriverObject(Class<?> driverClass) {
@@ -182,9 +230,14 @@ public interface JsonScript extends Script<JsonNode, ObjectNode, ArrayNode, Json
 
     @Override
     public ApplicationSpec.Dictionary readRawBaseScript() {
-      return createHostSpec()
+      return hostSpec()
           .readRawScript(
               getScriptResourceName().orElseThrow(() -> scriptNotSpecified(this)));
+    }
+
+    @Override
+    public LanguageSpec<JsonNode, ObjectNode, ArrayNode, JsonNode> languageSpec() {
+      return LanguageSpec.ForJson.create(formRegistry());
     }
 
     public Optional<String> getScriptResourceNameKey() {

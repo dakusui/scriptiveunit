@@ -15,7 +15,7 @@ public enum TestUtils {
   }
 
   public static void configureScriptNameSystemProperty(String scriptName, Class driverClass) {
-    String scriptSystemPropertyKey = new JsonScript.Standard(
+    String scriptSystemPropertyKey = new JsonScript.Compat(
         driverClass, System.getProperties())
         .getScriptResourceNameKey()
         .orElseThrow(ScriptiveUnitException::noScriptResourceNameKeyWasGiven);

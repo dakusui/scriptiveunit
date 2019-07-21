@@ -163,7 +163,7 @@ public class VariationTest {
       Resource<ObjectNode> setUpBeforeAll,
       Resource<ObjectNode> testOracles
   ) throws Throwable {
-    JsonScript.Standard baseConfig = new JsonScript.Standard(
+    JsonScript.Compat baseConfig = new JsonScript.Compat(
         Simple.class,
         new Properties(),
         "components/root.json");
@@ -172,7 +172,7 @@ public class VariationTest {
           @Override
           public ApplicationSpec.Dictionary readScriptResource() {
             return Loader.create(
-                baseConfig.createApplicationSpec(),
+                baseConfig.applicationSpec(),
                 _extends,
                 description,
                 factors,

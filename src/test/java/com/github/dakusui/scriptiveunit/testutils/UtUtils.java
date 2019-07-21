@@ -52,7 +52,7 @@ public enum UtUtils {
   }
 
   static JsonScript config() {
-    return new JsonScript.Standard(
+    return new JsonScript.Compat(
         DummyDriver.class,
         new Properties(),
         "(none)");

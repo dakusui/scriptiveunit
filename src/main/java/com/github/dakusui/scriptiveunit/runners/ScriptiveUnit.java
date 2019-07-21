@@ -40,7 +40,7 @@ public class ScriptiveUnit extends Parameterized {
    */
   @SuppressWarnings("unused")
   public ScriptiveUnit(Class<?> klass) throws Throwable {
-    this(klass, new JsonScript.Standard(klass, System.getProperties()));
+    this(klass, new JsonScript.Compat(klass, System.getProperties()));
   }
 
   /**
@@ -49,7 +49,7 @@ public class ScriptiveUnit extends Parameterized {
    * @param klass  A test class
    * @param script A config object.
    */
-  public ScriptiveUnit(Class<?> klass, JsonScript.Standard script) throws Throwable {
+  public ScriptiveUnit(Class<?> klass, JsonScript.Compat script) throws Throwable {
     this(klass,
         ScriptCompiler.Compat.createInstance(
             ReflectionUtils.getAnnotationWithDefault(

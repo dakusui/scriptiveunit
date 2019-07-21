@@ -70,7 +70,7 @@ public class BrokenScriptsTestExample extends TestBase {
   }
 
   private void useMalformedScript() {
-    String scriptSystemPropertyKey = new JsonScript.Standard(Qapi.class, System.getProperties())
+    String scriptSystemPropertyKey = new JsonScript.Compat(Qapi.class, System.getProperties())
         .getScriptResourceNameKey()
         .orElseThrow(ScriptiveUnitException::noScriptResourceNameKeyWasGiven);
     System.setProperty(scriptSystemPropertyKey, "tests/negative/01-malformed-script/script.json");

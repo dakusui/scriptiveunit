@@ -131,7 +131,7 @@ public class ScriptiveSuiteSet extends ParentRunner<Runner> {
     try {
       return new ScriptiveUnit(
           klass,
-          new JsonScript.Standard(klass, System.getProperties(), scriptResourceName));
+          new JsonScript.Compat(klass, System.getProperties(), scriptResourceName));
     } catch (Error | RuntimeException e) {
       throw e;
     } catch (Throwable throwable) {

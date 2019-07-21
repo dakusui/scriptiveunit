@@ -9,8 +9,8 @@ import java.util.Optional;
 
 public interface Script<NODE, OBJECT extends NODE, ARRAY extends NODE, ATOM extends NODE> {
   default Preprocessor createPreprocessor() {
-    return new Preprocessor.Builder<>(createHostSpec())
-        .applicationSpec(createApplicationSpec())
+    return new Preprocessor.Builder<>(hostSpec())
+        .applicationSpec(applicationSpec())
         .build();
   }
 
@@ -24,9 +24,15 @@ public interface Script<NODE, OBJECT extends NODE, ARRAY extends NODE, ATOM exte
 
   ApplicationSpec.Dictionary readRawScriptResource(String s, HostSpec<NODE, OBJECT, ARRAY, ATOM> hostSpec);
 
-  ApplicationSpec createApplicationSpec();
+  LanguageSpec<NODE, OBJECT, ARRAY, ATOM> languageSpec();
 
-  HostSpec<NODE, OBJECT, ARRAY, ATOM> createHostSpec();
+  default ApplicationSpec applicationSpec() {
+    return languageSpec().applicationSpec();
+  }
+
+  default HostSpec<NODE, OBJECT, ARRAY, ATOM> hostSpec() {
+    return languageSpec().hostSpec();
+  }
 
   default String name() {
     return this.getClass().getCanonicalName();

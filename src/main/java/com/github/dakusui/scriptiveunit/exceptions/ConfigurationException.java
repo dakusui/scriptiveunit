@@ -15,8 +15,8 @@ public class ConfigurationException extends ScriptiveUnitException {
   }
 
   public static ConfigurationException scriptNotSpecified(JsonScript script) {
-    if (script instanceof JsonScript.Standard) {
-      String key = ((JsonScript.Standard) script).getScriptResourceNameKey()
+    if (script instanceof JsonScript.Compat) {
+      String key = ((JsonScript.Compat) script).getScriptResourceNameKey()
           .orElseThrow(ScriptiveUnitException::noScriptResourceNameKeyWasGiven);
       throw new ConfigurationException(format(
           "Script to be run was not specified. Give -D%s={FQCN of your script} to your command line as a VM option.",

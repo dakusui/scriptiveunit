@@ -39,7 +39,7 @@ public class ScriptiveCore {
     try {
       final ScriptiveUnit scriptiveUnit = new ScriptiveUnit(
           validateDriverClass(driverClass),
-          new JsonScript.Standard(driverClass, new Properties(), scriptResourceName)
+          new JsonScript.Compat(driverClass, new Properties(), scriptResourceName)
       );
       return Utils.describeForm(scriptiveUnit, driverClass.newInstance(), functionName);
     } catch (Throwable throwable) {
@@ -51,7 +51,7 @@ public class ScriptiveCore {
     try {
       return Utils.getFormNames(new ScriptiveUnit(
           validateDriverClass(driverClass),
-          new JsonScript.Standard(driverClass, new Properties(), scriptResourceName)
+          new JsonScript.Compat(driverClass, new Properties(), scriptResourceName)
       ), driverClass.newInstance());
     } catch (Throwable throwable) {
       throw ScriptiveUnitException.wrapIfNecessary(throwable);
@@ -84,7 +84,7 @@ public class ScriptiveCore {
 
   public Result runScript(Class<?> driverClass, String scriptResourceName) {
     try {
-      return new JUnitCore().run(new ScriptiveUnit(driverClass, new JsonScript.Standard(driverClass, new Properties(), scriptResourceName)));
+      return new JUnitCore().run(new ScriptiveUnit(driverClass, new JsonScript.Compat(driverClass, new Properties(), scriptResourceName)));
     } catch (Throwable throwable) {
       throw ScriptiveUnitException.wrapIfNecessary(throwable);
     }
