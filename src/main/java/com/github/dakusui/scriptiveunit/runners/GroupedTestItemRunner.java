@@ -20,21 +20,12 @@ import org.junit.runners.model.InitializationError;
 import org.junit.runners.model.Statement;
 
 import java.lang.annotation.Annotation;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
-import static com.github.dakusui.actionunit.core.ActionSupport.attempt;
-import static com.github.dakusui.actionunit.core.ActionSupport.named;
-import static com.github.dakusui.actionunit.core.ActionSupport.nop;
-import static com.github.dakusui.actionunit.core.ActionSupport.sequential;
+import static com.github.dakusui.actionunit.core.ActionSupport.*;
 import static com.github.dakusui.scriptiveunit.runners.GroupedTestItemRunner.Utils.createMainActionsForTestCase;
 import static com.github.dakusui.scriptiveunit.runners.GroupedTestItemRunner.Utils.createMainActionsForTestFixture;
 import static com.github.dakusui.scriptiveunit.utils.ActionUtils.performActionWithLogging;
@@ -286,10 +277,10 @@ public final class GroupedTestItemRunner extends ParentRunner<Action> {
     };
   }
 
-  private final int          groupId;
-  private final Action       beforeAction;
+  private final int groupId;
+  private final Action beforeAction;
   private final List<Action> mainActions;
-  private final Action       afterAction;
+  private final Action afterAction;
 
   /**
    * Constructs a new {@code ParentRunner} that will run {@code @TestClass}
@@ -412,16 +403,12 @@ public final class GroupedTestItemRunner extends ParentRunner<Action> {
           Object.class,
           testCaseId,
           session.createSetUpActionForFixture(
-              testSuiteDescriptor,
               testCaseTuple),
           createMainActionsForTestCase(
               session,
               indexedTestCase,
               testSuiteDescriptor.getTestOracles()),
-          session.createTearDownActionForFixture(
-              testSuiteDescriptor,
-              testCaseTuple
-          ));
+          session.createTearDownActionForFixture(testCaseTuple));
     } catch (InitializationError initializationError) {
       throw ScriptiveUnitException.wrapIfNecessary(initializationError);
     }
@@ -437,9 +424,9 @@ public final class GroupedTestItemRunner extends ParentRunner<Action> {
       return new GroupedTestItemRunner(
           Object.class,
           fixtureId,
-          session.createSetUpActionForFixture(testSuiteDescriptor, fixture),
+          session.createSetUpActionForFixture(fixture),
           createMainActionsForTestFixture(testCasesFilteredByFixture, session, testSuiteDescriptor),
-          session.createTearDownActionForFixture(testSuiteDescriptor, fixture)
+          session.createTearDownActionForFixture(fixture)
       );
     } catch (InitializationError initializationError) {
       throw ScriptiveUnitException.wrapIfNecessary(initializationError);
@@ -464,13 +451,11 @@ public final class GroupedTestItemRunner extends ParentRunner<Action> {
                 return named(
                     describe(input),
                     sequential(
-                        session.createSetUpActionForFixture(testSuiteDescriptor, input.get()),
+                        session.createSetUpActionForFixture(input.get()),
                         attempt(
-                            session.createMainAction(
-                                testOracle,
-                                input))
+                            session.createMainAction(testOracle, input))
                             .ensure(
-                                session.createTearDownActionForFixture(testSuiteDescriptor, input.get()))));
+                                session.createTearDownActionForFixture(input.get()))));
               } finally {
                 i++;
               }
@@ -498,8 +483,8 @@ public final class GroupedTestItemRunner extends ParentRunner<Action> {
 
     static List<Action> createMainActionsForTestFixture
         (List<IndexedTestCase> testCasesFilteredByFixture,
-            Session session,
-            TestSuiteDescriptor testSuiteDescriptor) {
+         Session session,
+         TestSuiteDescriptor testSuiteDescriptor) {
       return testSuiteDescriptor
           .getRunnerMode()
           .orderBy()

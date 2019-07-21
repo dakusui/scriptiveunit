@@ -1,6 +1,5 @@
 package com.github.dakusui.scriptiveunit.runners;
 
-import com.github.dakusui.jcunit.core.tuples.Tuple;
 import com.github.dakusui.scriptiveunit.annotations.RunScript;
 import com.github.dakusui.scriptiveunit.core.Script;
 import com.github.dakusui.scriptiveunit.loaders.ScriptCompiler;
@@ -30,8 +29,7 @@ public class ScriptiveUnit extends Parameterized {
    * Test runners each of which runs a test case represented by an action.
    */
   private final List<Runner> runners;
-  private final Session      session;
-  private       Tuple        commonFixture;
+  private final Session session;
 
   /**
    * Only called reflectively. Do not use programmatically.
@@ -50,7 +48,6 @@ public class ScriptiveUnit extends Parameterized {
     super(klass);
     this.session = Session.create(script, scriptCompiler);
     this.runners = newLinkedList(createRunners());
-    this.commonFixture = this.getTestSuiteDescriptor().createCommonFixture();
   }
 
   public TestSuiteDescriptor getTestSuiteDescriptor() {
@@ -82,7 +79,7 @@ public class ScriptiveUnit extends Parameterized {
     return new RunBefores(statement, Collections.emptyList(), null) {
       @Override
       public void evaluate() throws Throwable {
-        performActionWithLogging(session.createSetUpBeforeAllAction(commonFixture));
+        performActionWithLogging(session.createSetUpBeforeAllAction(session.getTestSuiteDescriptor().createCommonFixture()));
         super.evaluate();
       }
     };
@@ -94,7 +91,7 @@ public class ScriptiveUnit extends Parameterized {
       @Override
       public void evaluate() throws Throwable {
         super.evaluate();
-        performActionWithLogging(session.createTearDownAfterAllAction(commonFixture));
+        performActionWithLogging(session.createTearDownAfterAllAction(session.getTestSuiteDescriptor().createCommonFixture()));
       }
     };
   }

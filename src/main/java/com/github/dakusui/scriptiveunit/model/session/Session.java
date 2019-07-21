@@ -22,11 +22,7 @@ import java.util.Optional;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 
-import static com.github.dakusui.actionunit.core.ActionSupport.attempt;
-import static com.github.dakusui.actionunit.core.ActionSupport.leaf;
-import static com.github.dakusui.actionunit.core.ActionSupport.named;
-import static com.github.dakusui.actionunit.core.ActionSupport.nop;
-import static com.github.dakusui.actionunit.core.ActionSupport.sequential;
+import static com.github.dakusui.actionunit.core.ActionSupport.*;
 import static com.github.dakusui.scriptiveunit.utils.TestItemUtils.formatTestName;
 import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
@@ -40,11 +36,11 @@ public interface Session {
 
   Action createSetUpBeforeAllAction(Tuple commonFixtureTuple);
 
-  Action createSetUpActionForFixture(TestSuiteDescriptor testSuiteDescriptor, Tuple fixtureTuple);
+  Action createSetUpActionForFixture(Tuple fixtureTuple);
 
   Action createMainAction(TestOracle testOracle, IndexedTestCase indexedTestCase);
 
-  Action createTearDownActionForFixture(TestSuiteDescriptor testSuiteDescriptor, Tuple fixtureTuple);
+  Action createTearDownActionForFixture(Tuple fixtureTuple);
 
   Action createTearDownAfterAllAction(Tuple commonFixtureTuple);
 
@@ -59,9 +55,9 @@ public interface Session {
   }
 
   class Impl implements Session {
-    private final Script<?, ?, ?, ?>                   script;
+    private final Script<?, ?, ?, ?> script;
     private final BiFunction<TestItem, String, Report> reportCreator;
-    private final TestSuiteDescriptor                  testSuiteDescriptor;
+    private final TestSuiteDescriptor testSuiteDescriptor;
 
     Impl(Script<?, ?, ?, ?> script, ScriptCompiler scriptCompiler) {
       this.script = script;
@@ -99,8 +95,8 @@ public interface Session {
     }
 
     @Override
-    public Action createSetUpActionForFixture(TestSuiteDescriptor testSuiteDescriptor, Tuple fixtureTuple) {
-      Optional<Statement> statement = testSuiteDescriptor.setUp();
+    public Action createSetUpActionForFixture(Tuple fixtureTuple) {
+      Optional<Statement> statement = getTestSuiteDescriptor().setUp();
       return ActionSupport.named(
           "Fixture set up",
           statement.isPresent() ?
@@ -130,9 +126,8 @@ public interface Session {
     }
 
     @Override
-    public Action createTearDownActionForFixture(TestSuiteDescriptor testSuiteDescriptor, Tuple fixtureTuple) {
-      Optional<Statement> statement = testSuiteDescriptor
-          .tearDown();
+    public Action createTearDownActionForFixture(Tuple fixtureTuple) {
+      Optional<Statement> statement = testSuiteDescriptor.tearDown();
       return ActionSupport.named(
           "Fixture tear down",
           statement.isPresent() ?
