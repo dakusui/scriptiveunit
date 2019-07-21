@@ -1,11 +1,12 @@
 package com.github.dakusui.scriptiveunit.runners;
 
 import com.github.dakusui.jcunit.core.tuples.Tuple;
-import com.github.dakusui.scriptiveunit.core.JsonScript;
+import com.github.dakusui.scriptiveunit.annotations.RunScript;
 import com.github.dakusui.scriptiveunit.core.Script;
 import com.github.dakusui.scriptiveunit.loaders.ScriptCompiler;
 import com.github.dakusui.scriptiveunit.model.desc.TestSuiteDescriptor;
 import com.github.dakusui.scriptiveunit.model.session.Session;
+import com.github.dakusui.scriptiveunit.utils.DriverUtils;
 import com.github.dakusui.scriptiveunit.utils.TupleUtils;
 import org.junit.internal.runners.statements.RunBefores;
 import org.junit.runner.Runner;
@@ -40,7 +41,7 @@ public class ScriptiveUnit extends Parameterized {
   public ScriptiveUnit(Class<?> klass) throws Throwable {
     this(klass,
         new ScriptCompiler.Default(),
-        new JsonScript.Compat(klass, System.getProperties()));
+        DriverUtils.createScript(klass, RunScript.Utils.getScriptResourceNameFrom(klass, System.getProperties())));
   }
 
   public ScriptiveUnit(Class<?> klass, ScriptCompiler scriptCompiler, Script script) throws Throwable {

@@ -6,7 +6,6 @@ import com.github.dakusui.scriptiveunit.loaders.preprocessing.ApplicationSpec;
 import com.github.dakusui.scriptiveunit.loaders.preprocessing.HostSpec;
 import com.github.dakusui.scriptiveunit.loaders.preprocessing.Preprocessor;
 import com.github.dakusui.scriptiveunit.model.form.FormRegistry;
-import com.github.dakusui.scriptiveunit.utils.ReflectionUtils;
 import org.codehaus.jackson.JsonNode;
 import org.codehaus.jackson.node.ArrayNode;
 import org.codehaus.jackson.node.ObjectNode;
@@ -112,7 +111,23 @@ public interface JsonScript extends Script<JsonNode, ObjectNode, ArrayNode, Json
       super(languageSpec);
       this.languageSpec = languageSpec;
       this.reporting = reporting;
-      this.scriptResourceName = scriptResourceName;
+      this.scriptResourceName = requireNonNull(scriptResourceName);
+    }
+
+    public static LanguageSpec.ForJson createLanguageSpecFromDriverClass(Class<?> driverClass) {
+      return LanguageSpec.ForJson.create(FormRegistry.getFormRegistry(createDriverObject(driverClass)));
+    }
+
+    private static LanguageSpec.ForJson createLanguageSpecFrom(Object driverObject) {
+      return LanguageSpec.ForJson.create(FormRegistry.getFormRegistry(driverObject));
+    }
+
+    private static Object createDriverObject(Class<?> driverClass) {
+      try {
+        return driverClass.newInstance();
+      } catch (InstantiationException | IllegalAccessException e) {
+        throw ScriptiveUnitException.wrapIfNecessary(e);
+      }
     }
 
     @Override
@@ -130,37 +145,36 @@ public interface JsonScript extends Script<JsonNode, ObjectNode, ArrayNode, Json
       return languageSpec;
     }
 
-    static Default createFromResource(
+    public static Default createFromResource(
         String resourceName,
-        FormRegistry formRegistry,
-        Reporting reporting) {
+        Reporting reporting,
+        LanguageSpec.ForJson languageSpec) {
       return new Default(
-          LanguageSpec.ForJson.create(formRegistry),
+          languageSpec,
           reporting,
           resourceName);
     }
 
-    static Default createFromResourceSpecifiedByPropertyKey(
+    public static Default createFromResourceSpecifiedByPropertyKey(
         String propertyKey,
-        FormRegistry formRegistry,
         Reporting reporting,
-        Properties properties) {
+        Properties properties,
+        LanguageSpec.ForJson languageSpec) {
       return createFromResource(
           properties.getProperty(propertyKey),
-          formRegistry,
-          reporting
+          reporting, languageSpec
       );
     }
 
     static Default createFromResourceSpecifiedBySystemPropertyKey(
         String systemPropertyKey,
-        FormRegistry formRegistry,
-        Reporting reporting) {
+        Reporting reporting,
+        LanguageSpec.ForJson languageSpec) {
       return createFromResourceSpecifiedByPropertyKey(
           systemPropertyKey,
-          formRegistry,
           reporting,
-          System.getProperties());
+          System.getProperties(),
+          languageSpec);
     }
   }
 
@@ -175,29 +189,15 @@ public interface JsonScript extends Script<JsonNode, ObjectNode, ArrayNode, Json
     }
 
     public Compat(Class<?> driverClass, Properties properties, String scriptResourceName) {
-      super(createLanguageSpecFrom(createDriverObject(driverClass)));
-      final RunScript loadAnnotation = getLoadAnnotation(driverClass);
+      super(Default.createLanguageSpecFrom(Default.createDriverObject(driverClass)));
+      final RunScript loadAnnotation = RunScript.Utils.getLoadAnnotation(driverClass);
       this.properties = scriptResourceName != null ?
-          createPropertiesFor(loadAnnotation, scriptResourceName) :
+          RunScript.Utils.createPropertiesFor(loadAnnotation, scriptResourceName) :
           new Properties();
       this.properties.putAll(properties);
       this.driverClass = requireNonNull(driverClass);
       this.reporting = new Reporting("report.json", new File("."));
       this.scriptResourceNameKey = loadAnnotation.scriptSystemPropertyKey();
-    }
-
-    static RunScript getLoadAnnotation(Class<?> driverClass) {
-      return ReflectionUtils.getAnnotation(
-          driverClass,
-          RunScript.class,
-          RunScript.DEFAULT_INSTANCE);
-    }
-
-    private static Properties createPropertiesFor(
-        RunScript load, String scriptResourceName) {
-      Properties properties = new Properties();
-      properties.put(load.scriptSystemPropertyKey(), scriptResourceName);
-      return properties;
     }
 
     public String getScriptResourceNameKey() {
@@ -229,16 +229,5 @@ public interface JsonScript extends Script<JsonNode, ObjectNode, ArrayNode, Json
               getScriptResourceName().orElseThrow(() -> scriptNotSpecified(this)));
     }
 
-    private static LanguageSpec.ForJson createLanguageSpecFrom(Object driverObject) {
-      return LanguageSpec.ForJson.create(FormRegistry.getFormRegistry(driverObject));
-    }
-
-    private static Object createDriverObject(Class<?> driverClass) {
-      try {
-        return driverClass.newInstance();
-      } catch (InstantiationException | IllegalAccessException e) {
-        throw ScriptiveUnitException.wrapIfNecessary(e);
-      }
-    }
   }
 }

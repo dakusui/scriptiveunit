@@ -2,6 +2,8 @@ package com.github.dakusui.scriptiveunit.utils;
 
 import com.github.dakusui.scriptiveunit.annotations.Import;
 import com.github.dakusui.scriptiveunit.annotations.Scriptable;
+import com.github.dakusui.scriptiveunit.core.JsonScript;
+import com.github.dakusui.scriptiveunit.core.Reporting;
 import com.github.dakusui.scriptiveunit.libs.Predicates;
 import com.github.dakusui.scriptiveunit.model.form.Form;
 
@@ -39,6 +41,14 @@ public enum DriverUtils {
   public static void main(String... args) {
     getFormsFromImportedFieldsInObject(new DriverExample())
         .forEach(System.out::println);
+  }
+
+  public static JsonScript.Default createScript(Class<?> driverClass, String scriptResourceName) {
+    return JsonScript.Default.createFromResource(
+        scriptResourceName,
+        Reporting.create(),
+        JsonScript.Default.createLanguageSpecFromDriverClass(driverClass)
+    );
   }
 
   public static class DriverExample {
