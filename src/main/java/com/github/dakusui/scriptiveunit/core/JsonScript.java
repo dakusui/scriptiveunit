@@ -87,7 +87,27 @@ public interface JsonScript extends Script<JsonNode, ObjectNode, ArrayNode, Json
   }
 
   abstract class Base implements JsonScript {
+    public static JsonScript createScript(Class<?> driverClass, ApplicationSpec.Dictionary dictionary) {
+      return new Base() {
+        private LanguageSpec<JsonNode, ObjectNode, ArrayNode, JsonNode> languageSpec = Default.createLanguageSpecFromDriverClass(driverClass);
+        Reporting reporting = Reporting.create();
 
+        @Override
+        public Optional<Reporting> getReporting() {
+          return Optional.of(reporting);
+        }
+
+        @Override
+        public ApplicationSpec.Dictionary readRawBaseScript() {
+          return dictionary;
+        }
+
+        @Override
+        public LanguageSpec<JsonNode, ObjectNode, ArrayNode, JsonNode> languageSpec() {
+          return languageSpec;
+        }
+      };
+    }
   }
 
   class Default implements JsonScript {

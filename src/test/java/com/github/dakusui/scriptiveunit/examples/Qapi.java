@@ -1,6 +1,7 @@
 package com.github.dakusui.scriptiveunit.examples;
 
 
+import com.github.dakusui.scriptiveunit.annotations.CompileWith;
 import com.github.dakusui.scriptiveunit.annotations.RunScript;
 import com.github.dakusui.scriptiveunit.annotations.Import;
 import com.github.dakusui.scriptiveunit.annotations.Import.Alias;
@@ -30,7 +31,7 @@ import static java.util.Objects.requireNonNull;
 /**
  * A driver example.
  */
-@RunScript(compileWith = Qapi.Loader.class)
+@RunScript(compiler = @CompileWith(Qapi.Loader.class))
 @RunWith(ScriptiveUnit.class)
 public class Qapi {
   public static class Loader extends ScriptCompiler.Default {

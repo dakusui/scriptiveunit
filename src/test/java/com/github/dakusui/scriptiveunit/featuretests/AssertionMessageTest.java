@@ -1,7 +1,10 @@
 package com.github.dakusui.scriptiveunit.featuretests;
 
+import com.github.dakusui.scriptiveunit.annotations.CompileWith;
+import com.github.dakusui.scriptiveunit.annotations.LoadBy;
 import com.github.dakusui.scriptiveunit.annotations.RunScript;
 import com.github.dakusui.scriptiveunit.core.JsonScript;
+import com.github.dakusui.scriptiveunit.core.ScriptLoader;
 import com.github.dakusui.scriptiveunit.loaders.preprocessing.ApplicationSpec;
 import com.github.dakusui.scriptiveunit.runners.ScriptiveUnit;
 import com.github.dakusui.scriptiveunit.testutils.TestBase;
@@ -98,20 +101,17 @@ public class AssertionMessageTest extends TestBase {
     }
   }
 
-  @RunScript(compileWith = Simple.Compiler.class)
+  @RunScript(
+      loader = @LoadBy(Simple.Loader.class),
+      compiler = @CompileWith(Simple.Compiler.class))
   public static class Simple extends SimpleTestBase {
-    public static class Compiler extends SimpleTestBase.Compiler implements SyntaxSugar {
-      public Compiler() {
-        super();
-      }
-
-      JsonScript createScript(JsonScript script) {
-        return new JsonScript.Delegating(script) {
-          @Override
-          public ApplicationSpec.Dictionary readRawBaseScript() {
-            return new SyntaxSugar() {
+    public static class Loader extends ScriptLoader.Base {
+      @Override
+      public JsonScript load(Class<?> driverClass) {
+        return JsonScript.Base.createScript(driverClass,
+            new SyntaxSugar() {
               ApplicationSpec.Dictionary createDictionary() {
-                return createPreprocessor().preprocess(dict(
+                return dict(
                     $("testOracles", array(
                         dict(
                             $("description", "shouldPass"),
@@ -125,12 +125,17 @@ public class AssertionMessageTest extends TestBase {
                             $("description", "shouldBeIgnored"),
                             $("given", array("not", array("always"))),
                             $("when", array("format", "hello")),
-                            $("then", array("matches", array("output"), ".*Ell.*")))))));
+                            $("then", array("matches", array("output"), ".*Ell.*"))))));
               }
-            }.createDictionary();
-          }
-        };
+            }.createDictionary());
       }
+    }
+
+    public static class Compiler extends SimpleTestBase.Compiler implements SyntaxSugar {
+      public Compiler() {
+        super();
+      }
+
     }
   }
 }

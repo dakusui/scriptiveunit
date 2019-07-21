@@ -12,7 +12,7 @@ public enum Utils {
   ;
 
   public static ScriptCompiler createScriptCompilerFrom(CompileWith compileWithAnnotation) {
-    return ReflectionUtils.createInstance(compileWithAnnotation.with(), argValues(compileWithAnnotation.args()));
+    return ReflectionUtils.createInstance(compileWithAnnotation.value(), argValues(compileWithAnnotation.args()));
   }
 
   public static ScriptLoader createScriptLoaderFrom(LoadBy loadByAnnotation) {
