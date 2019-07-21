@@ -6,6 +6,7 @@ import com.github.dakusui.scriptiveunit.model.form.FormHandle;
 import com.github.dakusui.scriptiveunit.model.form.FormHandleFactory;
 import com.github.dakusui.scriptiveunit.model.form.FormRegistry;
 import com.github.dakusui.scriptiveunit.model.form.value.Value;
+import com.github.dakusui.scriptiveunit.model.form.value.ValueUtils;
 import com.github.dakusui.scriptiveunit.model.session.Stage;
 import com.github.dakusui.scriptiveunit.utils.CoreUtils;
 
@@ -22,6 +23,11 @@ import static com.github.dakusui.scriptiveunit.exceptions.TypeMismatch.headOfCal
 public interface Statement {
   static Factory createStatementFactory(Script script, Map<String, List<Object>> userDefinedFormClauseMap) {
     return new Factory(script.languageSpec().formRegistry(), userDefinedFormClauseMap);
+  }
+
+  @SuppressWarnings("unchecked")
+  static <T> T eval(Statement statement, Stage stage) {
+    return (T) ValueUtils.INSTANCE.toValue(statement).apply(stage);
   }
 
   <U> Value<U> toValue();

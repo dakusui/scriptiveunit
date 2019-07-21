@@ -13,14 +13,14 @@ import com.github.dakusui.scriptiveunit.model.desc.TestSuiteDescriptor;
 import com.github.dakusui.scriptiveunit.model.desc.testitem.IndexedTestCase;
 import com.github.dakusui.scriptiveunit.model.desc.testitem.TestItem;
 import com.github.dakusui.scriptiveunit.model.desc.testitem.TestOracle;
-import com.github.dakusui.scriptiveunit.model.form.value.Value;
-import com.github.dakusui.scriptiveunit.model.form.value.ValueUtils;
 import com.github.dakusui.scriptiveunit.model.session.action.Pipe;
 import com.github.dakusui.scriptiveunit.model.session.action.Sink;
 import com.github.dakusui.scriptiveunit.model.session.action.Source;
+import com.github.dakusui.scriptiveunit.model.statement.Statement;
 import com.github.dakusui.scriptiveunit.utils.ActionUtils;
 import org.hamcrest.Matcher;
 
+import java.util.Optional;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 
@@ -36,7 +36,6 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assume.assumeThat;
 
 public interface Session {
-
   Script getScript();
 
   TestSuiteDescriptor getTestSuiteDescriptor();
@@ -95,24 +94,23 @@ public interface Session {
 
     @Override
     public Action createSetUpBeforeAllAction(Tuple commonFixtureTuple) {
+      Optional<Statement> statement = testSuiteDescriptor
+          .setUpBeforeAll();
       return ActionSupport.named(
           format("Suite level set up: %s", testSuiteDescriptor.getDescription()),
-          testSuiteDescriptor
-              .setUpBeforeAll()
-              .map(ValueUtils.INSTANCE::<Action>toValue)
-              .map(f -> f.apply(this.createSuiteLevelStage(commonFixtureTuple)))
-              .orElse(nop()));
+          statement.isPresent() ?
+              Statement.eval(statement.get(), this.createSuiteLevelStage(commonFixtureTuple)) :
+              nop());
     }
 
     @Override
     public Action createSetUpActionForFixture(TestSuiteDescriptor testSuiteDescriptor, Tuple fixtureTuple) {
+      Optional<Statement> statement = testSuiteDescriptor.setUp();
       return ActionSupport.named(
           "Fixture set up",
-          testSuiteDescriptor
-              .setUp()
-              .map(ValueUtils.INSTANCE::<Action>toValue)
-              .map((Value<Action> f) -> f.apply(this.createFixtureLevelStage(fixtureTuple)))
-              .orElse(nop()));
+          statement.isPresent() ?
+              Statement.eval(statement.get(), this.createFixtureLevelStage(fixtureTuple)) :
+              nop());
     }
 
     @Override
@@ -138,24 +136,24 @@ public interface Session {
 
     @Override
     public Action createTearDownActionForFixture(TestSuiteDescriptor testSuiteDescriptor, Tuple fixtureTuple) {
+      Optional<Statement> statement = testSuiteDescriptor
+          .tearDown();
       return ActionSupport.named(
           "Fixture tear down",
-          testSuiteDescriptor
-              .tearDown()
-              .map(ValueUtils.INSTANCE::<Action>toValue)
-              .map(f -> f.apply(this.createSuiteLevelStage(fixtureTuple)))
-              .orElse(nop()));
+          statement.isPresent() ?
+              Statement.eval(statement.get(), this.createSuiteLevelStage(fixtureTuple)) :
+              nop());
     }
 
     @Override
     public Action createTearDownAfterAllAction(Tuple commonFixtureTuple) {
+      Optional<Statement> statement = testSuiteDescriptor
+          .tearDownAfterAll();
       return ActionSupport.named(
           format("Suite level tear down: %s", testSuiteDescriptor.getDescription()),
-          testSuiteDescriptor
-              .tearDownAfterAll()
-              .map(ValueUtils.INSTANCE::<Action>toValue)
-              .map(f -> f.apply(this.createSuiteLevelStage(commonFixtureTuple)))
-              .orElse(nop()));
+          statement.isPresent() ?
+              Statement.eval(statement.get(), this.createSuiteLevelStage(commonFixtureTuple)) :
+              nop());
     }
 
     Action createBefore(TestItem testItem, TestOracleValuesFactory testOracleValuesFactory, Report report) {
@@ -165,7 +163,8 @@ public interface Session {
 
     Source<Tuple> createGiven(
         TestItem testItem,
-        Report report, final Function<Stage, Matcher<Tuple>> stageMatcherFunction) {
+        Report report,
+        final Function<Stage, Matcher<Tuple>> stageMatcherFunction) {
       Tuple testCaseTuple = testItem.getTestCaseTuple();
       Stage givenStage = createOracleLevelStage(testItem, report);
       return context -> {
