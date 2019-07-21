@@ -14,7 +14,7 @@ import java.io.IOException;
 public interface ScriptCompiler {
   TestSuiteDescriptor compile(Session session, Script script);
 
-  class Impl implements ScriptCompiler {
+  class Default implements ScriptCompiler {
     @Override
     public TestSuiteDescriptor compile(Session session, Script script) {
       return mapObjectNodeToJsonTestSuiteDescriptorBean(

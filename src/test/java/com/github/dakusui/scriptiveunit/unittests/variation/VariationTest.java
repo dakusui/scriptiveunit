@@ -170,7 +170,7 @@ public class VariationTest {
     new JUnitCore().run(
         new ScriptiveUnit(
             Simple.class,
-            new ScriptCompiler.Impl(),
+            new ScriptCompiler.Default(),
             new JsonScript.Delegating(baseScript) {
               @Override
               public ApplicationSpec.Dictionary readScriptResource() {

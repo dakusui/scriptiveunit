@@ -1,6 +1,6 @@
 package com.github.dakusui.scriptiveunit.core;
 
-import com.github.dakusui.scriptiveunit.annotations.CompatLoad;
+import com.github.dakusui.scriptiveunit.annotations.RunScript;
 import com.github.dakusui.scriptiveunit.exceptions.ScriptiveUnitException;
 import com.github.dakusui.scriptiveunit.loaders.preprocessing.ApplicationSpec;
 import com.github.dakusui.scriptiveunit.loaders.preprocessing.HostSpec;
@@ -165,31 +165,39 @@ public interface JsonScript extends Script<JsonNode, ObjectNode, ArrayNode, Json
   }
 
   class Compat extends Base {
-    private       Reporting  reporting;
+    private final Reporting  reporting;
     private final Class<?>   driverClass;
     private final Properties properties;
-    private       String     scriptResourceNameKey;
+    private final String     scriptResourceNameKey;
 
     public Compat(Class<?> driverClass, Properties properties) {
-      super(createLanguageSpecFrom(createDriverObject(driverClass)));
-      this.driverClass = driverClass;
-      this.properties = new Properties();
-      this.properties.putAll(properties);
-      final CompatLoad loadAnnotation = ReflectionUtils.getAnnotation(
-          driverClass,
-          CompatLoad.class,
-          CompatLoad.DEFAULT_INSTANCE);
-      this.scriptResourceNameKey = loadAnnotation.scriptSystemPropertyKey();
-      this.reporting = new Reporting("report.json", new File("."));
+      this(driverClass, properties, null);
     }
 
     public Compat(Class<?> driverClass, Properties properties, String scriptResourceName) {
-      this(driverClass, properties);
-      final CompatLoad loadAnnotation = ReflectionUtils.getAnnotation(
+      super(createLanguageSpecFrom(createDriverObject(driverClass)));
+      final RunScript loadAnnotation = getLoadAnnotation(driverClass);
+      this.properties = scriptResourceName != null ?
+          createPropertiesFor(loadAnnotation, scriptResourceName) :
+          new Properties();
+      this.properties.putAll(properties);
+      this.driverClass = requireNonNull(driverClass);
+      this.reporting = new Reporting("report.json", new File("."));
+      this.scriptResourceNameKey = loadAnnotation.scriptSystemPropertyKey();
+    }
+
+    static RunScript getLoadAnnotation(Class<?> driverClass) {
+      return ReflectionUtils.getAnnotation(
           driverClass,
-          CompatLoad.class,
-          CompatLoad.DEFAULT_INSTANCE);
-      this.properties.put(loadAnnotation.scriptSystemPropertyKey(), scriptResourceName);
+          RunScript.class,
+          RunScript.DEFAULT_INSTANCE);
+    }
+
+    private static Properties createPropertiesFor(
+        RunScript load, String scriptResourceName) {
+      Properties properties = new Properties();
+      properties.put(load.scriptSystemPropertyKey(), scriptResourceName);
+      return properties;
     }
 
     public String getScriptResourceNameKey() {
@@ -199,8 +207,8 @@ public interface JsonScript extends Script<JsonNode, ObjectNode, ArrayNode, Json
     public Optional<String> getScriptResourceName() {
       String work = this.properties.getProperty(
           getScriptResourceNameKey(),
-          CompatLoad.SCRIPT_NOT_SPECIFIED);
-      return CompatLoad.SCRIPT_NOT_SPECIFIED.equals(work) ?
+          RunScript.SCRIPT_NOT_SPECIFIED);
+      return RunScript.SCRIPT_NOT_SPECIFIED.equals(work) ?
           Optional.empty() :
           Optional.of(work);
     }

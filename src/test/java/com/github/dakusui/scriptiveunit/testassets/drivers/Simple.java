@@ -2,7 +2,7 @@ package com.github.dakusui.scriptiveunit.testassets.drivers;
 
 import com.github.dakusui.scriptiveunit.annotations.Import;
 import com.github.dakusui.scriptiveunit.annotations.Import.Alias;
-import com.github.dakusui.scriptiveunit.annotations.CompatLoad;
+import com.github.dakusui.scriptiveunit.annotations.RunScript;
 import com.github.dakusui.scriptiveunit.annotations.Scriptable;
 import com.github.dakusui.scriptiveunit.libs.Arith;
 import com.github.dakusui.scriptiveunit.libs.Collections;
@@ -20,7 +20,7 @@ import org.junit.runner.RunWith;
 
 import java.util.Map;
 
-@CompatLoad()
+@RunScript()
 @RunWith(ScriptiveUnit.class)
 public class Simple {
   @SuppressWarnings("unused")

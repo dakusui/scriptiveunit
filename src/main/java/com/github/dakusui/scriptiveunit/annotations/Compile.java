@@ -8,7 +8,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 @Retention(RUNTIME)
 public @interface Compile {
-  Class<? extends ScriptCompiler.Impl> with() default ScriptCompiler.Impl.class;
+  Class<? extends ScriptCompiler.Default> with() default ScriptCompiler.Default.class;
 
   Value[] args() default {};
 

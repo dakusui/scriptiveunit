@@ -39,7 +39,7 @@ public class ScriptiveUnit extends Parameterized {
   @SuppressWarnings("unused")
   public ScriptiveUnit(Class<?> klass) throws Throwable {
     this(klass,
-        new ScriptCompiler.Impl(),
+        new ScriptCompiler.Default(),
         new JsonScript.Compat(klass, System.getProperties()));
   }
 

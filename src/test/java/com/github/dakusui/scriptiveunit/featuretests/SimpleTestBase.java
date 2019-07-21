@@ -43,7 +43,7 @@ public abstract class SimpleTestBase {
     }
   }
 
-  abstract static class Compiler extends ScriptCompiler.Impl implements SyntaxSugar {
+  abstract static class Compiler extends ScriptCompiler.Default implements SyntaxSugar {
     Compiler() {
     }
   }

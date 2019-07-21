@@ -3,7 +3,7 @@ package com.github.dakusui.scriptiveunit.testutils;
 import com.github.dakusui.jcunit.core.tuples.Tuple;
 import com.github.dakusui.jcunit8.factorspace.Constraint;
 import com.github.dakusui.jcunit8.testsuite.TestCase;
-import com.github.dakusui.scriptiveunit.annotations.CompatLoad;
+import com.github.dakusui.scriptiveunit.annotations.RunScript;
 import com.github.dakusui.scriptiveunit.core.JsonScript;
 import com.github.dakusui.scriptiveunit.exceptions.ScriptiveUnitException;
 import com.github.dakusui.scriptiveunit.featuretests.AssertionMessageTest;
@@ -159,7 +159,7 @@ public enum UtUtils {
     };
   }
 
-  @CompatLoad(with = AssertionMessageTest.Simple.Compiler.class)
+  @RunScript(compileWith = AssertionMessageTest.Simple.Compiler.class)
   public static class DummyDriver extends AssertionMessageTest.Simple {
   }
 
