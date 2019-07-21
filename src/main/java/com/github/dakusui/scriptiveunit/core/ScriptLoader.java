@@ -42,7 +42,7 @@ public interface ScriptLoader {
 
     @Override
     public JsonScript load(Class<?> driverClass) {
-      return new JsonScript.Compat(driverClass, System.getProperties().getProperty(getScriptResourceNameKey(driverClass)));
+      return new JsonScript.FromDriverClass(driverClass, System.getProperties().getProperty(getScriptResourceNameKey(driverClass)));
     }
 
     static String getScriptResourceNameKey(RunScript runScriptAnnotation) {

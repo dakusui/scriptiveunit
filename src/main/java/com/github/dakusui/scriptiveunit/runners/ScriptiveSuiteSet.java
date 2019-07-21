@@ -1,9 +1,8 @@
 package com.github.dakusui.scriptiveunit.runners;
 
+import com.github.dakusui.scriptiveunit.annotations.RunScript;
 import com.github.dakusui.scriptiveunit.core.JsonScript;
 import com.github.dakusui.scriptiveunit.exceptions.ScriptiveUnitException;
-import com.github.dakusui.scriptiveunit.loaders.ScriptCompiler;
-import com.github.dakusui.scriptiveunit.utils.DriverUtils;
 import com.github.dakusui.scriptiveunit.utils.ReflectionUtils;
 import org.junit.runner.Description;
 import org.junit.runner.Runner;
@@ -25,6 +24,8 @@ import java.util.function.Predicate;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
+import static com.github.dakusui.scriptiveunit.annotations.Utils.createScriptCompilerFrom;
+import static com.github.dakusui.scriptiveunit.utils.ReflectionUtils.getAnnotation;
 import static java.lang.String.format;
 import static java.util.stream.Collectors.toList;
 
@@ -83,8 +84,7 @@ public class ScriptiveSuiteSet extends ParentRunner<Runner> {
         klass,
         new SuiteScripts.Streamer(klass.getAnnotation(SuiteScripts.class)).stream()
             .map(
-                scriptResourceName ->
-                    createRunner(scriptResourceName, figureOutDriverClass(klass)))
+                scriptResourceName -> createRunner(scriptResourceName, figureOutDriverClass(klass)))
             .collect(toList()));
   }
 
@@ -131,11 +131,10 @@ public class ScriptiveSuiteSet extends ParentRunner<Runner> {
 
   private static Runner createRunner(String scriptResourceName, Class<?> klass) {
     try {
-      JsonScript script = DriverUtils.createJsonScriptFromResource(klass, scriptResourceName);
       return new ScriptiveUnit(
           klass,
-          new ScriptCompiler.Default(),
-          script);
+          createScriptCompilerFrom(getAnnotation(klass, RunScript.class).orElseThrow(RuntimeException::new).compiler()),
+          new JsonScript.FromDriverClass(klass, scriptResourceName));
     } catch (Error | RuntimeException e) {
       throw e;
     } catch (Throwable throwable) {

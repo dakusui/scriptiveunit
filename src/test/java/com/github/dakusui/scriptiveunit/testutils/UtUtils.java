@@ -52,7 +52,7 @@ public enum UtUtils {
   }
 
   static JsonScript config() {
-    return new JsonScript.Compat(DummyDriver.class, "(none)");
+    return new JsonScript.FromDriverClass(DummyDriver.class, "(none)");
   }
 
   private static File createTemporaryDirectory() {

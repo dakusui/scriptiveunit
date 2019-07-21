@@ -162,7 +162,7 @@ public class VariationTest {
       Resource<ObjectNode> setUpBeforeAll,
       Resource<ObjectNode> testOracles
   ) throws Throwable {
-    JsonScript.Compat baseScript = new JsonScript.Compat(
+    JsonScript.FromDriverClass baseScript = new JsonScript.FromDriverClass(
         Simple.class,
         "components/root.json");
     new JUnitCore().run(

@@ -193,11 +193,11 @@ public interface JsonScript extends Script<JsonNode, ObjectNode, ArrayNode, Json
     }
   }
 
-  class Compat extends Default {
+  class FromDriverClass extends Default {
     private final Class<?> driverClass;
     private final String   scriptResourceNameKey;
 
-    public Compat(Class<?> driverClass, String scriptResourceName) {
+    public FromDriverClass(Class<?> driverClass, String scriptResourceName) {
       super(Default.createLanguageSpecFrom(Default.createDriverObject(driverClass)),
           Reporting.create(),
           scriptResourceName
