@@ -6,7 +6,6 @@ import com.github.dakusui.scriptiveunit.core.Script;
 import com.github.dakusui.scriptiveunit.loaders.ScriptCompiler;
 import com.github.dakusui.scriptiveunit.model.desc.TestSuiteDescriptor;
 import com.github.dakusui.scriptiveunit.model.session.Session;
-import com.github.dakusui.scriptiveunit.utils.TupleUtils;
 import org.junit.internal.runners.statements.RunBefores;
 import org.junit.runner.Runner;
 import org.junit.runners.Parameterized;
@@ -51,7 +50,7 @@ public class ScriptiveUnit extends Parameterized {
     super(klass);
     this.session = Session.create(script, scriptCompiler);
     this.runners = newLinkedList(createRunners());
-    this.commonFixture = TupleUtils.createCommonFixture(getTestSuiteDescriptor().getFactorSpaceDescriptor().getParameters());
+    this.commonFixture = this.getTestSuiteDescriptor().createCommonFixture();
   }
 
   public TestSuiteDescriptor getTestSuiteDescriptor() {

@@ -3,12 +3,10 @@ package com.github.dakusui.scriptiveunit.model.session;
 import com.github.dakusui.actionunit.core.Action;
 import com.github.dakusui.actionunit.core.ActionSupport;
 import com.github.dakusui.jcunit.core.tuples.Tuple;
-import com.github.dakusui.jcunit8.factorspace.Constraint;
 import com.github.dakusui.scriptiveunit.core.Reporting;
 import com.github.dakusui.scriptiveunit.core.Script;
 import com.github.dakusui.scriptiveunit.exceptions.ScriptiveUnitException;
 import com.github.dakusui.scriptiveunit.loaders.ScriptCompiler;
-import com.github.dakusui.scriptiveunit.model.desc.ConstraintDefinition;
 import com.github.dakusui.scriptiveunit.model.desc.TestSuiteDescriptor;
 import com.github.dakusui.scriptiveunit.model.desc.testitem.IndexedTestCase;
 import com.github.dakusui.scriptiveunit.model.desc.testitem.TestItem;
@@ -40,8 +38,6 @@ public interface Session {
 
   TestSuiteDescriptor getTestSuiteDescriptor();
 
-  Constraint createConstraint(ConstraintDefinition constraintDefinition);
-
   Action createSetUpBeforeAllAction(Tuple commonFixtureTuple);
 
   Action createSetUpActionForFixture(TestSuiteDescriptor testSuiteDescriptor, Tuple fixtureTuple);
@@ -51,6 +47,12 @@ public interface Session {
   Action createTearDownActionForFixture(TestSuiteDescriptor testSuiteDescriptor, Tuple fixtureTuple);
 
   Action createTearDownAfterAllAction(Tuple commonFixtureTuple);
+
+  Stage createSuiteLevelStage(Tuple suiteLevelTuple);
+
+  Stage createFixtureLevelStage(Tuple fixtureLevelTuple);
+
+  Stage createOracleLevelStage(TestItem testItem, Report report);
 
   static Session create(Script script, ScriptCompiler scriptCompiler) {
     return new Impl(script, scriptCompiler);
@@ -83,13 +85,6 @@ public interface Session {
     @Override
     public TestSuiteDescriptor getTestSuiteDescriptor() {
       return this.testSuiteDescriptor;
-    }
-
-    @Override
-    public Constraint createConstraint(ConstraintDefinition constraintDefinition) {
-      return Constraint.create(
-          in -> constraintDefinition.test(createSuiteLevelStage(in)),
-          constraintDefinition.involvedParameterNames());
     }
 
     @Override
@@ -156,6 +151,26 @@ public interface Session {
               nop());
     }
 
+    @Override
+    public Stage createSuiteLevelStage(Tuple suiteLevelTuple) {
+      return Stage.Factory.frameworkStageFor(this.getScript(), suiteLevelTuple);
+    }
+
+    @Override
+    public Stage createFixtureLevelStage(Tuple fixtureLevelTuple) {
+      return Stage.Factory.frameworkStageFor(this.getScript(), fixtureLevelTuple);
+    }
+
+    @Override
+    public Stage createOracleLevelStage(TestItem testItem, Report report) {
+      return Stage.Factory.oracleLevelStageFor(
+          this.getScript(),
+          testItem,
+          null,
+          null,
+          report);
+    }
+
     Action createBefore(TestItem testItem, TestOracleValuesFactory testOracleValuesFactory, Report report) {
       Stage beforeStage = this.createOracleLevelStage(testItem, report);
       return testOracleValuesFactory.beforeFactory().apply(beforeStage);
@@ -215,23 +230,6 @@ public interface Session {
     Action createAfter(TestItem testItem, TestOracleValuesFactory definition, Report report) {
       Stage afterStage = this.createOracleLevelStage(testItem, report);
       return definition.afterFactory().apply(afterStage);
-    }
-
-    Stage createSuiteLevelStage(Tuple suiteLevelTuple) {
-      return Stage.Factory.frameworkStageFor(this.getScript(), suiteLevelTuple);
-    }
-
-    Stage createFixtureLevelStage(Tuple fixtureLevelTuple) {
-      return Stage.Factory.frameworkStageFor(this.getScript(), fixtureLevelTuple);
-    }
-
-    Stage createOracleLevelStage(TestItem testItem, Report report) {
-      return Stage.Factory.oracleLevelStageFor(
-          this.getScript(),
-          testItem,
-          null,
-          null,
-          report);
     }
 
     <RESPONSE> Stage createOracleVerificationStage(TestItem testItem, RESPONSE response, Report report) {

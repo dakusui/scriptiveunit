@@ -51,7 +51,10 @@ public abstract class FactorSpaceDescriptorBean {
         return constraintList.stream()
             .map(statementFactory::create)
             .map(ConstraintDefinitionImpl::new)
-            .map(session::createConstraint)
+            .map((ConstraintDefinitionImpl constraintDefinition) ->
+                Constraint.create(
+                    in -> constraintDefinition.test(session.createFixtureLevelStage(in)),
+                    constraintDefinition.involvedParameterNames()))
             .collect(toList());
       }
     };
