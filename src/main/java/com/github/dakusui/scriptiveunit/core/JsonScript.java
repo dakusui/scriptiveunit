@@ -12,10 +12,35 @@ import org.codehaus.jackson.node.ObjectNode;
 import java.util.Optional;
 import java.util.Properties;
 
-import static com.github.dakusui.scriptiveunit.exceptions.ConfigurationException.scriptNotSpecified;
 import static java.util.Objects.requireNonNull;
 
 public interface JsonScript extends Script<JsonNode, ObjectNode, ArrayNode, JsonNode> {
+  static JsonScript createScript(Class<?> driverClass, ApplicationSpec.Dictionary dictionary) {
+    return getJsonScript(dictionary, Default.createLanguageSpecFromDriverClass(driverClass));
+  }
+
+  static JsonScript getJsonScript(ApplicationSpec.Dictionary dictionary, final LanguageSpec.ForJson languageSpecFromDriverClass) {
+    return new Base() {
+      private LanguageSpec<JsonNode, ObjectNode, ArrayNode, JsonNode> languageSpec = languageSpecFromDriverClass;
+      Reporting reporting = Reporting.create();
+
+      @Override
+      public Optional<Reporting> getReporting() {
+        return Optional.of(reporting);
+      }
+
+      @Override
+      public ApplicationSpec.Dictionary readRawBaseScript() {
+        return dictionary;
+      }
+
+      @Override
+      public LanguageSpec<JsonNode, ObjectNode, ArrayNode, JsonNode> languageSpec() {
+        return languageSpec;
+      }
+    };
+  }
+
   @Override
   default ApplicationSpec.Dictionary readScriptResource() {
     return createPreprocessor().preprocess(readRawBaseScript());
@@ -87,27 +112,6 @@ public interface JsonScript extends Script<JsonNode, ObjectNode, ArrayNode, Json
   }
 
   abstract class Base implements JsonScript {
-    public static JsonScript createScript(Class<?> driverClass, ApplicationSpec.Dictionary dictionary) {
-      return new Base() {
-        private LanguageSpec<JsonNode, ObjectNode, ArrayNode, JsonNode> languageSpec = Default.createLanguageSpecFromDriverClass(driverClass);
-        Reporting reporting = Reporting.create();
-
-        @Override
-        public Optional<Reporting> getReporting() {
-          return Optional.of(reporting);
-        }
-
-        @Override
-        public ApplicationSpec.Dictionary readRawBaseScript() {
-          return dictionary;
-        }
-
-        @Override
-        public LanguageSpec<JsonNode, ObjectNode, ArrayNode, JsonNode> languageSpec() {
-          return languageSpec;
-        }
-      };
-    }
   }
 
   class Default implements JsonScript {
@@ -119,6 +123,10 @@ public interface JsonScript extends Script<JsonNode, ObjectNode, ArrayNode, Json
       this.languageSpec = languageSpec;
       this.reporting = reporting;
       this.scriptResourceName = requireNonNull(scriptResourceName);
+    }
+
+    public String getScriptResourceName() {
+      return this.scriptResourceName;
     }
 
     public static LanguageSpec.ForJson createLanguageSpecFromDriverClass(Class<?> driverClass) {
@@ -188,14 +196,12 @@ public interface JsonScript extends Script<JsonNode, ObjectNode, ArrayNode, Json
   class Compat extends Default {
     private final Class<?> driverClass;
     private final String   scriptResourceNameKey;
-    private final String   scriptResourceName;
 
     public Compat(Class<?> driverClass, String scriptResourceName) {
       super(Default.createLanguageSpecFrom(Default.createDriverObject(driverClass)),
           Reporting.create(),
           scriptResourceName
       );
-      this.scriptResourceName = scriptResourceName;
       this.driverClass = requireNonNull(driverClass);
       this.scriptResourceNameKey = ScriptLoader.FromResourceSpecifiedBySystemProperty.getScriptResourceNameKey(driverClass);
     }
@@ -204,19 +210,8 @@ public interface JsonScript extends Script<JsonNode, ObjectNode, ArrayNode, Json
       return scriptResourceNameKey;
     }
 
-    public Optional<String> getScriptResourceName() {
-      return Optional.ofNullable(scriptResourceName);
-    }
-
     public Class getTestClass() {
       return this.driverClass;
-    }
-
-    @Override
-    public ApplicationSpec.Dictionary readRawBaseScript() {
-      return hostSpec()
-          .readRawScript(
-              getScriptResourceName().orElseThrow(() -> scriptNotSpecified(this)));
     }
   }
 }

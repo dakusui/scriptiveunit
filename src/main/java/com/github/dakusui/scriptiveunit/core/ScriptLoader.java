@@ -18,7 +18,7 @@ public interface ScriptLoader {
     private final String scriptResourceName;
 
     public FromResource(String scriptResourceName) {
-      this.scriptResourceName = scriptResourceName;
+      this.scriptResourceName = requireNonNull(scriptResourceName);
     }
 
     @Override
@@ -37,10 +37,15 @@ public interface ScriptLoader {
 
     @SuppressWarnings("unused")
     public FromResourceSpecifiedBySystemProperty() {
-      this(System.getProperties().getProperty(DEFAULT_SCRIPT_SYSTEM_PROPERTY_KEY));
+      this(DEFAULT_SCRIPT_SYSTEM_PROPERTY_KEY);
     }
 
-    public static String getScriptResourceNameKey(RunScript runScriptAnnotation) {
+    @Override
+    public JsonScript load(Class<?> driverClass) {
+      return new JsonScript.Compat(driverClass, System.getProperties().getProperty(getScriptResourceNameKey(driverClass)));
+    }
+
+    static String getScriptResourceNameKey(RunScript runScriptAnnotation) {
       Class<? extends ScriptLoader> scriptLoaderClass = runScriptAnnotation.loader().value();
       if (scriptLoaderClass.isAssignableFrom(FromResourceSpecifiedBySystemProperty.class)) {
         Value[] args = runScriptAnnotation.loader().args();

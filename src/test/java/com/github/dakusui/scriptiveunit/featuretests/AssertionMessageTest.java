@@ -108,8 +108,8 @@ public class AssertionMessageTest extends TestBase {
     public static class Loader extends ScriptLoader.Base {
       @Override
       public JsonScript load(Class<?> driverClass) {
-        return JsonScript.Base.createScript(driverClass,
-            new SyntaxSugar() {
+        return JsonScript.createScript(driverClass,
+            new ApplicationSpec.Dictionary.Factory() {
               ApplicationSpec.Dictionary createDictionary() {
                 return dict(
                     $("testOracles", array(
@@ -131,7 +131,7 @@ public class AssertionMessageTest extends TestBase {
       }
     }
 
-    public static class Compiler extends SimpleTestBase.Compiler implements SyntaxSugar {
+    public static class Compiler extends SimpleTestBase.Compiler implements ApplicationSpec.Dictionary.Factory {
       public Compiler() {
         super();
       }

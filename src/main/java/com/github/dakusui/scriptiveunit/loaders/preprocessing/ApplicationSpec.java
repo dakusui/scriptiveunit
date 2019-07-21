@@ -3,6 +3,7 @@ package com.github.dakusui.scriptiveunit.loaders.preprocessing;
 import com.github.dakusui.scriptiveunit.exceptions.ScriptiveUnitException;
 import com.github.dakusui.scriptiveunit.utils.Checks;
 
+import java.util.Arrays;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -328,6 +329,32 @@ public interface ApplicationSpec {
       String key();
 
       Node value();
+    }
+
+    interface Factory {
+      default Dictionary dict(Entry... entries) {
+        return ApplicationSpec.dict(entries);
+      }
+
+      default Array array(Object... values) {
+        return ApplicationSpec.array((Node[])
+            Arrays.stream(values)
+                .map(each -> each instanceof Node ?
+                    ((Node) each) :
+                    ApplicationSpec.atom(each))
+                .toArray(Node[]::new));
+      }
+
+      default Entry entry(String key, Object value) {
+        return ApplicationSpec.entry(key,
+            value instanceof Node ?
+                (Node) value :
+                atom(value));
+      }
+
+      default Entry $(String key, Object value) {
+        return this.entry(key, value);
+      }
     }
   }
 }

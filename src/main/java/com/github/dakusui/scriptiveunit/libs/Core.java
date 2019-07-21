@@ -100,14 +100,17 @@ public class Core {
       Script work = input.getScript();
       if (!(work instanceof JsonScript.Compat))
         throw ConfigurationException.nonStandardScript(work);
-      JsonScript.Compat config = (JsonScript.Compat) work;
+      JsonScript.Compat script = (JsonScript.Compat) work;
       final Object retValue;
       switch (attr) {
       case "driverClass":
-        retValue = config.getTestClass().getCanonicalName();
+        retValue = script.getTestClass().getCanonicalName();
         break;
       case "scriptResourceName":
-        retValue = config.getScriptResourceName();
+        retValue = script.getScriptResourceName();
+        break;
+      case "scriptResourceNameKey":
+        retValue = script.getScriptResourceNameKey();
         break;
       default:
         throw SyntaxException.systemAttributeNotFound(attr, input);

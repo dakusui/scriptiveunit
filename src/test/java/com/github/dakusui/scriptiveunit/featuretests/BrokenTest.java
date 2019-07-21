@@ -47,7 +47,7 @@ public class BrokenTest {
 
       @Override
       public JsonScript load(Class<?> driverClass) {
-        ApplicationSpec.Dictionary dictionary = new SyntaxSugar() {
+        ApplicationSpec.Dictionary dictionary = new ApplicationSpec.Dictionary.Factory() {
           ApplicationSpec.Dictionary create() {
             return dict(
                 $("testOracles", array(
@@ -57,7 +57,7 @@ public class BrokenTest {
                     ))));
           }
         }.create();
-        return JsonScript.Base.createScript(driverClass, dictionary);
+        return JsonScript.createScript(driverClass, dictionary);
       }
 
     }

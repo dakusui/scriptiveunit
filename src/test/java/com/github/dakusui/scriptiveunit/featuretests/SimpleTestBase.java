@@ -11,39 +11,10 @@ import com.github.dakusui.scriptiveunit.model.form.value.Value;
 import com.github.dakusui.scriptiveunit.runners.ScriptiveUnit;
 import org.junit.runner.RunWith;
 
-import java.util.Arrays;
-
-import static com.github.dakusui.scriptiveunit.loaders.preprocessing.ApplicationSpec.atom;
-
 @RunWith(ScriptiveUnit.class)
 public abstract class SimpleTestBase {
-  interface SyntaxSugar {
-    default ApplicationSpec.Dictionary dict(ApplicationSpec.Dictionary.Entry... entries) {
-      return ApplicationSpec.dict(entries);
-    }
 
-    default ApplicationSpec.Array array(Object... values) {
-      return ApplicationSpec.array((ApplicationSpec.Node[])
-          Arrays.stream(values)
-              .map(each -> each instanceof ApplicationSpec.Node ?
-                  ((ApplicationSpec.Node) each) :
-                  ApplicationSpec.atom(each))
-              .toArray(ApplicationSpec.Node[]::new));
-    }
-
-    default ApplicationSpec.Dictionary.Entry entry(String key, Object value) {
-      return ApplicationSpec.entry(key,
-          value instanceof ApplicationSpec.Node ?
-              (ApplicationSpec.Node) value :
-              atom(value));
-    }
-
-    default ApplicationSpec.Dictionary.Entry $(String key, Object value) {
-      return this.entry(key, value);
-    }
-  }
-
-  abstract static class Compiler extends ScriptCompiler.Default implements SyntaxSugar {
+  abstract static class Compiler extends ScriptCompiler.Default implements ApplicationSpec.Dictionary.Factory {
     Compiler() {
     }
   }
