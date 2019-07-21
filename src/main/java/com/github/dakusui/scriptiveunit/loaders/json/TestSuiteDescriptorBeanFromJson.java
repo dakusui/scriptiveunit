@@ -9,10 +9,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
-public class JsonTestSuiteDescriptorBean extends TestSuiteDescriptorBean {
-  public JsonTestSuiteDescriptorBean(
+public class TestSuiteDescriptorBeanFromJson extends TestSuiteDescriptorBean {
+  public TestSuiteDescriptorBeanFromJson(
       @JsonProperty("description") String description,
-      @JsonProperty("factorSpace") FactorSpaceDescriptorBeanBean factorSpaceBean,
+      @JsonProperty("factorSpace") FactorSpaceDescriptorBeanFromJson factorSpaceBean,
       @JsonProperty("runnerType") String runnerType,
       @JsonProperty("define") Map<String, List<Object>> userFormClauseMap,
       @JsonProperty("setUpBeforeAll") List<Object> setUpBeforeAllClause,
@@ -32,8 +32,8 @@ public class JsonTestSuiteDescriptorBean extends TestSuiteDescriptorBean {
         tearDownAfterAllClause);
   }
 
-  public static class FactorSpaceDescriptorBeanBean extends FactorSpaceDescriptorBean {
-    public FactorSpaceDescriptorBeanBean(
+  public static class FactorSpaceDescriptorBeanFromJson extends FactorSpaceDescriptorBean {
+    public FactorSpaceDescriptorBeanFromJson(
         @JsonProperty("factors") Map<String, Map<String, Object>> parameterMap,
         @JsonProperty("constraints") List<List<Object>> constraintList
     ) {

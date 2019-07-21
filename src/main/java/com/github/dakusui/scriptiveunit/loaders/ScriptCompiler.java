@@ -1,8 +1,7 @@
 package com.github.dakusui.scriptiveunit.loaders;
 
-import com.github.dakusui.scriptiveunit.core.Script;
 import com.github.dakusui.scriptiveunit.exceptions.ScriptiveUnitException;
-import com.github.dakusui.scriptiveunit.loaders.json.JsonTestSuiteDescriptorBean;
+import com.github.dakusui.scriptiveunit.loaders.json.TestSuiteDescriptorBeanFromJson;
 import com.github.dakusui.scriptiveunit.loaders.preprocessing.HostSpec;
 import com.github.dakusui.scriptiveunit.model.desc.TestSuiteDescriptor;
 import com.github.dakusui.scriptiveunit.model.session.Session;
@@ -12,22 +11,22 @@ import org.codehaus.jackson.node.ObjectNode;
 import java.io.IOException;
 
 public interface ScriptCompiler {
-  TestSuiteDescriptor compile(Session session, Script script);
+  TestSuiteDescriptor compile(Session session);
 
   class Default implements ScriptCompiler {
     @Override
-    public TestSuiteDescriptor compile(Session session, Script script) {
+    public TestSuiteDescriptor compile(Session session) {
       return mapObjectNodeToJsonTestSuiteDescriptorBean(
           new HostSpec.Json()
-              .toHostObject(script.readScriptResource()))
+              .toHostObject(session.getScript().readScriptResource()))
           .create(session);
     }
 
-    static JsonTestSuiteDescriptorBean mapObjectNodeToJsonTestSuiteDescriptorBean(ObjectNode rootNode) {
+    static TestSuiteDescriptorBeanFromJson mapObjectNodeToJsonTestSuiteDescriptorBean(ObjectNode rootNode) {
       try {
         return new ObjectMapper().readValue(
             rootNode,
-            JsonTestSuiteDescriptorBean.class);
+            TestSuiteDescriptorBeanFromJson.class);
       } catch (IOException e) {
         throw ScriptiveUnitException.wrapIfNecessary(e);
       }

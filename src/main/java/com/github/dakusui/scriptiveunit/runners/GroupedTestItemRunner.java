@@ -191,8 +191,6 @@ public final class GroupedTestItemRunner extends ParentRunner<Action> {
         .stream()
         .map((Function<TestOracle, Runner>) input ->
             createRunnerForTestOracle(
-                Object.class,
-//                session.getConfig().getTestClass(),
                 id.getAndIncrement(),
                 input,
                 session,
@@ -206,8 +204,6 @@ public final class GroupedTestItemRunner extends ParentRunner<Action> {
         .stream()
         .map(
             (Function<IndexedTestCase, Runner>) (IndexedTestCase testCase) -> createRunnerForTestCase(
-                Object.class,
-//                session.getConfig().getTestClass(),
                 testCase,
                 session,
                 testSuiteDescriptor)
@@ -232,8 +228,6 @@ public final class GroupedTestItemRunner extends ParentRunner<Action> {
     List<Tuple> fixtures = buildFixtures(usedInSetUp, testCases);
     return fixtures.stream().map(
         (Function<Tuple, Runner>) fixture -> createRunnerForTestFixture(
-//            session.getConfig().getTestClass(),
-            Object.class,
             fixtures.indexOf(fixture),
             fixture,
             testCases.stream().filter((IndexedTestCase indexedTestCase) ->
@@ -377,14 +371,13 @@ public final class GroupedTestItemRunner extends ParentRunner<Action> {
   }
 
   private static GroupedTestItemRunner createRunnerForTestOracle(
-      Class<?> testClass,
       int testOracleId,
       TestOracle testOracle,
       Session session,
       TestSuiteDescriptor testSuiteDescriptor) {
     try {
       return new GroupedTestItemRunner(
-          testClass,
+          Object.class,
           testOracleId,
           nop(),
           Utils.createMainActionsForTestOracle(
@@ -400,7 +393,6 @@ public final class GroupedTestItemRunner extends ParentRunner<Action> {
   }
 
   private static GroupedTestItemRunner createRunnerForTestCase(
-      Class<?> testClass,
       IndexedTestCase indexedTestCase,
       Session session,
       TestSuiteDescriptor testSuiteDescriptor) {
@@ -408,7 +400,7 @@ public final class GroupedTestItemRunner extends ParentRunner<Action> {
     try {
       Tuple testCaseTuple = indexedTestCase.get();
       return new GroupedTestItemRunner(
-          testClass,
+          Object.class,
           testCaseId,
           session.createSetUpActionForFixture(
               testSuiteDescriptor,
@@ -428,7 +420,6 @@ public final class GroupedTestItemRunner extends ParentRunner<Action> {
   }
 
   private static GroupedTestItemRunner createRunnerForTestFixture(
-      Class<?> testClass,
       int fixtureId,
       Tuple fixture,
       List<IndexedTestCase> testCasesFilteredByFixture,
@@ -436,7 +427,7 @@ public final class GroupedTestItemRunner extends ParentRunner<Action> {
       TestSuiteDescriptor testSuiteDescriptor) {
     try {
       return new GroupedTestItemRunner(
-          testClass,
+          Object.class,
           fixtureId,
           session.createSetUpActionForFixture(testSuiteDescriptor, fixture),
           createMainActionsForTestFixture(testCasesFilteredByFixture, session, testSuiteDescriptor),

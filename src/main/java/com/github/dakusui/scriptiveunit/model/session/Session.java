@@ -13,6 +13,7 @@ import com.github.dakusui.scriptiveunit.model.desc.TestSuiteDescriptor;
 import com.github.dakusui.scriptiveunit.model.desc.testitem.IndexedTestCase;
 import com.github.dakusui.scriptiveunit.model.desc.testitem.TestItem;
 import com.github.dakusui.scriptiveunit.model.desc.testitem.TestOracle;
+import com.github.dakusui.scriptiveunit.model.form.value.Value;
 import com.github.dakusui.scriptiveunit.model.form.value.ValueUtils;
 import com.github.dakusui.scriptiveunit.model.session.action.Pipe;
 import com.github.dakusui.scriptiveunit.model.session.action.Sink;
@@ -61,7 +62,7 @@ public interface Session {
     private final BiFunction<TestItem, String, Report> reportCreator;
     private final TestSuiteDescriptor                  testSuiteDescriptor;
 
-    protected Impl(Script<?, ?, ?, ?> script, ScriptCompiler scriptCompiler) {
+    Impl(Script<?, ?, ?, ?> script, ScriptCompiler scriptCompiler) {
       this.script = script;
       Reporting reporting = this.script.getReporting()
           .orElseThrow(ScriptiveUnitException::noReportingObjectIsAvailable);
@@ -72,7 +73,7 @@ public interface Session {
           scriptResourceName,
           testItem,
           reporting.reportFileName);
-      this.testSuiteDescriptor = scriptCompiler.compile(this, script);
+      this.testSuiteDescriptor = scriptCompiler.compile(this);
     }
 
     @Override
@@ -110,7 +111,7 @@ public interface Session {
           testSuiteDescriptor
               .setUp()
               .map(ValueUtils.INSTANCE::<Action>toValue)
-              .map(f -> f.apply(this.createFixtureLevelStage(fixtureTuple)))
+              .map((Value<Action> f) -> f.apply(this.createFixtureLevelStage(fixtureTuple)))
               .orElse(nop()));
     }
 
