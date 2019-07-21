@@ -2,6 +2,7 @@ package com.github.dakusui.scriptiveunit.runners;
 
 import com.github.dakusui.scriptiveunit.core.JsonScript;
 import com.github.dakusui.scriptiveunit.exceptions.ScriptiveUnitException;
+import com.github.dakusui.scriptiveunit.loaders.ScriptCompiler;
 import com.github.dakusui.scriptiveunit.utils.ReflectionUtils;
 import org.junit.runner.Description;
 import org.junit.runner.Runner;
@@ -129,9 +130,11 @@ public class ScriptiveSuiteSet extends ParentRunner<Runner> {
 
   private static Runner createRunner(String scriptResourceName, Class<?> klass) {
     try {
+      JsonScript.Compat script = new JsonScript.Compat(klass, System.getProperties(), scriptResourceName);
       return new ScriptiveUnit(
           klass,
-          new JsonScript.Compat(klass, System.getProperties(), scriptResourceName));
+          new ScriptCompiler.Impl(),
+          script);
     } catch (Error | RuntimeException e) {
       throw e;
     } catch (Throwable throwable) {

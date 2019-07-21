@@ -91,7 +91,7 @@ public class VariationTest {
     return createResourceParameterFactory("components/testOracles", "json");
   }
 
-  @Given({"isFactorsAttributePresent", "!isConstraintsAttributePresent"})
+  @Given({ "isFactorsAttributePresent", "!isConstraintsAttributePresent" })
   @Test
   public void whenRunTest$thenTerminatesNormally(
       @From("_extends") Resource<ObjectNode> _extends,
@@ -163,31 +163,29 @@ public class VariationTest {
       Resource<ObjectNode> setUpBeforeAll,
       Resource<ObjectNode> testOracles
   ) throws Throwable {
-    JsonScript.Compat baseConfig = new JsonScript.Compat(
+    JsonScript.Compat baseScript = new JsonScript.Compat(
         Simple.class,
         new Properties(),
         "components/root.json");
-    final ScriptCompiler.Compat compat = new ScriptCompiler.Compat(
-        new JsonScript.Delegating(baseConfig) {
-          @Override
-          public ApplicationSpec.Dictionary readScriptResource() {
-            return Loader.create(
-                baseConfig.applicationSpec(),
-                _extends,
-                description,
-                factors,
-                constraints,
-                runnerType,
-                setUp,
-                setUpBeforeAll,
-                testOracles
-            ).createDefaultValues();
-          }
-        }
-    );
     new JUnitCore().run(
         new ScriptiveUnit(
             Simple.class,
-            compat, compat.getScript()));
+            new ScriptCompiler.Impl(),
+            new JsonScript.Delegating(baseScript) {
+              @Override
+              public ApplicationSpec.Dictionary readScriptResource() {
+                return Loader.create(
+                    baseScript.applicationSpec(),
+                    _extends,
+                    description,
+                    factors,
+                    constraints,
+                    runnerType,
+                    setUp,
+                    setUpBeforeAll,
+                    testOracles
+                ).createDefaultValues();
+              }
+            }));
   }
 }

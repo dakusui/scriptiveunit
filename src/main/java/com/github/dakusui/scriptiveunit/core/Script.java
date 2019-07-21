@@ -3,7 +3,6 @@ package com.github.dakusui.scriptiveunit.core;
 import com.github.dakusui.scriptiveunit.loaders.preprocessing.ApplicationSpec;
 import com.github.dakusui.scriptiveunit.loaders.preprocessing.HostSpec;
 import com.github.dakusui.scriptiveunit.loaders.preprocessing.Preprocessor;
-import com.github.dakusui.scriptiveunit.model.form.FormRegistry;
 
 import java.util.Optional;
 
@@ -13,8 +12,6 @@ public interface Script<NODE, OBJECT extends NODE, ARRAY extends NODE, ATOM exte
         .applicationSpec(applicationSpec())
         .build();
   }
-
-  FormRegistry formRegistry();
 
   Optional<Reporting> getReporting();
 

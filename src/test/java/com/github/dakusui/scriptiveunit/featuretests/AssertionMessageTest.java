@@ -101,8 +101,12 @@ public class AssertionMessageTest extends TestBase {
   @CompatLoad(with = Simple.Compiler.class)
   public static class Simple extends SimpleTestBase {
     public static class Compiler extends SimpleTestBase.Compiler implements SyntaxSugar {
-      public Compiler(JsonScript script) {
-        super(new JsonScript.Delegating(script) {
+      public Compiler() {
+        super();
+      }
+
+      JsonScript createScript(JsonScript script) {
+        return new JsonScript.Delegating(script) {
           @Override
           public ApplicationSpec.Dictionary readRawBaseScript() {
             return new SyntaxSugar() {
@@ -125,7 +129,7 @@ public class AssertionMessageTest extends TestBase {
               }
             }.createDictionary();
           }
-        });
+        };
       }
     }
   }

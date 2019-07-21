@@ -2,7 +2,6 @@ package com.github.dakusui.scriptiveunit.unittests.negative;
 
 import com.github.dakusui.scriptiveunit.core.JsonScript;
 import com.github.dakusui.scriptiveunit.examples.Qapi;
-import com.github.dakusui.scriptiveunit.exceptions.ScriptiveUnitException;
 import com.github.dakusui.scriptiveunit.testutils.TestBase;
 import org.junit.Test;
 import org.junit.runner.Description;
@@ -70,9 +69,12 @@ public class BrokenScriptsTestExample extends TestBase {
   }
 
   private void useMalformedScript() {
-    String scriptSystemPropertyKey = new JsonScript.Compat(Qapi.class, System.getProperties())
-        .getScriptResourceNameKey()
-        .orElseThrow(ScriptiveUnitException::noScriptResourceNameKeyWasGiven);
-    System.setProperty(scriptSystemPropertyKey, "tests/negative/01-malformed-script/script.json");
+    String scriptSystemPropertyKey = new JsonScript.Compat(
+        Qapi.class,
+        System.getProperties())
+        .getScriptResourceNameKey();
+    System.setProperty(
+        scriptSystemPropertyKey,
+        "tests/negative/01-malformed-script/script.json");
   }
 }

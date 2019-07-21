@@ -21,7 +21,7 @@ import static com.github.dakusui.scriptiveunit.exceptions.TypeMismatch.headOfCal
  */
 public interface Statement {
   static Factory createStatementFactory(Script script, Map<String, List<Object>> userDefinedFormClauseMap) {
-    return new Factory(script.formRegistry(), userDefinedFormClauseMap);
+    return new Factory(script.languageSpec().formRegistry(), userDefinedFormClauseMap);
   }
 
   <U> Value<U> toValue();

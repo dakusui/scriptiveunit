@@ -1,7 +1,6 @@
 package com.github.dakusui.scriptiveunit.testutils;
 
 import com.github.dakusui.scriptiveunit.core.JsonScript;
-import com.github.dakusui.scriptiveunit.exceptions.ScriptiveUnitException;
 import org.junit.runner.Result;
 
 import java.io.OutputStream;
@@ -17,8 +16,7 @@ public enum TestUtils {
   public static void configureScriptNameSystemProperty(String scriptName, Class driverClass) {
     String scriptSystemPropertyKey = new JsonScript.Compat(
         driverClass, System.getProperties())
-        .getScriptResourceNameKey()
-        .orElseThrow(ScriptiveUnitException::noScriptResourceNameKeyWasGiven);
+        .getScriptResourceNameKey();
     System.setProperty(scriptSystemPropertyKey, scriptName);
   }
 

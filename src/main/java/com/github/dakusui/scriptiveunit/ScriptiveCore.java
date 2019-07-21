@@ -3,6 +3,7 @@ package com.github.dakusui.scriptiveunit;
 import com.github.dakusui.scriptiveunit.core.Description;
 import com.github.dakusui.scriptiveunit.core.JsonScript;
 import com.github.dakusui.scriptiveunit.exceptions.ScriptiveUnitException;
+import com.github.dakusui.scriptiveunit.loaders.ScriptCompiler;
 import com.github.dakusui.scriptiveunit.model.form.Form;
 import com.github.dakusui.scriptiveunit.runners.RunningMode;
 import com.github.dakusui.scriptiveunit.runners.ScriptiveSuiteSet;
@@ -37,9 +38,11 @@ public class ScriptiveCore {
 
   public Description describeFunction(Class<?> driverClass, String scriptResourceName, String functionName) {
     try {
+      JsonScript.Compat script = new JsonScript.Compat(driverClass, new Properties(), scriptResourceName);
       final ScriptiveUnit scriptiveUnit = new ScriptiveUnit(
           validateDriverClass(driverClass),
-          new JsonScript.Compat(driverClass, new Properties(), scriptResourceName)
+          new ScriptCompiler.Impl(),
+          script
       );
       return Utils.describeForm(scriptiveUnit, driverClass.newInstance(), functionName);
     } catch (Throwable throwable) {
@@ -49,9 +52,11 @@ public class ScriptiveCore {
 
   public List<String> listFunctions(Class<?> driverClass, String scriptResourceName) {
     try {
+      JsonScript.Compat script = new JsonScript.Compat(driverClass, new Properties(), scriptResourceName);
       return Utils.getFormNames(new ScriptiveUnit(
           validateDriverClass(driverClass),
-          new JsonScript.Compat(driverClass, new Properties(), scriptResourceName)
+          new ScriptCompiler.Impl(),
+          script
       ), driverClass.newInstance());
     } catch (Throwable throwable) {
       throw ScriptiveUnitException.wrapIfNecessary(throwable);
@@ -84,7 +89,11 @@ public class ScriptiveCore {
 
   public Result runScript(Class<?> driverClass, String scriptResourceName) {
     try {
-      return new JUnitCore().run(new ScriptiveUnit(driverClass, new JsonScript.Compat(driverClass, new Properties(), scriptResourceName)));
+      JsonScript.Compat script = new JsonScript.Compat(driverClass, new Properties(), scriptResourceName);
+      return new JUnitCore().run(new ScriptiveUnit(
+          driverClass,
+          new ScriptCompiler.Impl(),
+          script));
     } catch (Throwable throwable) {
       throw ScriptiveUnitException.wrapIfNecessary(throwable);
     }

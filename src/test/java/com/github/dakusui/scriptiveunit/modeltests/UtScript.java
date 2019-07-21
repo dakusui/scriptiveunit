@@ -14,13 +14,8 @@ import java.util.Optional;
 public class UtScript implements JsonScript {
   private final LanguageSpec.ForJson languageSpec;
 
-  UtScript(LanguageSpec.ForJson languageSpec) {
+  private UtScript(LanguageSpec.ForJson languageSpec) {
     this.languageSpec = languageSpec;
-  }
-
-  @Override
-  public FormRegistry formRegistry() {
-    return this.languageSpec().formRegistry();
   }
 
   @Override
@@ -38,7 +33,7 @@ public class UtScript implements JsonScript {
     return languageSpec;
   }
 
-  public static JsonScript create(FormRegistry formRegistry) {
+  static JsonScript create(FormRegistry formRegistry) {
     return new UtScript(LanguageSpec.ForJson.create(formRegistry));
   }
 }

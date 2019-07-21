@@ -1,11 +1,10 @@
 package com.github.dakusui.scriptiveunit.examples;
 
 
+import com.github.dakusui.scriptiveunit.annotations.CompatLoad;
 import com.github.dakusui.scriptiveunit.annotations.Import;
 import com.github.dakusui.scriptiveunit.annotations.Import.Alias;
-import com.github.dakusui.scriptiveunit.annotations.CompatLoad;
 import com.github.dakusui.scriptiveunit.annotations.Scriptable;
-import com.github.dakusui.scriptiveunit.core.JsonScript;
 import com.github.dakusui.scriptiveunit.libs.Arith;
 import com.github.dakusui.scriptiveunit.libs.Collections;
 import com.github.dakusui.scriptiveunit.libs.Predicates;
@@ -34,9 +33,8 @@ import static java.util.Objects.requireNonNull;
 @CompatLoad(with = Qapi.Loader.class)
 @RunWith(ScriptiveUnit.class)
 public class Qapi {
-  public static class Loader extends ScriptCompiler.Compat {
-    public Loader(JsonScript script) {
-      super(script);
+  public static class Loader extends ScriptCompiler.Impl {
+    public Loader() {
     }
   }
 

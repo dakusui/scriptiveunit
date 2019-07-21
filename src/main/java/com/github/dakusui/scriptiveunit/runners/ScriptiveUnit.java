@@ -1,13 +1,11 @@
 package com.github.dakusui.scriptiveunit.runners;
 
 import com.github.dakusui.jcunit.core.tuples.Tuple;
-import com.github.dakusui.scriptiveunit.annotations.CompatLoad;
 import com.github.dakusui.scriptiveunit.core.JsonScript;
 import com.github.dakusui.scriptiveunit.core.Script;
 import com.github.dakusui.scriptiveunit.loaders.ScriptCompiler;
 import com.github.dakusui.scriptiveunit.model.desc.TestSuiteDescriptor;
 import com.github.dakusui.scriptiveunit.model.session.Session;
-import com.github.dakusui.scriptiveunit.utils.ReflectionUtils;
 import com.github.dakusui.scriptiveunit.utils.TupleUtils;
 import org.junit.internal.runners.statements.RunBefores;
 import org.junit.runner.Runner;
@@ -40,22 +38,9 @@ public class ScriptiveUnit extends Parameterized {
    */
   @SuppressWarnings("unused")
   public ScriptiveUnit(Class<?> klass) throws Throwable {
-    this(klass, new JsonScript.Compat(klass, System.getProperties()));
-  }
-
-  /**
-   * A constructor for testing.
-   *
-   * @param klass  A test class
-   * @param script A config object.
-   */
-  public ScriptiveUnit(Class<?> klass, JsonScript.Compat script) throws Throwable {
     this(klass,
-        ScriptCompiler.Compat.createInstance(
-            ReflectionUtils.getAnnotationWithDefault(
-                script.getTestClass(),
-                CompatLoad.DEFAULT_INSTANCE).with(), script),
-        script);
+        new ScriptCompiler.Impl(),
+        new JsonScript.Compat(klass, System.getProperties()));
   }
 
   public ScriptiveUnit(Class<?> klass, ScriptCompiler scriptCompiler, Script script) throws Throwable {

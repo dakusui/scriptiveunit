@@ -9,17 +9,12 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 @Retention(RUNTIME)
 public @interface CompatLoad {
-  String  SCRIPT_NOT_SPECIFIED               = "";
-  String  DEFAULT_SCRIPT_SYSTEM_PROPERTY_KEY = "scriptiveunit.target";
+  String     SCRIPT_NOT_SPECIFIED               = "";
+  String     DEFAULT_SCRIPT_SYSTEM_PROPERTY_KEY = "scriptiveunit.target";
   CompatLoad DEFAULT_INSTANCE                   = new CompatLoad() {
     @Override
     public Class<? extends Annotation> annotationType() {
       return CompatLoad.class;
-    }
-
-    @Override
-    public String script() {
-      return "";
     }
 
     @Override
@@ -28,14 +23,12 @@ public @interface CompatLoad {
     }
 
     @Override
-    public Class<? extends ScriptCompiler.Compat> with() {
-      return ScriptCompiler.Compat.class;
+    public Class<? extends ScriptCompiler.Impl> with() {
+      return ScriptCompiler.Impl.class;
     }
   };
 
-  String script() default SCRIPT_NOT_SPECIFIED;
-
   String scriptSystemPropertyKey() default DEFAULT_SCRIPT_SYSTEM_PROPERTY_KEY;
 
-  Class<? extends ScriptCompiler.Compat> with() default ScriptCompiler.Compat.class;
+  Class<? extends ScriptCompiler.Impl> with() default ScriptCompiler.Impl.class;
 }

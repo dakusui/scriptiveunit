@@ -39,8 +39,13 @@ public class BrokenTest {
   @CompatLoad(with = Broken.Compiler.class)
   public static class Broken extends SimpleTestBase {
     public static class Compiler extends SimpleTestBase.Compiler {
-      public Compiler(JsonScript script) {
-        super(new JsonScript.Delegating(script) {
+      public Compiler() {
+        super();
+      }
+
+
+      JsonScript createScript(JsonScript script) {
+        return new JsonScript.Delegating(script) {
           @Override
           public ApplicationSpec.Dictionary readScriptResource() {
             return createPreprocessor().preprocess(readRawBaseScript());
@@ -59,7 +64,7 @@ public class BrokenTest {
               }
             }.create();
           }
-        });
+        };
       }
     }
   }

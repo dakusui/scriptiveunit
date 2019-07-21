@@ -1,6 +1,5 @@
 package com.github.dakusui.scriptiveunit.loaders;
 
-import com.github.dakusui.scriptiveunit.core.JsonScript;
 import com.github.dakusui.scriptiveunit.core.Script;
 import com.github.dakusui.scriptiveunit.exceptions.ScriptiveUnitException;
 import com.github.dakusui.scriptiveunit.loaders.json.JsonTestSuiteDescriptorBean;
@@ -11,7 +10,6 @@ import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.node.ObjectNode;
 
 import java.io.IOException;
-import java.lang.reflect.InvocationTargetException;
 
 public interface ScriptCompiler {
   TestSuiteDescriptor compile(Session session, Script script);
@@ -35,26 +33,4 @@ public interface ScriptCompiler {
       }
     }
   }
-
-  class Compat extends Impl {
-    private final JsonScript script;
-
-    public Compat(JsonScript script) {
-      this.script = script;
-    }
-
-    @SuppressWarnings("JavaReflectionInvocation")
-    public static ScriptCompiler createInstance(Class<? extends Compat> klass, Script script) {
-      try {
-        return klass.getConstructor(JsonScript.class).newInstance(script);
-      } catch (InstantiationException | IllegalAccessException | InvocationTargetException | NoSuchMethodException e) {
-        throw ScriptiveUnitException.wrapIfNecessary(e);
-      }
-    }
-
-    public JsonScript getScript() {
-      return this.script;
-    }
-  }
-
 }
