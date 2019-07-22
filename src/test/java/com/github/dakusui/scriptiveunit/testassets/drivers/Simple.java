@@ -12,7 +12,7 @@ import com.github.dakusui.scriptiveunit.libs.Strings;
 import com.github.dakusui.scriptiveunit.libs.actions.Basic;
 import com.github.dakusui.scriptiveunit.libs.extras.Reporting;
 import com.github.dakusui.scriptiveunit.model.form.value.Value;
-import com.github.dakusui.scriptiveunit.model.session.Stage;
+import com.github.dakusui.scriptiveunit.model.stage.Stage;
 import com.github.dakusui.scriptiveunit.runners.ScriptiveSuiteSet;
 import com.github.dakusui.scriptiveunit.runners.ScriptiveSuiteSet.SuiteScripts;
 import com.github.dakusui.scriptiveunit.runners.ScriptiveUnit;

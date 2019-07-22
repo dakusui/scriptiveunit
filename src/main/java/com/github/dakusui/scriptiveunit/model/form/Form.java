@@ -8,7 +8,7 @@ import com.github.dakusui.scriptiveunit.core.Description;
 import com.github.dakusui.scriptiveunit.model.form.value.FuncValue;
 import com.github.dakusui.scriptiveunit.model.form.value.Value;
 import com.github.dakusui.scriptiveunit.model.form.value.ValueList;
-import com.github.dakusui.scriptiveunit.model.session.Stage;
+import com.github.dakusui.scriptiveunit.model.stage.Stage;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;

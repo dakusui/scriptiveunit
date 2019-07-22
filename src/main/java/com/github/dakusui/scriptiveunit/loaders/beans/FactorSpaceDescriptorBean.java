@@ -6,6 +6,7 @@ import com.github.dakusui.jcunit8.factorspace.Parameter;
 import com.github.dakusui.scriptiveunit.exceptions.ScriptiveUnitException;
 import com.github.dakusui.scriptiveunit.model.desc.ParameterSpaceDescriptor;
 import com.github.dakusui.scriptiveunit.model.session.Session;
+import com.github.dakusui.scriptiveunit.model.stage.Stage;
 import com.github.dakusui.scriptiveunit.model.statement.Statement;
 
 import java.util.List;
@@ -53,7 +54,7 @@ public abstract class FactorSpaceDescriptorBean {
             .map(ConstraintDefinitionImpl::new)
             .map((ConstraintDefinitionImpl constraintDefinition) ->
                 Constraint.create(
-                    in -> constraintDefinition.test(session.createFixtureLevelStage(in)),
+                    in -> constraintDefinition.test(Stage.createFixtureLevelStage(in, ((Session.Impl) session).getScript())),
                     constraintDefinition.involvedParameterNames()))
             .collect(toList());
       }

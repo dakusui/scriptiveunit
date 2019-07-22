@@ -14,6 +14,7 @@ import com.github.dakusui.scriptiveunit.model.desc.testitem.TestOracle;
 import com.github.dakusui.scriptiveunit.model.session.action.Pipe;
 import com.github.dakusui.scriptiveunit.model.session.action.Sink;
 import com.github.dakusui.scriptiveunit.model.session.action.Source;
+import com.github.dakusui.scriptiveunit.model.stage.Stage;
 import com.github.dakusui.scriptiveunit.model.statement.Statement;
 import com.github.dakusui.scriptiveunit.utils.ActionUtils;
 import org.hamcrest.Matcher;
@@ -22,7 +23,11 @@ import java.util.Optional;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 
-import static com.github.dakusui.actionunit.core.ActionSupport.*;
+import static com.github.dakusui.actionunit.core.ActionSupport.attempt;
+import static com.github.dakusui.actionunit.core.ActionSupport.leaf;
+import static com.github.dakusui.actionunit.core.ActionSupport.named;
+import static com.github.dakusui.actionunit.core.ActionSupport.nop;
+import static com.github.dakusui.actionunit.core.ActionSupport.sequential;
 import static com.github.dakusui.scriptiveunit.utils.TestItemUtils.formatTestName;
 import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
@@ -40,20 +45,18 @@ public interface Session {
 
   Action createMainAction(TestOracle testOracle, IndexedTestCase indexedTestCase);
 
-  Action createTearDownActionForFixture(Tuple testCaseTUple);
+  Action createTearDownActionForFixture(Tuple testCaseTuple);
 
   Action createTearDownAfterAllAction();
-
-  Stage createFixtureLevelStage(Tuple fixtureTuple);
 
   static Session create(Script script, ScriptCompiler scriptCompiler) {
     return new Impl(script, scriptCompiler);
   }
 
   class Impl implements Session {
-    private final Script<?, ?, ?, ?> script;
+    private final Script<?, ?, ?, ?>                   script;
     private final BiFunction<TestItem, String, Report> reportCreator;
-    private final TestSuiteDescriptor testSuiteDescriptor;
+    private final TestSuiteDescriptor                  testSuiteDescriptor;
 
     Impl(Script<?, ?, ?, ?> script, ScriptCompiler scriptCompiler) {
       this.script = script;
@@ -86,7 +89,7 @@ public interface Session {
       return ActionSupport.named(
           format("Suite level set up: %s", testSuiteDescriptor.getDescription()),
           statement.isPresent() ?
-              Statement.eval(statement.get(), this.createSuiteLevelStage(commonFixtureTuple)) :
+              Statement.eval(statement.get(), Stage.createSuiteLevelStage(commonFixtureTuple, this.getScript())) :
               nop());
     }
 
@@ -97,7 +100,7 @@ public interface Session {
       return ActionSupport.named(
           "Fixture set up",
           statement.isPresent() ?
-              Statement.eval(statement.get(), this.createFixtureLevelStage(fixtureTuple)) :
+              Statement.eval(statement.get(), Stage.createSuiteLevelStage(fixtureTuple, this.getScript())) :
               nop());
     }
 
@@ -123,48 +126,29 @@ public interface Session {
     }
 
     @Override
-    public Action createTearDownActionForFixture(Tuple testCaseTUple) {
-      Tuple fixtureTuple = testSuiteDescriptor.createFixtureTupleFrom(testCaseTUple);
+    public Action createTearDownActionForFixture(Tuple testCaseTuple) {
+      Tuple fixtureTuple = testSuiteDescriptor.createFixtureTupleFrom(testCaseTuple);
       Optional<Statement> statement = testSuiteDescriptor.tearDown();
       return ActionSupport.named(
           "Fixture tear down",
           statement.isPresent() ?
-              Statement.eval(statement.get(), this.createFixtureLevelStage(fixtureTuple)) :
+              Statement.eval(statement.get(), Stage.createSuiteLevelStage(fixtureTuple, this.getScript())) :
               nop());
     }
 
     @Override
     public Action createTearDownAfterAllAction() {
       Tuple commonFixtureTuple = testSuiteDescriptor.createCommonFixture();
-      Optional<Statement> statement = testSuiteDescriptor
-          .tearDownAfterAll();
+      Optional<Statement> statement = testSuiteDescriptor.tearDownAfterAll();
       return ActionSupport.named(
           format("Suite level tear down: %s", testSuiteDescriptor.getDescription()),
           statement.isPresent() ?
-              Statement.eval(statement.get(), this.createSuiteLevelStage(commonFixtureTuple)) :
+              Statement.eval(statement.get(), Stage.createSuiteLevelStage(commonFixtureTuple, this.getScript())) :
               nop());
     }
 
-    Stage createSuiteLevelStage(Tuple suiteLevelTuple) {
-      return Stage.Factory.frameworkStageFor(this.getScript(), suiteLevelTuple);
-    }
-
-    @Override
-    public Stage createFixtureLevelStage(Tuple fixtureTuple) {
-      return Stage.Factory.frameworkStageFor(this.getScript(), fixtureTuple);
-    }
-
-    Stage createOracleLevelStage(TestItem testItem, Report report) {
-      return Stage.Factory.oracleLevelStageFor(
-          this.getScript(),
-          testItem,
-          null,
-          null,
-          report);
-    }
-
     Action createBefore(TestItem testItem, TestOracleValuesFactory testOracleValuesFactory, Report report) {
-      Stage beforeStage = this.createOracleLevelStage(testItem, report);
+      Stage beforeStage = Stage.createOracleLevelStage(testItem, report, this.getScript());
       return testOracleValuesFactory.beforeFactory().apply(beforeStage);
     }
 
@@ -173,7 +157,7 @@ public interface Session {
         Report report,
         final Function<Stage, Matcher<Tuple>> stageMatcherFunction) {
       Tuple testCaseTuple = testItem.getTestCaseTuple();
-      Stage givenStage = createOracleLevelStage(testItem, report);
+      Stage givenStage = Stage.createOracleLevelStage(testItem, report, this.getScript());
       return context -> {
         Matcher<Tuple> matcher = stageMatcherFunction.apply(givenStage);
         assumeThat(testCaseTuple, matcher);
@@ -183,7 +167,7 @@ public interface Session {
 
     Pipe<Tuple, TestIO> createWhen(TestItem testItem, Report report, final Function<Stage, Object> function) {
       return (testCase, context) -> {
-        Stage whenStage = createOracleLevelStage(testItem, report);
+        Stage whenStage = Stage.createOracleLevelStage(testItem, report, this.getScript());
         return TestIO.create(
             testCase,
             function.apply(whenStage));
@@ -220,7 +204,7 @@ public interface Session {
     }
 
     Action createAfter(TestItem testItem, TestOracleValuesFactory definition, Report report) {
-      Stage afterStage = this.createOracleLevelStage(testItem, report);
+      Stage afterStage = Stage.createOracleLevelStage(testItem, report, this.getScript());
       return definition.afterFactory().apply(afterStage);
     }
 

@@ -11,7 +11,7 @@ import com.github.dakusui.scriptiveunit.exceptions.SyntaxException;
 import com.github.dakusui.scriptiveunit.model.desc.testitem.TestItem;
 import com.github.dakusui.scriptiveunit.model.form.value.Value;
 import com.github.dakusui.scriptiveunit.model.form.value.ValueList;
-import com.github.dakusui.scriptiveunit.model.session.Stage;
+import com.github.dakusui.scriptiveunit.model.stage.Stage;
 
 import java.lang.reflect.InvocationTargetException;
 import java.util.List;

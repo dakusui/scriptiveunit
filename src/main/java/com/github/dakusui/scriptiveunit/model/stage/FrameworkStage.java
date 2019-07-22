@@ -1,11 +1,11 @@
-package com.github.dakusui.scriptiveunit.model.session;
+package com.github.dakusui.scriptiveunit.model.stage;
 
 import com.github.dakusui.jcunit.core.tuples.Tuple;
 import com.github.dakusui.scriptiveunit.core.Script;
 
 import java.util.Optional;
 
-class FrameworkStage extends StageBase {
+class FrameworkStage extends Stage.Base {
   private final Tuple testCase;
 
   FrameworkStage(Tuple testCase, Script script) {

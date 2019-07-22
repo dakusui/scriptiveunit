@@ -9,7 +9,7 @@ import com.github.dakusui.scriptiveunit.libs.Core;
 import com.github.dakusui.scriptiveunit.libs.Predicates;
 import com.github.dakusui.scriptiveunit.libs.actions.Basic;
 import com.github.dakusui.scriptiveunit.model.form.value.Value;
-import com.github.dakusui.scriptiveunit.model.session.Stage;
+import com.github.dakusui.scriptiveunit.model.stage.Stage;
 import com.github.dakusui.scriptiveunit.runners.ScriptiveUnit;
 import org.junit.runner.RunWith;
 

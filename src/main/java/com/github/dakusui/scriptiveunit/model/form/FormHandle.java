@@ -1,13 +1,13 @@
 package com.github.dakusui.scriptiveunit.model.form;
 
 import com.github.dakusui.scriptiveunit.model.form.value.Value;
-import com.github.dakusui.scriptiveunit.model.session.Stage;
+import com.github.dakusui.scriptiveunit.model.stage.Stage;
 import com.github.dakusui.scriptiveunit.model.statement.Statement;
 import com.github.dakusui.scriptiveunit.utils.CoreUtils;
 
 import java.util.stream.Stream;
 
-import static com.github.dakusui.scriptiveunit.model.session.Stage.Factory.createWrappedStage;
+import static com.github.dakusui.scriptiveunit.model.stage.Stage.Factory.createWrappedStage;
 import static com.github.dakusui.scriptiveunit.utils.CoreUtils.iterableToStream;
 import static com.google.common.collect.Iterables.getOnlyElement;
 import static com.google.common.collect.Iterables.toArray;

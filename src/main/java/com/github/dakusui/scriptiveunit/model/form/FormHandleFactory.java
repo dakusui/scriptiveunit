@@ -1,7 +1,7 @@
 package com.github.dakusui.scriptiveunit.model.form;
 
 import com.github.dakusui.scriptiveunit.model.form.value.Value;
-import com.github.dakusui.scriptiveunit.model.session.Stage;
+import com.github.dakusui.scriptiveunit.model.stage.Stage;
 import com.github.dakusui.scriptiveunit.model.statement.Statement;
 import com.github.dakusui.scriptiveunit.model.statement.StatementRegistry;
 

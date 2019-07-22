@@ -5,7 +5,7 @@ import com.github.dakusui.scriptiveunit.annotations.Import;
 import com.github.dakusui.scriptiveunit.core.JsonScript;
 import com.github.dakusui.scriptiveunit.libs.Arith;
 import com.github.dakusui.scriptiveunit.model.form.FormRegistry;
-import com.github.dakusui.scriptiveunit.model.session.Stage;
+import com.github.dakusui.scriptiveunit.model.stage.Stage;
 import com.github.dakusui.scriptiveunit.model.statement.Statement;
 import com.github.dakusui.scriptiveunit.testutils.TestBase;
 import org.junit.Test;

@@ -1,13 +1,13 @@
-package com.github.dakusui.scriptiveunit.model.session;
+package com.github.dakusui.scriptiveunit.model.stage;
 
 import com.github.dakusui.jcunit.core.tuples.Tuple;
-import com.github.dakusui.scriptiveunit.core.JsonScript;
 import com.github.dakusui.scriptiveunit.core.Script;
 import com.github.dakusui.scriptiveunit.model.desc.testitem.TestItem;
+import com.github.dakusui.scriptiveunit.model.session.Report;
 
 import java.util.Optional;
 
-class OracleLevelStage extends StageBase {
+class OracleLevelStage extends Stage.Base {
   private final TestItem testItem;
 
   OracleLevelStage(Object response, Throwable throwable, Script script, Report report, TestItem testItem) {

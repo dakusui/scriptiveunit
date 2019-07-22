@@ -389,7 +389,7 @@ public final class GroupedTestItemRunner extends ParentRunner<Action> {
       return new GroupedTestItemRunner(
           Object.class,
           testCaseId,
-          session.createSetUpActionForFixture(session.getTestSuiteDescriptor().createFixtureTupleFrom(testCaseTuple)),
+          session.createSetUpActionForFixture(testCaseTuple),
           createMainActionsForTestCase(session, indexedTestCase,
               testSuiteDescriptor.getTestOracles()),
           session.createTearDownActionForFixture(testCaseTuple));

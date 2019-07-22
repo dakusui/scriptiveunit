@@ -1,6 +1,6 @@
 package com.github.dakusui.scriptiveunit.model.form.value;
 
-import com.github.dakusui.scriptiveunit.model.session.Stage;
+import com.github.dakusui.scriptiveunit.model.stage.Stage;
 
 import java.util.LinkedList;
 import java.util.List;

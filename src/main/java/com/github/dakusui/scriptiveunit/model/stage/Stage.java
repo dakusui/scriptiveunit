@@ -1,9 +1,10 @@
-package com.github.dakusui.scriptiveunit.model.session;
+package com.github.dakusui.scriptiveunit.model.stage;
 
 import com.github.dakusui.jcunit.core.tuples.Tuple;
 import com.github.dakusui.scriptiveunit.core.Script;
 import com.github.dakusui.scriptiveunit.model.desc.testitem.TestItem;
 import com.github.dakusui.scriptiveunit.model.form.value.Value;
+import com.github.dakusui.scriptiveunit.model.session.Report;
 
 import java.util.Optional;
 import java.util.function.BiFunction;
@@ -26,6 +27,23 @@ public interface Stage extends Value.Listener {
       stage.fail(value, e);
       throw e;
     }
+  }
+
+  static Stage createFixtureLevelStage(Tuple fixtureTuple, Script script) {
+    return Factory.frameworkStageFor(script, fixtureTuple);
+  }
+
+  static Stage createSuiteLevelStage(Tuple suiteLevelTuple, Script script) {
+    return createFixtureLevelStage(suiteLevelTuple, script);
+  }
+
+  static Stage createOracleLevelStage(TestItem testItem, Report report, Script script) {
+    return Factory.oracleLevelStageFor(
+        script,
+        testItem,
+        null,
+        null,
+        report);
   }
 
   Script getScript();
@@ -165,4 +183,48 @@ public interface Stage extends Value.Listener {
     }
   }
 
+  abstract class Base implements Default {
+    private final Object    response;
+    private final Throwable throwable;
+    private final Script    script;
+    private final Report    report;
+
+    Base(Object response, Throwable throwable, Script script, Report report) {
+      this.response = response;
+      this.throwable = throwable;
+      this.script = script;
+      this.report = report;
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    public <RESPONSE> Optional<RESPONSE> response() {
+      return Optional.ofNullable((RESPONSE) response);
+    }
+
+    @Override
+    public <T> T getArgument(int index) {
+      throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public int sizeOfArguments() {
+      throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public Optional<Throwable> getThrowable() {
+      return Optional.ofNullable(throwable);
+    }
+
+    @Override
+    public Script getScript() {
+      return script;
+    }
+
+    @Override
+    public Optional<Report> getReport() {
+      return Optional.ofNullable(report);
+    }
+  }
 }

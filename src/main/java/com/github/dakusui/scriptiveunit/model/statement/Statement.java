@@ -7,7 +7,7 @@ import com.github.dakusui.scriptiveunit.model.form.FormHandleFactory;
 import com.github.dakusui.scriptiveunit.model.form.FormRegistry;
 import com.github.dakusui.scriptiveunit.model.form.value.Value;
 import com.github.dakusui.scriptiveunit.model.form.value.ValueUtils;
-import com.github.dakusui.scriptiveunit.model.session.Stage;
+import com.github.dakusui.scriptiveunit.model.stage.Stage;
 import com.github.dakusui.scriptiveunit.utils.CoreUtils;
 
 import java.util.List;
