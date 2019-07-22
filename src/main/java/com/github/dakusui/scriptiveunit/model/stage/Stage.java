@@ -2,7 +2,8 @@ package com.github.dakusui.scriptiveunit.model.stage;
 
 import com.github.dakusui.jcunit.core.tuples.Tuple;
 import com.github.dakusui.scriptiveunit.core.Script;
-import com.github.dakusui.scriptiveunit.model.desc.testitem.TestItem;
+import com.github.dakusui.scriptiveunit.model.desc.testitem.IndexedTestCase;
+import com.github.dakusui.scriptiveunit.model.desc.testitem.TestOracle;
 import com.github.dakusui.scriptiveunit.model.form.value.Value;
 import com.github.dakusui.scriptiveunit.model.session.Report;
 
@@ -37,13 +38,12 @@ public interface Stage extends Value.Listener {
     return createFixtureLevelStage(suiteLevelTuple, script);
   }
 
-  static Stage createOracleLevelStage(TestItem testItem, Report report, Script script) {
+  static Stage createOracleLevelStage(Report report, Script script, IndexedTestCase testCase, TestOracle testOracle) {
     return Factory.oracleLevelStageFor(
         script,
-        testItem,
         null,
-        null,
-        report);
+        testCase, testOracle, report, null
+    );
   }
 
   Script getScript();
@@ -60,14 +60,11 @@ public interface Stage extends Value.Listener {
 
   Optional<Report> getReport();
 
-  Optional<TestItem> getTestItem();
+  Optional<IndexedTestCase> getTestCase();
+
+  Optional<TestOracle> getTestOracle();
 
   interface Default extends Stage {
-    @Override
-    default Optional<TestItem> getTestItem() {
-      return Optional.empty();
-    }
-
     @Override
     default void enter(Value value) {
 
@@ -83,9 +80,55 @@ public interface Stage extends Value.Listener {
     }
   }
 
+
+  abstract class Base implements Default {
+    private final Object    response;
+    private final Throwable throwable;
+    private final Script    script;
+    private final Report    report;
+
+    Base(Object response, Throwable throwable, Script script, Report report) {
+      this.response = response;
+      this.throwable = throwable;
+      this.script = script;
+      this.report = report;
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    public <RESPONSE> Optional<RESPONSE> response() {
+      return Optional.ofNullable((RESPONSE) response);
+    }
+
+    @Override
+    public <T> T getArgument(int index) {
+      throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public int sizeOfArguments() {
+      throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public Optional<Throwable> getThrowable() {
+      return Optional.ofNullable(throwable);
+    }
+
+    @Override
+    public Script getScript() {
+      return script;
+    }
+
+    @Override
+    public Optional<Report> getReport() {
+      return Optional.ofNullable(report);
+    }
+  }
+
   interface Factory {
-    static <RESPONSE> Stage oracleLevelStageFor(Script script, TestItem testItem, RESPONSE response, Throwable throwable, Report report) {
-      return new OracleLevelStage(response, throwable, script, report, testItem);
+    static <RESPONSE> Stage oracleLevelStageFor(Script script, RESPONSE response, IndexedTestCase testCase, TestOracle testOracle, Report report, Throwable throwable) {
+      return new OracleLevelStage(response, throwable, script, report, testCase, testOracle);
     }
 
     static Stage frameworkStageFor(Script script, Tuple fixture) {
@@ -99,6 +142,16 @@ public interface Stage extends Value.Listener {
         public <U> U getArgument(int index) {
           check(index < sizeOfArguments(), () -> indexOutOfBounds(index, sizeOfArguments()));
           return (U) args[index].apply(stage);
+        }
+
+        @Override
+        public Optional<IndexedTestCase> getTestCase() {
+          return stage.getTestCase();
+        }
+
+        @Override
+        public Optional<TestOracle> getTestOracle() {
+          return stage.getTestOracle();
         }
 
         @Override
@@ -161,8 +214,13 @@ public interface Stage extends Value.Listener {
         }
 
         @Override
-        public Optional<TestItem> getTestItem() {
-          return stage.getTestItem();
+        public Optional<IndexedTestCase> getTestCase() {
+          return stage.getTestCase();
+        }
+
+        @Override
+        public Optional<TestOracle> getTestOracle() {
+          return stage.getTestOracle();
         }
 
         @Override
@@ -180,51 +238,6 @@ public interface Stage extends Value.Listener {
           formListener.fail(value, t);
         }
       };
-    }
-  }
-
-  abstract class Base implements Default {
-    private final Object    response;
-    private final Throwable throwable;
-    private final Script    script;
-    private final Report    report;
-
-    Base(Object response, Throwable throwable, Script script, Report report) {
-      this.response = response;
-      this.throwable = throwable;
-      this.script = script;
-      this.report = report;
-    }
-
-    @SuppressWarnings("unchecked")
-    @Override
-    public <RESPONSE> Optional<RESPONSE> response() {
-      return Optional.ofNullable((RESPONSE) response);
-    }
-
-    @Override
-    public <T> T getArgument(int index) {
-      throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public int sizeOfArguments() {
-      throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public Optional<Throwable> getThrowable() {
-      return Optional.ofNullable(throwable);
-    }
-
-    @Override
-    public Script getScript() {
-      return script;
-    }
-
-    @Override
-    public Optional<Report> getReport() {
-      return Optional.ofNullable(report);
     }
   }
 }

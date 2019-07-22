@@ -1,7 +1,8 @@
 package com.github.dakusui.scriptiveunit.model.session;
 
 import com.github.dakusui.scriptiveunit.exceptions.ScriptiveUnitException;
-import com.github.dakusui.scriptiveunit.model.desc.testitem.TestItem;
+import com.github.dakusui.scriptiveunit.model.desc.testitem.IndexedTestCase;
+import com.github.dakusui.scriptiveunit.model.desc.testitem.TestOracle;
 import com.github.dakusui.scriptiveunit.utils.Checks;
 import org.codehaus.jackson.map.ObjectMapper;
 
@@ -15,9 +16,9 @@ import static java.lang.String.format;
 public interface Report extends Map<String, Object> {
   void submit();
 
-  static Report create(File baseDir, final File applicationDirectory, final String testSuiteName, TestItem testItem, final String reportFileName) {
-    int testCaseId = testItem.getTestCaseId();
-    int oracleId = testItem.getTestOracleId();
+  static Report create(File baseDir, final File applicationDirectory, final String testSuiteName, final String reportFileName, IndexedTestCase testCase, TestOracle testOracle) {
+    int testCaseId = testCase.getIndex();
+    int oracleId = testOracle.getIndex();
     return new Base() {
       private final File base = baseDir;
 
@@ -36,6 +37,7 @@ public interface Report extends Map<String, Object> {
             reportingDirectory_() :
             new File(base, reportingDirectory_().getPath());
       }
+
       private File reportingDirectory_() {
         return new File(
             new File("reports"),

@@ -2,6 +2,7 @@ package com.github.dakusui.scriptiveunit.model.session;
 
 import com.github.dakusui.actionunit.core.Action;
 import com.github.dakusui.actionunit.core.ActionSupport;
+import com.github.dakusui.actionunit.core.Context;
 import com.github.dakusui.jcunit.core.tuples.Tuple;
 import com.github.dakusui.scriptiveunit.core.Reporting;
 import com.github.dakusui.scriptiveunit.core.Script;
@@ -9,7 +10,6 @@ import com.github.dakusui.scriptiveunit.exceptions.ScriptiveUnitException;
 import com.github.dakusui.scriptiveunit.loaders.ScriptCompiler;
 import com.github.dakusui.scriptiveunit.model.desc.TestSuiteDescriptor;
 import com.github.dakusui.scriptiveunit.model.desc.testitem.IndexedTestCase;
-import com.github.dakusui.scriptiveunit.model.desc.testitem.TestItem;
 import com.github.dakusui.scriptiveunit.model.desc.testitem.TestOracle;
 import com.github.dakusui.scriptiveunit.model.session.action.Pipe;
 import com.github.dakusui.scriptiveunit.model.session.action.Sink;
@@ -35,6 +35,7 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assume.assumeThat;
 
 public interface Session {
+
   Script getScript();
 
   TestSuiteDescriptor getTestSuiteDescriptor();
@@ -54,21 +55,22 @@ public interface Session {
   }
 
   class Impl implements Session {
-    private final Script<?, ?, ?, ?>                   script;
-    private final BiFunction<TestItem, String, Report> reportCreator;
-    private final TestSuiteDescriptor                  testSuiteDescriptor;
+    private final Script<?, ?, ?, ?>                                                script;
+    private final Function<String, BiFunction<IndexedTestCase, TestOracle, Report>> reportCreator;
+    private final TestSuiteDescriptor                                               testSuiteDescriptor;
 
     Impl(Script<?, ?, ?, ?> script, ScriptCompiler scriptCompiler) {
       this.script = script;
       Reporting reporting = this.script.getReporting()
           .orElseThrow(ScriptiveUnitException::noReportingObjectIsAvailable);
-      this.reportCreator = (testItem, scriptResourceName) -> Report.create(
+      this.reportCreator = (scriptResourceName) -> (indexedTestCase, testOracle) -> Report.create(
           null,
           reporting.reportBaseDirectory,
           // Only name of a test script is wanted here.
           scriptResourceName,
-          testItem,
-          reporting.reportFileName);
+          reporting.reportFileName,
+          indexedTestCase,
+          testOracle);
       this.testSuiteDescriptor = scriptCompiler.compile(this);
     }
 
@@ -106,23 +108,22 @@ public interface Session {
 
     @Override
     public Action createMainAction(TestOracle testOracle, IndexedTestCase indexedTestCase) {
-      TestItem testItem = TestItem.create(indexedTestCase, testOracle);
-      TestOracleValuesFactory definition = testItem.testOracleActionFactory(
-          tuple -> formatTestName(tuple, testSuiteDescriptor, testOracle.getDescription().orElse("noname")));
-      Tuple testCaseTuple = testItem.getTestCaseTuple();
-      Report report = createReport(testItem);
+      TestOracleValuesFactory definition = testOracleActionFactory(
+          tuple -> formatTestName(tuple, testSuiteDescriptor, testOracle.getDescription().orElse("noname")), indexedTestCase, testOracle);
+      Tuple testCaseTuple = indexedTestCase.get();
+      Report report = createReport(indexedTestCase, testOracle);
       return named(
           definition.describeTestCase(testCaseTuple),
           sequential(
-              createBefore(testItem, definition, report),
+              createBefore(definition, report, indexedTestCase, testOracle),
               attempt(ActionUtils.<Tuple, TestIO>test()
-                  .given(createGiven(testItem, report, definition.givenFactory()))
-                  .when(createWhen(testItem, report, definition.whenFactory()))
-                  .then(createThen(testItem, report, definition.thenFactory())).build())
+                  .given(createGiven(report, definition.givenFactory(), indexedTestCase, testOracle))
+                  .when(createWhen(report, definition.whenFactory(), indexedTestCase, testOracle))
+                  .then(createThen(report, definition.thenFactory(), indexedTestCase, testOracle)).build())
                   .recover(
                       AssertionError.class,
-                      leaf(c -> createErrorHandler(testItem, definition, report).accept(c.thrownException(), c)))
-                  .ensure(createAfter(testItem, definition, report))));
+                      leaf(c -> createErrorHandler(definition, report, indexedTestCase, testOracle).accept(c.thrownException(), c)))
+                  .ensure(createAfter(definition, report, indexedTestCase, testOracle))));
     }
 
     @Override
@@ -147,83 +148,91 @@ public interface Session {
               nop());
     }
 
-    Action createBefore(TestItem testItem, TestOracleValuesFactory testOracleValuesFactory, Report report) {
-      Stage beforeStage = Stage.createOracleLevelStage(testItem, report, this.getScript());
+    Action createBefore(TestOracleValuesFactory testOracleValuesFactory, Report report, IndexedTestCase testCase, TestOracle testOracle) {
+      Stage beforeStage = Stage.createOracleLevelStage(report, this.getScript(), testCase, testOracle);
       return testOracleValuesFactory.beforeFactory().apply(beforeStage);
     }
 
     Source<Tuple> createGiven(
-        TestItem testItem,
         Report report,
-        final Function<Stage, Matcher<Tuple>> stageMatcherFunction) {
-      Tuple testCaseTuple = testItem.getTestCaseTuple();
-      Stage givenStage = Stage.createOracleLevelStage(testItem, report, this.getScript());
+        final Function<Stage, Matcher<Tuple>> stageMatcherFunction, IndexedTestCase testCase, TestOracle testOracle) {
+      Stage givenStage = Stage.createOracleLevelStage(report, this.getScript(), testCase, testOracle);
       return context -> {
         Matcher<Tuple> matcher = stageMatcherFunction.apply(givenStage);
-        assumeThat(testCaseTuple, matcher);
-        return testCaseTuple;
+        assumeThat(testCase.get(), matcher);
+        return testCase.get();
       };
     }
 
-    Pipe<Tuple, TestIO> createWhen(TestItem testItem, Report report, final Function<Stage, Object> function) {
-      return (testCase, context) -> {
-        Stage whenStage = Stage.createOracleLevelStage(testItem, report, this.getScript());
+    Pipe<Tuple, TestIO> createWhen(Report report, final Function<Stage, Object> function, IndexedTestCase testCase, TestOracle testOracle) {
+      return (Tuple testCaseTuple, Context context) -> {
+        Stage whenStage = Stage.createOracleLevelStage(report, this.getScript(), testCase, testOracle);
         return TestIO.create(
-            testCase,
+            testCaseTuple,
             function.apply(whenStage));
       };
     }
 
-    Sink<TestIO> createThen(TestItem testItem, Report report, Function<Stage, Function<Object, Matcher<Stage>>> matcherFunction) {
+    Sink<TestIO> createThen(Report report, Function<Stage, Function<Object, Matcher<Stage>>> matcherFunction, IndexedTestCase testCase, TestOracle testOracle) {
       return (testIO, context) -> {
-        Stage thenStage = Impl.this.createOracleVerificationStage(testItem, testIO.getOutput(), report);
+        Stage thenStage = Impl.this.createOracleVerificationStage(testIO.getOutput(), report, testCase, testOracle);
         assertThat(
             format("Test:<%s> failed with input:<%s>",
                 formatTestName(
-                    testItem.getTestCaseTuple(),
+                    testCase.get(),
                     testSuiteDescriptor,
-                    testItem.getDescription().orElse("(noname)")),
+                    testOracle.getDescription().orElse("(noname)")),
                 testIO.getInput()),
             thenStage,
             matcherFunction.apply(thenStage).apply(testIO.getOutput()));
       };
     }
 
-    Report createReport(TestItem testItem) {
-      return this.reportCreator.apply(
-          testItem,
-          getScript().name());
+    Report createReport(IndexedTestCase testCase, TestOracle testOracle) {
+      return this.reportCreator
+          .apply(getScript().name())
+          .apply(testCase, testOracle);
     }
 
-    Sink<AssertionError> createErrorHandler(TestItem testItem, TestOracleValuesFactory definition, Report report) {
+    Sink<AssertionError> createErrorHandler(TestOracleValuesFactory definition, Report report, IndexedTestCase testCase, TestOracle testOracle) {
       return (input, context) -> {
-        Stage onFailureStage = createOracleFailureHandlingStage(testItem, input, report);
+        Stage onFailureStage = createOracleFailureHandlingStage(input, report, testCase, testOracle);
         definition.errorHandlerFactory().apply(onFailureStage);
         throw input;
       };
     }
 
-    Action createAfter(TestItem testItem, TestOracleValuesFactory definition, Report report) {
-      Stage afterStage = Stage.createOracleLevelStage(testItem, report, this.getScript());
+    Action createAfter(TestOracleValuesFactory definition, Report report, IndexedTestCase testCase, TestOracle testOracle) {
+      Stage afterStage = Stage.createOracleLevelStage(report, this.getScript(), testCase, testOracle);
       return definition.afterFactory().apply(afterStage);
     }
 
-    <RESPONSE> Stage createOracleVerificationStage(TestItem testItem, RESPONSE response, Report report) {
+    <RESPONSE> Stage createOracleVerificationStage(RESPONSE response, Report report, IndexedTestCase testCase, TestOracle testOracle) {
       return Stage.Factory.oracleLevelStageFor(
           getScript(),
-          testItem,
           requireNonNull(response),
-          null,
-          report);
+          testCase,
+          testOracle,
+          report,
+          null
+      );
     }
 
-    Stage createOracleFailureHandlingStage(TestItem testItem, Throwable throwable, Report report) {
+    Stage createOracleFailureHandlingStage(Throwable throwable, Report report, IndexedTestCase testCase, TestOracle testOracle) {
       return Stage.Factory.oracleLevelStageFor(
           getScript(),
-          testItem,
           null,
-          throwable,
-          report);
+          testCase,
+          testOracle,
+          report,
+          throwable
+      );
+    }
+
+    static TestOracleValuesFactory testOracleActionFactory(Function<Tuple, String> testCaseFormatter, IndexedTestCase testCase, TestOracle testOracle) {
+      return TestOracleValuesFactory.createTestOracleValuesFactory(
+          testCaseFormatter, testCase, testOracle
+      );
     }
   }
 }

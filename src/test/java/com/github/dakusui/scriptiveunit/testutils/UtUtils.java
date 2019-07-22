@@ -6,10 +6,8 @@ import com.github.dakusui.jcunit8.testsuite.TestCase;
 import com.github.dakusui.scriptiveunit.annotations.CompileWith;
 import com.github.dakusui.scriptiveunit.annotations.RunScript;
 import com.github.dakusui.scriptiveunit.core.JsonScript;
-import com.github.dakusui.scriptiveunit.exceptions.ScriptiveUnitException;
 import com.github.dakusui.scriptiveunit.featuretests.AssertionMessageTest;
 import com.github.dakusui.scriptiveunit.model.desc.testitem.IndexedTestCase;
-import com.github.dakusui.scriptiveunit.model.desc.testitem.TestItem;
 import com.github.dakusui.scriptiveunit.model.desc.testitem.TestOracle;
 import com.github.dakusui.scriptiveunit.model.form.value.Value;
 import com.github.dakusui.scriptiveunit.model.session.Report;
@@ -17,8 +15,6 @@ import com.github.dakusui.scriptiveunit.model.stage.Stage;
 import com.github.dakusui.scriptiveunit.model.statement.Statement;
 
 import java.io.File;
-import java.io.IOException;
-import java.nio.file.Files;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
@@ -44,23 +40,13 @@ public enum UtUtils {
     String reportFileName = "report.bin";
     return Stage.Factory.oracleLevelStageFor(
         config(),
-        testItem,
         createResponse(),
-        createThrowable(),
-        Report.create(BASE_DIR, applicationDir, testSuiteName, testItem, reportFileName)
+        testItem.getTestCase(), testItem.getTestOracle(), Report.create(BASE_DIR, applicationDir, testSuiteName, reportFileName, testItem.getTestCase(), testItem.getTestOracle()), createThrowable()
     );
   }
 
   static JsonScript config() {
     return new JsonScript.FromDriverClass(DummyDriver.class, "(none)");
-  }
-
-  private static File createTemporaryDirectory() {
-    try {
-      return Files.createTempDirectory("target").toFile();
-    } catch (IOException e) {
-      throw ScriptiveUnitException.wrapIfNecessary(e);
-    }
   }
 
   private static TestItem createTestItem() {
@@ -162,5 +148,35 @@ public enum UtUtils {
 
   public static void main(String... args) {
     System.out.println(new File(new File("target"), "dirname").toPath());
+  }
+
+  public static interface TestItem {
+    IndexedTestCase getTestCase();
+
+    TestOracle getTestOracle();
+
+    class Impl implements TestItem {
+      private final IndexedTestCase indexedTestCase;
+      private final TestOracle      testOracle;
+
+      Impl(IndexedTestCase indexedTestCase, TestOracle testOracle) {
+        this.indexedTestCase = indexedTestCase;
+        this.testOracle = testOracle;
+      }
+
+      @Override
+      public IndexedTestCase getTestCase() {
+        return this.indexedTestCase;
+      }
+
+      @Override
+      public TestOracle getTestOracle() {
+        return this.testOracle;
+      }
+    }
+
+    static TestItem create(IndexedTestCase testCase, TestOracle testOracle) {
+      return new Impl(testCase, testOracle);
+    }
   }
 }

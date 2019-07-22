@@ -2,31 +2,39 @@ package com.github.dakusui.scriptiveunit.model.stage;
 
 import com.github.dakusui.jcunit.core.tuples.Tuple;
 import com.github.dakusui.scriptiveunit.core.Script;
-import com.github.dakusui.scriptiveunit.model.desc.testitem.TestItem;
+import com.github.dakusui.scriptiveunit.model.desc.testitem.IndexedTestCase;
+import com.github.dakusui.scriptiveunit.model.desc.testitem.TestOracle;
 import com.github.dakusui.scriptiveunit.model.session.Report;
 
 import java.util.Optional;
 
 class OracleLevelStage extends Stage.Base {
-  private final TestItem testItem;
+  private final IndexedTestCase indexedTestCase;
+  private final TestOracle      testOracle;
 
-  OracleLevelStage(Object response, Throwable throwable, Script script, Report report, TestItem testItem) {
+  OracleLevelStage(Object response, Throwable throwable, Script script, Report report, IndexedTestCase testCase, TestOracle testOracle) {
     super(response, throwable, script, report);
-    this.testItem = testItem;
+    this.indexedTestCase = testCase;
+    this.testOracle = testOracle;
   }
 
   @Override
   public Optional<Tuple> getTestCaseTuple() {
-    return Optional.of(this.testItem.getTestCaseTuple());
+    return Optional.of(this.indexedTestCase.get());
   }
 
   @Override
-  public Optional<TestItem> getTestItem() {
-    return Optional.ofNullable(testItem);
+  public Optional<IndexedTestCase> getTestCase() {
+    return Optional.of(this.indexedTestCase);
+  }
+
+  @Override
+  public Optional<TestOracle> getTestOracle() {
+    return Optional.of(this.testOracle);
   }
 
   @Override
   public String toString() {
-    return String.format("stage:oracle:<%s>", testItem);
+    return String.format("stage:oracle:<%s>", indexedTestCase);
   }
 }

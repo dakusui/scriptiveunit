@@ -3,7 +3,7 @@ package com.github.dakusui.scriptiveunit.model.session;
 import com.github.dakusui.actionunit.core.Action;
 import com.github.dakusui.actionunit.core.Context;
 import com.github.dakusui.jcunit.core.tuples.Tuple;
-import com.github.dakusui.scriptiveunit.model.desc.testitem.TestItem;
+import com.github.dakusui.scriptiveunit.model.desc.testitem.IndexedTestCase;
 import com.github.dakusui.scriptiveunit.model.desc.testitem.TestOracle;
 import com.github.dakusui.scriptiveunit.model.form.value.Value;
 import com.github.dakusui.scriptiveunit.model.session.action.Sink;
@@ -29,7 +29,8 @@ import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
 
 public interface TestOracleValuesFactory {
-  static TestOracleValuesFactory createTestOracleValuesFactory(TestItem testItem, TestOracle.Definition definition, Function<Tuple, String> testCaseFormatter) {
+  static TestOracleValuesFactory createTestOracleValuesFactory(Function<Tuple, String> testCaseFormatter, final IndexedTestCase testCase, TestOracle testOracle) {
+    TestOracle.Definition definition = testOracle.definition();
     Value<Action> beforeValue = definition.before()
         .map(Statement::<Action>toValue)
         .orElse((Stage s) -> nop());
@@ -98,8 +99,8 @@ public interface TestOracleValuesFactory {
                 out;
             description.appendText(format("output <%s>", output));
             description.appendText(" ");
-            if (!testItem.getTestCaseTuple().isEmpty()) {
-              description.appendText(format("created from <%s>", testItem.getTestCaseTuple()));
+            if (!testCase.get().isEmpty()) {
+              description.appendText(format("created from <%s>", testCase.get()));
               description.appendText(" ");
             }
             description.appendText(format("did not satisfy it.:%n%s", formListener.toString()));

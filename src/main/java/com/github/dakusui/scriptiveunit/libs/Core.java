@@ -1,6 +1,7 @@
 package com.github.dakusui.scriptiveunit.libs;
 
 import com.github.dakusui.jcunit.core.tuples.Tuple;
+import com.github.dakusui.jcunit8.testsuite.TestCase;
 import com.github.dakusui.scriptiveunit.annotations.AccessesTestParameter;
 import com.github.dakusui.scriptiveunit.annotations.Scriptable;
 import com.github.dakusui.scriptiveunit.core.JsonScript;
@@ -8,7 +9,7 @@ import com.github.dakusui.scriptiveunit.core.Script;
 import com.github.dakusui.scriptiveunit.exceptions.ConfigurationException;
 import com.github.dakusui.scriptiveunit.exceptions.ScriptiveUnitException;
 import com.github.dakusui.scriptiveunit.exceptions.SyntaxException;
-import com.github.dakusui.scriptiveunit.model.desc.testitem.TestItem;
+import com.github.dakusui.scriptiveunit.model.desc.testitem.TestOracle;
 import com.github.dakusui.scriptiveunit.model.form.value.Value;
 import com.github.dakusui.scriptiveunit.model.form.value.ValueList;
 import com.github.dakusui.scriptiveunit.model.stage.Stage;
@@ -77,8 +78,16 @@ public class Core {
 
   @SuppressWarnings("unused")
   @Scriptable
-  public Value<TestItem> testItem() {
-    return stage -> stage.getTestItem().orElseThrow(
+  public Value<TestCase> testCase() {
+    return stage -> stage.getTestCase().orElseThrow(
+        () -> new IllegalStateException(
+            format("This method cannot be called on this stage:<%s>", stage)));
+  }
+
+  @SuppressWarnings("unused")
+  @Scriptable
+  public Value<TestOracle> testOracle() {
+    return stage -> stage.getTestOracle().orElseThrow(
         () -> new IllegalStateException(
             format("This method cannot be called on this stage:<%s>", stage)));
   }

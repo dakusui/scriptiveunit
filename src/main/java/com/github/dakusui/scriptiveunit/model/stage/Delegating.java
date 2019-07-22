@@ -2,9 +2,7 @@ package com.github.dakusui.scriptiveunit.model.stage;
 
 import com.github.dakusui.jcunit.core.tuples.Tuple;
 import com.github.dakusui.scriptiveunit.core.Script;
-import com.github.dakusui.scriptiveunit.model.desc.testitem.TestItem;
 import com.github.dakusui.scriptiveunit.model.session.Report;
-import com.github.dakusui.scriptiveunit.model.stage.Stage;
 
 import java.util.Optional;
 
@@ -50,10 +48,5 @@ abstract class Delegating implements Stage {
   @Override
   public Optional<Report> getReport() {
     return this.target.getReport();
-  }
-
-  @Override
-  public Optional<TestItem> getTestItem() {
-    return this.target.getTestItem();
   }
 }
