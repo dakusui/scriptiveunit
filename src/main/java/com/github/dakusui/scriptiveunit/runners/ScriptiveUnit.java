@@ -79,7 +79,7 @@ public class ScriptiveUnit extends Parameterized {
     return new RunBefores(statement, Collections.emptyList(), null) {
       @Override
       public void evaluate() throws Throwable {
-        performActionWithLogging(session.createSetUpBeforeAllAction(session.getTestSuiteDescriptor().createCommonFixture()));
+        performActionWithLogging(session.createSetUpBeforeAllAction());
         super.evaluate();
       }
     };
@@ -91,7 +91,7 @@ public class ScriptiveUnit extends Parameterized {
       @Override
       public void evaluate() throws Throwable {
         super.evaluate();
-        performActionWithLogging(session.createTearDownAfterAllAction(session.getTestSuiteDescriptor().createCommonFixture()));
+        performActionWithLogging(session.createTearDownAfterAllAction());
       }
     };
   }

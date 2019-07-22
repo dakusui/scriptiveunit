@@ -34,21 +34,17 @@ public interface Session {
 
   TestSuiteDescriptor getTestSuiteDescriptor();
 
-  Action createSetUpBeforeAllAction(Tuple commonFixtureTuple);
+  Action createSetUpBeforeAllAction();
 
-  Action createSetUpActionForFixture(Tuple fixtureTuple);
+  Action createSetUpActionForFixture(Tuple testCaseTuple);
 
   Action createMainAction(TestOracle testOracle, IndexedTestCase indexedTestCase);
 
-  Action createTearDownActionForFixture(Tuple fixtureTuple);
+  Action createTearDownActionForFixture(Tuple testCaseTUple);
 
-  Action createTearDownAfterAllAction(Tuple commonFixtureTuple);
+  Action createTearDownAfterAllAction();
 
-  Stage createSuiteLevelStage(Tuple suiteLevelTuple);
-
-  Stage createFixtureLevelStage(Tuple fixtureLevelTuple);
-
-  Stage createOracleLevelStage(TestItem testItem, Report report);
+  Stage createFixtureLevelStage(Tuple fixtureTuple);
 
   static Session create(Script script, ScriptCompiler scriptCompiler) {
     return new Impl(script, scriptCompiler);
@@ -84,7 +80,8 @@ public interface Session {
     }
 
     @Override
-    public Action createSetUpBeforeAllAction(Tuple commonFixtureTuple) {
+    public Action createSetUpBeforeAllAction() {
+      Tuple commonFixtureTuple = this.getTestSuiteDescriptor().createCommonFixture();
       Optional<Statement> statement = getTestSuiteDescriptor().setUpBeforeAll();
       return ActionSupport.named(
           format("Suite level set up: %s", testSuiteDescriptor.getDescription()),
@@ -94,8 +91,9 @@ public interface Session {
     }
 
     @Override
-    public Action createSetUpActionForFixture(Tuple fixtureTuple) {
-      Optional<Statement> statement = getTestSuiteDescriptor().setUp();
+    public Action createSetUpActionForFixture(Tuple testCaseTuple) {
+      Tuple fixtureTuple = this.testSuiteDescriptor.createFixtureTupleFrom(testCaseTuple);
+      Optional<Statement> statement = this.testSuiteDescriptor.setUp();
       return ActionSupport.named(
           "Fixture set up",
           statement.isPresent() ?
@@ -125,17 +123,19 @@ public interface Session {
     }
 
     @Override
-    public Action createTearDownActionForFixture(Tuple fixtureTuple) {
+    public Action createTearDownActionForFixture(Tuple testCaseTUple) {
+      Tuple fixtureTuple = testSuiteDescriptor.createFixtureTupleFrom(testCaseTUple);
       Optional<Statement> statement = testSuiteDescriptor.tearDown();
       return ActionSupport.named(
           "Fixture tear down",
           statement.isPresent() ?
-              Statement.eval(statement.get(), this.createSuiteLevelStage(fixtureTuple)) :
+              Statement.eval(statement.get(), this.createFixtureLevelStage(fixtureTuple)) :
               nop());
     }
 
     @Override
-    public Action createTearDownAfterAllAction(Tuple commonFixtureTuple) {
+    public Action createTearDownAfterAllAction() {
+      Tuple commonFixtureTuple = testSuiteDescriptor.createCommonFixture();
       Optional<Statement> statement = testSuiteDescriptor
           .tearDownAfterAll();
       return ActionSupport.named(
@@ -145,18 +145,16 @@ public interface Session {
               nop());
     }
 
-    @Override
-    public Stage createSuiteLevelStage(Tuple suiteLevelTuple) {
+    Stage createSuiteLevelStage(Tuple suiteLevelTuple) {
       return Stage.Factory.frameworkStageFor(this.getScript(), suiteLevelTuple);
     }
 
     @Override
-    public Stage createFixtureLevelStage(Tuple fixtureLevelTuple) {
-      return Stage.Factory.frameworkStageFor(this.getScript(), fixtureLevelTuple);
+    public Stage createFixtureLevelStage(Tuple fixtureTuple) {
+      return Stage.Factory.frameworkStageFor(this.getScript(), fixtureTuple);
     }
 
-    @Override
-    public Stage createOracleLevelStage(TestItem testItem, Report report) {
+    Stage createOracleLevelStage(TestItem testItem, Report report) {
       return Stage.Factory.oracleLevelStageFor(
           this.getScript(),
           testItem,

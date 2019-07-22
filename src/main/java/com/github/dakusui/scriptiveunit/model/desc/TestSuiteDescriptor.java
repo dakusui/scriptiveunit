@@ -40,6 +40,13 @@ public interface TestSuiteDescriptor {
 
   List<String> fixtureLevelParameterNames();
 
+  default Tuple createFixtureTupleFrom(Tuple tuple) {
+    Tuple.Builder b = new Tuple.Builder();
+    for (String each : fixtureLevelParameterNames())
+      b.put(each, tuple.get(each));
+    return b.build();
+  }
+
   Statement.Factory statementFactory();
 
   default Tuple createCommonFixture() {
