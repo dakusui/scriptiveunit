@@ -1,6 +1,8 @@
 package com.github.dakusui.scriptiveunit.exceptions;
 
-import com.github.dakusui.scriptiveunit.model.form.handle.ObjectMethod;
+import com.github.dakusui.scriptiveunit.core.JsonScript;
+import com.github.dakusui.scriptiveunit.core.Script;
+import com.github.dakusui.scriptiveunit.model.form.Form;
 
 import java.util.List;
 import java.util.Map;
@@ -12,14 +14,18 @@ public class ConfigurationException extends ScriptiveUnitException {
     super(message);
   }
 
-  public static ConfigurationException scriptNotSpecified(String scriptSystemPropertyKey) {
-    throw new ConfigurationException(
-        format("Script to be run was not specified. Give -D%s={FQCN of your script} to your command line as a VM option.",
-            scriptSystemPropertyKey)
-    );
+  public static ConfigurationException scriptNotSpecified(JsonScript script) {
+    if (script instanceof JsonScript.FromDriverClass) {
+      String key = ((JsonScript.FromDriverClass) script).getScriptResourceNameKey();
+      throw new ConfigurationException(format(
+          "Script to be run was not specified. Give -D%s={FQCN of your script} to your command line as a VM option.",
+          key));
+    } else {
+      throw noScriptResourceWasGiven();
+    }
   }
 
-  public static ConfigurationException duplicatedFormsAreFound(Map<String, List<ObjectMethod>> duplicatedObjectMethods) {
+  public static ConfigurationException duplicatedFormsAreFound(Map<String, List<Form>> duplicatedObjectMethods) {
     StringBuffer buf = new StringBuffer();
     duplicatedObjectMethods.forEach((s, objectMethods) -> {
       buf.append(format("%s:%n", s));
@@ -30,5 +36,13 @@ public class ConfigurationException extends ScriptiveUnitException {
     throw new ConfigurationException(format(
         "Following object methods are found duplicated:%n%s", found
     ));
+  }
+
+  private static ScriptiveUnitException noScriptResourceWasGiven() {
+    throw new ScriptiveUnitException("No script was given in this session.");
+  }
+
+  public static ScriptiveUnitException nonStandardScript(Script script) {
+    throw new ScriptiveUnitException(format("Non-standard config:<%s> was given", script));
   }
 }

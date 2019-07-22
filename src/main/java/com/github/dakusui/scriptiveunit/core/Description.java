@@ -21,6 +21,7 @@ public interface Description {
         return ret;
       }
 
+      @SuppressWarnings("unchecked")
       void format(int indentLevel, List<String> out, List<Object> body) {
         if (body.isEmpty()) {
           out.add(indent(indentLevel) + "()");
@@ -33,7 +34,6 @@ public interface Description {
         out.add(indent(indentLevel) + "(" + body.get(0));
         for (Object each : body.subList(1, body.size())) {
           if (each instanceof List) {
-            //noinspection unchecked
             format(indentLevel + 1, out, (List<Object>) each);
           } else {
             out.add(indent(indentLevel + 1) + each);

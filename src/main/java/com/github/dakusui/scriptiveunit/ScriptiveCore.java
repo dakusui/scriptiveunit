@@ -1,9 +1,10 @@
 package com.github.dakusui.scriptiveunit;
 
-import com.github.dakusui.scriptiveunit.core.Config;
 import com.github.dakusui.scriptiveunit.core.Description;
+import com.github.dakusui.scriptiveunit.core.JsonScript;
 import com.github.dakusui.scriptiveunit.exceptions.ScriptiveUnitException;
-import com.github.dakusui.scriptiveunit.model.form.handle.ObjectMethod;
+import com.github.dakusui.scriptiveunit.loaders.ScriptCompiler;
+import com.github.dakusui.scriptiveunit.model.form.Form;
 import com.github.dakusui.scriptiveunit.runners.RunningMode;
 import com.github.dakusui.scriptiveunit.runners.ScriptiveSuiteSet;
 import com.github.dakusui.scriptiveunit.runners.ScriptiveSuiteSet.SuiteScripts;
@@ -20,9 +21,9 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Properties;
 import java.util.stream.Stream;
 
+import static com.github.dakusui.scriptiveunit.core.JsonScript.Utils.createScriptFromResource;
 import static com.github.dakusui.scriptiveunit.exceptions.FacadeException.validateDriverClass;
 import static com.github.dakusui.scriptiveunit.exceptions.FacadeException.validateSuiteSetClass;
 import static com.github.dakusui.scriptiveunit.exceptions.ResourceException.functionNotFound;
@@ -37,13 +38,13 @@ public class ScriptiveCore {
 
   public Description describeFunction(Class<?> driverClass, String scriptResourceName, String functionName) {
     try {
+      JsonScript script = JsonScript.Utils.createScriptFromResource(driverClass, scriptResourceName);
       final ScriptiveUnit scriptiveUnit = new ScriptiveUnit(
           validateDriverClass(driverClass),
-          new Config.Builder(driverClass, new Properties())
-              .withScriptResourceName(scriptResourceName)
-              .build()
+          new ScriptCompiler.Default(),
+          script
       );
-      return Utils.describeFunction(scriptiveUnit, driverClass.newInstance(), functionName);
+      return Utils.describeForm(scriptiveUnit, driverClass.newInstance(), functionName);
     } catch (Throwable throwable) {
       throw ScriptiveUnitException.wrapIfNecessary(throwable);
     }
@@ -51,11 +52,11 @@ public class ScriptiveCore {
 
   public List<String> listFunctions(Class<?> driverClass, String scriptResourceName) {
     try {
+      JsonScript script = JsonScript.Utils.createScriptFromResource(driverClass, scriptResourceName);
       return Utils.getFormNames(new ScriptiveUnit(
           validateDriverClass(driverClass),
-          new Config.Builder(driverClass, new Properties())
-              .withScriptResourceName(scriptResourceName)
-              .build()
+          new ScriptCompiler.Default(),
+          script
       ), driverClass.newInstance());
     } catch (Throwable throwable) {
       throw ScriptiveUnitException.wrapIfNecessary(throwable);
@@ -88,7 +89,11 @@ public class ScriptiveCore {
 
   public Result runScript(Class<?> driverClass, String scriptResourceName) {
     try {
-      return new JUnitCore().run(new ScriptiveUnit(driverClass, new Config.Builder(driverClass, new Properties()).withScriptResourceName(scriptResourceName).build()));
+      JsonScript script = JsonScript.Utils.createScriptFromResource(driverClass, scriptResourceName);
+      return new JUnitCore().run(new ScriptiveUnit(
+          driverClass,
+          new ScriptCompiler.Default(),
+          script));
     } catch (Throwable throwable) {
       throw ScriptiveUnitException.wrapIfNecessary(throwable);
     }
@@ -97,22 +102,22 @@ public class ScriptiveCore {
   enum Utils {
     ;
 
-    public static Description describeFunction(ScriptiveUnit scriptiveUnit, Object driverObject, String functionName) {
+    public static Description describeForm(ScriptiveUnit scriptiveUnit, Object driverObject, String formName) {
       Optional<Description> value =
           Stream.concat(
-              DriverUtils.getObjectMethodsFromImportedFieldsInObject(driverObject).stream().map(ObjectMethod::describe),
+              DriverUtils.getFormsFromImportedFieldsInObject(driverObject).stream().map(Form::describe),
               Private.getUserDefinedFormClauses(scriptiveUnit).entrySet().stream().map((Map.Entry<String, List<Object>> entry) -> Description.describe(entry.getKey(), entry.getValue()))
-          ).filter(t -> functionName.equals(t.name())).findFirst();
+          ).filter(t -> formName.equals(t.name())).findFirst();
       if (value.isPresent())
         return value.get();
-      throw functionNotFound(functionName);
+      throw functionNotFound(formName);
     }
 
     public static List<String> getFormNames(ScriptiveUnit scriptiveUnit, Object driverObject) {
       return Stream.concat(
-          DriverUtils.getObjectMethodsFromImportedFieldsInObject(driverObject)
+          DriverUtils.getFormsFromImportedFieldsInObject(driverObject)
               .stream()
-              .map(ObjectMethod::getName),
+              .map(Form::getName),
           Private.getUserDefinedFormClauseNamesFromScript(scriptiveUnit).stream()).collect(toList());
     }
 
@@ -126,6 +131,7 @@ public class ScriptiveCore {
       private static Map<String, List<Object>> getUserDefinedFormClauses(ScriptiveUnit scriptiveUnit) {
         return scriptiveUnit.getTestSuiteDescriptor().getUserDefinedFormClauses();
       }
+
     }
   }
 }

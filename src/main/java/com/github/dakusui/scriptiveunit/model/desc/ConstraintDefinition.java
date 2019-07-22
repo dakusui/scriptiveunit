@@ -1,6 +1,6 @@
 package com.github.dakusui.scriptiveunit.model.desc;
 
-import com.github.dakusui.scriptiveunit.model.session.Stage;
+import com.github.dakusui.scriptiveunit.model.stage.Stage;
 
 import java.util.List;
 import java.util.function.Predicate;

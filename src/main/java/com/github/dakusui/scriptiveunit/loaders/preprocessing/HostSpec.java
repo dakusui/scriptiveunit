@@ -10,11 +10,11 @@ import org.codehaus.jackson.node.ObjectNode;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
-import static com.github.dakusui.scriptiveunit.utils.JsonUtils.requireObjectNode;
 import static com.github.dakusui.scriptiveunit.loaders.preprocessing.ApplicationSpec.isArray;
 import static com.github.dakusui.scriptiveunit.loaders.preprocessing.ApplicationSpec.isAtom;
 import static com.github.dakusui.scriptiveunit.loaders.preprocessing.ApplicationSpec.isDictionary;
 import static com.github.dakusui.scriptiveunit.utils.CoreUtils.toBigDecimal;
+import static com.github.dakusui.scriptiveunit.utils.JsonUtils.requireObjectNode;
 import static java.lang.String.format;
 
 public interface HostSpec<NODE, OBJECT extends NODE, ARRAY extends NODE, ATOM extends NODE> {
@@ -47,6 +47,8 @@ public interface HostSpec<NODE, OBJECT extends NODE, ARRAY extends NODE, ATOM ex
   OBJECT toHostObject(ApplicationSpec.Dictionary dictionary);
 
   ApplicationSpec.Dictionary toApplicationDictionary(OBJECT object);
+
+  ApplicationSpec.Dictionary readRawScript(String resourceName);
 
   interface Default<NODE, OBJECT extends NODE, ARRAY extends NODE, ATOM extends NODE> extends HostSpec<NODE, OBJECT, ARRAY, ATOM> {
     @Override
@@ -210,6 +212,11 @@ public interface HostSpec<NODE, OBJECT extends NODE, ARRAY extends NODE, ATOM ex
     @Override
     public void addToArray(ArrayNode ret, JsonNode eachNode) {
       ret.add(eachNode);
+    }
+
+    @Override
+    public ApplicationSpec.Dictionary readRawScript(String resourceName) {
+      return this.toApplicationDictionary(this.readObjectNode(resourceName));
     }
   }
 }

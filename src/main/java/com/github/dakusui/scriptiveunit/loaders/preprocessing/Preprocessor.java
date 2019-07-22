@@ -6,12 +6,13 @@ import static com.github.dakusui.scriptiveunit.loaders.preprocessing.Application
 import static java.util.Objects.requireNonNull;
 
 public interface Preprocessor {
-  ApplicationSpec.Dictionary readScript(String scriptResourceName);
+  ApplicationSpec.Dictionary preprocess(ApplicationSpec.Dictionary rawScript);
+
+//  ApplicationSpec.Dictionary readRawScript(String scriptResourceName);
 
   class Builder<NODE, OBJECT extends NODE, ARRAY extends NODE, ATOM extends NODE> {
     private ApplicationSpec applicationSpec;
 
-    private RawScriptReader<NODE, OBJECT, ARRAY, ATOM> rawScriptReader;
 
     private final HostSpec<NODE, OBJECT, ARRAY, ATOM> hostSpec;
 
@@ -24,49 +25,35 @@ public interface Preprocessor {
       return this;
     }
 
-    public Builder<NODE, OBJECT, ARRAY, ATOM> rawScriptReader(RawScriptReader<NODE, OBJECT, ARRAY, ATOM> rawScriptReader) {
-      this.rawScriptReader = requireNonNull(rawScriptReader);
-      return this;
-    }
-
     public Preprocessor build() {
       requireNonNull(applicationSpec);
-      requireNonNull(rawScriptReader);
+      requireNonNull(hostSpec);
       return new Preprocessor() {
         @Override
-        public ApplicationSpec.Dictionary readScript(String scriptResourceName) {
-          return readScript(
-              scriptResourceName,
-              applicationSpec.createDefaultValues(),
-              applicationSpec,
-              hostSpec);
-        }
-
-        ApplicationSpec.Dictionary readScript(
-            String scriptResourceName,
-            ApplicationSpec.Dictionary defaultValues,
-            ApplicationSpec applicationSpec,
-            HostSpec<NODE, OBJECT, ARRAY, ATOM> hostSpec) {
-          return applicationSpec.deepMerge(readScriptHandlingInheritance(scriptResourceName, applicationSpec, hostSpec), defaultValues);
+        public ApplicationSpec.Dictionary preprocess(ApplicationSpec.Dictionary rawScript) {
+          ApplicationSpec.Dictionary ret = applicationSpec.deepMerge(
+              preprocess(rawScript, applicationSpec.preprocessors()),
+              applicationSpec.createDefaultValues());
+          for (String parent : applicationSpec.parentsOf(rawScript)) {
+            ret = applicationSpec.deepMerge(
+                readApplicationDictionaryWithMerging(parent, applicationSpec),
+                ret
+            );
+          }
+          return applicationSpec.removeInheritanceDirective(ret);
         }
 
         ApplicationSpec.Dictionary readApplicationDictionaryWithMerging(
             String resourceName,
-            ApplicationSpec applicationSpec,
-            HostSpec<NODE, OBJECT, ARRAY, ATOM> hostSpec) {
-          ApplicationSpec.Dictionary child = preprocess(
-              rawScriptReader.apply(resourceName, hostSpec),
+            ApplicationSpec applicationSpec) {
+          ApplicationSpec.Dictionary resource = preprocess(
+              hostSpec.readRawScript(resourceName),
               applicationSpec.preprocessors());
 
           ApplicationSpec.Dictionary work_ = dict();
-          for (String s : applicationSpec.parentsOf(child))
-            work_ = applicationSpec.deepMerge(readApplicationDictionaryWithMerging(s, applicationSpec, hostSpec), work_);
-          return applicationSpec.deepMerge(child, work_);
-        }
-
-
-        ApplicationSpec.Dictionary readScriptHandlingInheritance(String scriptResourceName, ApplicationSpec applicationSpec, HostSpec<NODE, OBJECT, ARRAY, ATOM> hostSpec) {
-          return applicationSpec.removeInheritanceDirective(readApplicationDictionaryWithMerging(scriptResourceName, applicationSpec, hostSpec));
+          for (String s : applicationSpec.parentsOf(resource))
+            work_ = applicationSpec.deepMerge(readApplicationDictionaryWithMerging(s, applicationSpec), work_);
+          return applicationSpec.deepMerge(resource, work_);
         }
 
         ApplicationSpec.Dictionary preprocess(ApplicationSpec.Dictionary inputNode, List<PreprocessingUnit> preprocessingUnits) {
@@ -75,7 +62,6 @@ public interface Preprocessor {
           }
           return inputNode;
         }
-
       };
     }
   }

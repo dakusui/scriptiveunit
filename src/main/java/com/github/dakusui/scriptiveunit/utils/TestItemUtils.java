@@ -17,7 +17,7 @@ public enum TestItemUtils {
   public static String formatTestName(Tuple tuple, TestSuiteDescriptor testSuiteDescriptor, String testOracleDescription) {
     Tuple filteredTuple = filterSimpleSingleLevelParametersOut(
         tuple,
-        testSuiteDescriptor.getFactorSpaceDescriptor().getParameters()
+        testSuiteDescriptor.getParameterSpaceDescriptor().getParameters()
     );
     return templateTestOracleDescription(
         tuple,

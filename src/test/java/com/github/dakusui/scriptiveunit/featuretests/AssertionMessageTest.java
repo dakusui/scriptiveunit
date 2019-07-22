@@ -1,15 +1,15 @@
 package com.github.dakusui.scriptiveunit.featuretests;
 
-import com.github.dakusui.scriptiveunit.annotations.Load;
-import com.github.dakusui.scriptiveunit.core.Config;
+import com.github.dakusui.scriptiveunit.annotations.CompileWith;
+import com.github.dakusui.scriptiveunit.annotations.LoadBy;
+import com.github.dakusui.scriptiveunit.annotations.RunScript;
+import com.github.dakusui.scriptiveunit.core.JsonScript;
+import com.github.dakusui.scriptiveunit.core.ScriptLoader;
 import com.github.dakusui.scriptiveunit.loaders.preprocessing.ApplicationSpec;
-import com.github.dakusui.scriptiveunit.loaders.preprocessing.HostSpec;
 import com.github.dakusui.scriptiveunit.runners.ScriptiveUnit;
 import com.github.dakusui.scriptiveunit.testutils.TestBase;
 import org.junit.Test;
 import org.junit.runner.notification.Failure;
-
-import java.util.Optional;
 
 import static com.github.dakusui.crest.Crest.allOf;
 import static com.github.dakusui.crest.Crest.asBoolean;
@@ -101,36 +101,41 @@ public class AssertionMessageTest extends TestBase {
     }
   }
 
-  @Load(with = Simple.Loader.class)
+  @RunScript(
+      loader = @LoadBy(Simple.Loader.class),
+      compiler = @CompileWith(Simple.Compiler.class))
   public static class Simple extends SimpleTestBase {
-    public static class Loader extends SimpleTestBase.Loader {
-      public Loader(Config config) {
-        super(new Config.Delegating(config) {
-          @Override
-          public Optional<String> getScriptResourceName() {
-            return Optional.of("(dummy)");
+    public static class Loader extends ScriptLoader.Base {
+      @Override
+      public JsonScript load(Class<?> driverClass) {
+        return JsonScript.Utils.createScript(new ApplicationSpec.Dictionary.Factory() {
+          ApplicationSpec.Dictionary createDictionary() {
+            return dict(
+                $("testOracles", array(
+                    dict(
+                        $("description", "shouldPass"),
+                        $("when", array("format", "hello")),
+                        $("then", array("matches", array("output"), ".*ell.*"))),
+                    dict(
+                        $("description", "shouldFail"),
+                        $("when", array("format", "hello")),
+                        $("then", array("matches", array("output"), ".*ELLO"))),
+                    dict(
+                        $("description", "shouldBeIgnored"),
+                        $("given", array("not", array("always"))),
+                        $("when", array("format", "hello")),
+                        $("then", array("matches", array("output"), ".*Ell.*"))))));
           }
-        });
+        }.createDictionary(), driverClass
+        );
+      }
+    }
+
+    public static class Compiler extends SimpleTestBase.Compiler implements ApplicationSpec.Dictionary.Factory {
+      public Compiler() {
+        super();
       }
 
-      @Override
-      protected ApplicationSpec.Dictionary readRawScriptResource(String scriptResourceName, HostSpec hostSpec) {
-        return dict(
-            $("testOracles", array(
-                dict(
-                    $("description", "shouldPass"),
-                    $("when", array("format", "hello")),
-                    $("then", array("matches", array("output"), ".*ell.*"))),
-                dict(
-                    $("description", "shouldFail"),
-                    $("when", array("format", "hello")),
-                    $("then", array("matches", array("output"), ".*ELLO"))),
-                dict(
-                    $("description", "shouldBeIgnored"),
-                    $("given", array("not", array("always"))),
-                    $("when", array("format", "hello")),
-                    $("then", array("matches", array("output"), ".*Ell.*"))))));
-      }
     }
   }
 }

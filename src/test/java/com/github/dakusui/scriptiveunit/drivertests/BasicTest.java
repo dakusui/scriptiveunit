@@ -3,9 +3,10 @@ package com.github.dakusui.scriptiveunit.drivertests;
 import com.github.dakusui.actionunit.core.Action;
 import com.github.dakusui.actionunit.io.Writer;
 import com.github.dakusui.actionunit.visitors.ReportingActionPerformer;
-import com.github.dakusui.scriptiveunit.drivers.actions.Basic;
-import com.github.dakusui.scriptiveunit.model.form.FormList;
-import com.github.dakusui.scriptiveunit.model.session.Stage;
+import com.github.dakusui.scriptiveunit.libs.actions.Basic;
+import com.github.dakusui.scriptiveunit.model.form.value.ValueList;
+import com.github.dakusui.scriptiveunit.model.stage.Stage;
+import com.github.dakusui.scriptiveunit.testutils.TestBase;
 import com.github.dakusui.scriptiveunit.testutils.UtUtils;
 import org.junit.Test;
 
@@ -13,7 +14,7 @@ import static java.util.Arrays.asList;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
-public class BasicTest {
+public class BasicTest extends TestBase {
   private final Stage stage = UtUtils.createOracleLevelStage();
   private final Basic basic = new Basic();
 
@@ -34,7 +35,7 @@ public class BasicTest {
 
   @Test
   public void testPerformTrue() {
-      assertTrue(basic.perform(FormList.create(asList(
+      assertTrue(basic.perform(ValueList.create(asList(
           basic.print(UtUtils.createForm("helloPrint")))))
           .apply(stage));
   }
@@ -42,7 +43,7 @@ public class BasicTest {
   @Test(expected = RuntimeException.class)
   public void testPerformFalse() {
     try {
-      basic.perform(FormList.create(asList(
+      basic.perform(ValueList.create(asList(
           basic.print(UtUtils.createForm("helloPrint")),
           basic.fail(UtUtils.createForm("helloFail")))))
           .apply(stage);

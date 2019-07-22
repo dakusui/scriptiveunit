@@ -1,8 +1,8 @@
 package com.github.dakusui.scriptiveunit.drivertests;
 
 import com.github.dakusui.actionunit.core.Action;
-import com.github.dakusui.scriptiveunit.drivers.extras.Reporting;
-import com.github.dakusui.scriptiveunit.model.session.Stage;
+import com.github.dakusui.scriptiveunit.libs.extras.Reporting;
+import com.github.dakusui.scriptiveunit.model.stage.Stage;
 import org.junit.Test;
 
 import static com.github.dakusui.crest.Crest.*;

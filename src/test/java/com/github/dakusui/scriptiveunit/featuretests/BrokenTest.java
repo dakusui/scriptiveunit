@@ -1,10 +1,12 @@
 package com.github.dakusui.scriptiveunit.featuretests;
 
-import com.github.dakusui.scriptiveunit.annotations.Load;
-import com.github.dakusui.scriptiveunit.core.Config;
+import com.github.dakusui.scriptiveunit.annotations.CompileWith;
+import com.github.dakusui.scriptiveunit.annotations.LoadBy;
+import com.github.dakusui.scriptiveunit.annotations.RunScript;
+import com.github.dakusui.scriptiveunit.core.JsonScript;
+import com.github.dakusui.scriptiveunit.core.ScriptLoader;
 import com.github.dakusui.scriptiveunit.exceptions.ScriptiveUnitException;
 import com.github.dakusui.scriptiveunit.loaders.preprocessing.ApplicationSpec;
-import com.github.dakusui.scriptiveunit.loaders.preprocessing.HostSpec;
 import org.junit.Test;
 
 import java.lang.reflect.InvocationTargetException;
@@ -37,21 +39,32 @@ public class BrokenTest {
     }
   }
 
-  @Load(with = Broken.Loader.class)
+  @RunScript(
+      loader = @LoadBy(Broken.Loader.class),
+      compiler = @CompileWith(Broken.Compiler.class))
   public static class Broken extends SimpleTestBase {
-    public static class Loader extends SimpleTestBase.Loader {
-      public Loader(Config config) {
-        super(config);
-      }
+    public static class Loader extends ScriptLoader.Base {
 
       @Override
-      protected ApplicationSpec.Dictionary readRawScriptResource(String scriptResourceName, HostSpec hostSpec) {
-        return dict(
-            $("testOracles", array(
-                dict(
-                    $("when", array("brokenForm")),
-                    $("then", array("matches", array("output"), "bye"))
-                ))));
+      public JsonScript load(Class<?> driverClass) {
+        ApplicationSpec.Dictionary dictionary = new ApplicationSpec.Dictionary.Factory() {
+          ApplicationSpec.Dictionary create() {
+            return dict(
+                $("testOracles", array(
+                    dict(
+                        $("when", array("brokenForm")),
+                        $("then", array("matches", array("output"), "bye"))
+                    ))));
+          }
+        }.create();
+        return JsonScript.Utils.createScript(dictionary, driverClass);
+      }
+
+    }
+
+    public static class Compiler extends SimpleTestBase.Compiler {
+      public Compiler() {
+        super();
       }
     }
   }
