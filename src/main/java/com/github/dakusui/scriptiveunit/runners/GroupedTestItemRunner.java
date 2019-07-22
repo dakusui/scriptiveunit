@@ -2,7 +2,6 @@ package com.github.dakusui.scriptiveunit.runners;
 
 import com.github.dakusui.actionunit.core.Action;
 import com.github.dakusui.jcunit.core.tuples.Tuple;
-import com.github.dakusui.jcunit8.factorspace.Parameter;
 import com.github.dakusui.jcunit8.testsuite.TestCase;
 import com.github.dakusui.scriptiveunit.exceptions.ScriptiveUnitException;
 import com.github.dakusui.scriptiveunit.model.desc.TestSuiteDescriptor;
@@ -23,7 +22,6 @@ import java.lang.annotation.Annotation;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
-import java.util.stream.Stream;
 
 import static com.github.dakusui.actionunit.core.ActionSupport.*;
 import static com.github.dakusui.scriptiveunit.runners.GroupedTestItemRunner.Utils.createMainActionsForTestCase;
@@ -212,16 +210,7 @@ public final class GroupedTestItemRunner extends ParentRunner<Action> {
 
   static Iterable<Runner> createRunnersGroupingByTestFixture(Session session) {
     TestSuiteDescriptor testSuiteDescriptor = session.getTestSuiteDescriptor();
-    List<Parameter> parameters = testSuiteDescriptor.getFactorSpaceDescriptor().getParameters();
-    List<String> singleLevelFactors = parameters.stream()
-        .filter((Parameter each) -> each instanceof Parameter.Simple)
-        .filter((Parameter each) -> each.getKnownValues().size() == 1)
-        .map(Parameter::getName)
-        .collect(toList());
-    List<String> usedInSetUp = figureOutParametersUsedInSetUp(
-        testSuiteDescriptor,
-        singleLevelFactors
-    );
+    List<String> usedInSetUp = testSuiteDescriptor.fixtureLevelParameterNames();
     List<IndexedTestCase> testCases = testSuiteDescriptor.getTestCases().stream()
         .sorted(byParameters(usedInSetUp))
         .collect(toList());
@@ -234,16 +223,6 @@ public final class GroupedTestItemRunner extends ParentRunner<Action> {
                 project(indexedTestCase.get(), usedInSetUp).equals(fixture)).collect(toList()),
             session,
             testSuiteDescriptor)
-    ).collect(toList());
-  }
-
-  private static List<String> figureOutParametersUsedInSetUp(
-      TestSuiteDescriptor testSuiteDescriptor,
-      List<String> singleLevelFactors) {
-    return Stream.concat(
-        testSuiteDescriptor.getInvolvedParameterNamesInSetUpAction().stream(),
-        singleLevelFactors.stream()
-    ).distinct(
     ).collect(toList());
   }
 
@@ -402,11 +381,8 @@ public final class GroupedTestItemRunner extends ParentRunner<Action> {
       return new GroupedTestItemRunner(
           Object.class,
           testCaseId,
-          session.createSetUpActionForFixture(
-              testCaseTuple),
-          createMainActionsForTestCase(
-              session,
-              indexedTestCase,
+          session.createSetUpActionForFixture(testCaseTuple),
+          createMainActionsForTestCase(session, indexedTestCase,
               testSuiteDescriptor.getTestOracles()),
           session.createTearDownActionForFixture(testCaseTuple));
     } catch (InitializationError initializationError) {

@@ -28,15 +28,15 @@ import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.toList;
 
 public abstract class TestSuiteDescriptorBean {
-  private final FactorSpaceDescriptorBean      factorSpaceBean;
+  private final FactorSpaceDescriptorBean factorSpaceBean;
   private final List<? extends TestOracleBean> testOracleBeanList;
-  private final String                         description;
-  private final RunningMode                    runnerMode;
-  private final Map<String, List<Object>>      userDefinedFormClauseMap;
-  private final List<Object>                   setUpClause;
-  private final List<Object>                   setUpBeforeAllClause;
-  private final List<Object>                   tearDownClause;
-  private final List<Object>                   tearDownAfterAllClause;
+  private final String description;
+  private final RunningMode runnerMode;
+  private final Map<String, List<Object>> userDefinedFormClauseMap;
+  private final List<Object> setUpClause;
+  private final List<Object> setUpBeforeAllClause;
+  private final List<Object> tearDownClause;
+  private final List<Object> tearDownAfterAllClause;
 
   public TestSuiteDescriptorBean(
       String description,
@@ -94,7 +94,7 @@ public abstract class TestSuiteDescriptorBean {
         }
 
         @Override
-        public ParameterSpaceDescriptor getFactorSpaceDescriptor() {
+        public ParameterSpaceDescriptor getParameterSpaceDescriptor() {
           return factorSpaceBean.create(session, statementFactory);
         }
 
@@ -134,10 +134,8 @@ public abstract class TestSuiteDescriptorBean {
         }
 
         @Override
-        public List<String> getInvolvedParameterNamesInSetUpAction() {
-          return setUp()
-              .map(ValueUtils::involvedParameters)
-              .orElse(emptyList());
+        public List<String> fixtureLevelParameterNames() {
+          return TestSuiteDescriptor.Utils.fixtureLevelParameterNames(this);
         }
 
         @Override
@@ -174,10 +172,10 @@ public abstract class TestSuiteDescriptorBean {
         private ParameterSpace createParameterSpaceFrom(TestSuiteDescriptor testSuiteDescriptor) {
           return new ParameterSpace.Builder()
               .addAllParameters(
-                  testSuiteDescriptor.getFactorSpaceDescriptor().getParameters()
+                  testSuiteDescriptor.getParameterSpaceDescriptor().getParameters()
               )
               .addAllConstraints(
-                  testSuiteDescriptor.getFactorSpaceDescriptor().getConstraints()
+                  testSuiteDescriptor.getParameterSpaceDescriptor().getConstraints()
               )
               .build();
         }

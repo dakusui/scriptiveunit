@@ -85,8 +85,7 @@ public interface Session {
 
     @Override
     public Action createSetUpBeforeAllAction(Tuple commonFixtureTuple) {
-      Optional<Statement> statement = testSuiteDescriptor
-          .setUpBeforeAll();
+      Optional<Statement> statement = getTestSuiteDescriptor().setUpBeforeAll();
       return ActionSupport.named(
           format("Suite level set up: %s", testSuiteDescriptor.getDescription()),
           statement.isPresent() ?
