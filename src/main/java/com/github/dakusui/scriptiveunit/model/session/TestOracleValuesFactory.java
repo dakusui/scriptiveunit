@@ -29,7 +29,10 @@ import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
 
 public interface TestOracleValuesFactory {
-  static TestOracleValuesFactory createTestOracleValuesFactory(Function<Tuple, String> testCaseFormatter, final IndexedTestCase testCase, TestOracle testOracle) {
+  static TestOracleValuesFactory createTestOracleValuesFactory(
+      Function<Tuple, String> testCaseFormatter,
+      final IndexedTestCase testCase,
+      TestOracle testOracle) {
     TestOracle.Definition definition = testOracle.definition();
     Value<Action> beforeValue = definition.before()
         .map(Statement::<Action>toValue)

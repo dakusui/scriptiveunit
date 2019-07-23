@@ -9,6 +9,7 @@ import com.github.dakusui.scriptiveunit.core.JsonScript;
 import com.github.dakusui.scriptiveunit.featuretests.AssertionMessageTest;
 import com.github.dakusui.scriptiveunit.model.desc.testitem.IndexedTestCase;
 import com.github.dakusui.scriptiveunit.model.desc.testitem.TestOracle;
+import com.github.dakusui.scriptiveunit.model.form.FormRegistry;
 import com.github.dakusui.scriptiveunit.model.form.value.Value;
 import com.github.dakusui.scriptiveunit.model.form.value.ValueList;
 import com.github.dakusui.scriptiveunit.model.session.Report;
@@ -18,10 +19,9 @@ import com.github.dakusui.scriptiveunit.model.statement.Statement;
 import java.io.File;
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
-import java.util.Optional;
-import java.util.stream.Collectors;
 
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
@@ -37,27 +37,32 @@ public enum UtUtils {
     return s -> value;
   }
 
-  public static Stage createStage() {
+  public static Stage createOracleStage() {
     TestItem testItem = createTestItem();
     String testSuiteName = "_noname_";
     File applicationDir = new File("unittest");
     applicationDir.deleteOnExit();
     String reportFileName = "report.bin";
-    return Stage.Factory.oracleLevelStageFor(
-        config(),
+    return Stage.Factory.oracleStageFor(
+        createScript(),
         createResponse(),
         testItem.getTestCase(), testItem.getTestOracle(), Report.create(BASE_DIR, applicationDir, testSuiteName, reportFileName, testItem.getTestCase(), testItem.getTestOracle()), createThrowable()
     );
   }
 
-  static JsonScript config() {
+  public static Stage createFrameworkStage() {
+    return Stage.Factory.frameworkStageFor(createScript(), new Tuple.Impl()
+    );
+  }
+
+  static JsonScript createScript() {
     return new JsonScript.FromDriverClass(DummyDriver.class, "(none)");
   }
 
   private static TestItem createTestItem() {
     return TestItem.create(
         new IndexedTestCase(0, createTestCase()),
-        createTestOracle());
+        createTestOracle(createEmptyFormRegistry()));
   }
 
   private static Throwable createThrowable() {
@@ -68,53 +73,22 @@ public enum UtUtils {
     return "RESPONSE_STRING";
   }
 
-  private static TestOracle createTestOracle() {
-    return new TestOracle() {
-      @Override
-      public int getIndex() {
-        return 0;
-      }
+  private static FormRegistry createEmptyFormRegistry() {
+    return FormRegistry.createFormRegistry(new Object());
+  }
 
-      @Override
-      public Optional<String> getDescription() {
-        return Optional.empty();
-      }
-
-      @Override
-      public Definition definition() {
-        return new Definition() {
-          @Override
-          public Optional<Statement> before() {
-            return Optional.empty();
-          }
-
-          @Override
-          public Optional<Statement> given() {
-            return Optional.empty();
-          }
-
-          @Override
-          public Statement when() {
-            return createEmptyStatement();
-          }
-
-          @Override
-          public Statement then() {
-            return createEmptyStatement();
-          }
-
-          @Override
-          public Optional<Statement> onFailure() {
-            return Optional.empty();
-          }
-
-          @Override
-          public Optional<Statement> after() {
-            return Optional.empty();
-          }
-        };
-      }
-    };
+  private static TestOracle createTestOracle(FormRegistry formRegistry) {
+    return new TestOracle.Impl(
+        0,
+        "dummy",
+        emptyList(),
+        emptyList(),
+        emptyList(),
+        emptyList(),
+        emptyList(),
+        emptyList(),
+        Statement.Factory.create(formRegistry, Collections.emptyMap())
+    );
   }
 
   private static Statement createEmptyStatement() {
@@ -164,7 +138,7 @@ public enum UtUtils {
     System.out.println(new File(new File("target"), "dirname").toPath());
   }
 
-  public static interface TestItem {
+  public interface TestItem {
     IndexedTestCase getTestCase();
 
     TestOracle getTestOracle();

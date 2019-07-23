@@ -6,11 +6,12 @@ import com.github.dakusui.scriptiveunit.annotations.Scriptable;
 import com.github.dakusui.scriptiveunit.exceptions.ConfigurationException;
 import com.github.dakusui.scriptiveunit.model.form.FormRegistry;
 import com.github.dakusui.scriptiveunit.model.form.value.Value;
+import com.github.dakusui.scriptiveunit.testutils.TestBase;
 import org.junit.Test;
 
-public class FormRegistryTest {
+public class FormRegistryTest extends TestBase {
   @Test(expected = ConfigurationException.class)
-  public void test() {
+  public void duplicated() {
     try {
       FormRegistry formRegistry = FormRegistry.createFormRegistry(new DuplicatedForms());
       Object value = formRegistry.lookUp("func")
@@ -24,13 +25,34 @@ public class FormRegistryTest {
     }
   }
 
+  @Test(expected = NonExistingException.class)
+  public void nonExisting() {
+    try {
+      FormRegistry formRegistry = FormRegistry.createFormRegistry(new NonExistingForm());
+      Object value = formRegistry.lookUp("func")
+          .orElseThrow(NonExistingException::new)
+          .resolveValue(new Value[0]);
+
+      System.out.println(value);
+    } catch (ConfigurationException e) {
+      e.printStackTrace();
+      throw e;
+    }
+  }
+
   public static class DuplicatedForms {
-    @Import({@Alias (value = "func1", as = "func")})
+    @Import({ @Alias(value = "func1", as = "func") })
     public final Lib1 lib1 = new Lib1();
 
-    @Import({@Alias (value = "func2", as = "func")})
+    @Import({ @Alias(value = "func2", as = "func") })
     public final Lib2 lib2 = new Lib2();
   }
+
+  public static class NonExistingForm {
+    @Import({ @Alias(value = "undefinedFunc", as = "func") })
+    public final Lib1 lib1 = new Lib1();
+  }
+
 
   public static class Lib1 {
     @Scriptable
@@ -44,5 +66,8 @@ public class FormRegistryTest {
     public Value<String> func2(Value<String> s) {
       return Value.Const.createConst("constantValue");
     }
+  }
+
+  static class NonExistingException extends RuntimeException {
   }
 }

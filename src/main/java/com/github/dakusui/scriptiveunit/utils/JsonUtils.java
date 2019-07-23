@@ -18,7 +18,7 @@ public enum JsonUtils {
     try {
       return new ObjectMapper().readTree(is);
     } catch (IOException e) {
-      throw wrapMinimally("Non-welformed input is given.", e);
+      throw wrapMinimally("Malformed input is given.", e);
     }
   }
 

@@ -29,4 +29,12 @@ public class ConfigurationException extends ScriptiveUnitException {
   public static ScriptiveUnitException nonStandardScript(Script script) {
     throw new ScriptiveUnitException(format("Non-standard config:<%s> was given", script));
   }
+
+  public static ConfigurationException noScriptCompilerProvided(Class<?> driverClass) {
+    throw new ConfigurationException(format("No compiler was provided for class:<%s>", driverClass));
+  }
+
+  public static ConfigurationException noScriptLoaderProvided(Class<?> driverClass) {
+    throw new ConfigurationException(format("No script loader was provided for class:<%s>", driverClass));
+  }
 }

@@ -2,18 +2,16 @@ package com.github.dakusui.scriptiveunit.drivertests;
 
 import com.github.dakusui.scriptiveunit.libs.Strings;
 import com.github.dakusui.scriptiveunit.model.stage.Stage;
-import com.github.dakusui.scriptiveunit.testutils.UtUtils;
 import org.junit.Test;
 
 import static com.github.dakusui.crest.Crest.asObject;
 import static com.github.dakusui.crest.Crest.assertThat;
-import static com.github.dakusui.scriptiveunit.testutils.UtUtils.value;
-import static com.github.dakusui.scriptiveunit.testutils.UtUtils.values;
+import static com.github.dakusui.scriptiveunit.testutils.UtUtils.*;
 
 public class StringsTest {
   private Strings lib = new Strings();
 
-  private Stage stage = UtUtils.createStage();
+  private Stage stage = createOracleStage();
 
   @Test
   public void given_hello_StartsWith_h_$whenApplied$thenTrue() {

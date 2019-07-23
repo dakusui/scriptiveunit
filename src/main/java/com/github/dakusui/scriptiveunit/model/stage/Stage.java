@@ -39,7 +39,7 @@ public interface Stage extends Value.Listener {
   }
 
   static Stage createOracleLevelStage(Report report, Script script, IndexedTestCase testCase, TestOracle testOracle) {
-    return Factory.oracleLevelStageFor(
+    return Factory.oracleStageFor(
         script,
         null,
         testCase, testOracle, report, null
@@ -127,7 +127,7 @@ public interface Stage extends Value.Listener {
   }
 
   interface Factory {
-    static <RESPONSE> Stage oracleLevelStageFor(Script script, RESPONSE response, IndexedTestCase testCase, TestOracle testOracle, Report report, Throwable throwable) {
+    static <RESPONSE> Stage oracleStageFor(Script script, RESPONSE response, IndexedTestCase testCase, TestOracle testOracle, Report report, Throwable throwable) {
       return new OracleLevelStage(response, throwable, script, report, testCase, testOracle);
     }
 

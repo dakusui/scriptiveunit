@@ -1,12 +1,12 @@
 package com.github.dakusui.scriptiveunit.model.form.value;
 
-import com.github.dakusui.scriptiveunit.exceptions.SyntaxException;
 import com.github.dakusui.scriptiveunit.model.statement.Statement;
 import com.google.common.collect.Lists;
 
 import java.util.List;
 import java.util.Objects;
 
+import static com.github.dakusui.scriptiveunit.exceptions.SyntaxException.parameterNameShouldBeSpecifiedWithConstant;
 import static java.util.Objects.requireNonNull;
 
 public enum ValueUtils {
@@ -44,7 +44,7 @@ public enum ValueUtils {
              */
             work.add(Objects.toString(each.toValue()));
           } else {
-            throw SyntaxException.parameterNameShouldBeSpecifiedWithConstant((Statement.Compound) statement);
+            throw parameterNameShouldBeSpecifiedWithConstant((Statement.Compound) statement);
           }
         }
       } else {

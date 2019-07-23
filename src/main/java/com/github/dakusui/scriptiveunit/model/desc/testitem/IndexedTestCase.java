@@ -6,6 +6,7 @@ import com.github.dakusui.jcunit8.testsuite.TestCase;
 
 import java.util.List;
 
+import static java.lang.String.format;
 import static java.util.Collections.emptyList;
 
 public class IndexedTestCase implements TestCase {
@@ -46,4 +47,14 @@ public class IndexedTestCase implements TestCase {
   public List<Constraint> violatedConstraints() {
     return this.violatedConstraints;
   }
+
+  @Override
+  public String toString() {
+    return format("testCase[%s]:{category=%s; values=%s; violatedConstraints=%s}",
+        this.index,
+        this.category,
+        this.tuple,
+        this.violatedConstraints);
+  }
+
 }

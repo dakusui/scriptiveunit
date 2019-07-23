@@ -1,7 +1,5 @@
 package com.github.dakusui.scriptiveunit.utils;
 
-import com.google.common.collect.ImmutableMap;
-
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -13,16 +11,11 @@ import java.util.stream.Collector;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
-import static com.github.dakusui.jcunit.core.utils.Checks.checkcond;
 import static com.github.dakusui.scriptiveunit.core.Exceptions.SCRIPTIVEUNIT;
 import static java.math.MathContext.DECIMAL128;
 
 public enum CoreUtils {
   ;
-  public static final Map<Class<?>, Class<?>> PRIMITIVES_TO_WRAPPERS = new ImmutableMap.Builder<Class<?>, Class<?>>()
-      .put(boolean.class, Boolean.class).put(byte.class, Byte.class).put(char.class, Character.class)
-      .put(double.class, Double.class).put(float.class, Float.class).put(int.class, Integer.class)
-      .put(long.class, Long.class).put(short.class, Short.class).put(void.class, Void.class).build();
 
   public static <V> Stream<V> iterableToStream(Iterable<V> iterable) {
     return StreamSupport.stream(iterable.spliterator(), false);
@@ -65,11 +58,11 @@ public enum CoreUtils {
     return raw.subList(1, raw.size());
   }
 
-  public static <T> Collector<T, List<T>, Optional<T>> singletonCollector() {
+  public static <T> Collector<T, List<T>, T> singletonCollector() {
     return singletonCollector(IllegalStateException::new, IllegalStateException::new);
   }
 
-  public static <T> Collector<T, List<T>, Optional<T>> singletonCollector(Supplier<IllegalStateException> onNotFound, Supplier<IllegalStateException> onMultipleElements) {
+  public static <T> Collector<T, List<T>, T> singletonCollector(Supplier<RuntimeException> onNotFound, Supplier<RuntimeException> onMultipleElements) {
     return Collector.of(
         ArrayList::new,
         (ts, t) -> {
@@ -77,7 +70,7 @@ public enum CoreUtils {
             ts.add(t);
             return;
           }
-          throw onNotFound.get();
+          throw onMultipleElements.get();
         },
         (left, right) -> {
           if (left.size() == 1 && right.isEmpty() || left.isEmpty() && right.size() == 1) {
@@ -87,12 +80,12 @@ public enum CoreUtils {
           throw onMultipleElements.get();
         },
         list -> {
-          checkcond(list.size() <= 1);
-          return list.isEmpty() ?
-              Optional.empty() :
-              Optional.of(list.get(0));
+          if (list.isEmpty())
+            throw onNotFound.get();
+          if (list.size() > 1)
+            throw onMultipleElements.get();
+          return list.get(0);
         }
     );
   }
-
 }
