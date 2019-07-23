@@ -106,16 +106,6 @@ public interface ApplicationSpec {
       };
     }
 
-    static Function<Node, ScriptiveUnitException> notDictionary() {
-      return node -> {
-        throw new ScriptiveUnitException(format("Node:'%s' is not a dictionary", node));
-      };
-    }
-
-    public static Dictionary requireDictionary(Node node) {
-      return requireDictionary(node, notDictionary());
-    }
-
     public static Dictionary requireDictionary(Node node, Function<Node, ScriptiveUnitException> otherwiseThrow) {
       Checks.check(isDictionary(node), () -> otherwiseThrow.apply(node));
       return (Dictionary) node;
