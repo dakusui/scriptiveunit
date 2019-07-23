@@ -2,7 +2,6 @@ package com.github.dakusui.scriptiveunit;
 
 import com.github.dakusui.scriptiveunit.core.Description;
 import com.github.dakusui.scriptiveunit.core.JsonScript;
-import com.github.dakusui.scriptiveunit.exceptions.ScriptiveUnitException;
 import com.github.dakusui.scriptiveunit.loaders.ScriptCompiler;
 import com.github.dakusui.scriptiveunit.model.form.Form;
 import com.github.dakusui.scriptiveunit.runners.RunningMode;
@@ -16,17 +15,13 @@ import org.junit.runner.JUnitCore;
 import org.junit.runner.Result;
 import org.junit.runner.RunWith;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Stream;
 
-import static com.github.dakusui.scriptiveunit.core.JsonScript.Utils.createScriptFromResource;
 import static com.github.dakusui.scriptiveunit.exceptions.FacadeException.validateDriverClass;
 import static com.github.dakusui.scriptiveunit.exceptions.FacadeException.validateSuiteSetClass;
 import static com.github.dakusui.scriptiveunit.exceptions.ResourceException.functionNotFound;
+import static com.github.dakusui.scriptiveunit.exceptions.ScriptiveUnitException.wrapIfNecessary;
 import static java.util.stream.Collectors.toList;
 
 /**
@@ -46,7 +41,7 @@ public class ScriptiveCore {
       );
       return Utils.describeForm(scriptiveUnit, driverClass.newInstance(), functionName);
     } catch (Throwable throwable) {
-      throw ScriptiveUnitException.wrapIfNecessary(throwable);
+      throw wrapIfNecessary(throwable);
     }
   }
 
@@ -59,7 +54,7 @@ public class ScriptiveCore {
           script
       ), driverClass.newInstance());
     } catch (Throwable throwable) {
-      throw ScriptiveUnitException.wrapIfNecessary(throwable);
+      throw wrapIfNecessary(throwable);
     }
   }
 
@@ -95,7 +90,7 @@ public class ScriptiveCore {
           new ScriptCompiler.Default(),
           script));
     } catch (Throwable throwable) {
-      throw ScriptiveUnitException.wrapIfNecessary(throwable);
+      throw wrapIfNecessary(throwable);
     }
   }
 

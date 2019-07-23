@@ -1,10 +1,8 @@
 package com.github.dakusui.scriptiveunit.exceptions;
 
-import com.github.dakusui.scriptiveunit.loaders.preprocessing.ApplicationSpec;
 import com.github.dakusui.scriptiveunit.model.stage.Stage;
 import com.github.dakusui.scriptiveunit.model.statement.Statement;
 import org.codehaus.jackson.JsonNode;
-import org.codehaus.jackson.node.ObjectNode;
 
 import java.util.Map;
 import java.util.function.Supplier;
@@ -12,7 +10,7 @@ import java.util.function.Supplier;
 import static java.lang.String.format;
 
 public class SyntaxException extends ScriptiveUnitException {
-  private SyntaxException(String message) {
+  public SyntaxException(String message) {
     super(message);
   }
 
@@ -24,14 +22,6 @@ public class SyntaxException extends ScriptiveUnitException {
           context,
           knownAttributeNames));
     };
-  }
-
-  public static SyntaxException mergeFailed(ApplicationSpec.Dictionary source, ApplicationSpec.Dictionary target, String key) {
-    throw new SyntaxException(format("Failed to merge '%s' and '%s' on '%s'", source, target, key));
-  }
-
-  public static SyntaxException mergeFailed(ObjectNode source, ObjectNode target, String key) {
-    throw new SyntaxException(format("Failed to merge '%s' and '%s' on '%s'", source, target, key));
   }
 
   public static SyntaxException nonObject(JsonNode jsonNode) {

@@ -8,7 +8,6 @@ import com.github.dakusui.scriptiveunit.core.JsonScript;
 import com.github.dakusui.scriptiveunit.core.Script;
 import com.github.dakusui.scriptiveunit.exceptions.ConfigurationException;
 import com.github.dakusui.scriptiveunit.exceptions.ScriptiveUnitException;
-import com.github.dakusui.scriptiveunit.exceptions.SyntaxException;
 import com.github.dakusui.scriptiveunit.model.desc.testitem.TestOracle;
 import com.github.dakusui.scriptiveunit.model.form.value.Value;
 import com.github.dakusui.scriptiveunit.model.form.value.ValueList;
@@ -20,6 +19,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import static com.github.dakusui.scriptiveunit.exceptions.SyntaxException.attributeNotFound;
+import static com.github.dakusui.scriptiveunit.exceptions.SyntaxException.systemAttributeNotFound;
 import static com.github.dakusui.scriptiveunit.utils.Checks.check;
 import static com.github.dakusui.scriptiveunit.utils.ReflectionUtils.chooseMethod;
 import static java.lang.String.format;
@@ -70,22 +70,19 @@ public class Core {
         return (E) chooseMethod(Arrays.stream(object.getClass().getMethods())
             .filter(m -> m.getName().equals(methodName))
             .toArray(Method[]::new), args)
-            .invoke(object, (Object[])args);
+            .invoke(object, (Object[]) args);
       } catch (IllegalAccessException | InvocationTargetException e) {
         throw ScriptiveUnitException.wrapIfNecessary(e);
       }
     };
   }
 
-  @SuppressWarnings("unused")
   @Scriptable
   public Value<Throwable> exception() {
-    return stage ->
-        stage.getThrowable()
-            .orElseThrow(IllegalStateException::new);
+    return stage -> stage.getThrowable()
+        .orElseThrow(IllegalStateException::new);
   }
 
-  @SuppressWarnings("unused")
   @Scriptable
   public Value<TestCase> testCase() {
     return stage -> stage.getTestCase().orElseThrow(
@@ -93,7 +90,6 @@ public class Core {
             format("This method cannot be called on this stage:<%s>", stage)));
   }
 
-  @SuppressWarnings("unused")
   @Scriptable
   public Value<TestOracle> testOracle() {
     return stage -> stage.getTestOracle().orElseThrow(
@@ -112,7 +108,7 @@ public class Core {
 
   @SuppressWarnings("unused")
   @Scriptable
-  public Value<Object> configAttr(Value<String> attrName) {
+  public Value<Object> scriptAttr(Value<String> attrName) {
     return input -> {
       String attr = requireNonNull(attrName.apply(input));
       Script work = input.getScript();
@@ -131,7 +127,7 @@ public class Core {
         retValue = script.getScriptResourceNameKey();
         break;
       default:
-        throw SyntaxException.systemAttributeNotFound(attr, input);
+        throw systemAttributeNotFound(attr, input);
       }
       return retValue;
     };

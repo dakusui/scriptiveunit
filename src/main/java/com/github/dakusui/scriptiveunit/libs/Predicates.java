@@ -124,7 +124,7 @@ public class Predicates {
     return input -> requireNonNull(requireNonNull(compare(a, b)).apply(input)) == 0;
   }
 
-  @SuppressWarnings({ "unused", "WeakerAccess", "unchecked" })
+  @SuppressWarnings({ "unused", "unchecked" })
   @Scriptable
   public <U> Value<Integer> compare(Value<Comparable<U>> a, Value<U> b) {
     return (Stage input) -> {

@@ -63,7 +63,7 @@ public interface Statement {
   class Factory {
     private final FormHandleFactory formHandleFactory;
 
-    public Factory(FormRegistry formRegistry, Map<String, List<Object>> userDefinedFormClauses) {
+    Factory(FormRegistry formRegistry, Map<String, List<Object>> userDefinedFormClauses) {
 
       this.formHandleFactory = new FormHandleFactory(
           formRegistry,
@@ -155,6 +155,10 @@ public interface Statement {
           return String.format("\"%s\"", Objects.toString(this.value()));
         }
       };
+    }
+
+    public static Statement.Factory create(FormRegistry formRegistry, Map<String, List<Object>> userDefinedFormClauses) {
+      return new Statement.Factory(formRegistry, userDefinedFormClauses);
     }
   }
 

@@ -208,7 +208,7 @@ public interface Session {
     }
 
     <RESPONSE> Stage createOracleVerificationStage(RESPONSE response, Report report, IndexedTestCase testCase, TestOracle testOracle) {
-      return Stage.Factory.oracleLevelStageFor(
+      return Stage.Factory.oracleStageFor(
           getScript(),
           requireNonNull(response),
           testCase,
@@ -219,7 +219,7 @@ public interface Session {
     }
 
     Stage createOracleFailureHandlingStage(Throwable throwable, Report report, IndexedTestCase testCase, TestOracle testOracle) {
-      return Stage.Factory.oracleLevelStageFor(
+      return Stage.Factory.oracleStageFor(
           getScript(),
           null,
           testCase,

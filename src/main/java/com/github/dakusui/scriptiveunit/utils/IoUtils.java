@@ -11,8 +11,18 @@ import java.io.OutputStream;
 import static com.github.dakusui.scriptiveunit.exceptions.ScriptiveUnitException.wrapIfNecessary;
 import static java.util.Objects.requireNonNull;
 
-public class IoUtils {
-  static void writeTo(File out, InputStream i) {
+class IoUtils {
+  static File materializeResource(@SuppressWarnings("SameParameterValue") String resourceName) {
+    try {
+      try (InputStream i = new BufferedInputStream(openResource(resourceName))) {
+        return writeToTempFile(i);
+      }
+    } catch (IOException e) {
+      throw wrapIfNecessary(e);
+    }
+  }
+
+  private static void writeTo(File out, InputStream i) {
     try {
       byte[] buf = new byte[4096];
       try (OutputStream fileOutputStream = new BufferedOutputStream(new FileOutputStream(out))) {
@@ -20,16 +30,6 @@ public class IoUtils {
         while ((len = i.read(buf, 0, buf.length)) > 0) {
           fileOutputStream.write(buf, 0, len);
         }
-      }
-    } catch (IOException e) {
-      throw wrapIfNecessary(e);
-    }
-  }
-
-  static File materializeResource(@SuppressWarnings("SameParameterValue") String resourceName) {
-    try {
-      try (InputStream i = new BufferedInputStream(openResource(resourceName))) {
-        return writeToTempFile(i);
       }
     } catch (IOException e) {
       throw wrapIfNecessary(e);

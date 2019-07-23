@@ -97,7 +97,7 @@ public class Qapi {
       @Alias(value = "request", as = "query"),
       @Alias(value = "response", as = "result"),
       @Alias(value = "service", as = "issue"),
-      @Alias(value = "configAttr", as = "config_attr"),
+      @Alias(value = "scriptAttr", as = "config_attr"),
       @Alias(value = "systemProperty", as = "system_property"),
   })
   public QueryApi<Request, Response, Entry> queryApi = new QueryApi<Request, Response, Entry>() {

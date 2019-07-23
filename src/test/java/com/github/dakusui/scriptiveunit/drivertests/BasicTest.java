@@ -10,12 +10,13 @@ import com.github.dakusui.scriptiveunit.testutils.TestBase;
 import com.github.dakusui.scriptiveunit.testutils.UtUtils;
 import org.junit.Test;
 
+import static com.github.dakusui.scriptiveunit.testutils.UtUtils.createOracleStage;
 import static java.util.Arrays.asList;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 public class BasicTest extends TestBase {
-  private final Stage stage = UtUtils.createStage();
+  private final Stage stage = createOracleStage();
   private final Basic basic = new Basic();
 
   @Test

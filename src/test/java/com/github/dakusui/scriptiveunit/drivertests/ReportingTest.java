@@ -7,11 +7,11 @@ import org.junit.Test;
 
 import static com.github.dakusui.crest.Crest.*;
 import static com.github.dakusui.scriptiveunit.testutils.UtUtils.createForm;
-import static com.github.dakusui.scriptiveunit.testutils.UtUtils.createStage;
+import static com.github.dakusui.scriptiveunit.testutils.UtUtils.createOracleStage;
 import static com.github.dakusui.scriptiveunit.utils.ActionUtils.performActionWithLogging;
 
 public class ReportingTest {
-  private final Stage stage = createStage();
+  private final Stage     stage     = createOracleStage();
   private final Reporting reporting = new Reporting();
 
   @Test
