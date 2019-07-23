@@ -15,10 +15,13 @@ import com.github.dakusui.scriptiveunit.model.form.value.ValueList;
 import com.github.dakusui.scriptiveunit.model.stage.Stage;
 
 import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.util.Arrays;
 import java.util.List;
 
 import static com.github.dakusui.scriptiveunit.exceptions.SyntaxException.attributeNotFound;
 import static com.github.dakusui.scriptiveunit.utils.Checks.check;
+import static com.github.dakusui.scriptiveunit.utils.ReflectionUtils.chooseMethod;
 import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
 import static java.util.stream.Collectors.toList;
@@ -56,13 +59,19 @@ public class Core {
    */
   @SuppressWarnings({ "unused", "unchecked" })
   @Scriptable
-  public <E> Value<E> value(Value<String> entryName, Value<?> target) {
+  public <E> Value<E> value(Value<String> entryName, Value<?> target, ValueList<?> argList) {
     return (Stage input) -> {
       Object object = requireNonNull(target.apply(input));
       String methodName = requireNonNull(entryName.apply(input));
+      Object[] args = argList.stream()
+          .map(arg -> arg.apply(input))
+          .toArray();
       try {
-        return (E) object.getClass().getMethod(methodName).invoke(object);
-      } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
+        return (E) chooseMethod(Arrays.stream(object.getClass().getMethods())
+            .filter(m -> m.getName().equals(methodName))
+            .toArray(Method[]::new), args)
+            .invoke(object, (Object[])args);
+      } catch (IllegalAccessException | InvocationTargetException e) {
         throw ScriptiveUnitException.wrapIfNecessary(e);
       }
     };
