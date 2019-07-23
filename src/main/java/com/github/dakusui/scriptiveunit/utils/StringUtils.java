@@ -203,7 +203,7 @@ public enum StringUtils {
   private static Font loadMonospaceFont() {
     try {
       return Font.createFont(Font.TRUETYPE_FONT,
-          materializeResource("font/unifont-12.1.02.ttf"));
+          IoUtils.materializeResource("font/unifont-12.1.02.ttf"));
     } catch (FontFormatException | IOException e) {
       throw wrapIfNecessary(e);
     }
