@@ -195,11 +195,11 @@ public interface JsonScript extends Script<JsonNode, ObjectNode, ArrayNode, Json
     }
 
     private static LanguageSpec.ForJson createLanguageSpecFromDriverClass(Class<?> driverClass) {
-      return LanguageSpec.ForJson.create(FormRegistry.getFormRegistry(createDriverObject(driverClass)));
+      return LanguageSpec.ForJson.create(FormRegistry.createFormRegistry(createDriverObject(driverClass)));
     }
 
     private static LanguageSpec.ForJson createLanguageSpecFrom(Object driverObject) {
-      return LanguageSpec.ForJson.create(FormRegistry.getFormRegistry(driverObject));
+      return LanguageSpec.ForJson.create(FormRegistry.createFormRegistry(driverObject));
     }
 
     private static Object createDriverObject(Class<?> driverClass) {

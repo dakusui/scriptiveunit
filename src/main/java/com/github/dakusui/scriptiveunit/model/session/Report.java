@@ -11,6 +11,7 @@ import java.io.IOException;
 import java.util.Map;
 import java.util.TreeMap;
 
+import static com.github.dakusui.scriptiveunit.exceptions.ScriptiveUnitException.wrapMinimally;
 import static java.lang.String.format;
 
 public interface Report extends Map<String, Object> {
@@ -28,7 +29,7 @@ public interface Report extends Map<String, Object> {
         try {
           new ObjectMapper().writeValue(reportFile, this);
         } catch (IOException e) {
-          throw ScriptiveUnitException.wrap(e, "Failed to write to a report file '%s'", reportFile);
+          throw wrapMinimally(format("Failed to write to a report file '%s'", reportFile), e);
         }
       }
 

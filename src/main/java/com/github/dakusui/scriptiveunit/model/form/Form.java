@@ -5,23 +5,31 @@ import com.github.dakusui.scriptiveunit.annotations.Doc;
 import com.github.dakusui.scriptiveunit.annotations.Import;
 import com.github.dakusui.scriptiveunit.annotations.Memoized;
 import com.github.dakusui.scriptiveunit.core.Description;
+import com.github.dakusui.scriptiveunit.exceptions.ScriptiveUnitException;
 import com.github.dakusui.scriptiveunit.model.form.value.FuncValue;
 import com.github.dakusui.scriptiveunit.model.form.value.Value;
 import com.github.dakusui.scriptiveunit.model.form.value.ValueList;
 import com.github.dakusui.scriptiveunit.model.stage.Stage;
+import com.github.dakusui.scriptiveunit.utils.StringUtils;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.util.*;
+import java.lang.reflect.Type;
+import java.util.AbstractList;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.function.Function;
 
-import static com.github.dakusui.scriptiveunit.exceptions.ScriptiveUnitException.wrap;
 import static com.github.dakusui.scriptiveunit.exceptions.TypeMismatch.valueReturnedByScriptableMethodWasNotValueObject;
 import static com.github.dakusui.scriptiveunit.utils.Checks.check;
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
 import static java.util.Arrays.stream;
 import static java.util.Objects.requireNonNull;
+import static java.util.stream.Collectors.joining;
 
 /**
  * An interface that represents a pair of a method and object on which it should
@@ -131,7 +139,14 @@ public interface Form {
 
       @Override
       public String toString() {
-        return String.format("%s(%s of %s)", method.getName(), method, driverObject);
+        return String.format("%s(%s) in class:<%s>", method.getName(),
+            stream(method.getParameterTypes())
+                .map(t -> Arrays.stream(method.getGenericParameterTypes())
+                    .map(Type::getTypeName)
+                    .map(s -> String.format("%s%s", Value.class.getSimpleName(), s.substring(s.indexOf('<'))))
+                    .collect(joining(",")))
+                .collect(joining(",")),
+            driverObject.getClass().getCanonicalName());
       }
 
       Object invokeMethod(Object... args) {
@@ -141,9 +156,9 @@ public interface Form {
           String message = format("Failed to invoke %s#%s(%s) with %s",
               method.getDeclaringClass().getCanonicalName(),
               method.getName(),
-              arrayToString(parameterTypes),
-              arrayToString(args));
-          throw wrap(e, message);
+              StringUtils.arrayToString(parameterTypes),
+              StringUtils.arrayToString(args));
+          throw ScriptiveUnitException.wrapMinimally(message, e);
         }
       }
 
@@ -193,13 +208,6 @@ public interface Form {
         };
       }
 
-      String arrayToString(Object[] args) {
-        try {
-          return Arrays.toString(args);
-        } catch (Exception e) {
-          return "(N/A)";
-        }
-      }
     };
   }
 

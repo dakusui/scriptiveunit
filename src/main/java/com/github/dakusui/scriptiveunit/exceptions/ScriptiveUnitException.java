@@ -9,6 +9,12 @@ import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
 
 public class ScriptiveUnitException extends RuntimeException {
+  public static class WrappingException extends ScriptiveUnitException {
+    WrappingException(String message, Throwable nested) {
+      super(message, nested);
+    }
+  }
+
   public ScriptiveUnitException(String message, Throwable nested) {
     super(message, nested);
   }
@@ -21,8 +27,8 @@ public class ScriptiveUnitException extends RuntimeException {
     super(nested);
   }
 
-  public static ScriptiveUnitException wrap(Throwable t, String format, Object... args) {
-    throw new ScriptiveUnitException(format(format, (Object[]) args), requireNonNull(t));
+  public static ScriptiveUnitException wrapMinimally(String message, Throwable t) {
+    throw new WrappingException(message, unwrap(t));
   }
 
   public static ScriptiveUnitException wrapIfNecessary(Throwable t) {
@@ -31,7 +37,7 @@ public class ScriptiveUnitException extends RuntimeException {
     if (t instanceof Error) {
       throw (Error) t;
     }
-    throw new ScriptiveUnitException(requireNonNull(t));
+    throw new WrappingException(t.getMessage(), requireNonNull(t));
   }
 
   public static Supplier<ScriptiveUnitException> fail(String fmt, Object... args) {
@@ -55,8 +61,10 @@ public class ScriptiveUnitException extends RuntimeException {
     throw new ScriptiveUnitException("No reporting object is available in this session.");
   }
 
-  public static ScriptiveUnitException noScriptResourceNameKeyWasGiven() {
-    throw new ScriptiveUnitException("No script resource key was given in this session.");
+  private static Throwable unwrap(Throwable t) {
+    if (t instanceof WrappingException)
+      return unwrap(t.getCause());
+    return t;
   }
 
   interface Validator extends BooleanSupplier {

@@ -1,6 +1,7 @@
 package com.github.dakusui.scriptiveunit.unittests.utils;
 
 import com.github.dakusui.actionunit.core.Context;
+import com.github.dakusui.scriptiveunit.model.session.action.Pipe;
 import com.github.dakusui.scriptiveunit.model.session.action.Sink;
 import com.github.dakusui.scriptiveunit.model.session.action.Source;
 import com.github.dakusui.scriptiveunit.utils.StringUtils;
@@ -8,7 +9,9 @@ import org.junit.Test;
 
 import java.util.function.Supplier;
 
-import static com.github.dakusui.crest.Crest.*;
+import static com.github.dakusui.crest.Crest.allOf;
+import static com.github.dakusui.crest.Crest.asString;
+import static com.github.dakusui.crest.Crest.assertThat;
 
 public class StringUtilsTest {
   @Test
@@ -40,7 +43,7 @@ public class StringUtilsTest {
         allOf(
             asString("apply", Context.create()).equalTo("HELLO").$(),
             asString("toString").equalTo("hello").$()
-            ));
+        ));
   }
 
   @Test
@@ -53,5 +56,25 @@ public class StringUtilsTest {
             asString("get").equalTo("HELLO").$(),
             asString("toString").equalTo("hello").$()
         ));
+  }
+
+
+  @Test
+  public void testPipe() {
+    Pipe<String, String> pipe = StringUtils.prettify("hello", (s, c) -> "HELLO:<" + s + ">");
+
+    assertThat(
+        pipe,
+        allOf(
+            asString("apply", "world", Context.create())
+                .equalTo("HELLO:<world>").$(),
+            asString("toString").equalTo("hello").$()
+        ));
+  }
+
+  @Test
+  public void givenNull$whenArrayToString$thenNA() {
+    String s = StringUtils.arrayToString(null);
+    System.out.println(s);
   }
 }
