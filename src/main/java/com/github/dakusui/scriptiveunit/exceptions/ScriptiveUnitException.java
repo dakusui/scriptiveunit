@@ -61,6 +61,10 @@ public class ScriptiveUnitException extends RuntimeException {
     throw new ScriptiveUnitException("No reporting object is available in this session.");
   }
 
+  public static ScriptiveUnitException noScriptResourceNameKeyWasGiven() {
+    throw new ScriptiveUnitException("No script resource key was given in this session.");
+  }
+
   private static Throwable unwrap(Throwable t) {
     if (t instanceof WrappingException)
       return unwrap(t.getCause());

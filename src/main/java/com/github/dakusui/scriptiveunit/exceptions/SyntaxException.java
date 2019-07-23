@@ -26,14 +26,6 @@ public class SyntaxException extends ScriptiveUnitException {
     };
   }
 
-  public static SyntaxException typeMismatch(Class type, Object input) {
-    throw new SyntaxException(format("Type mismatch. '%s'(%s) couldn't be converted to %s",
-        input,
-        input != null ? input.getClass().getCanonicalName() : "none",
-        type.getCanonicalName()
-    ));
-  }
-
   public static SyntaxException mergeFailed(ApplicationSpec.Dictionary source, ApplicationSpec.Dictionary target, String key) {
     throw new SyntaxException(format("Failed to merge '%s' and '%s' on '%s'", source, target, key));
   }
@@ -68,9 +60,5 @@ public class SyntaxException extends ScriptiveUnitException {
 
   public static SyntaxException systemAttributeNotFound(String attr, Stage input) {
     throw new SyntaxException(format("Unknown system attribute '%s' was accessed in '%s'", attr, input));
-  }
-
-  public static Supplier<ScriptiveUnitException> notDictionary() {
-    return () -> new SyntaxException("Non dictionary node was given");
   }
 }

@@ -81,13 +81,6 @@ public enum ReflectionUtils {
     return func.apply(new Reflections(prefix, new TypeAnnotationsScanner(), new SubTypesScanner())).stream();
   }
 
-  public static <T extends Annotation> T getAnnotationWithDefault(Class javaClass, T defaultValue) {
-    @SuppressWarnings("unchecked") T ret = (T) javaClass.<T>getAnnotation(defaultValue.annotationType());
-    return ret != null ?
-        ret :
-        defaultValue;
-  }
-
   public static Object getFieldValue(Object object, Field field) {
     try {
       return field.get(object);
@@ -123,7 +116,6 @@ public enum ReflectionUtils {
     for (int i = 0; i < parameterTypes.length; i++) {
       if (argTypes[i] == null)
         continue;
-      ;
       if (!parameterTypes[i].isAssignableFrom(argTypes[i]))
         return false;
     }

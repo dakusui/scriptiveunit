@@ -17,6 +17,8 @@ import java.util.List;
 import static com.github.dakusui.jcunit8.core.Utils.createTestClassMock;
 import static com.github.dakusui.scriptiveunit.annotations.Utils.createScriptCompilerFrom;
 import static com.github.dakusui.scriptiveunit.annotations.Utils.createScriptLoaderFrom;
+import static com.github.dakusui.scriptiveunit.exceptions.ConfigurationException.noScriptCompilerProvided;
+import static com.github.dakusui.scriptiveunit.exceptions.ConfigurationException.noScriptLoaderProvided;
 import static com.github.dakusui.scriptiveunit.utils.ActionUtils.performActionWithLogging;
 import static com.github.dakusui.scriptiveunit.utils.ReflectionUtils.getAnnotation;
 import static com.google.common.collect.Lists.newLinkedList;
@@ -29,7 +31,7 @@ public class ScriptiveUnit extends Parameterized {
    * Test runners each of which runs a test case represented by an action.
    */
   private final List<Runner> runners;
-  private final Session session;
+  private final Session      session;
 
   /**
    * Only called reflectively. Do not use programmatically.
@@ -39,8 +41,14 @@ public class ScriptiveUnit extends Parameterized {
   @SuppressWarnings("unused")
   public ScriptiveUnit(Class<?> klass) throws Throwable {
     this(klass,
-        createScriptCompilerFrom(getAnnotation(klass, RunScript.class).orElseThrow(RuntimeException::new).compiler()),
-        createScriptLoaderFrom(getAnnotation(klass, RunScript.class).orElseThrow(RuntimeException::new).loader()).load(klass)
+        createScriptCompilerFrom(getAnnotation(klass, RunScript.class)
+            .orElseThrow(() -> noScriptCompilerProvided(klass))
+            .compiler()),
+        createScriptLoaderFrom(
+            getAnnotation(klass, RunScript.class)
+                .orElseThrow(() -> noScriptLoaderProvided(klass))
+                .loader())
+            .load(klass)
     );
   }
 

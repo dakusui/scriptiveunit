@@ -3,6 +3,7 @@ package com.github.dakusui.scriptiveunit.core;
 import com.github.dakusui.scriptiveunit.annotations.RunScript;
 import com.github.dakusui.scriptiveunit.annotations.Utils;
 import com.github.dakusui.scriptiveunit.annotations.Value;
+import com.github.dakusui.scriptiveunit.exceptions.ScriptiveUnitException;
 import com.github.dakusui.scriptiveunit.utils.ReflectionUtils;
 
 import static java.util.Objects.requireNonNull;
@@ -16,7 +17,7 @@ public interface ScriptLoader {
   class FromResource extends Base {
     private final String scriptResourceName;
 
-    public FromResource(String scriptResourceName) {
+    FromResource(String scriptResourceName) {
       this.scriptResourceName = requireNonNull(scriptResourceName);
     }
 
@@ -58,7 +59,7 @@ public interface ScriptLoader {
 
     public static String getScriptResourceNameKey(Class<?> driverClass) {
       return getScriptResourceNameKey(ReflectionUtils.getAnnotation(driverClass, RunScript.class)
-          .orElseThrow(RuntimeException::new));
+          .orElseThrow(ScriptiveUnitException::noScriptResourceNameKeyWasGiven));
     }
   }
 }
