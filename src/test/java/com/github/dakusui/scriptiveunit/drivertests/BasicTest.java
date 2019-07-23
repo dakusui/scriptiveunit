@@ -15,7 +15,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 public class BasicTest extends TestBase {
-  private final Stage stage = UtUtils.createOracleLevelStage();
+  private final Stage stage = UtUtils.createStage();
   private final Basic basic = new Basic();
 
   @Test

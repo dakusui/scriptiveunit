@@ -10,17 +10,22 @@ import com.github.dakusui.scriptiveunit.featuretests.AssertionMessageTest;
 import com.github.dakusui.scriptiveunit.model.desc.testitem.IndexedTestCase;
 import com.github.dakusui.scriptiveunit.model.desc.testitem.TestOracle;
 import com.github.dakusui.scriptiveunit.model.form.value.Value;
+import com.github.dakusui.scriptiveunit.model.form.value.ValueList;
 import com.github.dakusui.scriptiveunit.model.session.Report;
 import com.github.dakusui.scriptiveunit.model.stage.Stage;
 import com.github.dakusui.scriptiveunit.model.statement.Statement;
 
 import java.io.File;
 import java.text.SimpleDateFormat;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
+import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
+import static java.util.stream.Collectors.toList;
 
 public enum UtUtils {
   ;
@@ -32,7 +37,7 @@ public enum UtUtils {
     return s -> value;
   }
 
-  public static Stage createOracleLevelStage() {
+  public static Stage createStage() {
     TestItem testItem = createTestItem();
     String testSuiteName = "_noname_";
     File applicationDir = new File("unittest");
@@ -140,6 +145,15 @@ public enum UtUtils {
         return emptyList();
       }
     };
+  }
+
+  public static <V> Value.Const<V> value(V value) {
+    return Value.Const.createConst(value);
+  }
+
+  @SuppressWarnings("unchecked")
+  public static <V> ValueList<V> values(V... values) {
+    return ValueList.create(Arrays.stream(values).map(UtUtils::value).collect(toList()));
   }
 
   @RunScript(compiler = @CompileWith(AssertionMessageTest.Simple.Compiler.class))
