@@ -11,11 +11,26 @@ import org.junit.Test;
 
 public class FormRegistryTest extends TestBase {
   @Test(expected = ConfigurationException.class)
-  public void test() {
+  public void duplicated() {
     try {
       FormRegistry formRegistry = FormRegistry.createFormRegistry(new DuplicatedForms());
       Object value = formRegistry.lookUp("func")
           .orElseThrow(RuntimeException::new)
+          .resolveValue(new Value[0]);
+
+      System.out.println(value);
+    } catch (ConfigurationException e) {
+      e.printStackTrace();
+      throw e;
+    }
+  }
+
+  @Test(expected = NonExistingException.class)
+  public void nonExisting() {
+    try {
+      FormRegistry formRegistry = FormRegistry.createFormRegistry(new NonExistingForm());
+      Object value = formRegistry.lookUp("func")
+          .orElseThrow(NonExistingException::new)
           .resolveValue(new Value[0]);
 
       System.out.println(value);
@@ -33,6 +48,12 @@ public class FormRegistryTest extends TestBase {
     public final Lib2 lib2 = new Lib2();
   }
 
+  public static class NonExistingForm {
+    @Import({ @Alias(value = "undefinedFunc", as = "func") })
+    public final Lib1 lib1 = new Lib1();
+  }
+
+
   public static class Lib1 {
     @Scriptable
     public Value<String> func1(Value<String> s) {
@@ -45,5 +66,8 @@ public class FormRegistryTest extends TestBase {
     public Value<String> func2(Value<String> s) {
       return Value.Const.createConst("constantValue");
     }
+  }
+
+  static class NonExistingException extends RuntimeException {
   }
 }
