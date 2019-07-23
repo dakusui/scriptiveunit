@@ -25,6 +25,7 @@ import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
 import static com.github.dakusui.scriptiveunit.exceptions.ScriptiveUnitException.wrapIfNecessary;
+import static com.github.dakusui.scriptiveunit.utils.CoreUtils.singletonCollector;
 import static java.lang.ClassLoader.getSystemResourceAsStream;
 import static java.util.stream.Collectors.toList;
 
@@ -113,7 +114,7 @@ public enum ReflectionUtils {
         .toArray(i -> (Class<?>[]) new Class[i]);
     return Arrays.stream(constructors)
         .filter(each -> typesMatch(each.getParameterTypes(), argTypes))
-        .findFirst();
+        .collect(singletonCollector());
   }
 
   private static boolean typesMatch(Class<?>[] parameterTypes, Class<?>[] argTypes) {
