@@ -8,6 +8,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.function.Supplier;
 import java.util.stream.Collector;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
@@ -65,6 +66,10 @@ public enum CoreUtils {
   }
 
   public static <T> Collector<T, List<T>, Optional<T>> singletonCollector() {
+    return singletonCollector(IllegalStateException::new, IllegalStateException::new);
+  }
+
+  public static <T> Collector<T, List<T>, Optional<T>> singletonCollector(Supplier<IllegalStateException> onNotFound, Supplier<IllegalStateException> onMultipleElements) {
     return Collector.of(
         ArrayList::new,
         (ts, t) -> {
@@ -72,14 +77,14 @@ public enum CoreUtils {
             ts.add(t);
             return;
           }
-          throw new IllegalStateException();
+          throw onNotFound.get();
         },
         (left, right) -> {
           if (left.size() == 1 && right.isEmpty() || left.isEmpty() && right.size() == 1) {
             left.addAll(right);
             return left;
           }
-          throw new IllegalStateException();
+          throw onMultipleElements.get();
         },
         list -> {
           checkcond(list.size() <= 1);

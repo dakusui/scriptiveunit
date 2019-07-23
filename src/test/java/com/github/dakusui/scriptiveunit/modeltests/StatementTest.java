@@ -40,7 +40,7 @@ public class StatementTest extends TestBase {
   }
 
   private JsonScript createConfig(Standard driverObject) {
-    return UtScript.create(FormRegistry.getFormRegistry(driverObject));
+    return UtScript.create(FormRegistry.createFormRegistry(driverObject));
   }
 
   private FormRegistry createFormRegistry(Standard driverObject) {

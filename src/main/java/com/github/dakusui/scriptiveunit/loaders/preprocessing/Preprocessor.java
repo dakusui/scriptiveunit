@@ -8,8 +8,6 @@ import static java.util.Objects.requireNonNull;
 public interface Preprocessor {
   ApplicationSpec.Dictionary preprocess(ApplicationSpec.Dictionary rawScript);
 
-//  ApplicationSpec.Dictionary readRawScript(String scriptResourceName);
-
   class Builder<NODE, OBJECT extends NODE, ARRAY extends NODE, ATOM extends NODE> {
     private ApplicationSpec applicationSpec;
 

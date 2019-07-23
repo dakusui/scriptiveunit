@@ -1,6 +1,5 @@
 package com.github.dakusui.scriptiveunit.exceptions;
 
-import com.github.dakusui.scriptiveunit.core.JsonScript;
 import com.github.dakusui.scriptiveunit.core.Script;
 import com.github.dakusui.scriptiveunit.model.form.Form;
 
@@ -14,32 +13,17 @@ public class ConfigurationException extends ScriptiveUnitException {
     super(message);
   }
 
-  public static ConfigurationException scriptNotSpecified(JsonScript script) {
-    if (script instanceof JsonScript.FromDriverClass) {
-      String key = ((JsonScript.FromDriverClass) script).getScriptResourceNameKey();
-      throw new ConfigurationException(format(
-          "Script to be run was not specified. Give -D%s={FQCN of your script} to your command line as a VM option.",
-          key));
-    } else {
-      throw noScriptResourceWasGiven();
-    }
-  }
-
   public static ConfigurationException duplicatedFormsAreFound(Map<String, List<Form>> duplicatedObjectMethods) {
     StringBuffer buf = new StringBuffer();
     duplicatedObjectMethods.forEach((s, objectMethods) -> {
       buf.append(format("%s:%n", s));
-      objectMethods.forEach(each -> buf.append(format("  %s%n", each)));
+      objectMethods.forEach((Form each) -> buf.append(format("  %s%n", each)));
       buf.append(format("%n"));
     });
     String found = buf.toString();
     throw new ConfigurationException(format(
         "Following object methods are found duplicated:%n%s", found
     ));
-  }
-
-  private static ScriptiveUnitException noScriptResourceWasGiven() {
-    throw new ScriptiveUnitException("No script was given in this session.");
   }
 
   public static ScriptiveUnitException nonStandardScript(Script script) {

@@ -12,6 +12,7 @@ import static com.github.dakusui.scriptiveunit.utils.CoreUtils.toBigDecimalIfPos
 import static java.util.Objects.requireNonNull;
 
 public class Predicates {
+
   @SuppressWarnings("unused")
   @Scriptable
   @Doc({

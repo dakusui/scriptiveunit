@@ -2,9 +2,6 @@ package com.github.dakusui.scriptiveunit.utils;
 
 import com.github.dakusui.scriptiveunit.annotations.Import;
 import com.github.dakusui.scriptiveunit.annotations.Scriptable;
-import com.github.dakusui.scriptiveunit.core.JsonScript;
-import com.github.dakusui.scriptiveunit.core.LanguageSpec;
-import com.github.dakusui.scriptiveunit.core.Reporting;
 import com.github.dakusui.scriptiveunit.libs.Predicates;
 import com.github.dakusui.scriptiveunit.model.form.Form;
 
@@ -37,11 +34,6 @@ public enum DriverUtils {
         aliases
     ).collect(toMap(alias -> requireNonNull(alias).value(), alias -> !"".equals(requireNonNull(alias).as()) ? alias.as() : ""
     ));
-  }
-
-  public static void main(String... args) {
-    getFormsFromImportedFieldsInObject(new DriverExample())
-        .forEach(System.out::println);
   }
 
   public static class DriverExample {

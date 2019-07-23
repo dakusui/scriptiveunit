@@ -140,22 +140,7 @@ public interface Statement {
       return new Atom() {
         @Override
         public <U> Value<U> toValue() {
-          return new Value.Const<U>() {
-            @Override
-            public U apply(Stage stage) {
-              return Stage.evaluateValue(stage, this, (f, s) -> value());
-            }
-
-            @Override
-            public String name() {
-              return "const:'" + value() + "'";
-            }
-
-            @Override
-            public String toString() {
-              return Objects.toString(value());//form.toString();
-            }
-          };
+          return Value.Const.createConst(object);
         }
 
         @SuppressWarnings("unchecked")

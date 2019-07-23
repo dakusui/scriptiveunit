@@ -23,8 +23,8 @@ public class Collections {
 
   @SuppressWarnings("unused")
   @Scriptable
-  public <E> Value<Integer> concat(Value<Iterable<? extends E>> iterable) {
-    return (Stage input) -> Iterables.size(requireNonNull(iterable.apply(input)));
+  public <E> Value<Iterable<E>> concat(Value<? extends Iterable<? extends E>> iterable1, Value<? extends Iterable<? extends E>> iterable2) {
+    return (Stage input) -> Iterables.concat(iterable1.apply(input), iterable2.apply(input));
   }
 
   @SuppressWarnings("unused")
