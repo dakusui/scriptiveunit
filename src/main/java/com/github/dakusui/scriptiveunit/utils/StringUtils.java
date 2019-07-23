@@ -20,6 +20,7 @@ import java.util.regex.Pattern;
 import static com.github.dakusui.scriptiveunit.exceptions.ScriptiveUnitException.wrapIfNecessary;
 import static com.github.dakusui.scriptiveunit.exceptions.SyntaxException.cyclicTemplatingFound;
 import static com.github.dakusui.scriptiveunit.exceptions.SyntaxException.undefinedFactor;
+import static com.github.dakusui.scriptiveunit.utils.IoUtils.materializeResource;
 import static java.lang.Character.isUpperCase;
 import static java.lang.Character.toLowerCase;
 import static java.lang.Character.toUpperCase;
@@ -50,7 +51,7 @@ public enum StringUtils {
     i.forEach((Object in) -> {
       b.append("  ");
       b.append(in);
-      b.append("\n");
+      b.append(format("%n"));
     });
     b.append("]");
     return b.toString();
@@ -194,7 +195,7 @@ public enum StringUtils {
     int originalWidth = width(text);
     if (originalWidth >= requiredWidth)
       return text;
-    return text + String.format("%" + (requiredWidth - originalWidth) + "s", "");
+    return text + format("%" + (requiredWidth - originalWidth) + "s", "");
   }
 
   private static final Font MONOSPACEFONT = loadMonospaceFont();
@@ -202,7 +203,7 @@ public enum StringUtils {
   private static Font loadMonospaceFont() {
     try {
       return Font.createFont(Font.TRUETYPE_FONT,
-          IoUtils.materializeResource("font/unifont-12.1.02.ttf"));
+          materializeResource("font/unifont-12.1.02.ttf"));
     } catch (FontFormatException | IOException e) {
       throw wrapIfNecessary(e);
     }

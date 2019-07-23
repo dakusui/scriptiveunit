@@ -12,6 +12,8 @@ import java.util.function.Supplier;
 import static com.github.dakusui.crest.Crest.allOf;
 import static com.github.dakusui.crest.Crest.asString;
 import static com.github.dakusui.crest.Crest.assertThat;
+import static java.util.Collections.singletonList;
+import static org.junit.Assert.assertEquals;
 
 public class StringUtilsTest {
   @Test
@@ -76,5 +78,26 @@ public class StringUtilsTest {
   public void givenNull$whenArrayToString$thenNA() {
     String s = StringUtils.arrayToString(null);
     System.out.println(s);
+  }
+
+  @Test
+  public void testIterableToString() {
+    assertEquals("[hello]", StringUtils.iterableToString(singletonList("hello")));
+  }
+
+
+  @Test
+  public void testAlignLeft_Longer() {
+    assertEquals("hello", StringUtils.alignLeft("hello", 3));
+  }
+
+  @Test
+  public void testAlignLeft_Shorter() {
+    assertEquals("hello     ", StringUtils.alignLeft("hello", 10));
+  }
+
+  @Test
+  public void testAlignLeft_Equal() {
+    assertEquals("hello", StringUtils.alignLeft("hello", 5));
   }
 }
