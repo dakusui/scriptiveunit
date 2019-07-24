@@ -2,7 +2,7 @@ package com.github.dakusui.scriptiveunit;
 
 import com.github.dakusui.scriptiveunit.core.Description;
 import com.github.dakusui.scriptiveunit.core.JsonScript;
-import com.github.dakusui.scriptiveunit.loaders.ScriptCompiler;
+import com.github.dakusui.scriptiveunit.core.ScriptCompiler;
 import com.github.dakusui.scriptiveunit.model.form.Form;
 import com.github.dakusui.scriptiveunit.runners.RunningMode;
 import com.github.dakusui.scriptiveunit.runners.ScriptiveSuiteSet;
@@ -18,9 +18,9 @@ import org.junit.runner.RunWith;
 import java.util.*;
 import java.util.stream.Stream;
 
-import static com.github.dakusui.scriptiveunit.exceptions.FacadeException.validateDriverClass;
-import static com.github.dakusui.scriptiveunit.exceptions.FacadeException.validateSuiteSetClass;
-import static com.github.dakusui.scriptiveunit.exceptions.ResourceException.functionNotFound;
+import static com.github.dakusui.scriptiveunit.utils.Validator.validateDriverClass;
+import static com.github.dakusui.scriptiveunit.utils.Validator.validateSuiteSetClass;
+import static com.github.dakusui.scriptiveunit.exceptions.Exceptions.functionNotFound;
 import static com.github.dakusui.scriptiveunit.exceptions.ScriptiveUnitException.wrapIfNecessary;
 import static java.util.stream.Collectors.toList;
 

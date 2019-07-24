@@ -1,6 +1,7 @@
 package com.github.dakusui.scriptiveunit.model.session;
 
 import com.github.dakusui.scriptiveunit.exceptions.ScriptiveUnitException;
+import com.github.dakusui.scriptiveunit.exceptions.ScriptiveUnitUnclassifiedException;
 import com.github.dakusui.scriptiveunit.model.desc.testitem.IndexedTestCase;
 import com.github.dakusui.scriptiveunit.model.desc.testitem.TestOracle;
 import com.github.dakusui.scriptiveunit.utils.Checks;
@@ -60,10 +61,10 @@ public interface Report extends Map<String, Object> {
 
       private File ensureDirectoryExists(File dir) {
         if (!dir.exists()) {
-          Checks.check(dir.mkdirs(), () -> new ScriptiveUnitException(format("Failed to create a directory '%s'.", dir)));
+          Checks.check(dir.mkdirs(), () -> new ScriptiveUnitUnclassifiedException(format("Failed to create a directory '%s'.", dir)));
           return dir;
         }
-        return Checks.check(dir, File::isDirectory, () -> new ScriptiveUnitException(format("'%s' exists, but not a directory.", dir)));
+        return Checks.check(dir, File::isDirectory, () -> new ScriptiveUnitUnclassifiedException(format("'%s' exists, but not a directory.", dir)));
       }
     };
   }

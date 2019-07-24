@@ -2,7 +2,7 @@ package com.github.dakusui.scriptiveunit.runners;
 
 import com.github.dakusui.scriptiveunit.annotations.RunScript;
 import com.github.dakusui.scriptiveunit.core.JsonScript;
-import com.github.dakusui.scriptiveunit.exceptions.ConfigurationException;
+import com.github.dakusui.scriptiveunit.exceptions.Exceptions;
 import com.github.dakusui.scriptiveunit.utils.ReflectionUtils;
 import org.junit.runner.Description;
 import org.junit.runner.Runner;
@@ -131,7 +131,7 @@ public class ScriptiveSuiteSet extends ParentRunner<Runner> {
       return new ScriptiveUnit(
           klass,
           createScriptCompilerFrom(getAnnotation(klass, RunScript.class)
-              .orElseThrow(() -> ConfigurationException.noScriptCompilerProvided(klass))
+              .orElseThrow(() -> Exceptions.noScriptCompilerProvided(klass))
               .compiler()),
           new JsonScript.FromDriverClass(klass, scriptResourceName));
     } catch (Throwable throwable) {

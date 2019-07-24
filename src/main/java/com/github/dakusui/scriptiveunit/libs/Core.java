@@ -6,7 +6,7 @@ import com.github.dakusui.scriptiveunit.annotations.AccessesTestParameter;
 import com.github.dakusui.scriptiveunit.annotations.Scriptable;
 import com.github.dakusui.scriptiveunit.core.JsonScript;
 import com.github.dakusui.scriptiveunit.core.Script;
-import com.github.dakusui.scriptiveunit.exceptions.ConfigurationException;
+import com.github.dakusui.scriptiveunit.exceptions.Exceptions;
 import com.github.dakusui.scriptiveunit.exceptions.ScriptiveUnitException;
 import com.github.dakusui.scriptiveunit.model.desc.testitem.TestOracle;
 import com.github.dakusui.scriptiveunit.model.form.value.Value;
@@ -18,8 +18,8 @@ import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.List;
 
-import static com.github.dakusui.scriptiveunit.exceptions.SyntaxException.attributeNotFound;
-import static com.github.dakusui.scriptiveunit.exceptions.SyntaxException.systemAttributeNotFound;
+import static com.github.dakusui.scriptiveunit.exceptions.Exceptions.attributeNotFound;
+import static com.github.dakusui.scriptiveunit.exceptions.Exceptions.systemAttributeNotFound;
 import static com.github.dakusui.scriptiveunit.utils.Checks.check;
 import static com.github.dakusui.scriptiveunit.utils.ReflectionUtils.chooseMethod;
 import static java.lang.String.format;
@@ -44,7 +44,7 @@ public class Core {
       String attrName = attr.apply(input);
       check(
           testCase.containsKey(attrName),
-          attributeNotFound(attrName, input, testCase.keySet()));
+          () -> attributeNotFound(attrName, input, testCase.keySet()));
       return (E) testCase.get(attrName);
     };
   }
@@ -113,7 +113,7 @@ public class Core {
       String attr = requireNonNull(attrName.apply(input));
       Script work = input.getScript();
       if (!(work instanceof JsonScript.FromDriverClass))
-        throw ConfigurationException.nonStandardScript(work);
+        throw Exceptions.nonStandardScript(work);
       JsonScript.FromDriverClass script = (JsonScript.FromDriverClass) work;
       final Object retValue;
       switch (attr) {

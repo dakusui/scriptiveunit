@@ -1,21 +1,30 @@
 package com.github.dakusui.scriptiveunit.utils;
 
+import com.github.dakusui.faultsource.FaultSource;
+
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
-import java.util.Optional;
 import java.util.function.Supplier;
 import java.util.stream.Collector;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
-import static com.github.dakusui.scriptiveunit.core.Exceptions.SCRIPTIVEUNIT;
 import static java.math.MathContext.DECIMAL128;
 
-public enum CoreUtils {
-  ;
+public enum CoreUtils implements FaultSource {
+  SCRIPTIVEUNIT {
+    @Override
+    public RuntimeException exceptionForCaughtFailure(String message, Throwable t) {
+      throw new RuntimeException(message, t);
+    }
+
+    @Override
+    public RuntimeException exceptionForIllegalValue(String message) {
+      return new IllegalArgumentException(message);
+    }
+  };
 
   public static <V> Stream<V> iterableToStream(Iterable<V> iterable) {
     return StreamSupport.stream(iterable.spliterator(), false);

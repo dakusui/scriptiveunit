@@ -18,11 +18,10 @@ public enum DriverUtils {
   public static List<Form> getFormsFromImportedFieldsInObject(Object object) {
     return ReflectionUtils.getAnnotatedFields(object, Import.class)
         .stream()
-        .map(
-            each -> ReflectionUtils.getAnnotatedMethods(
-                each.get(),
-                Scriptable.class,
-                createAliasMap(each.getField().getAnnotation(Import.class).value())))
+        .map(each -> ReflectionUtils.getAnnotatedMethods(
+            each.get(),
+            Scriptable.class,
+            createAliasMap(each.getField().getAnnotation(Import.class).value())))
         .flatMap(List::stream)
         .filter((Form form) -> form.getName() != null)
         .collect(toList());

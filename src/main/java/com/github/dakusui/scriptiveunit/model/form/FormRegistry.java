@@ -6,7 +6,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-import static com.github.dakusui.scriptiveunit.exceptions.ConfigurationException.duplicatedFormsAreFound;
+import static com.github.dakusui.scriptiveunit.exceptions.Exceptions.duplicatedFormsAreFound;
 import static com.github.dakusui.scriptiveunit.utils.DriverUtils.getFormsFromImportedFieldsInObject;
 import static java.util.stream.Collectors.toMap;
 

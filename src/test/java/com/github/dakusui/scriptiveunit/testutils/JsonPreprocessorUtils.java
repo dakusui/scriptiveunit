@@ -8,8 +8,8 @@ import org.codehaus.jackson.node.TextNode;
 
 import java.util.AbstractList;
 
-import static com.github.dakusui.scriptiveunit.exceptions.SyntaxException.nonArray;
-import static com.github.dakusui.scriptiveunit.exceptions.SyntaxException.nonText;
+import static com.github.dakusui.scriptiveunit.exceptions.Exceptions.nonArray;
+import static com.github.dakusui.scriptiveunit.exceptions.Exceptions.nonText;
 import static com.github.dakusui.scriptiveunit.utils.Checks.check;
 
 public enum JsonPreprocessorUtils {

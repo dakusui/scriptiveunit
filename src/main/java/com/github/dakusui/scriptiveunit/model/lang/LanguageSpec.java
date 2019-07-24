@@ -1,7 +1,5 @@
-package com.github.dakusui.scriptiveunit.core;
+package com.github.dakusui.scriptiveunit.model.lang;
 
-import com.github.dakusui.scriptiveunit.loaders.preprocessing.ApplicationSpec;
-import com.github.dakusui.scriptiveunit.loaders.preprocessing.HostSpec;
 import com.github.dakusui.scriptiveunit.model.form.FormRegistry;
 import org.codehaus.jackson.JsonNode;
 import org.codehaus.jackson.node.ArrayNode;

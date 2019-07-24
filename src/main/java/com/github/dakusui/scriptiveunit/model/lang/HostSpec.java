@@ -1,4 +1,4 @@
-package com.github.dakusui.scriptiveunit.loaders.preprocessing;
+package com.github.dakusui.scriptiveunit.model.lang;
 
 import com.github.dakusui.scriptiveunit.utils.JsonUtils;
 import com.github.dakusui.scriptiveunit.utils.ReflectionUtils;
@@ -10,9 +10,9 @@ import org.codehaus.jackson.node.ObjectNode;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
-import static com.github.dakusui.scriptiveunit.loaders.preprocessing.ApplicationSpec.isArray;
-import static com.github.dakusui.scriptiveunit.loaders.preprocessing.ApplicationSpec.isAtom;
-import static com.github.dakusui.scriptiveunit.loaders.preprocessing.ApplicationSpec.isDictionary;
+import static com.github.dakusui.scriptiveunit.model.lang.ApplicationSpec.isArray;
+import static com.github.dakusui.scriptiveunit.model.lang.ApplicationSpec.isAtom;
+import static com.github.dakusui.scriptiveunit.model.lang.ApplicationSpec.isDictionary;
 import static com.github.dakusui.scriptiveunit.utils.CoreUtils.toBigDecimal;
 import static com.github.dakusui.scriptiveunit.utils.JsonUtils.requireObjectNode;
 import static java.lang.String.format;

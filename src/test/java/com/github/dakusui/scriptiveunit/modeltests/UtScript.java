@@ -1,9 +1,9 @@
 package com.github.dakusui.scriptiveunit.modeltests;
 
 import com.github.dakusui.scriptiveunit.core.JsonScript;
-import com.github.dakusui.scriptiveunit.core.LanguageSpec;
+import com.github.dakusui.scriptiveunit.model.lang.LanguageSpec;
 import com.github.dakusui.scriptiveunit.core.Reporting;
-import com.github.dakusui.scriptiveunit.loaders.preprocessing.ApplicationSpec;
+import com.github.dakusui.scriptiveunit.model.lang.ApplicationSpec;
 import com.github.dakusui.scriptiveunit.model.form.FormRegistry;
 import org.codehaus.jackson.JsonNode;
 import org.codehaus.jackson.node.ArrayNode;
