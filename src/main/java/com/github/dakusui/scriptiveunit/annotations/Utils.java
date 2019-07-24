@@ -1,7 +1,7 @@
 package com.github.dakusui.scriptiveunit.annotations;
 
 import com.github.dakusui.scriptiveunit.core.ScriptLoader;
-import com.github.dakusui.scriptiveunit.loaders.ScriptCompiler;
+import com.github.dakusui.scriptiveunit.core.ScriptCompiler;
 import com.github.dakusui.scriptiveunit.utils.ReflectionUtils;
 
 import java.util.Arrays;

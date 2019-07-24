@@ -27,11 +27,16 @@ A pacakge to host exception classes
   - -> (Mapping)
   - -> ObjectNode (JSON)
   - -> TestSuiteDescriptorBean (List<Object>)
-  - -> (nonam)
-  - -> TestSuiteDescriptor (Statements)
-  - -> (eval)
+  - -> (noname): Compile?
+  - -> TestSuiteDescriptor (Statements) + () -> Statements (userForms)
+  - -> (eval) ** Runtime 1
   - -> Object (evaluated value; action)
-  - -> (perform)
+  - -> (perform) ** Runtime 2
   - -> Test Result
 
 ScriptiveUnit
+
+* Parameter Error
+* Syntax Error in script
+* Runtime Error
+  * Type Mismatch (Class Cast Exception)

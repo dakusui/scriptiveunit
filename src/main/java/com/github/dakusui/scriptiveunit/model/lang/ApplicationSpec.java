@@ -1,7 +1,8 @@
-package com.github.dakusui.scriptiveunit.loaders.preprocessing;
+package com.github.dakusui.scriptiveunit.model.lang;
 
 import com.github.dakusui.scriptiveunit.exceptions.ScriptiveUnitException;
 import com.github.dakusui.scriptiveunit.exceptions.ScriptiveUnitUnclassifiedException;
+import com.github.dakusui.scriptiveunit.loaders.preprocessing.PreprocessingUnit;
 import com.github.dakusui.scriptiveunit.utils.Checks;
 
 import java.util.Arrays;
@@ -15,8 +16,8 @@ import java.util.function.Function;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
-import static com.github.dakusui.scriptiveunit.loaders.preprocessing.ApplicationSpec.Utils.nonDictionaryFound;
-import static com.github.dakusui.scriptiveunit.loaders.preprocessing.ApplicationSpec.Utils.requireDictionary;
+import static com.github.dakusui.scriptiveunit.model.lang.ApplicationSpec.Utils.nonDictionaryFound;
+import static com.github.dakusui.scriptiveunit.model.lang.ApplicationSpec.Utils.requireDictionary;
 import static com.github.dakusui.scriptiveunit.utils.Checks.check;
 import static java.lang.String.format;
 import static java.util.Collections.emptyList;

@@ -5,7 +5,7 @@ import com.github.dakusui.scriptiveunit.annotations.LoadBy;
 import com.github.dakusui.scriptiveunit.annotations.RunScript;
 import com.github.dakusui.scriptiveunit.core.JsonScript;
 import com.github.dakusui.scriptiveunit.core.ScriptLoader;
-import com.github.dakusui.scriptiveunit.loaders.preprocessing.ApplicationSpec;
+import com.github.dakusui.scriptiveunit.model.lang.ApplicationSpec;
 import com.github.dakusui.scriptiveunit.runners.ScriptiveUnit;
 import com.github.dakusui.scriptiveunit.testutils.TestBase;
 import org.junit.Test;

@@ -36,14 +36,12 @@ public enum Exceptions {
     throw new ScriptiveUnitUnclassifiedException("No reporting object is available in this session.");
   }
 
-  public static Supplier<SyntaxException> attributeNotFound(String attributeName, Stage context, Iterable<String> knownAttributeNames) {
-    return () -> {
-      throw new SyntaxException(format(
+  public static SyntaxException attributeNotFound(String attributeName, Stage context, Iterable<String> knownAttributeNames) {
+      throw new ScriptiveUnitUnclassifiedException(format(
           "Attribute '%s' is accessed in stage:<%s>, but not found in your test case. Known attribute names are %s'",
           attributeName,
           context,
           knownAttributeNames));
-    };
   }
 
   public static SyntaxException nonObject(JsonNode jsonNode) {

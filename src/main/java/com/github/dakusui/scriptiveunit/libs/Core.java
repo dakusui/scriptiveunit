@@ -44,7 +44,7 @@ public class Core {
       String attrName = attr.apply(input);
       check(
           testCase.containsKey(attrName),
-          attributeNotFound(attrName, input, testCase.keySet()));
+          () -> attributeNotFound(attrName, input, testCase.keySet()));
       return (E) testCase.get(attrName);
     };
   }

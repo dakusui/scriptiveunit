@@ -1,8 +1,8 @@
-package com.github.dakusui.scriptiveunit.loaders;
+package com.github.dakusui.scriptiveunit.core;
 
 import com.github.dakusui.scriptiveunit.exceptions.ScriptiveUnitException;
 import com.github.dakusui.scriptiveunit.loaders.json.TestSuiteDescriptorBeanFromJson;
-import com.github.dakusui.scriptiveunit.loaders.preprocessing.HostSpec;
+import com.github.dakusui.scriptiveunit.model.lang.HostSpec;
 import com.github.dakusui.scriptiveunit.model.desc.TestSuiteDescriptor;
 import com.github.dakusui.scriptiveunit.model.session.Session;
 import org.codehaus.jackson.map.ObjectMapper;

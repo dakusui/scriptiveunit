@@ -1,6 +1,6 @@
 package com.github.dakusui.scriptiveunit.annotations;
 
-import com.github.dakusui.scriptiveunit.loaders.ScriptCompiler;
+import com.github.dakusui.scriptiveunit.core.ScriptCompiler;
 
 import java.lang.annotation.Retention;
 

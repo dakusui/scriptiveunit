@@ -1,10 +1,11 @@
 package com.github.dakusui.scriptiveunit.core;
 
 import com.github.dakusui.scriptiveunit.exceptions.ScriptiveUnitException;
-import com.github.dakusui.scriptiveunit.loaders.preprocessing.ApplicationSpec;
-import com.github.dakusui.scriptiveunit.loaders.preprocessing.HostSpec;
+import com.github.dakusui.scriptiveunit.model.lang.ApplicationSpec;
+import com.github.dakusui.scriptiveunit.model.lang.HostSpec;
 import com.github.dakusui.scriptiveunit.loaders.preprocessing.Preprocessor;
 import com.github.dakusui.scriptiveunit.model.form.FormRegistry;
+import com.github.dakusui.scriptiveunit.model.lang.LanguageSpec;
 import org.codehaus.jackson.JsonNode;
 import org.codehaus.jackson.node.ArrayNode;
 import org.codehaus.jackson.node.ObjectNode;

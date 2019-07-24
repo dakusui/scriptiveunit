@@ -1,6 +1,5 @@
 package com.github.dakusui.scriptiveunit.utils;
 
-import com.github.dakusui.scriptiveunit.core.ObjectField;
 import com.github.dakusui.scriptiveunit.exceptions.Exceptions;
 import com.github.dakusui.scriptiveunit.exceptions.ScriptiveUnitException;
 import com.github.dakusui.scriptiveunit.model.form.Form;

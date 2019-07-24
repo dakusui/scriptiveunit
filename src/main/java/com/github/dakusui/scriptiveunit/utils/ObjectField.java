@@ -1,13 +1,11 @@
-package com.github.dakusui.scriptiveunit.core;
-
-import com.github.dakusui.scriptiveunit.utils.ReflectionUtils;
+package com.github.dakusui.scriptiveunit.utils;
 
 import java.lang.reflect.Field;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static java.util.Objects.requireNonNull;
 
-public interface ObjectField {
+interface ObjectField {
   Object get();
 
   Field getField();

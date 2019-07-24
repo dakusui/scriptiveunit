@@ -2,7 +2,7 @@ package com.github.dakusui.scriptiveunit;
 
 import com.github.dakusui.scriptiveunit.core.Description;
 import com.github.dakusui.scriptiveunit.core.JsonScript;
-import com.github.dakusui.scriptiveunit.loaders.ScriptCompiler;
+import com.github.dakusui.scriptiveunit.core.ScriptCompiler;
 import com.github.dakusui.scriptiveunit.model.form.Form;
 import com.github.dakusui.scriptiveunit.runners.RunningMode;
 import com.github.dakusui.scriptiveunit.runners.ScriptiveSuiteSet;

@@ -2,7 +2,7 @@ package com.github.dakusui.scriptiveunit.runners;
 
 import com.github.dakusui.scriptiveunit.annotations.RunScript;
 import com.github.dakusui.scriptiveunit.core.Script;
-import com.github.dakusui.scriptiveunit.loaders.ScriptCompiler;
+import com.github.dakusui.scriptiveunit.core.ScriptCompiler;
 import com.github.dakusui.scriptiveunit.model.desc.TestSuiteDescriptor;
 import com.github.dakusui.scriptiveunit.model.session.Session;
 import org.junit.internal.runners.statements.RunBefores;
