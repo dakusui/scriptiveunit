@@ -109,7 +109,7 @@ public class AssertionMessageTest extends TestBase {
       @Override
       public JsonScript load(Class<?> driverClass) {
         return JsonScript.Utils.createScript(new ApplicationSpec.Dictionary.Factory() {
-          ApplicationSpec.Dictionary createDictionary() {
+          public ApplicationSpec.Dictionary create() {
             return dict(
                 $("testOracles", array(
                     dict(
@@ -126,7 +126,7 @@ public class AssertionMessageTest extends TestBase {
                         $("when", array("format", "hello")),
                         $("then", array("matches", array("output"), ".*Ell.*"))))));
           }
-        }.createDictionary(), driverClass
+        }.create(), driverClass
         );
       }
     }

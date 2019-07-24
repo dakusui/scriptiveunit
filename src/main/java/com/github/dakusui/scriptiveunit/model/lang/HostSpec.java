@@ -7,12 +7,13 @@ import org.codehaus.jackson.node.ArrayNode;
 import org.codehaus.jackson.node.JsonNodeFactory;
 import org.codehaus.jackson.node.ObjectNode;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
-import static com.github.dakusui.scriptiveunit.model.lang.ApplicationSpec.isArray;
-import static com.github.dakusui.scriptiveunit.model.lang.ApplicationSpec.isAtom;
-import static com.github.dakusui.scriptiveunit.model.lang.ApplicationSpec.isDictionary;
+import static com.github.dakusui.scriptiveunit.exceptions.ScriptiveUnitException.wrapIfNecessary;
+import static com.github.dakusui.scriptiveunit.model.lang.ApplicationSpec.*;
 import static com.github.dakusui.scriptiveunit.utils.CoreUtils.toBigDecimal;
 import static com.github.dakusui.scriptiveunit.utils.JsonUtils.requireObjectNode;
 import static java.lang.String.format;
@@ -49,6 +50,10 @@ public interface HostSpec<NODE, OBJECT extends NODE, ARRAY extends NODE, ATOM ex
   ApplicationSpec.Dictionary toApplicationDictionary(OBJECT object);
 
   ApplicationSpec.Dictionary readRawScript(String resourceName);
+
+  default InputStream openResource(String resourceName) {
+    return ReflectionUtils.openResourceAsStream(resourceName);
+  }
 
   interface Default<NODE, OBJECT extends NODE, ARRAY extends NODE, ATOM extends NODE> extends HostSpec<NODE, OBJECT, ARRAY, ATOM> {
     @Override
@@ -201,7 +206,11 @@ public interface HostSpec<NODE, OBJECT extends NODE, ARRAY extends NODE, ATOM ex
 
     @Override
     public ObjectNode readObjectNode(String resourceName) {
-      return requireObjectNode(JsonUtils.readJsonNodeFromStream(ReflectionUtils.openResourceAsStream(resourceName)));
+      try (InputStream is = openResource(resourceName)) {
+        return requireObjectNode(JsonUtils.readJsonNodeFromStream(is));
+      } catch (IOException e) {
+        throw wrapIfNecessary(e);
+      }
     }
 
     @Override

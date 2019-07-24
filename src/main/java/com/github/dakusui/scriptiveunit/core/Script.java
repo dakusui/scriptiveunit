@@ -10,9 +10,7 @@ import java.util.Optional;
 
 public interface Script<NODE, OBJECT extends NODE, ARRAY extends NODE, ATOM extends NODE> {
   default Preprocessor createPreprocessor() {
-    return new Preprocessor.Builder<>(hostSpec())
-        .applicationSpec(applicationSpec())
-        .build();
+    return Preprocessor.create(hostSpec(), applicationSpec());
   }
 
   Optional<Reporting> getReporting();

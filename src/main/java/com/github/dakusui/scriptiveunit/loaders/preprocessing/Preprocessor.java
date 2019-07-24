@@ -9,19 +9,25 @@ import static com.github.dakusui.scriptiveunit.model.lang.ApplicationSpec.dict;
 import static java.util.Objects.requireNonNull;
 
 public interface Preprocessor {
+  static <NODE, OBJECT extends NODE, ARRAY extends NODE, ATOM extends NODE> Preprocessor create(HostSpec<NODE, OBJECT, ARRAY, ATOM> hostSpec, ApplicationSpec applicationSpec) {
+    return new Builder(hostSpec)
+        .applicationSpec(applicationSpec)
+        .build();
+  }
+
   ApplicationSpec.Dictionary preprocess(ApplicationSpec.Dictionary rawScript);
 
-  class Builder<NODE, OBJECT extends NODE, ARRAY extends NODE, ATOM extends NODE> {
+  class Builder {
     private ApplicationSpec applicationSpec;
 
 
-    private final HostSpec<NODE, OBJECT, ARRAY, ATOM> hostSpec;
+    private final HostSpec hostSpec;
 
-    public Builder(HostSpec<NODE, OBJECT, ARRAY, ATOM> hostSpec) {
+    public Builder(HostSpec hostSpec) {
       this.hostSpec = requireNonNull(hostSpec);
     }
 
-    public Builder<NODE, OBJECT, ARRAY, ATOM> applicationSpec(ApplicationSpec applicationSpec) {
+    public Builder applicationSpec(ApplicationSpec applicationSpec) {
       this.applicationSpec = requireNonNull(applicationSpec);
       return this;
     }
