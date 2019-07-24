@@ -4,7 +4,7 @@ import com.github.dakusui.crest.Crest;
 import com.github.dakusui.scriptiveunit.ScriptiveCore;
 import com.github.dakusui.scriptiveunit.core.Description;
 import com.github.dakusui.scriptiveunit.examples.Qapi;
-import com.github.dakusui.scriptiveunit.exceptions.FacadeException;
+import com.github.dakusui.scriptiveunit.exceptions.ValidationFailure;
 import com.github.dakusui.scriptiveunit.exceptions.ResourceException;
 import com.github.dakusui.scriptiveunit.testassets.Driver1;
 import com.github.dakusui.scriptiveunit.testassets.Driver2;
@@ -174,7 +174,7 @@ public class ScriptiveCoreTest extends TestBase {
     }
   }
 
-  @Test(expected = FacadeException.class)
+  @Test(expected = ValidationFailure.class)
   public void whenListScriptsOnInvalidSuiteSetClass$thenFacadeExceptionWillBeThrown() {
     new ScriptiveCore().listScripts(SuiteSet2.class);
   }

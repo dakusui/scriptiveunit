@@ -18,9 +18,8 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import static com.github.dakusui.scriptiveunit.exceptions.ScriptiveUnitException.wrapIfNecessary;
-import static com.github.dakusui.scriptiveunit.exceptions.SyntaxException.cyclicTemplatingFound;
-import static com.github.dakusui.scriptiveunit.exceptions.SyntaxException.undefinedFactor;
-import static com.github.dakusui.scriptiveunit.utils.IoUtils.materializeResource;
+import static com.github.dakusui.scriptiveunit.exceptions.Exceptions.cyclicTemplatingFound;
+import static com.github.dakusui.scriptiveunit.exceptions.Exceptions.undefinedFactor;
 import static java.lang.Character.isUpperCase;
 import static java.lang.Character.toLowerCase;
 import static java.lang.Character.toUpperCase;

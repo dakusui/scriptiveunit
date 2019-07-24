@@ -23,7 +23,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 
-import static com.github.dakusui.scriptiveunit.exceptions.TypeMismatch.valueReturnedByScriptableMethodWasNotValueObject;
+import static com.github.dakusui.scriptiveunit.exceptions.Exceptions.valueReturnedByScriptableMethodWasNotValueObject;
 import static com.github.dakusui.scriptiveunit.utils.Checks.check;
 import static java.lang.String.format;
 import static java.util.Arrays.asList;

@@ -1,7 +1,7 @@
 package com.github.dakusui.scriptiveunit.utils;
 
 import com.github.dakusui.scriptiveunit.core.ObjectField;
-import com.github.dakusui.scriptiveunit.exceptions.ResourceException;
+import com.github.dakusui.scriptiveunit.exceptions.Exceptions;
 import com.github.dakusui.scriptiveunit.exceptions.ScriptiveUnitException;
 import com.github.dakusui.scriptiveunit.model.form.Form;
 import org.reflections.Reflections;
@@ -30,7 +30,7 @@ public enum ReflectionUtils {
   }
 
   public static InputStream openResourceAsStream(String resourceName) {
-    return ResourceException.scriptExists(getSystemResourceAsStream(resourceName), resourceName);
+    return scriptExists(getSystemResourceAsStream(resourceName), resourceName);
   }
 
   public static Stream<String> allScriptsUnderMatching(String prefix, Pattern pattern) {
@@ -119,5 +119,11 @@ public enum ReflectionUtils {
         return false;
     }
     return true;
+  }
+
+  public static <T> T scriptExists(T target, String scriptName) {
+    if (target == null)
+      throw Exceptions.scriptNotFound(scriptName);
+    return target;
   }
 }

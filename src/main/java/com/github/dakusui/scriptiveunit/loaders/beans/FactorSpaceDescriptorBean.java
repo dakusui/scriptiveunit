@@ -3,7 +3,7 @@ package com.github.dakusui.scriptiveunit.loaders.beans;
 import com.github.dakusui.jcunit.fsm.spec.FsmSpec;
 import com.github.dakusui.jcunit8.factorspace.Constraint;
 import com.github.dakusui.jcunit8.factorspace.Parameter;
-import com.github.dakusui.scriptiveunit.exceptions.ScriptiveUnitException;
+import com.github.dakusui.scriptiveunit.exceptions.ValidationFailure;
 import com.github.dakusui.scriptiveunit.model.desc.ParameterSpaceDescriptor;
 import com.github.dakusui.scriptiveunit.model.session.Session;
 import com.github.dakusui.scriptiveunit.model.stage.Stage;
@@ -15,6 +15,7 @@ import java.util.Objects;
 import java.util.stream.Collectors;
 
 import static java.lang.Class.forName;
+import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
 import static java.util.stream.Collectors.toList;
 
@@ -23,7 +24,7 @@ import static java.util.stream.Collectors.toList;
  */
 public abstract class FactorSpaceDescriptorBean {
   protected static class ParameterDefinition {
-    String       type;
+    String type;
     List<Object> args;
 
     public ParameterDefinition(String type, List<Object> args) {
@@ -33,7 +34,7 @@ public abstract class FactorSpaceDescriptorBean {
   }
 
   private final Map<String, ParameterDefinition> parameterDefinitionMap;
-  private final List<List<Object>>               constraintList;
+  private final List<List<Object>> constraintList;
 
   public FactorSpaceDescriptorBean(Map<String, ParameterDefinition> parameterDefinitionMap, List<List<Object>> constraintList) {
     this.parameterDefinitionMap = parameterDefinitionMap;
@@ -68,26 +69,26 @@ public abstract class FactorSpaceDescriptorBean {
             (String parameterName) -> {
               ParameterDefinition def = requireNonNull(factorMap.get(parameterName));
               switch (def.type) {
-              case "simple":
-                return Parameter.Simple.Factory.of(validateParameterDefinitionArgsForSimple(def.args)).create(parameterName);
-              case "regex":
-                return Parameter.Regex.Factory.of(Objects.toString(validateParameterDefinitionArgsForRegex(def.args).get(0))).create(parameterName);
-              case "fsm":
-                try {
-                  return Parameter.Fsm.Factory.of(
-                      (Class<? extends FsmSpec<Object>>) forName(Objects.toString(def.args.get(0))),
-                      Integer.valueOf(Objects.toString(def.args.get(1)))
-                  ).create(parameterName);
-                } catch (ClassCastException | ClassNotFoundException e) {
-                  throw new RuntimeException(e);
-                }
-              default:
-                throw new RuntimeException(
-                    String.format(
-                        "unknown type '%s' was given to parameter '%s''s definition.",
-                        def.type,
-                        parameterName
-                    ));
+                case "simple":
+                  return Parameter.Simple.Factory.of(validateParameterDefinitionArgsForSimple(def.args)).create(parameterName);
+                case "regex":
+                  return Parameter.Regex.Factory.of(Objects.toString(validateParameterDefinitionArgsForRegex(def.args).get(0))).create(parameterName);
+                case "fsm":
+                  try {
+                    return Parameter.Fsm.Factory.of(
+                        (Class<? extends FsmSpec<Object>>) forName(Objects.toString(def.args.get(0))),
+                        Integer.valueOf(Objects.toString(def.args.get(1)))
+                    ).create(parameterName);
+                  } catch (ClassCastException | ClassNotFoundException e) {
+                    throw new RuntimeException(e);
+                  }
+                default:
+                  throw new RuntimeException(
+                      format(
+                          "unknown type '%s' was given to parameter '%s''s definition.",
+                          def.type,
+                          parameterName
+                      ));
               }
             })
         .collect(Collectors.toList());
@@ -99,7 +100,7 @@ public abstract class FactorSpaceDescriptorBean {
 
   private List<Object> validateParameterDefinitionArgsForRegex(List<Object> def) {
     if (def.size() != 1)
-      throw ScriptiveUnitException.fail("").get();
+      throw new ValidationFailure(format("One and only one value is required but <%s> was given", def));
     return def;
   }
 }

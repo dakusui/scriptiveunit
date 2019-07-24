@@ -1,6 +1,7 @@
 package com.github.dakusui.scriptiveunit.loaders.preprocessing;
 
 import com.github.dakusui.scriptiveunit.exceptions.ScriptiveUnitException;
+import com.github.dakusui.scriptiveunit.exceptions.ScriptiveUnitUnclassifiedException;
 import com.github.dakusui.scriptiveunit.utils.Checks;
 
 import java.util.Arrays;
@@ -102,7 +103,7 @@ public interface ApplicationSpec {
 
     static Function<Node, ScriptiveUnitException> nonDictionaryFound(String key) {
       return node -> {
-        throw new ScriptiveUnitException(format("Non dictionary node:'%s' was found at key:'%s'", node, key));
+        throw new ScriptiveUnitUnclassifiedException(format("Non dictionary node:'%s' was found at key:'%s'", node, key));
       };
     }
 

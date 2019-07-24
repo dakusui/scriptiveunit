@@ -10,7 +10,7 @@ import com.github.dakusui.scriptiveunit.model.session.Report;
 import java.util.Optional;
 import java.util.function.BiFunction;
 
-import static com.github.dakusui.scriptiveunit.exceptions.ScriptiveUnitException.indexOutOfBounds;
+import static com.github.dakusui.scriptiveunit.exceptions.Exceptions.indexOutOfBounds;
 import static com.github.dakusui.scriptiveunit.utils.Checks.check;
 
 /**

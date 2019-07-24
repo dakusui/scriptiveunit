@@ -15,14 +15,14 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.stream.StreamSupport;
 
-import static com.github.dakusui.scriptiveunit.exceptions.TypeMismatch.headOfCallMustBeString;
+import static com.github.dakusui.scriptiveunit.exceptions.Exceptions.headOfCallMustBeString;
 
 /**
  * An interface that represents a lexical structure of a script element.
  */
 public interface Statement {
   static Factory createStatementFactory(Script script, Map<String, List<Object>> userDefinedFormClauseMap) {
-    return new Factory(script.languageSpec().formRegistry(), userDefinedFormClauseMap);
+    return Statement.Factory.create(script.languageSpec().formRegistry(), userDefinedFormClauseMap);
   }
 
   @SuppressWarnings("unchecked")

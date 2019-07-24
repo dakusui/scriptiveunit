@@ -8,7 +8,7 @@ import java.io.IOException;
 import java.io.InputStream;
 
 import static com.github.dakusui.scriptiveunit.exceptions.ScriptiveUnitException.wrapMinimally;
-import static com.github.dakusui.scriptiveunit.exceptions.SyntaxException.nonObject;
+import static com.github.dakusui.scriptiveunit.exceptions.Exceptions.nonObject;
 import static com.github.dakusui.scriptiveunit.utils.Checks.check;
 
 public enum JsonUtils {

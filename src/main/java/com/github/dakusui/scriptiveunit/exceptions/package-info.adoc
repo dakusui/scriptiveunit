@@ -1,0 +1,37 @@
+A pacakge to host exception classes
+
+== Exception Hierarchy
+
+
+* Sources of errors
+  ** User input
+    *** Value
+    *** Reference to resources (files, url, classpath resources)
+  ** I/O
+    *** Files
+    *** Network
+    *** Class path resources
+  ** Script
+    *** Malformed
+    *** Invalid
+    *** Type mismatch
+  ** Program (bug)
+
+
+* Execution phases
+
+  - Resource (raw script; JSON)
+  - -> Dictionary (abstract representation)
+  - -> (Preprocessing)
+  - -> Dictionary
+  - -> (Mapping)
+  - -> ObjectNode (JSON)
+  - -> TestSuiteDescriptorBean (List<Object>)
+  - -> (nonam)
+  - -> TestSuiteDescriptor (Statements)
+  - -> (eval)
+  - -> Object (evaluated value; action)
+  - -> (perform)
+  - -> Test Result
+
+ScriptiveUnit
