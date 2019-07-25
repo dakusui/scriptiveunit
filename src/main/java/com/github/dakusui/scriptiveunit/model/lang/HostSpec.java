@@ -143,8 +143,14 @@ public interface HostSpec<NODE, OBJECT extends NODE, ARRAY extends NODE, ATOM ex
           return JsonNodeFactory.instance.numberNode((Integer) value);
         if (value instanceof Long)
           return JsonNodeFactory.instance.numberNode((Long) value);
+        if (value instanceof Float)
+          return JsonNodeFactory.instance.numberNode((Float)value);
+        if (value instanceof Double)
+          return JsonNodeFactory.instance.numberNode((Double) value);
         return JsonNodeFactory.instance.numberNode(toBigDecimal((Number) value));
       }
+      if (value instanceof Boolean)
+        return JsonNodeFactory.instance.booleanNode((Boolean) value);
       if (value instanceof String)
         return JsonNodeFactory.instance.textNode((String) value);
       throw new RuntimeException(format("Unsupported value was given: '%s'", value));
@@ -194,6 +200,8 @@ public interface HostSpec<NODE, OBJECT extends NODE, ARRAY extends NODE, ATOM ex
         return jsonNode.asInt();
       if (jsonNode.isLong())
         return jsonNode.asLong();
+      if (jsonNode.isDouble())
+        return jsonNode.asDouble();
       if (jsonNode.isBigInteger())
         return jsonNode.getBigIntegerValue();
       if (jsonNode.isBigDecimal())
