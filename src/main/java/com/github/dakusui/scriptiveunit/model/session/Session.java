@@ -49,16 +49,16 @@ public interface Session {
 
   Action createTearDownAfterAllAction();
 
-  static Session create(Script script, ScriptCompiler scriptCompiler) {
+  static Session create(Script<JsonNode, ObjectNode, ArrayNode, JsonNode> script, ScriptCompiler scriptCompiler) {
     return new Impl(script, scriptCompiler);
   }
 
   class Impl implements Session {
-    private final Script<?, ?, ?, ?>                                                script;
+    private final Script<JsonNode, ObjectNode, ArrayNode, JsonNode>                 script;
     private final Function<String, BiFunction<IndexedTestCase, TestOracle, Report>> reportCreator;
     private final TestSuiteDescriptor                                               testSuiteDescriptor;
 
-    Impl(Script<?, ?, ?, ?> script, ScriptCompiler scriptCompiler) {
+    Impl(Script<JsonNode, ObjectNode, ArrayNode, JsonNode> script, ScriptCompiler scriptCompiler) {
       this.script = script;
       Reporting reporting = this.script.getReporting()
           .orElseThrow(Exceptions::noReportingObjectIsAvailable);
@@ -74,7 +74,7 @@ public interface Session {
     }
 
     @Override
-    public Script getScript() {
+    public Script<JsonNode, ObjectNode, ArrayNode, JsonNode> getScript() {
       return this.script;
     }
 
