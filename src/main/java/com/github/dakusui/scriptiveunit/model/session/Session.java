@@ -70,7 +70,7 @@ public interface Session {
           reporting.reportFileName,
           indexedTestCase,
           testOracle);
-      this.testSuiteDescriptor = scriptCompiler.compile(this);
+      this.testSuiteDescriptor = scriptCompiler.compile(this, script.languageSpec().resourceStoreSpec());
     }
 
     @Override

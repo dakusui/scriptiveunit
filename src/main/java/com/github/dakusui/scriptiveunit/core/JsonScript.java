@@ -22,7 +22,6 @@ public interface JsonScript extends Script<JsonNode, ObjectNode, ArrayNode, Json
     return languageSpec.createPreprocessor().preprocess(rawScript, languageSpec.resourceStoreSpec());
   }
 
-
   abstract class Base implements JsonScript {
     final         LanguageSpec.ForJson languageSpec;
     private final Reporting            reporting;
