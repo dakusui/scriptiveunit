@@ -33,7 +33,10 @@ import java.util.function.Function;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
+import static com.github.dakusui.scriptiveunit.utils.JsonUtils.readJsonNodeFromStream;
+import static com.github.dakusui.scriptiveunit.utils.JsonUtils.requireObjectNode;
 import static com.github.dakusui.scriptiveunit.utils.ReflectionUtils.allScriptsUnderMatching;
+import static com.github.dakusui.scriptiveunit.utils.ReflectionUtils.openResourceAsStream;
 
 
 @RunWith(JCUnit8.class)
@@ -172,7 +175,7 @@ public class VariationTest {
   ) throws Throwable {
     JsonScript.FromDriverClass baseScript = new JsonScript.FromDriverClass(
         Simple.class,
-        "components/root.json");
+        "components/root.json", requireObjectNode(readJsonNodeFromStream(openResourceAsStream("components/root.json"))));
     new JUnitCore().run(
         new ScriptiveUnit(
             Simple.class,
