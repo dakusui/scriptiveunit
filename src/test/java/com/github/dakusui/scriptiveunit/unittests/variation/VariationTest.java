@@ -8,8 +8,9 @@ import com.github.dakusui.jcunit8.runners.junit4.annotations.Given;
 import com.github.dakusui.jcunit8.runners.junit4.annotations.ParameterSource;
 import com.github.dakusui.scriptiveunit.core.JsonScript;
 import com.github.dakusui.scriptiveunit.core.ScriptCompiler;
-import com.github.dakusui.scriptiveunit.model.lang.ApplicationSpec;
-import com.github.dakusui.scriptiveunit.model.lang.ResourceStoreSpec;
+import com.github.dakusui.scriptiveunit.model.desc.TestSuiteDescriptor;
+import com.github.dakusui.scriptiveunit.model.lang.HostSpec;
+import com.github.dakusui.scriptiveunit.model.session.Session;
 import com.github.dakusui.scriptiveunit.runners.ScriptiveUnit;
 import com.github.dakusui.scriptiveunit.testassets.drivers.Loader;
 import com.github.dakusui.scriptiveunit.testassets.drivers.Simple;
@@ -169,22 +170,25 @@ public class VariationTest {
     new JUnitCore().run(
         new ScriptiveUnit(
             Simple.class,
-            new ScriptCompiler.Default(),
-            new JsonScript.Delegating(baseScript) {
+            new ScriptCompiler.Default() {
               @Override
-              public ApplicationSpec.Dictionary readScriptResource(ResourceStoreSpec resourceStoreSpec, ObjectNode mainNode) {
-                return Loader.create(
-                    baseScript.languageSpec().applicationSpec(),
-                    _extends,
-                    description,
-                    factors,
-                    constraints,
-                    runnerType,
-                    setUp,
-                    setUpBeforeAll,
-                    testOracles
-                ).createDefaultValues();
+              public TestSuiteDescriptor compile(Session session) {
+                return mapObjectNodeToJsonTestSuiteDescriptorBean(
+                    new HostSpec.Json().toHostObject(
+                        Loader.create(
+                            baseScript.languageSpec().applicationSpec(),
+                            _extends,
+                            description,
+                            factors,
+                            constraints,
+                            runnerType,
+                            setUp,
+                            setUpBeforeAll,
+                            testOracles
+                        ).createDefaultValues())
+                ).create(session);
               }
-            }));
+            },
+            baseScript));
   }
 }

@@ -10,7 +10,6 @@ import com.github.dakusui.scriptiveunit.model.desc.ParameterSpaceDescriptor;
 import com.github.dakusui.scriptiveunit.model.desc.TestSuiteDescriptor;
 import com.github.dakusui.scriptiveunit.model.desc.testitem.IndexedTestCase;
 import com.github.dakusui.scriptiveunit.model.desc.testitem.TestOracle;
-import com.github.dakusui.scriptiveunit.model.form.value.ValueUtils;
 import com.github.dakusui.scriptiveunit.model.session.Session;
 import com.github.dakusui.scriptiveunit.model.statement.Statement;
 import com.github.dakusui.scriptiveunit.runners.RunningMode;
@@ -23,8 +22,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
 
 import static com.github.dakusui.scriptiveunit.model.statement.Statement.createStatementFactory;
-import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
+import static java.util.Objects.requireNonNull;
 import static java.util.stream.Collectors.toList;
 
 public abstract class TestSuiteDescriptorBean {
@@ -54,7 +53,7 @@ public abstract class TestSuiteDescriptorBean {
     this.userDefinedFormClauseMap = userDefinedFormClauseMap;
     this.setUpBeforeAllClause = setUpBeforeAllClause;
     this.setUpClause = setUpClause;
-    this.testOracleBeanList = testOracleBeanList;
+    this.testOracleBeanList = requireNonNull(testOracleBeanList);
     this.tearDownClause = tearDownClause;
     this.tearDownAfterAllClause = tearDownAfterAllClause;
   }

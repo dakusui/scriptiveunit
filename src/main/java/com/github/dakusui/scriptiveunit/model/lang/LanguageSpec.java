@@ -1,5 +1,6 @@
 package com.github.dakusui.scriptiveunit.model.lang;
 
+import com.github.dakusui.scriptiveunit.loaders.preprocessing.Preprocessor;
 import com.github.dakusui.scriptiveunit.model.form.FormRegistry;
 import org.codehaus.jackson.JsonNode;
 import org.codehaus.jackson.node.ArrayNode;
@@ -13,6 +14,10 @@ public interface LanguageSpec<NODE, OBJECT extends NODE, ARRAY extends NODE, ATO
   ApplicationSpec applicationSpec();
 
   ResourceStoreSpec resourceStoreSpec();
+
+  default Preprocessor createPreprocessor() {
+    return Preprocessor.create(hostSpec(), applicationSpec());
+  }
 
   FormRegistry formRegistry();
 

@@ -1,11 +1,9 @@
 package com.github.dakusui.scriptiveunit.core;
 
 import com.github.dakusui.scriptiveunit.core.ScriptLoader.FromResourceSpecifiedBySystemProperty;
-import com.github.dakusui.scriptiveunit.loaders.preprocessing.Preprocessor;
 import com.github.dakusui.scriptiveunit.model.form.FormRegistry;
 import com.github.dakusui.scriptiveunit.model.lang.ApplicationSpec;
 import com.github.dakusui.scriptiveunit.model.lang.LanguageSpec;
-import com.github.dakusui.scriptiveunit.model.lang.ResourceStoreSpec;
 import org.codehaus.jackson.JsonNode;
 import org.codehaus.jackson.node.ArrayNode;
 import org.codehaus.jackson.node.ObjectNode;
@@ -19,53 +17,11 @@ import static com.github.dakusui.scriptiveunit.utils.ReflectionUtils.openResourc
 import static java.util.Objects.requireNonNull;
 
 public interface JsonScript extends Script<JsonNode, ObjectNode, ArrayNode, JsonNode> {
-  @Override
-  default ApplicationSpec.Dictionary readScriptResource(ResourceStoreSpec resourceStoreSpec, ObjectNode mainNode) {
-    return staticReadScript(resourceStoreSpec, mainNode, this.languageSpec(), this.createPreprocessor());
+  static ApplicationSpec.Dictionary processScript(LanguageSpec<JsonNode, ObjectNode, ArrayNode, JsonNode> languageSpec) {
+    ApplicationSpec.Dictionary rawScript = languageSpec.hostSpec().toApplicationDictionary(languageSpec.resourceStoreSpec().mainNode());
+    return languageSpec.createPreprocessor().preprocess(rawScript, languageSpec.resourceStoreSpec());
   }
 
-  static ApplicationSpec.Dictionary staticReadScript(ResourceStoreSpec resourceStoreSpec, ObjectNode script, LanguageSpec<JsonNode, ObjectNode, ArrayNode, JsonNode> languageSpec, Preprocessor preprocessor) {
-    ApplicationSpec.Dictionary rawScript = languageSpec.hostSpec().toApplicationDictionary(script);
-    return preprocessor.preprocess(rawScript, resourceStoreSpec);
-  }
-
-
-  class Delegating implements JsonScript {
-    private final JsonScript base;
-
-    protected Delegating(JsonScript base) {
-      this.base = base;
-    }
-
-    protected JsonScript base() {
-      return this.base;
-    }
-
-    @Override
-    public Optional<Reporting> getReporting() {
-      return base().getReporting();
-    }
-
-    @Override
-    public ApplicationSpec.Dictionary readScriptResource(ResourceStoreSpec resourceStoreSpec, ObjectNode mainNode) {
-      return base().readScriptResource(resourceStoreSpec, mainNode);
-    }
-
-    @Override
-    public LanguageSpec<JsonNode, ObjectNode, ArrayNode, JsonNode> languageSpec() {
-      return base().languageSpec();
-    }
-
-    @Override
-    public String name() {
-      return base().name();
-    }
-
-    @Override
-    public Preprocessor createPreprocessor() {
-      return base().createPreprocessor();
-    }
-  }
 
   abstract class Base implements JsonScript {
     final         LanguageSpec.ForJson languageSpec;

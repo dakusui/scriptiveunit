@@ -13,23 +13,19 @@ import static com.github.dakusui.scriptiveunit.utils.JsonUtils.requireObjectNode
  */
 public interface ResourceStoreSpec {
 
-  InputStream openResource(String resourceName);
-
   ObjectNode readObjectNode(String resourceName);
 
   ObjectNode mainNode();
 
   abstract class Base implements ResourceStoreSpec {
     @Override
-    public InputStream openResource(String resourceName) {
-      return ReflectionUtils.openResourceAsStream(resourceName);
-    }
-
-    @Override
     public ObjectNode readObjectNode(String resourceName) {
       return requireObjectNode(readJsonNodeFromStream(this.openResource(resourceName)));
     }
 
+    InputStream openResource(String resourceName) {
+      return ReflectionUtils.openResourceAsStream(resourceName);
+    }
   }
 
   class Impl extends Base {
@@ -37,10 +33,6 @@ public interface ResourceStoreSpec {
 
     public Impl(ObjectNode mainNode) {
       this.mainNode = mainNode;
-    }
-
-    public Impl(String mainNodeResourceName) {
-      this.mainNode = readObjectNode(mainNodeResourceName);
     }
 
     @Override
