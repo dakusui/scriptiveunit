@@ -102,10 +102,12 @@ public interface JsonScript extends Script<JsonNode, ObjectNode, ArrayNode, Json
     }
 
     public static Default createScriptFromResource(Class<?> driverClass, String scriptResourceName) {
+      ObjectNode mainNode = requireObjectNode(readJsonNodeFromStream(openResourceAsStream(scriptResourceName)));
       return new Default(
-          createLanguageSpecFrom(requireObjectNode(readJsonNodeFromStream(openResourceAsStream(scriptResourceName))), FormRegistry.createFormRegistry(createDriverObject(driverClass))),
+          createLanguageSpecFrom(mainNode, FormRegistry.createFormRegistry(createDriverObject(driverClass))),
           Reporting.create(),
-          scriptResourceName, ((ResourceStoreSpec.Impl) createLanguageSpecFrom(requireObjectNode(readJsonNodeFromStream(openResourceAsStream(scriptResourceName))), FormRegistry.createFormRegistry(createDriverObject(driverClass))).resourceStoreSpec()).mainNode());
+          scriptResourceName,
+          mainNode);
     }
 
     private static LanguageSpec.ForJson createLanguageSpecFrom(ObjectNode mainNode, FormRegistry formRegistry) {
