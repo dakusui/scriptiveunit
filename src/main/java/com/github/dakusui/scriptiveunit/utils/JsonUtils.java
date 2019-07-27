@@ -13,9 +13,9 @@ import java.util.function.Supplier;
 
 import static com.github.dakusui.scriptiveunit.exceptions.Exceptions.nonObject;
 import static com.github.dakusui.scriptiveunit.exceptions.ScriptiveUnitException.wrapMinimally;
+import static com.github.dakusui.scriptiveunit.exceptions.ScriptiveUnitUnclassifiedException.unclassifiedException;
 import static com.github.dakusui.scriptiveunit.utils.Checks.check;
 import static com.github.dakusui.scriptiveunit.utils.CoreUtils.toBigDecimal;
-import static java.lang.String.format;
 
 public enum JsonUtils {
   ;
@@ -41,7 +41,7 @@ public enum JsonUtils {
       if (value instanceof Long)
         return JsonNodeFactory.instance.numberNode((Long) value);
       if (value instanceof Float)
-        return JsonNodeFactory.instance.numberNode((Float)value);
+        return JsonNodeFactory.instance.numberNode((Float) value);
       if (value instanceof Double)
         return JsonNodeFactory.instance.numberNode((Double) value);
       return JsonNodeFactory.instance.numberNode(toBigDecimal((Number) value));
@@ -50,7 +50,7 @@ public enum JsonUtils {
       return JsonNodeFactory.instance.booleanNode((Boolean) value);
     if (value instanceof String)
       return JsonNodeFactory.instance.textNode((String) value);
-    throw new RuntimeException(format("Unsupported value was given: '%s'", value));
+    throw unclassifiedException("Unsupported value:<%s> was given", value);
   }
 
   public static Object toPlainObject(JsonNode jsonNode) {
@@ -73,7 +73,7 @@ public enum JsonUtils {
     if (jsonNode.isNumber()) {
       return jsonNode.getDecimalValue();
     }
-    throw new UnsupportedOperationException();
+    throw unclassifiedException("Unsupported JSON node:<%s> was given", jsonNode);
   }
 
   @FunctionalInterface
