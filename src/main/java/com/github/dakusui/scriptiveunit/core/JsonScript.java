@@ -4,7 +4,6 @@ import com.github.dakusui.scriptiveunit.core.ScriptLoader.FromResourceSpecifiedB
 import com.github.dakusui.scriptiveunit.model.form.FormRegistry;
 import com.github.dakusui.scriptiveunit.model.lang.ApplicationSpec;
 import com.github.dakusui.scriptiveunit.model.lang.LanguageSpec;
-import com.github.dakusui.scriptiveunit.model.lang.ResourceStoreSpec;
 import org.codehaus.jackson.JsonNode;
 import org.codehaus.jackson.node.ArrayNode;
 import org.codehaus.jackson.node.ObjectNode;
@@ -18,8 +17,8 @@ import static com.github.dakusui.scriptiveunit.utils.ReflectionUtils.openResourc
 import static java.util.Objects.requireNonNull;
 
 public interface JsonScript extends Script<JsonNode, ObjectNode, ArrayNode, JsonNode> {
-  static ApplicationSpec.Dictionary processScript(LanguageSpec<JsonNode, ObjectNode, ArrayNode, JsonNode> languageSpec) {
-    ApplicationSpec.Dictionary rawScript = languageSpec.hostSpec().toApplicationDictionary(((ResourceStoreSpec.Impl) languageSpec.resourceStoreSpec()).mainNode());
+  static ApplicationSpec.Dictionary processScript(LanguageSpec<JsonNode, ObjectNode, ArrayNode, JsonNode> languageSpec, ObjectNode mainNode) {
+    ApplicationSpec.Dictionary rawScript = languageSpec.hostSpec().toApplicationDictionary(mainNode);
     return languageSpec.createPreprocessor().preprocess(rawScript, languageSpec.resourceStoreSpec());
   }
 
@@ -92,7 +91,8 @@ public interface JsonScript extends Script<JsonNode, ObjectNode, ArrayNode, Json
     public static JsonScript createScript(final Class<?> driverClass, final ObjectNode mainNode) {
       return new Base(
           createLanguageSpecFrom(mainNode, FormRegistry.createFormRegistry(createDriverObject(driverClass))),
-          Reporting.create(), ((ResourceStoreSpec.Impl) createLanguageSpecFrom(mainNode, FormRegistry.createFormRegistry(createDriverObject(driverClass))).resourceStoreSpec()).mainNode()) {
+          Reporting.create(),
+          mainNode) {
 
         @Override
         public Optional<Reporting> getReporting() {

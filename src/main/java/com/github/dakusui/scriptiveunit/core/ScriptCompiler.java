@@ -3,7 +3,6 @@ package com.github.dakusui.scriptiveunit.core;
 import com.github.dakusui.scriptiveunit.exceptions.ScriptiveUnitException;
 import com.github.dakusui.scriptiveunit.loaders.json.TestSuiteDescriptorBeanFromJson;
 import com.github.dakusui.scriptiveunit.model.desc.TestSuiteDescriptor;
-import com.github.dakusui.scriptiveunit.model.lang.ApplicationSpec;
 import com.github.dakusui.scriptiveunit.model.lang.HostSpec;
 import com.github.dakusui.scriptiveunit.model.lang.ResourceStoreSpec;
 import com.github.dakusui.scriptiveunit.model.session.Session;
@@ -21,12 +20,12 @@ public interface ScriptCompiler {
   class Default implements ScriptCompiler {
     @Override
     public TestSuiteDescriptor compile(Session session, ResourceStoreSpec resourceStoreSpec) {
-      return mapObjectNodeToJsonTestSuiteDescriptorBean(getRootNode(resourceStoreSpec, session.getScript())).create(session);
+      return mapObjectNodeToJsonTestSuiteDescriptorBean(getRootNode(session.getScript())).create(session);
     }
 
-    static ObjectNode getRootNode(ResourceStoreSpec resourceStoreSpec, Script<JsonNode, ObjectNode, ArrayNode, JsonNode> script) {
-      ApplicationSpec.Dictionary dictionary = JsonScript.processScript(script.languageSpec());
-      return new HostSpec.Json().toHostObject(dictionary);
+    static ObjectNode getRootNode(Script<JsonNode, ObjectNode, ArrayNode, JsonNode> script) {
+      return new HostSpec.Json().toHostObject(
+          JsonScript.processScript(script.languageSpec(), script.mainNode()));
     }
 
     static TestSuiteDescriptorBeanFromJson mapObjectNodeToJsonTestSuiteDescriptorBean(ObjectNode rootNode) {

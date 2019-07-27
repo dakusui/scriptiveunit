@@ -201,7 +201,7 @@ public class VariationTest {
 
                   @Override
                   public ResourceStoreSpec resourceStoreSpec() {
-                    return new ResourceStoreSpec.Impl(mainNode());
+                    return baseScript.languageSpec().resourceStoreSpec();
                   }
 
                   @Override

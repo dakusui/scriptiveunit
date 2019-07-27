@@ -27,14 +27,7 @@ public interface ResourceStoreSpec {
   }
 
   class Impl extends Base {
-    private final ObjectNode mainNode;
-
     public Impl(ObjectNode mainNode) {
-      this.mainNode = mainNode;
-    }
-
-    public ObjectNode mainNode() {
-      return this.mainNode;
     }
   }
 }
