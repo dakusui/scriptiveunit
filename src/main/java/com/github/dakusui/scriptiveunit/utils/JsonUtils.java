@@ -35,17 +35,21 @@ public enum JsonUtils {
   public static JsonNode toJsonNode(Object value) {
     if (value == null)
       return JsonNodeFactory.instance.nullNode();
-    if (value instanceof String)
-      return JsonNodeFactory.instance.textNode((String) value);
-    if (value instanceof Boolean)
-      return JsonNodeFactory.instance.booleanNode((Boolean) value);
     if (value instanceof Number) {
       if (value instanceof Integer)
         return JsonNodeFactory.instance.numberNode((Integer) value);
       if (value instanceof Long)
         return JsonNodeFactory.instance.numberNode((Long) value);
+      if (value instanceof Float)
+        return JsonNodeFactory.instance.numberNode((Float)value);
+      if (value instanceof Double)
+        return JsonNodeFactory.instance.numberNode((Double) value);
       return JsonNodeFactory.instance.numberNode(toBigDecimal((Number) value));
     }
+    if (value instanceof Boolean)
+      return JsonNodeFactory.instance.booleanNode((Boolean) value);
+    if (value instanceof String)
+      return JsonNodeFactory.instance.textNode((String) value);
     throw new RuntimeException(format("Unsupported value was given: '%s'", value));
   }
 
@@ -56,18 +60,18 @@ public enum JsonUtils {
       return jsonNode.asText();
     if (jsonNode.isBoolean())
       return jsonNode.asBoolean();
+    if (jsonNode.isInt())
+      return jsonNode.asInt();
+    if (jsonNode.isLong())
+      return jsonNode.asLong();
+    if (jsonNode.isDouble())
+      return jsonNode.asDouble();
+    if (jsonNode.isBigInteger())
+      return jsonNode.getBigIntegerValue();
+    if (jsonNode.isBigDecimal())
+      return jsonNode.getDecimalValue();
     if (jsonNode.isNumber()) {
-      if (jsonNode.isInt())
-        return jsonNode.asInt();
-      if (jsonNode.isLong())
-        return jsonNode.asLong();
-      if (jsonNode.isBigInteger())
-        return jsonNode.getBigIntegerValue();
-      if (jsonNode.isBigDecimal())
-        return jsonNode.getDecimalValue();
-      if (jsonNode.isNumber()) {
-        return jsonNode.getDecimalValue();
-      }
+      return jsonNode.getDecimalValue();
     }
     throw new UnsupportedOperationException();
   }
