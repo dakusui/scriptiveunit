@@ -4,6 +4,7 @@ import com.github.dakusui.scriptiveunit.core.JsonScript;
 import com.github.dakusui.scriptiveunit.core.Reporting;
 import com.github.dakusui.scriptiveunit.model.form.FormRegistry;
 import com.github.dakusui.scriptiveunit.model.lang.LanguageSpec;
+import com.github.dakusui.scriptiveunit.model.lang.ResourceStoreSpec;
 import org.codehaus.jackson.JsonNode;
 import org.codehaus.jackson.node.ArrayNode;
 import org.codehaus.jackson.node.ObjectNode;
@@ -25,6 +26,11 @@ public class UtScript implements JsonScript {
   @Override
   public LanguageSpec<JsonNode, ObjectNode, ArrayNode, JsonNode> languageSpec() {
     return languageSpec;
+  }
+
+  @Override
+  public ObjectNode mainNode() {
+    return ((ResourceStoreSpec.Impl) languageSpec.resourceStoreSpec()).mainNode();
   }
 
   static JsonScript create(FormRegistry formRegistry, ObjectNode mainNode) {

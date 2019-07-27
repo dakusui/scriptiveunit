@@ -4,6 +4,7 @@ import com.github.dakusui.scriptiveunit.core.ScriptLoader.FromResourceSpecifiedB
 import com.github.dakusui.scriptiveunit.model.form.FormRegistry;
 import com.github.dakusui.scriptiveunit.model.lang.ApplicationSpec;
 import com.github.dakusui.scriptiveunit.model.lang.LanguageSpec;
+import com.github.dakusui.scriptiveunit.model.lang.ResourceStoreSpec;
 import org.codehaus.jackson.JsonNode;
 import org.codehaus.jackson.node.ArrayNode;
 import org.codehaus.jackson.node.ObjectNode;
@@ -18,17 +19,19 @@ import static java.util.Objects.requireNonNull;
 
 public interface JsonScript extends Script<JsonNode, ObjectNode, ArrayNode, JsonNode> {
   static ApplicationSpec.Dictionary processScript(LanguageSpec<JsonNode, ObjectNode, ArrayNode, JsonNode> languageSpec) {
-    ApplicationSpec.Dictionary rawScript = languageSpec.hostSpec().toApplicationDictionary(languageSpec.resourceStoreSpec().mainNode());
+    ApplicationSpec.Dictionary rawScript = languageSpec.hostSpec().toApplicationDictionary(((ResourceStoreSpec.Impl)languageSpec.resourceStoreSpec()).mainNode());
     return languageSpec.createPreprocessor().preprocess(rawScript, languageSpec.resourceStoreSpec());
   }
 
   abstract class Base implements JsonScript {
     final         LanguageSpec.ForJson languageSpec;
     private final Reporting            reporting;
+    private final ObjectNode           mainNode;
 
     protected Base(LanguageSpec.ForJson languageSpec, Reporting reporting) {
       this.languageSpec = languageSpec;
       this.reporting = reporting;
+      this.mainNode = ((ResourceStoreSpec.Impl) languageSpec.resourceStoreSpec()).mainNode();
     }
 
     @Override
@@ -40,12 +43,17 @@ public interface JsonScript extends Script<JsonNode, ObjectNode, ArrayNode, Json
     public LanguageSpec<JsonNode, ObjectNode, ArrayNode, JsonNode> languageSpec() {
       return languageSpec;
     }
+
+    @Override
+    public ObjectNode mainNode() {
+      return this.mainNode;
+    }
   }
 
   class Default extends Base {
     private final String scriptResourceName;
 
-    Default(LanguageSpec.ForJson languageSpec, Reporting reporting, String scriptResourceName) {
+    protected Default(LanguageSpec.ForJson languageSpec, Reporting reporting, String scriptResourceName) {
       super(languageSpec, reporting);
       this.scriptResourceName = requireNonNull(scriptResourceName);
     }
@@ -60,8 +68,8 @@ public interface JsonScript extends Script<JsonNode, ObjectNode, ArrayNode, Json
     private final String   scriptResourceNameKey;
 
     public FromDriverClass(Class<?> driverClass, String scriptResourceName) {
-      super(Utils.createLanguageSpecFrom(Utils.createDriverObject(driverClass),
-          requireObjectNode(readJsonNodeFromStream(openResourceAsStream(scriptResourceName)))),
+      super(Utils.createLanguageSpecFrom(
+          requireObjectNode(readJsonNodeFromStream(openResourceAsStream(scriptResourceName))), FormRegistry.createFormRegistry(Utils.createDriverObject(driverClass))),
           Reporting.create(),
           scriptResourceName
       );
@@ -83,7 +91,7 @@ public interface JsonScript extends Script<JsonNode, ObjectNode, ArrayNode, Json
 
     public static JsonScript createScript(final Class<?> driverClass, final ObjectNode mainNode) {
       return new Base(
-          createLanguageSpecFrom(createDriverObject(driverClass), mainNode),
+          createLanguageSpecFrom(mainNode, FormRegistry.createFormRegistry(createDriverObject(driverClass))),
           Reporting.create()) {
 
         @Override
@@ -95,13 +103,13 @@ public interface JsonScript extends Script<JsonNode, ObjectNode, ArrayNode, Json
 
     public static Default createScriptFromResource(Class<?> driverClass, String scriptResourceName) {
       return new Default(
-          createLanguageSpecFrom(createDriverObject(driverClass), requireObjectNode(readJsonNodeFromStream(openResourceAsStream(scriptResourceName)))),
+          createLanguageSpecFrom(requireObjectNode(readJsonNodeFromStream(openResourceAsStream(scriptResourceName))), FormRegistry.createFormRegistry(createDriverObject(driverClass))),
           Reporting.create(),
           scriptResourceName);
     }
 
-    private static LanguageSpec.ForJson createLanguageSpecFrom(Object driverObject, ObjectNode mainNode) {
-      return LanguageSpec.ForJson.create(FormRegistry.createFormRegistry(driverObject), mainNode);
+    private static LanguageSpec.ForJson createLanguageSpecFrom(ObjectNode mainNode, FormRegistry formRegistry) {
+      return LanguageSpec.ForJson.create(formRegistry, mainNode);
     }
 
     private static Object createDriverObject(Class<?> driverClass) {

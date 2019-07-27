@@ -15,8 +15,6 @@ public interface ResourceStoreSpec {
 
   ObjectNode readObjectNode(String resourceName);
 
-  ObjectNode mainNode();
-
   abstract class Base implements ResourceStoreSpec {
     @Override
     public ObjectNode readObjectNode(String resourceName) {
@@ -35,7 +33,6 @@ public interface ResourceStoreSpec {
       this.mainNode = mainNode;
     }
 
-    @Override
     public ObjectNode mainNode() {
       return this.mainNode;
     }

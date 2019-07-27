@@ -10,6 +10,8 @@ public interface Script<NODE, OBJECT extends NODE, ARRAY extends NODE, ATOM exte
 
   LanguageSpec<NODE, OBJECT, ARRAY, ATOM> languageSpec();
 
+  OBJECT mainNode();
+
   default String name() {
     return Objects.toString(this.getClass().getCanonicalName());
   }
