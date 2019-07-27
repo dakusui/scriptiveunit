@@ -35,6 +35,6 @@ public class UtScript implements JsonScript {
   }
 
   static JsonScript create(FormRegistry formRegistry, ObjectNode mainNode) {
-    return new UtScript(LanguageSpec.ForJson.create(formRegistry, mainNode), mainNode);
+    return new UtScript(LanguageSpec.ForJson.create(formRegistry), mainNode);
   }
 }

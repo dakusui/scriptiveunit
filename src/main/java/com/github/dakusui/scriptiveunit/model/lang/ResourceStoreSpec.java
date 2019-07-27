@@ -27,7 +27,7 @@ public interface ResourceStoreSpec {
   }
 
   class Impl extends Base {
-    public Impl(ObjectNode mainNode) {
+    public Impl() {
     }
   }
 }

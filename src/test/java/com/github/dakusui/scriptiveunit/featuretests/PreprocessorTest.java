@@ -4,8 +4,6 @@ import com.github.dakusui.scriptiveunit.loaders.preprocessing.Preprocessor;
 import com.github.dakusui.scriptiveunit.model.lang.ApplicationSpec;
 import com.github.dakusui.scriptiveunit.model.lang.HostSpec;
 import com.github.dakusui.scriptiveunit.model.lang.ResourceStoreSpec;
-import com.github.dakusui.scriptiveunit.utils.JsonUtils;
-import org.codehaus.jackson.JsonNode;
 import org.codehaus.jackson.node.ObjectNode;
 import org.junit.Test;
 
@@ -21,12 +19,7 @@ public class PreprocessorTest {
   }
 
   private ResourceStoreSpec createResourceStoreSpec() {
-    return new ResourceStoreSpec.Impl(new JsonUtils.NodeFactory<ObjectNode>(){
-      @Override
-      public JsonNode create() {
-        return obj();
-      }
-    }.get());
+    return new ResourceStoreSpec.Impl();
   }
 
   private ApplicationSpec.Standard createApplicationSpec() {

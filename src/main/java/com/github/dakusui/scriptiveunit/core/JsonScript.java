@@ -67,7 +67,7 @@ public interface JsonScript extends Script<JsonNode, ObjectNode, ArrayNode, Json
     private final String   scriptResourceNameKey;
 
     public FromDriverClass(Class<?> driverClass, String scriptResourceName, ObjectNode mainNode) {
-      super(Utils.createLanguageSpecFrom(mainNode, FormRegistry.createFormRegistry(Utils.createDriverObject(driverClass))),
+      super(Utils.createLanguageSpecFrom(FormRegistry.createFormRegistry(Utils.createDriverObject(driverClass))),
           Reporting.create(),
           scriptResourceName,
           mainNode
@@ -90,7 +90,7 @@ public interface JsonScript extends Script<JsonNode, ObjectNode, ArrayNode, Json
 
     public static JsonScript createScript(final Class<?> driverClass, final ObjectNode mainNode) {
       return new Base(
-          createLanguageSpecFrom(mainNode, FormRegistry.createFormRegistry(createDriverObject(driverClass))),
+          createLanguageSpecFrom(FormRegistry.createFormRegistry(createDriverObject(driverClass))),
           Reporting.create(),
           mainNode) {
 
@@ -104,14 +104,14 @@ public interface JsonScript extends Script<JsonNode, ObjectNode, ArrayNode, Json
     public static Default createScriptFromResource(Class<?> driverClass, String scriptResourceName) {
       ObjectNode mainNode = requireObjectNode(readJsonNodeFromStream(openResourceAsStream(scriptResourceName)));
       return new Default(
-          createLanguageSpecFrom(mainNode, FormRegistry.createFormRegistry(createDriverObject(driverClass))),
+          createLanguageSpecFrom(FormRegistry.createFormRegistry(createDriverObject(driverClass))),
           Reporting.create(),
           scriptResourceName,
           mainNode);
     }
 
-    private static LanguageSpec.ForJson createLanguageSpecFrom(ObjectNode mainNode, FormRegistry formRegistry) {
-      return LanguageSpec.ForJson.create(formRegistry, mainNode);
+    private static LanguageSpec.ForJson createLanguageSpecFrom(FormRegistry formRegistry) {
+      return LanguageSpec.ForJson.create(formRegistry);
     }
 
     private static Object createDriverObject(Class<?> driverClass) {

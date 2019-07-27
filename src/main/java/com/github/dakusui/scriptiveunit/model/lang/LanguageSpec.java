@@ -22,10 +22,10 @@ public interface LanguageSpec<NODE, OBJECT extends NODE, ARRAY extends NODE, ATO
   FormRegistry formRegistry();
 
   interface ForJson extends LanguageSpec<JsonNode, ObjectNode, ArrayNode, JsonNode> {
-    static ForJson create(FormRegistry formRegistry, final ObjectNode mainNode) {
+    static ForJson create(FormRegistry formRegistry) {
       requireNonNull(formRegistry);
       return new ForJson() {
-        private ResourceStoreSpec resourceStoreSpec = new ResourceStoreSpec.Impl(mainNode);
+        private ResourceStoreSpec resourceStoreSpec = new ResourceStoreSpec.Impl();
         HostSpec.Json hostSpec = new HostSpec.Json();
         ApplicationSpec applicationSpec = new ApplicationSpec.Standard();
 
