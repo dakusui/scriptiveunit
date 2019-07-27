@@ -9,6 +9,7 @@ import com.github.dakusui.jcunit8.runners.junit4.annotations.ParameterSource;
 import com.github.dakusui.scriptiveunit.core.JsonScript;
 import com.github.dakusui.scriptiveunit.core.ScriptCompiler;
 import com.github.dakusui.scriptiveunit.model.lang.ApplicationSpec;
+import com.github.dakusui.scriptiveunit.model.lang.ResourceStoreSpec;
 import com.github.dakusui.scriptiveunit.runners.ScriptiveUnit;
 import com.github.dakusui.scriptiveunit.testassets.drivers.Loader;
 import com.github.dakusui.scriptiveunit.testassets.drivers.Simple;
@@ -171,9 +172,9 @@ public class VariationTest {
             new ScriptCompiler.Default(),
             new JsonScript.Delegating(baseScript) {
               @Override
-              public ApplicationSpec.Dictionary readScriptResource() {
+              public ApplicationSpec.Dictionary readScriptResource(ResourceStoreSpec resourceStoreSpec, ObjectNode mainNode) {
                 return Loader.create(
-                    baseScript.applicationSpec(),
+                    baseScript.languageSpec().applicationSpec(),
                     _extends,
                     description,
                     factors,

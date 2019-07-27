@@ -8,17 +8,13 @@ import com.github.dakusui.scriptiveunit.core.ScriptLoader;
 import com.github.dakusui.scriptiveunit.model.lang.ApplicationSpec;
 import com.github.dakusui.scriptiveunit.runners.ScriptiveUnit;
 import com.github.dakusui.scriptiveunit.testutils.TestBase;
+import com.github.dakusui.scriptiveunit.utils.JsonUtils;
+import org.codehaus.jackson.JsonNode;
+import org.codehaus.jackson.node.ObjectNode;
 import org.junit.Test;
 import org.junit.runner.notification.Failure;
 
-import static com.github.dakusui.crest.Crest.allOf;
-import static com.github.dakusui.crest.Crest.asBoolean;
-import static com.github.dakusui.crest.Crest.asInteger;
-import static com.github.dakusui.crest.Crest.asObject;
-import static com.github.dakusui.crest.Crest.asString;
-import static com.github.dakusui.crest.Crest.assertThat;
-import static com.github.dakusui.crest.Crest.call;
-import static com.github.dakusui.crest.Crest.substringAfterRegex;
+import static com.github.dakusui.crest.Crest.*;
 import static com.github.dakusui.printables.Printables.isEmptyString;
 import static com.github.dakusui.scriptiveunit.testutils.TestUtils.runClasses;
 
@@ -108,25 +104,26 @@ public class AssertionMessageTest extends TestBase {
     public static class Loader extends ScriptLoader.Base {
       @Override
       public JsonScript load(Class<?> driverClass) {
-        return JsonScript.Utils.createScript(new ApplicationSpec.Dictionary.Factory() {
-          public ApplicationSpec.Dictionary create() {
-            return dict(
-                $("testOracles", array(
-                    dict(
-                        $("description", "shouldPass"),
-                        $("when", array("format", "hello")),
-                        $("then", array("matches", array("output"), ".*ell.*"))),
-                    dict(
-                        $("description", "shouldFail"),
-                        $("when", array("format", "hello")),
-                        $("then", array("matches", array("output"), ".*ELLO"))),
-                    dict(
-                        $("description", "shouldBeIgnored"),
-                        $("given", array("not", array("always"))),
-                        $("when", array("format", "hello")),
-                        $("then", array("matches", array("output"), ".*Ell.*"))))));
-          }
-        }.create(), driverClass
+        return JsonScript.Utils.createScript(driverClass, new JsonUtils.NodeFactory<ObjectNode>() {
+              @Override
+              public JsonNode create() {
+                return obj(
+                    $("testOracles", arr(
+                        obj(
+                            $("description", $("shouldPass")),
+                            $("when", arr("format", "hello")),
+                            $("then", arr("matches", arr("output"), ".*ell.*"))),
+                        obj(
+                            $("description", $("shouldFail")),
+                            $("when", arr("format", "hello")),
+                            $("then", arr("matches", arr("output"), ".*ELLO"))),
+                        obj(
+                            $("description", $("shouldBeIgnored")),
+                            $("given", arr("not", arr("always"))),
+                            $("when", arr("format", "hello")),
+                            $("then", arr("matches", arr("output"), ".*Ell.*"))))));
+              }
+            }.get()
         );
       }
     }

@@ -1,32 +1,34 @@
 package com.github.dakusui.scriptiveunit.core;
 
-import com.github.dakusui.scriptiveunit.exceptions.ScriptiveUnitException;
-import com.github.dakusui.scriptiveunit.model.lang.ApplicationSpec;
-import com.github.dakusui.scriptiveunit.model.lang.HostSpec;
+import com.github.dakusui.scriptiveunit.core.ScriptLoader.FromResourceSpecifiedBySystemProperty;
 import com.github.dakusui.scriptiveunit.loaders.preprocessing.Preprocessor;
 import com.github.dakusui.scriptiveunit.model.form.FormRegistry;
+import com.github.dakusui.scriptiveunit.model.lang.ApplicationSpec;
 import com.github.dakusui.scriptiveunit.model.lang.LanguageSpec;
+import com.github.dakusui.scriptiveunit.model.lang.ResourceStoreSpec;
 import org.codehaus.jackson.JsonNode;
 import org.codehaus.jackson.node.ArrayNode;
 import org.codehaus.jackson.node.ObjectNode;
 
 import java.util.Optional;
 
+import static com.github.dakusui.scriptiveunit.exceptions.ScriptiveUnitException.wrapIfNecessary;
+import static com.github.dakusui.scriptiveunit.utils.JsonUtils.readJsonNodeFromStream;
+import static com.github.dakusui.scriptiveunit.utils.JsonUtils.requireObjectNode;
+import static com.github.dakusui.scriptiveunit.utils.ReflectionUtils.openResourceAsStream;
 import static java.util.Objects.requireNonNull;
 
 public interface JsonScript extends Script<JsonNode, ObjectNode, ArrayNode, JsonNode> {
   @Override
-  default ApplicationSpec.Dictionary readScriptResource() {
-    return createPreprocessor().preprocess(readRawBaseScript());
+  default ApplicationSpec.Dictionary readScriptResource(ResourceStoreSpec resourceStoreSpec, ObjectNode mainNode) {
+    return staticReadScript(resourceStoreSpec, mainNode, this.languageSpec(), this.createPreprocessor());
   }
 
-  @Override
-  default ApplicationSpec.Dictionary readRawScriptResource(
-      String resourceName,
-      HostSpec<JsonNode, ObjectNode, ArrayNode, JsonNode> hostSpec) {
-    return hostSpec.toApplicationDictionary(
-        hostSpec.readObjectNode(resourceName));
+  static ApplicationSpec.Dictionary staticReadScript(ResourceStoreSpec resourceStoreSpec, ObjectNode script, LanguageSpec<JsonNode, ObjectNode, ArrayNode, JsonNode> languageSpec, Preprocessor preprocessor) {
+    ApplicationSpec.Dictionary rawScript = languageSpec.hostSpec().toApplicationDictionary(script);
+    return preprocessor.preprocess(rawScript, resourceStoreSpec);
   }
+
 
   class Delegating implements JsonScript {
     private final JsonScript base;
@@ -41,66 +43,37 @@ public interface JsonScript extends Script<JsonNode, ObjectNode, ArrayNode, Json
 
     @Override
     public Optional<Reporting> getReporting() {
-      return base.getReporting();
+      return base().getReporting();
     }
 
     @Override
-    public ApplicationSpec.Dictionary readRawBaseScript() {
-      return base.readRawBaseScript();
-    }
-
-    @Override
-    public ApplicationSpec.Dictionary readScriptResource() {
-      return base.readScriptResource();
-    }
-
-    @Override
-    public ApplicationSpec.Dictionary readRawScriptResource(String resourceName, HostSpec<JsonNode, ObjectNode, ArrayNode, JsonNode> hostSpec) {
-      return base.readRawScriptResource(resourceName, hostSpec);
+    public ApplicationSpec.Dictionary readScriptResource(ResourceStoreSpec resourceStoreSpec, ObjectNode mainNode) {
+      return base().readScriptResource(resourceStoreSpec, mainNode);
     }
 
     @Override
     public LanguageSpec<JsonNode, ObjectNode, ArrayNode, JsonNode> languageSpec() {
-      return base.languageSpec();
-    }
-
-    @Override
-    public ApplicationSpec applicationSpec() {
-      return base.applicationSpec();
-    }
-
-    @Override
-    public HostSpec<JsonNode, ObjectNode, ArrayNode, JsonNode> hostSpec() {
-      return base.hostSpec();
+      return base().languageSpec();
     }
 
     @Override
     public String name() {
-      return base.name();
+      return base().name();
     }
 
     @Override
     public Preprocessor createPreprocessor() {
-      return base.createPreprocessor();
+      return base().createPreprocessor();
     }
   }
 
   abstract class Base implements JsonScript {
-  }
-
-  class Default implements JsonScript {
-    private final LanguageSpec.ForJson languageSpec;
+    final         LanguageSpec.ForJson languageSpec;
     private final Reporting            reporting;
-    private final String               scriptResourceName;
 
-    Default(LanguageSpec.ForJson languageSpec, Reporting reporting, String scriptResourceName) {
+    protected Base(LanguageSpec.ForJson languageSpec, Reporting reporting) {
       this.languageSpec = languageSpec;
       this.reporting = reporting;
-      this.scriptResourceName = requireNonNull(scriptResourceName);
-    }
-
-    public String getScriptResourceName() {
-      return this.scriptResourceName;
     }
 
     @Override
@@ -109,15 +82,22 @@ public interface JsonScript extends Script<JsonNode, ObjectNode, ArrayNode, Json
     }
 
     @Override
-    public ApplicationSpec.Dictionary readRawBaseScript() {
-      return hostSpec().readRawScript(scriptResourceName);
-    }
-
-    @Override
     public LanguageSpec<JsonNode, ObjectNode, ArrayNode, JsonNode> languageSpec() {
       return languageSpec;
     }
+  }
 
+  class Default extends Base {
+    private final String scriptResourceName;
+
+    Default(LanguageSpec.ForJson languageSpec, Reporting reporting, String scriptResourceName) {
+      super(languageSpec, reporting);
+      this.scriptResourceName = requireNonNull(scriptResourceName);
+    }
+
+    public String getScriptResourceName() {
+      return this.scriptResourceName;
+    }
   }
 
   class FromDriverClass extends Default {
@@ -125,12 +105,13 @@ public interface JsonScript extends Script<JsonNode, ObjectNode, ArrayNode, Json
     private final String   scriptResourceNameKey;
 
     public FromDriverClass(Class<?> driverClass, String scriptResourceName) {
-      super(Utils.createLanguageSpecFrom(Utils.createDriverObject(driverClass)),
+      super(Utils.createLanguageSpecFrom(Utils.createDriverObject(driverClass),
+          requireObjectNode(readJsonNodeFromStream(openResourceAsStream(scriptResourceName)))),
           Reporting.create(),
           scriptResourceName
       );
       this.driverClass = requireNonNull(driverClass);
-      this.scriptResourceNameKey = ScriptLoader.FromResourceSpecifiedBySystemProperty.getScriptResourceNameKey(driverClass);
+      this.scriptResourceNameKey = FromResourceSpecifiedBySystemProperty.getScriptResourceNameKey(driverClass);
     }
 
     public String getScriptResourceNameKey() {
@@ -145,69 +126,34 @@ public interface JsonScript extends Script<JsonNode, ObjectNode, ArrayNode, Json
   enum Utils {
     ;
 
-    public static JsonScript createScript(ApplicationSpec.Dictionary dictionary, Class<?> driverClass) {
-      return createScript(dictionary, createLanguageSpecFromDriverClass(driverClass));
-    }
-
-    public static JsonScript createScript(ApplicationSpec.Dictionary dictionary, final LanguageSpec.ForJson languageSpecFromDriverClass) {
-      return new Base() {
-        private LanguageSpec<JsonNode, ObjectNode, ArrayNode, JsonNode> languageSpec = languageSpecFromDriverClass;
-        Reporting reporting = Reporting.create();
+    public static JsonScript createScript(final Class<?> driverClass, final ObjectNode mainNode) {
+      return new Base(
+          createLanguageSpecFrom(createDriverObject(driverClass), mainNode),
+          Reporting.create()) {
 
         @Override
         public Optional<Reporting> getReporting() {
-          return Optional.of(reporting);
-        }
-
-        @Override
-        public ApplicationSpec.Dictionary readRawBaseScript() {
-          return dictionary;
-        }
-
-        @Override
-        public LanguageSpec<JsonNode, ObjectNode, ArrayNode, JsonNode> languageSpec() {
-          return languageSpec;
+          return Optional.of(Reporting.create());
         }
       };
     }
 
     public static Default createScriptFromResource(Class<?> driverClass, String scriptResourceName) {
-      return createScriptFromResource(createLanguageSpecFromDriverClass(driverClass), scriptResourceName);
-    }
-
-    public static Default createScriptFromResource(
-        LanguageSpec.ForJson languageSpecFromDriverClass,
-        String scriptResourceName) {
-      return createScriptFromResource(
-          scriptResourceName,
-          Reporting.create(),
-          languageSpecFromDriverClass
-      );
-    }
-
-    public static Default createScriptFromResource(
-        String resourceName,
-        Reporting reporting,
-        LanguageSpec.ForJson languageSpec) {
       return new Default(
-          languageSpec,
-          reporting,
-          resourceName);
+          createLanguageSpecFrom(createDriverObject(driverClass), requireObjectNode(readJsonNodeFromStream(openResourceAsStream(scriptResourceName)))),
+          Reporting.create(),
+          scriptResourceName);
     }
 
-    private static LanguageSpec.ForJson createLanguageSpecFromDriverClass(Class<?> driverClass) {
-      return LanguageSpec.ForJson.create(FormRegistry.createFormRegistry(createDriverObject(driverClass)));
-    }
-
-    private static LanguageSpec.ForJson createLanguageSpecFrom(Object driverObject) {
-      return LanguageSpec.ForJson.create(FormRegistry.createFormRegistry(driverObject));
+    private static LanguageSpec.ForJson createLanguageSpecFrom(Object driverObject, ObjectNode mainNode) {
+      return LanguageSpec.ForJson.create(FormRegistry.createFormRegistry(driverObject), mainNode);
     }
 
     private static Object createDriverObject(Class<?> driverClass) {
       try {
         return driverClass.newInstance();
       } catch (InstantiationException | IllegalAccessException e) {
-        throw ScriptiveUnitException.wrapIfNecessary(e);
+        throw wrapIfNecessary(e);
       }
     }
   }

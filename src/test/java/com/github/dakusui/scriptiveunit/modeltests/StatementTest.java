@@ -8,6 +8,9 @@ import com.github.dakusui.scriptiveunit.model.form.FormRegistry;
 import com.github.dakusui.scriptiveunit.model.stage.Stage;
 import com.github.dakusui.scriptiveunit.model.statement.Statement;
 import com.github.dakusui.scriptiveunit.testutils.TestBase;
+import com.github.dakusui.scriptiveunit.utils.JsonUtils;
+import org.codehaus.jackson.JsonNode;
+import org.codehaus.jackson.node.ObjectNode;
 import org.junit.Test;
 
 import static java.util.Arrays.asList;
@@ -36,11 +39,20 @@ public class StatementTest extends TestBase {
   }
 
   private Stage createStage(Standard driverObject) {
-    return Stage.Factory.frameworkStageFor(createConfig(driverObject), new Tuple.Impl());
+    return Stage.Factory.frameworkStageFor(createScript(driverObject), new Tuple.Impl());
   }
 
-  private JsonScript createConfig(Standard driverObject) {
-    return UtScript.create(FormRegistry.createFormRegistry(driverObject));
+  private JsonScript createScript(Standard driverObject) {
+    return UtScript.create(FormRegistry.createFormRegistry(driverObject), createEmptyMainNode());
+  }
+
+  private static ObjectNode createEmptyMainNode() {
+    return new JsonUtils.NodeFactory<ObjectNode>(){
+      @Override
+      public JsonNode create() {
+        return obj();
+      }
+    }.get();
   }
 
   private FormRegistry createFormRegistry(Standard driverObject) {

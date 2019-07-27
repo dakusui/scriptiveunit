@@ -2,6 +2,7 @@ package com.github.dakusui.scriptiveunit.loaders.preprocessing;
 
 import com.github.dakusui.scriptiveunit.model.lang.ApplicationSpec;
 import com.github.dakusui.scriptiveunit.model.lang.HostSpec;
+import com.github.dakusui.scriptiveunit.model.lang.ResourceStoreSpec;
 
 import java.util.List;
 
@@ -15,7 +16,7 @@ public interface Preprocessor {
         .build();
   }
 
-  ApplicationSpec.Dictionary preprocess(ApplicationSpec.Dictionary rawScript);
+  ApplicationSpec.Dictionary preprocess(ApplicationSpec.Dictionary rawScript, ResourceStoreSpec resourceStoreSpec);
 
   class Builder {
     private ApplicationSpec applicationSpec;
@@ -37,13 +38,13 @@ public interface Preprocessor {
       requireNonNull(hostSpec);
       return new Preprocessor() {
         @Override
-        public ApplicationSpec.Dictionary preprocess(ApplicationSpec.Dictionary rawScript) {
+        public ApplicationSpec.Dictionary preprocess(ApplicationSpec.Dictionary rawScript, ResourceStoreSpec resourceStoreSpec) {
           ApplicationSpec.Dictionary ret = applicationSpec.deepMerge(
               preprocess(rawScript, applicationSpec.preprocessors()),
               applicationSpec.createDefaultValues());
           for (String parent : applicationSpec.parentsOf(rawScript)) {
             ret = applicationSpec.deepMerge(
-                readApplicationDictionaryWithMerging(parent, applicationSpec),
+                readApplicationDictionaryWithMerging(parent, applicationSpec, resourceStoreSpec),
                 ret
             );
           }
@@ -52,14 +53,14 @@ public interface Preprocessor {
 
         ApplicationSpec.Dictionary readApplicationDictionaryWithMerging(
             String resourceName,
-            ApplicationSpec applicationSpec) {
+            ApplicationSpec applicationSpec, ResourceStoreSpec resourceStoreSpec) {
           ApplicationSpec.Dictionary resource = preprocess(
-              hostSpec.readRawScript(resourceName),
+              hostSpec.readRawScript(resourceName, resourceStoreSpec),
               applicationSpec.preprocessors());
 
           ApplicationSpec.Dictionary work_ = dict();
           for (String s : applicationSpec.parentsOf(resource))
-            work_ = applicationSpec.deepMerge(readApplicationDictionaryWithMerging(s, applicationSpec), work_);
+            work_ = applicationSpec.deepMerge(readApplicationDictionaryWithMerging(s, applicationSpec, resourceStoreSpec), work_);
           return applicationSpec.deepMerge(resource, work_);
         }
 

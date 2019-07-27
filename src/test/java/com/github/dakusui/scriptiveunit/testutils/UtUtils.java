@@ -15,6 +15,7 @@ import com.github.dakusui.scriptiveunit.model.form.value.ValueList;
 import com.github.dakusui.scriptiveunit.model.session.Report;
 import com.github.dakusui.scriptiveunit.model.stage.Stage;
 import com.github.dakusui.scriptiveunit.model.statement.Statement;
+import com.github.dakusui.scriptiveunit.utils.JsonUtils;
 
 import java.io.File;
 import java.text.SimpleDateFormat;
@@ -23,7 +24,6 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 
-import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
 
@@ -56,7 +56,7 @@ public enum UtUtils {
   }
 
   static JsonScript createScript() {
-    return new JsonScript.FromDriverClass(DummyDriver.class, "(none)");
+    return JsonScript.Utils.createScript(DummyDriver.class, JsonUtils.NodeFactory.emptyObject());
   }
 
   private static TestItem createTestItem() {
