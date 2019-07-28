@@ -10,6 +10,8 @@ import org.codehaus.jackson.node.ObjectNode;
 
 import java.util.Optional;
 
+import static com.github.dakusui.scriptiveunit.utils.IoUtils.currentWorkingDirectory;
+
 public class UtScript implements JsonScript {
   private final LanguageSpec.ForJson languageSpec;
   private final ObjectNode           mainNode;
@@ -35,6 +37,6 @@ public class UtScript implements JsonScript {
   }
 
   static JsonScript create(FormRegistry formRegistry, ObjectNode mainNode) {
-    return new UtScript(LanguageSpec.ForJson.create(formRegistry), mainNode);
+    return new UtScript(LanguageSpec.ForJson.create(formRegistry, currentWorkingDirectory()), mainNode);
   }
 }

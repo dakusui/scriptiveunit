@@ -17,6 +17,7 @@ import org.junit.runner.notification.Failure;
 import static com.github.dakusui.crest.Crest.*;
 import static com.github.dakusui.printables.Printables.isEmptyString;
 import static com.github.dakusui.scriptiveunit.testutils.TestUtils.runClasses;
+import static com.github.dakusui.scriptiveunit.utils.IoUtils.currentWorkingDirectory;
 
 public class AssertionMessageTest extends TestBase {
 
@@ -123,7 +124,8 @@ public class AssertionMessageTest extends TestBase {
                             $("when", arr("format", "hello")),
                             $("then", arr("matches", arr("output"), ".*Ell.*"))))));
               }
-            }.get()
+            }.get(),
+            currentWorkingDirectory()
         );
       }
     }

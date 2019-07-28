@@ -20,6 +20,7 @@ import java.util.Map;
 
 import static com.github.dakusui.crest.Crest.*;
 import static com.github.dakusui.printables.Printables.isEqualTo;
+import static com.github.dakusui.scriptiveunit.utils.IoUtils.currentWorkingDirectory;
 import static java.util.Collections.emptyList;
 
 @RunWith(Enclosed.class)
@@ -85,7 +86,7 @@ public class PreprocessorTest {
     }
 
     ResourceStoreSpec createResourceStoreSpec(Map<String, ObjectNode> additionalResources) {
-      return new ResourceStoreSpec.Impl() {
+      return new ResourceStoreSpec.Impl(currentWorkingDirectory()) {
         @Override
         public ObjectNode readObjectNode(String resourceName) {
           if (additionalResources.containsKey(resourceName))

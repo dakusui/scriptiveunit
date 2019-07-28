@@ -8,9 +8,12 @@ import org.codehaus.jackson.JsonNode;
 import org.codehaus.jackson.node.ArrayNode;
 import org.codehaus.jackson.node.ObjectNode;
 
+import java.io.File;
 import java.util.Optional;
 
 import static com.github.dakusui.scriptiveunit.exceptions.ScriptiveUnitException.wrapIfNecessary;
+import static com.github.dakusui.scriptiveunit.model.form.FormRegistry.createFormRegistry;
+import static com.github.dakusui.scriptiveunit.utils.IoUtils.currentWorkingDirectory;
 import static com.github.dakusui.scriptiveunit.utils.JsonUtils.readJsonNodeFromStream;
 import static com.github.dakusui.scriptiveunit.utils.JsonUtils.requireObjectNode;
 import static com.github.dakusui.scriptiveunit.utils.ReflectionUtils.openResourceAsStream;
@@ -67,7 +70,7 @@ public interface JsonScript extends Script<JsonNode, ObjectNode, ArrayNode, Json
     private final String   scriptResourceNameKey;
 
     public FromDriverClass(Class<?> driverClass, String scriptResourceName, ObjectNode mainNode) {
-      super(Utils.createLanguageSpecFrom(FormRegistry.createFormRegistry(Utils.createDriverObject(driverClass))),
+      super(Utils.createLanguageSpecFrom(createFormRegistry(Utils.createDriverObject(driverClass)), currentWorkingDirectory()),
           Reporting.create(),
           scriptResourceName,
           mainNode
@@ -88,9 +91,9 @@ public interface JsonScript extends Script<JsonNode, ObjectNode, ArrayNode, Json
   enum Utils {
     ;
 
-    public static JsonScript createScript(final Class<?> driverClass, final ObjectNode mainNode) {
+    public static JsonScript createScript(final Class<?> driverClass, final ObjectNode mainNode, final File baseDir) {
       return new Base(
-          createLanguageSpecFrom(FormRegistry.createFormRegistry(createDriverObject(driverClass))),
+          createLanguageSpecFrom(createFormRegistry(createDriverObject(driverClass)), baseDir),
           Reporting.create(),
           mainNode) {
 
@@ -104,14 +107,16 @@ public interface JsonScript extends Script<JsonNode, ObjectNode, ArrayNode, Json
     public static Default createScriptFromResource(Class<?> driverClass, String scriptResourceName) {
       ObjectNode mainNode = requireObjectNode(readJsonNodeFromStream(openResourceAsStream(scriptResourceName)));
       return new Default(
-          createLanguageSpecFrom(FormRegistry.createFormRegistry(createDriverObject(driverClass))),
+          createLanguageSpecFrom(
+              createFormRegistry(createDriverObject(driverClass)),
+              currentWorkingDirectory()),
           Reporting.create(),
           scriptResourceName,
           mainNode);
     }
 
-    private static LanguageSpec.ForJson createLanguageSpecFrom(FormRegistry formRegistry) {
-      return LanguageSpec.ForJson.create(formRegistry);
+    private static LanguageSpec.ForJson createLanguageSpecFrom(FormRegistry formRegistry, File baseDir) {
+      return LanguageSpec.ForJson.create(formRegistry, baseDir);
     }
 
     private static Object createDriverObject(Class<?> driverClass) {

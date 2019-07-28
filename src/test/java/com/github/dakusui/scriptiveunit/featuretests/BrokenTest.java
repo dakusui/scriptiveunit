@@ -15,6 +15,7 @@ import java.lang.reflect.InvocationTargetException;
 
 import static com.github.dakusui.crest.Crest.*;
 import static com.github.dakusui.scriptiveunit.testutils.TestUtils.runClasses;
+import static com.github.dakusui.scriptiveunit.utils.IoUtils.currentWorkingDirectory;
 
 public class BrokenTest {
   @Test(expected = ScriptiveUnitException.class)
@@ -46,15 +47,16 @@ public class BrokenTest {
       @Override
       public JsonScript load(Class<?> driverClass) {
         return JsonScript.Utils.createScript(driverClass, new JsonUtils.NodeFactory<ObjectNode>() {
-          @Override
-          public JsonNode create() {
-            return obj($("testOracles", arr(
-                obj(
-                    $("when", arr("brokenForm")),
-                    $("then", arr("matches", arr("output"), "bye"))
-                ))));
-          }
-        }.get());
+              @Override
+              public JsonNode create() {
+                return obj($("testOracles", arr(
+                    obj(
+                        $("when", arr("brokenForm")),
+                        $("then", arr("matches", arr("output"), "bye"))
+                    ))));
+              }
+            }.get(),
+            currentWorkingDirectory());
       }
 
     }
