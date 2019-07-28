@@ -109,7 +109,7 @@ public interface Session {
     public Action createMainAction(TestOracle testOracle, IndexedTestCase indexedTestCase) {
       TestOracleValuesFactory definition = testOracleActionFactory(
           tuple -> formatTestName(tuple, testSuiteDescriptor, testOracle.getDescription().orElse("noname")), indexedTestCase, testOracle);
-      Tuple testCaseTuple = indexedTestCase.get();
+      Tuple testCaseTuple = indexedTestCase.getTestInput();
       Report report = createReport(indexedTestCase, testOracle);
       return named(
           definition.describeTestCase(testCaseTuple),
@@ -158,8 +158,8 @@ public interface Session {
       Stage givenStage = Stage.createOracleLevelStage(report, this.getScript(), testCase, testOracle);
       return context -> {
         Matcher<Tuple> matcher = stageMatcherFunction.apply(givenStage);
-        assumeThat(testCase.get(), matcher);
-        return testCase.get();
+        assumeThat(testCase.getTestInput(), matcher);
+        return testCase.getTestInput();
       };
     }
 
@@ -178,7 +178,7 @@ public interface Session {
         assertThat(
             format("Test:<%s> failed with input:<%s>",
                 formatTestName(
-                    testCase.get(),
+                    testCase.getTestInput(),
                     testSuiteDescriptor,
                     testOracle.getDescription().orElse("(noname)")),
                 testIO.getInput()),

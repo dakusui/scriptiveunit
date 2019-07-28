@@ -98,7 +98,7 @@ public enum UtUtils {
   private static TestCase createTestCase() {
     return new TestCase() {
       @Override
-      public Tuple get() {
+      public Tuple getTestInput() {
         return new Tuple.Impl();
       }
 

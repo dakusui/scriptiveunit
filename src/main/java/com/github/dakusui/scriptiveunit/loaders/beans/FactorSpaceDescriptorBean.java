@@ -12,6 +12,7 @@ import com.github.dakusui.scriptiveunit.model.statement.Statement;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 import static java.lang.Class.forName;
@@ -24,7 +25,7 @@ import static java.util.stream.Collectors.toList;
  */
 public abstract class FactorSpaceDescriptorBean {
   protected static class ParameterDefinition {
-    String type;
+    String       type;
     List<Object> args;
 
     public ParameterDefinition(String type, List<Object> args) {
@@ -34,7 +35,7 @@ public abstract class FactorSpaceDescriptorBean {
   }
 
   private final Map<String, ParameterDefinition> parameterDefinitionMap;
-  private final List<List<Object>> constraintList;
+  private final List<List<Object>>               constraintList;
 
   public FactorSpaceDescriptorBean(Map<String, ParameterDefinition> parameterDefinitionMap, List<List<Object>> constraintList) {
     this.parameterDefinitionMap = parameterDefinitionMap;
@@ -50,11 +51,13 @@ public abstract class FactorSpaceDescriptorBean {
 
       @Override
       public List<Constraint> getConstraints() {
+        AtomicInteger i = new AtomicInteger(0);
         return constraintList.stream()
             .map(statementFactory::create)
             .map(ConstraintDefinitionImpl::new)
             .map((ConstraintDefinitionImpl constraintDefinition) ->
                 Constraint.create(
+                    "constriant:" + i.getAndIncrement(),
                     in -> constraintDefinition.test(Stage.createFixtureLevelStage(in, ((Session.Impl) session).getScript())),
                     constraintDefinition.involvedParameterNames()))
             .collect(toList());
@@ -69,26 +72,26 @@ public abstract class FactorSpaceDescriptorBean {
             (String parameterName) -> {
               ParameterDefinition def = requireNonNull(factorMap.get(parameterName));
               switch (def.type) {
-                case "simple":
-                  return Parameter.Simple.Factory.of(validateParameterDefinitionArgsForSimple(def.args)).create(parameterName);
-                case "regex":
-                  return Parameter.Regex.Factory.of(Objects.toString(validateParameterDefinitionArgsForRegex(def.args).get(0))).create(parameterName);
-                case "fsm":
-                  try {
-                    return Parameter.Fsm.Factory.of(
-                        (Class<? extends FsmSpec<Object>>) forName(Objects.toString(def.args.get(0))),
-                        Integer.valueOf(Objects.toString(def.args.get(1)))
-                    ).create(parameterName);
-                  } catch (ClassCastException | ClassNotFoundException e) {
-                    throw new RuntimeException(e);
-                  }
-                default:
-                  throw new RuntimeException(
-                      format(
-                          "unknown type '%s' was given to parameter '%s''s definition.",
-                          def.type,
-                          parameterName
-                      ));
+              case "simple":
+                return Parameter.Simple.Factory.of(validateParameterDefinitionArgsForSimple(def.args)).create(parameterName);
+              case "regex":
+                return Parameter.Regex.Factory.of(Objects.toString(validateParameterDefinitionArgsForRegex(def.args).get(0))).create(parameterName);
+              case "fsm":
+                try {
+                  return Parameter.Fsm.Factory.of(
+                      (Class<? extends FsmSpec<Object>>) forName(Objects.toString(def.args.get(0))),
+                      Integer.valueOf(Objects.toString(def.args.get(1)))
+                  ).create(parameterName);
+                } catch (ClassCastException | ClassNotFoundException e) {
+                  throw new RuntimeException(e);
+                }
+              default:
+                throw new RuntimeException(
+                    format(
+                        "unknown type '%s' was given to parameter '%s''s definition.",
+                        def.type,
+                        parameterName
+                    ));
               }
             })
         .collect(Collectors.toList());

@@ -20,7 +20,7 @@ class OracleLevelStage extends Stage.Base {
 
   @Override
   public Optional<Tuple> getTestCaseTuple() {
-    return Optional.of(this.indexedTestCase.get());
+    return Optional.of(this.indexedTestCase.getTestInput());
   }
 
   @Override

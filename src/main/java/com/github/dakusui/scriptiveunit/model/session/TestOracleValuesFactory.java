@@ -102,8 +102,8 @@ public interface TestOracleValuesFactory {
                 out;
             description.appendText(format("output <%s>", output));
             description.appendText(" ");
-            if (!testCase.get().isEmpty()) {
-              description.appendText(format("created from <%s>", testCase.get()));
+            if (!testCase.getTestInput().isEmpty()) {
+              description.appendText(format("created from <%s>", testCase.getTestInput()));
               description.appendText(" ");
             }
             description.appendText(format("did not satisfy it.:%n%s", formListener.toString()));

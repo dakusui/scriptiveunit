@@ -216,7 +216,7 @@ public final class GroupedTestItemRunner extends ParentRunner<Action> {
     return fixtures.stream().map(
         (Function<Tuple, Runner>) fixture -> {
           List<IndexedTestCase> filteredIndexedTestCases = indexedTestCases.stream()
-              .filter((IndexedTestCase indexedTestCase) -> project(indexedTestCase.get(), usedInSetUp).equals(fixture))
+              .filter((IndexedTestCase indexedTestCase) -> project(indexedTestCase.getTestInput(), usedInSetUp).equals(fixture))
               .collect(toList());
           return createRunnerForTestFixture(
               fixtures.indexOf(fixture),
@@ -238,7 +238,7 @@ public final class GroupedTestItemRunner extends ParentRunner<Action> {
       List<String> involved,
       List<IndexedTestCase> testCases) {
     return testCases.stream()
-        .map((IndexedTestCase input) -> project(input.get(), involved))
+        .map((IndexedTestCase input) -> project(input.getTestInput(), involved))
         .map((Map<String, Object> input) -> new Tuple.Builder().putAll(input).build())
         .distinct()
         .collect(toCollection(LinkedList::new));
@@ -256,7 +256,7 @@ public final class GroupedTestItemRunner extends ParentRunner<Action> {
   private static Comparator<? super TestCase> byParameters(List<String> parameters) {
     return (Comparator<TestCase>) (o1, o2) -> {
       for (String each : parameters) {
-        int ret = Objects.toString(o1.get().get(each)).compareTo(Objects.toString(o2.get().get(each)));
+        int ret = Objects.toString(o1.getTestInput().get(each)).compareTo(Objects.toString(o2.getTestInput().get(each)));
         if (ret != 0)
           return ret;
       }
@@ -385,7 +385,7 @@ public final class GroupedTestItemRunner extends ParentRunner<Action> {
       TestSuiteDescriptor testSuiteDescriptor) {
     int testCaseId = indexedTestCase.getIndex();
     try {
-      Tuple testCaseTuple = indexedTestCase.get();
+      Tuple testCaseTuple = indexedTestCase.getTestInput();
       return new GroupedTestItemRunner(
           Object.class,
           testCaseId,
@@ -435,11 +435,11 @@ public final class GroupedTestItemRunner extends ParentRunner<Action> {
                 return named(
                     describe(input),
                     sequential(
-                        session.createSetUpActionForFixture(input.get()),
+                        session.createSetUpActionForFixture(input.getTestInput()),
                         attempt(
                             session.createMainAction(testOracle, input))
                             .ensure(
-                                session.createTearDownActionForFixture(input.get()))));
+                                session.createTearDownActionForFixture(input.getTestInput()))));
               } finally {
                 i++;
               }
@@ -448,7 +448,7 @@ public final class GroupedTestItemRunner extends ParentRunner<Action> {
             String describe(IndexedTestCase input) {
               return format("%03d: %s", i,
                   templateTestOracleDescription(
-                      input.get(),
+                      input.getTestInput(),
                       testSuiteDescription,
                       testOracle.getDescription().orElse("(no name)")));
             }
