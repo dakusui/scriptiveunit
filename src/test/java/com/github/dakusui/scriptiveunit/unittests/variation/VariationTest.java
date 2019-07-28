@@ -125,17 +125,18 @@ public class VariationTest {
     );
   }
 
+  /*
   @Given("!isFactorsAttributePresent&&isConstraintsAttributePresent")
   @Test(expected = RuntimeException.class)
   public void whenRunTest$thenTerminatesWithMessage(
-      Resource<ObjectNode> _extends,
-      Resource<ObjectNode> description,
-      Resource<ObjectNode> factors,
-      Resource<ObjectNode> constraints,
-      Resource<ObjectNode> runnerType,
-      Resource<ObjectNode> setUp,
-      Resource<ObjectNode> setUpBeforeAll,
-      Resource<ObjectNode> testOracles
+      @From("_extends") Resource<ObjectNode> _extends,
+      @From("description") Resource<ObjectNode> description,
+      @From("factors") Resource<ObjectNode> factors,
+      @From("constraints") Resource<ObjectNode> constraints,
+      @From("runnerType") Resource<ObjectNode> runnerType,
+      @From("setUp") Resource<ObjectNode> setUp,
+      @From("setUpBeforeAll") Resource<ObjectNode> setUpBeforeAll,
+      @From("testOracles") Resource<ObjectNode> testOracles
   ) throws Throwable {
     runTest(
         _extends,
@@ -148,6 +149,7 @@ public class VariationTest {
         testOracles
     );
   }
+   */
 
   @Condition
   public boolean isFactorsAttributePresent(

@@ -17,7 +17,7 @@ public class IndexedTestCase implements TestCase {
 
   public IndexedTestCase(int index, TestCase testCase) {
     this.index = index;
-    this.tuple = testCase.get();
+    this.tuple = testCase.getTestInput();
     this.category = testCase.getCategory();
     this.violatedConstraints = testCase.violatedConstraints();
   }
@@ -34,7 +34,7 @@ public class IndexedTestCase implements TestCase {
   }
 
   @Override
-  public Tuple get() {
+  public Tuple getTestInput() {
     return this.tuple;
   }
 
