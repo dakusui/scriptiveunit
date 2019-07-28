@@ -6,7 +6,6 @@ import com.github.dakusui.scriptiveunit.model.lang.ResourceStoreSpec;
 
 import java.util.List;
 
-import static com.github.dakusui.scriptiveunit.model.lang.ApplicationSpec.dict;
 import static java.util.Objects.requireNonNull;
 
 public interface Preprocessor {
@@ -40,32 +39,35 @@ public interface Preprocessor {
         @Override
         public ApplicationSpec.Dictionary preprocess(ApplicationSpec.Dictionary rawScript, ResourceStoreSpec resourceStoreSpec) {
           ApplicationSpec.Dictionary ret = applicationSpec.createDefaultValues();
-          for (String parent : applicationSpec.parentsOf(rawScript)) {
-            ret = applicationSpec.deepMerge(
-                readApplicationDictionaryWithMerging(parent, applicationSpec, resourceStoreSpec),
-                ret
-            );
-          }
           ret = applicationSpec.deepMerge(
               preprocess(rawScript, applicationSpec.preprocessorUnits()),
               ret
           );
+          for (String parent : parentsOf(rawScript, applicationSpec)) {
+            ret = applicationSpec.deepMerge(
+                ret,
+                readApplicationDictionaryWithMerging(parent, applicationSpec, resourceStoreSpec)
+            );
+          }
           return applicationSpec.removeInheritanceDirective(ret);
         }
 
         ApplicationSpec.Dictionary readApplicationDictionaryWithMerging(
             String resourceName,
-            ApplicationSpec applicationSpec, ResourceStoreSpec resourceStoreSpec) {
-          ApplicationSpec.Dictionary resource = preprocess(
-              hostSpec.readRawScript(resourceName, resourceStoreSpec),
+            ApplicationSpec applicationSpec,
+            ResourceStoreSpec resourceStoreSpec) {
+          ApplicationSpec.Dictionary inputDictionary = hostSpec.readRawScript(resourceName, resourceStoreSpec);
+          ApplicationSpec.Dictionary work_ = inputDictionary;
+          ApplicationSpec.Dictionary preprocessedInputDictionary = preprocess(
+              work_,
               applicationSpec.preprocessorUnits());
-
-          ApplicationSpec.Dictionary work_ = dict();
-          for (String parentResouceName : applicationSpec.parentsOf(resource))
+          List<String> parents = parentsOf(inputDictionary, applicationSpec);
+          for (String parentResourceName : parents)
             work_ = applicationSpec.deepMerge(
                 work_,
-                readApplicationDictionaryWithMerging(parentResouceName, applicationSpec, resourceStoreSpec));
-          return applicationSpec.deepMerge(resource, work_);
+                readApplicationDictionaryWithMerging(parentResourceName, applicationSpec, resourceStoreSpec)
+            );
+          return applicationSpec.deepMerge(preprocessedInputDictionary, work_);
         }
 
         ApplicationSpec.Dictionary preprocess(ApplicationSpec.Dictionary inputNode, List<PreprocessingUnit> preprocessingUnits) {
@@ -75,6 +77,10 @@ public interface Preprocessor {
           return inputNode;
         }
       };
+    }
+
+    static List<String> parentsOf(ApplicationSpec.Dictionary rawScript, ApplicationSpec applicationSpec) {
+      return applicationSpec.parentsOf(rawScript);
     }
   }
 }

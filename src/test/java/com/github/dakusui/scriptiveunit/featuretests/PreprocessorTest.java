@@ -498,4 +498,60 @@ public class PreprocessorTest {
       );
     }
   }
+
+  public static class MultipleInheritance extends Base {
+    @Override
+    public ApplicationSpec.Dictionary given() {
+      return new ApplicationSpec.Dictionary.Factory() {
+        ApplicationSpec.Dictionary create() {
+          return dict($("$extends", array("parent1", "parent2")));
+        }
+      }.create();
+    }
+
+    Map<String, ObjectNode> createAdditionalResources() {
+      return new HashMap<String, ObjectNode>() {
+        {
+          put("parent1", objectNode(new NodeFactory<ObjectNode>() {
+            @Override
+            public JsonNode create() {
+              return obj(
+                  $("keyOnlyInParent1", $("valueOnlyInParent1")),
+                  $("keyBothInParent1AndParent2", $("valueInParent1"))
+              );
+            }
+          }));
+          put("parent2", objectNode(new NodeFactory<ObjectNode>() {
+            @Override
+            public JsonNode create() {
+              return obj($("keyOnlyInParent2", $("valueOnlyInParent2")),
+                  $("keyBothInParent1AndParent2", $("valueInParent2")));
+            }
+          }));
+          put("grandGrandParent", objectNode(new NodeFactory<ObjectNode>() {
+            @Override
+            public JsonNode create() {
+              return obj($("key", $("valueInGrandGrandParent")));
+            }
+          }));
+        }
+      };
+    }
+
+
+    @Override
+    void verifyObjectNode(ObjectNode preprocessedObjectNode) {
+      assertThat(
+          preprocessedObjectNode,
+          allOf(
+              asString(call("get", "keyOnlyInParent1").andThen("asText").$())
+                  .equalTo("valueOnlyInParent1").$(),
+              asString(call("get", "keyOnlyInParent2").andThen("asText").$())
+                  .equalTo("valueOnlyInParent2").$(),
+              asString(call("get", "keyBothInParent1AndParent2").andThen("asText").$())
+                  .equalTo("valueInParent1").$()
+          ));
+    }
+  }
+
 }
