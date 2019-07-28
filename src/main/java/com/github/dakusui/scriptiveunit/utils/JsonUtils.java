@@ -13,7 +13,7 @@ import java.util.function.Supplier;
 
 import static com.github.dakusui.scriptiveunit.exceptions.Exceptions.nonObject;
 import static com.github.dakusui.scriptiveunit.exceptions.ScriptiveUnitException.wrapMinimally;
-import static com.github.dakusui.scriptiveunit.exceptions.ScriptiveUnitUnclassifiedException.unclassifiedException;
+import static com.github.dakusui.scriptiveunit.exceptions.Exceptions.unclassifiedException;
 import static com.github.dakusui.scriptiveunit.utils.Checks.check;
 import static com.github.dakusui.scriptiveunit.utils.CoreUtils.toBigDecimal;
 

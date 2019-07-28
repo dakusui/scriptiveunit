@@ -28,7 +28,7 @@ public interface Preprocessor {
       this.hostSpec = requireNonNull(hostSpec);
     }
 
-    public Builder applicationSpec(ApplicationSpec applicationSpec) {
+    Builder applicationSpec(ApplicationSpec applicationSpec) {
       this.applicationSpec = requireNonNull(applicationSpec);
       return this;
     }
@@ -39,15 +39,17 @@ public interface Preprocessor {
       return new Preprocessor() {
         @Override
         public ApplicationSpec.Dictionary preprocess(ApplicationSpec.Dictionary rawScript, ResourceStoreSpec resourceStoreSpec) {
-          ApplicationSpec.Dictionary ret = applicationSpec.deepMerge(
-              preprocess(rawScript, applicationSpec.preprocessors()),
-              applicationSpec.createDefaultValues());
+          ApplicationSpec.Dictionary ret = applicationSpec.createDefaultValues();
           for (String parent : applicationSpec.parentsOf(rawScript)) {
             ret = applicationSpec.deepMerge(
                 readApplicationDictionaryWithMerging(parent, applicationSpec, resourceStoreSpec),
                 ret
             );
           }
+          ret = applicationSpec.deepMerge(
+              preprocess(rawScript, applicationSpec.preprocessorUnits()),
+              ret
+          );
           return applicationSpec.removeInheritanceDirective(ret);
         }
 
@@ -56,11 +58,13 @@ public interface Preprocessor {
             ApplicationSpec applicationSpec, ResourceStoreSpec resourceStoreSpec) {
           ApplicationSpec.Dictionary resource = preprocess(
               hostSpec.readRawScript(resourceName, resourceStoreSpec),
-              applicationSpec.preprocessors());
+              applicationSpec.preprocessorUnits());
 
           ApplicationSpec.Dictionary work_ = dict();
-          for (String s : applicationSpec.parentsOf(resource))
-            work_ = applicationSpec.deepMerge(readApplicationDictionaryWithMerging(s, applicationSpec, resourceStoreSpec), work_);
+          for (String parentResouceName : applicationSpec.parentsOf(resource))
+            work_ = applicationSpec.deepMerge(
+                work_,
+                readApplicationDictionaryWithMerging(parentResouceName, applicationSpec, resourceStoreSpec));
           return applicationSpec.deepMerge(resource, work_);
         }
 

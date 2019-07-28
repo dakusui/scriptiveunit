@@ -21,7 +21,7 @@ import static java.util.stream.Collectors.toList;
 public interface ApplicationSpec {
   Dictionary createDefaultValues();
 
-  List<PreprocessingUnit> preprocessors();
+  List<PreprocessingUnit> preprocessorUnits();
 
   Dictionary removeInheritanceDirective(Dictionary inputNode);
 
@@ -159,7 +159,7 @@ public interface ApplicationSpec {
     }
 
     @Override
-    public List<PreprocessingUnit> preprocessors() {
+    public List<PreprocessingUnit> preprocessorUnits() {
       return singletonList(
           PreprocessingUnit.preprocessor(toUniformedObjectNodeTranslator(),
               PreprocessingUnit.Utils.pathMatcher("factorSpace", "factors", ".*")));
@@ -333,7 +333,6 @@ public interface ApplicationSpec {
 
       default Entry $(String key, Object value) {
         return this.entry(key, value);
-      }
-    }
+      }    }
   }
 }
