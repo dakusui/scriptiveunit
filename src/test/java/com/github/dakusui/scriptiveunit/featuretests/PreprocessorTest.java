@@ -569,14 +569,8 @@ public class PreprocessorTest {
     void verifyObjectNode(ObjectNode preprocessedObjectNode) {
       assertThat(
           preprocessedObjectNode,
-          allOf(
-              asString(call("get", "keyOnlyInParent1").andThen("asText").$())
-                  .equalTo("valueOnlyInParent1").$(),
-              asString(call("get", "keyOnlyInParent2").andThen("asText").$())
-                  .equalTo("valueOnlyInParent2").$(),
-              asString(call("get", "keyBothInParent1AndParent2").andThen("asText").$())
-                  .equalTo("valueInParent1").$()
-          ));
+          asString(call("get", "keyInFile").andThen("asText").$())
+              .equalTo("valueInFile").$());
     }
   }
 }
