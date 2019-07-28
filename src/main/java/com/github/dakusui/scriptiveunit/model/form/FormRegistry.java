@@ -1,10 +1,6 @@
 package com.github.dakusui.scriptiveunit.model.form;
 
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 
 import static com.github.dakusui.scriptiveunit.exceptions.Exceptions.duplicatedFormsAreFound;
 import static com.github.dakusui.scriptiveunit.utils.DriverUtils.getFormsFromImportedFieldsInObject;
@@ -30,7 +26,7 @@ public interface FormRegistry {
         .filter((Map.Entry<String, List<Form>> each) -> each.getValue().size() > 1)
         .collect(toMap(Map.Entry::getKey, Map.Entry::getValue));
     if (!duplicatedForms.isEmpty())
-      throw duplicatedFormsAreFound(duplicatedForms);
+      throw duplicatedFormsAreFound(duplicatedForms, driverObject.getClass());
     return name -> allFoundForms.containsKey(name) ?
         Optional.of(allFoundForms.get(name).get(0)) :
         Optional.empty();

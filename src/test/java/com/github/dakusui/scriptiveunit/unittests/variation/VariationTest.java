@@ -7,13 +7,20 @@ import com.github.dakusui.jcunit8.runners.junit4.annotations.From;
 import com.github.dakusui.jcunit8.runners.junit4.annotations.Given;
 import com.github.dakusui.jcunit8.runners.junit4.annotations.ParameterSource;
 import com.github.dakusui.scriptiveunit.core.JsonScript;
+import com.github.dakusui.scriptiveunit.core.Reporting;
 import com.github.dakusui.scriptiveunit.core.ScriptCompiler;
+import com.github.dakusui.scriptiveunit.model.form.FormRegistry;
 import com.github.dakusui.scriptiveunit.model.lang.ApplicationSpec;
+import com.github.dakusui.scriptiveunit.model.lang.HostSpec;
+import com.github.dakusui.scriptiveunit.model.lang.LanguageSpec;
+import com.github.dakusui.scriptiveunit.model.lang.ResourceStoreSpec;
 import com.github.dakusui.scriptiveunit.runners.ScriptiveUnit;
 import com.github.dakusui.scriptiveunit.testassets.drivers.Loader;
 import com.github.dakusui.scriptiveunit.testassets.drivers.Simple;
 import com.github.dakusui.scriptiveunit.testutils.Resource;
 import com.github.dakusui.scriptiveunit.utils.JsonUtils;
+import org.codehaus.jackson.JsonNode;
+import org.codehaus.jackson.node.ArrayNode;
 import org.codehaus.jackson.node.ObjectNode;
 import org.junit.Test;
 import org.junit.runner.JUnitCore;
@@ -21,11 +28,15 @@ import org.junit.runner.RunWith;
 
 import java.io.InputStream;
 import java.util.List;
+import java.util.Optional;
 import java.util.function.Function;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
+import static com.github.dakusui.scriptiveunit.utils.JsonUtils.readJsonNodeFromStream;
+import static com.github.dakusui.scriptiveunit.utils.JsonUtils.requireObjectNode;
 import static com.github.dakusui.scriptiveunit.utils.ReflectionUtils.allScriptsUnderMatching;
+import static com.github.dakusui.scriptiveunit.utils.ReflectionUtils.openResourceAsStream;
 
 
 @RunWith(JCUnit8.class)
@@ -164,16 +175,46 @@ public class VariationTest {
   ) throws Throwable {
     JsonScript.FromDriverClass baseScript = new JsonScript.FromDriverClass(
         Simple.class,
-        "components/root.json");
+        "components/root.json", requireObjectNode(readJsonNodeFromStream(openResourceAsStream("components/root.json"))));
     new JUnitCore().run(
         new ScriptiveUnit(
             Simple.class,
             new ScriptCompiler.Default(),
-            new JsonScript.Delegating(baseScript) {
+            new JsonScript() {
               @Override
-              public ApplicationSpec.Dictionary readScriptResource() {
-                return Loader.create(
-                    baseScript.applicationSpec(),
+              public Optional<Reporting> getReporting() {
+                return baseScript.getReporting();
+              }
+
+              @Override
+              public LanguageSpec<JsonNode, ObjectNode, ArrayNode, JsonNode> languageSpec() {
+                return new LanguageSpec.ForJson() {
+                  @Override
+                  public HostSpec<JsonNode, ObjectNode, ArrayNode, JsonNode> hostSpec() {
+                    return baseScript.languageSpec().hostSpec();
+                  }
+
+                  @Override
+                  public ApplicationSpec applicationSpec() {
+                    return baseScript.languageSpec().applicationSpec();
+                  }
+
+                  @Override
+                  public ResourceStoreSpec resourceStoreSpec() {
+                    return baseScript.languageSpec().resourceStoreSpec();
+                  }
+
+                  @Override
+                  public FormRegistry formRegistry() {
+                    return baseScript.languageSpec().formRegistry();
+                  }
+                };
+              }
+
+              @Override
+              public ObjectNode mainNode() {
+                return languageSpec().hostSpec().toHostObject(Loader.create(
+                    baseScript.languageSpec().applicationSpec(),
                     _extends,
                     description,
                     factors,
@@ -182,7 +223,7 @@ public class VariationTest {
                     setUp,
                     setUpBeforeAll,
                     testOracles
-                ).createDefaultValues();
+                ).createDefaultValues());
               }
             }));
   }

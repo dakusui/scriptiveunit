@@ -5,6 +5,9 @@ import com.github.dakusui.scriptiveunit.core.Script;
 import com.github.dakusui.scriptiveunit.core.ScriptCompiler;
 import com.github.dakusui.scriptiveunit.model.desc.TestSuiteDescriptor;
 import com.github.dakusui.scriptiveunit.model.session.Session;
+import org.codehaus.jackson.JsonNode;
+import org.codehaus.jackson.node.ArrayNode;
+import org.codehaus.jackson.node.ObjectNode;
 import org.junit.internal.runners.statements.RunBefores;
 import org.junit.runner.Runner;
 import org.junit.runners.Parameterized;
@@ -52,7 +55,7 @@ public class ScriptiveUnit extends Parameterized {
     );
   }
 
-  public ScriptiveUnit(Class<?> klass, ScriptCompiler scriptCompiler, Script script) throws Throwable {
+  public ScriptiveUnit(Class<?> klass, ScriptCompiler scriptCompiler, Script<JsonNode, ObjectNode, ArrayNode, JsonNode> script) throws Throwable {
     super(klass);
     this.session = Session.create(script, scriptCompiler);
     this.runners = newLinkedList(createRunners());

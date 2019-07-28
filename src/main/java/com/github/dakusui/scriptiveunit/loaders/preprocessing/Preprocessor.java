@@ -1,27 +1,36 @@
 package com.github.dakusui.scriptiveunit.loaders.preprocessing;
 
 import com.github.dakusui.scriptiveunit.model.lang.ApplicationSpec;
+import com.github.dakusui.scriptiveunit.model.lang.ApplicationSpec.Dictionary;
 import com.github.dakusui.scriptiveunit.model.lang.HostSpec;
+import com.github.dakusui.scriptiveunit.model.lang.ResourceStoreSpec;
 
+import java.util.Comparator;
 import java.util.List;
 
-import static com.github.dakusui.scriptiveunit.model.lang.ApplicationSpec.dict;
+import static com.github.dakusui.scriptiveunit.model.lang.ApplicationSpec.Dictionary.Factory.emptyDictionary;
 import static java.util.Objects.requireNonNull;
 
 public interface Preprocessor {
-  ApplicationSpec.Dictionary preprocess(ApplicationSpec.Dictionary rawScript);
+  static <NODE, OBJECT extends NODE, ARRAY extends NODE, ATOM extends NODE> Preprocessor create(HostSpec<NODE, OBJECT, ARRAY, ATOM> hostSpec, ApplicationSpec applicationSpec) {
+    return new Builder(hostSpec)
+        .applicationSpec(applicationSpec)
+        .build();
+  }
 
-  class Builder<NODE, OBJECT extends NODE, ARRAY extends NODE, ATOM extends NODE> {
+  Dictionary preprocess(Dictionary rawScript, ResourceStoreSpec resourceStoreSpec);
+
+  class Builder {
     private ApplicationSpec applicationSpec;
 
 
-    private final HostSpec<NODE, OBJECT, ARRAY, ATOM> hostSpec;
+    private final HostSpec hostSpec;
 
-    public Builder(HostSpec<NODE, OBJECT, ARRAY, ATOM> hostSpec) {
+    public Builder(HostSpec hostSpec) {
       this.hostSpec = requireNonNull(hostSpec);
     }
 
-    public Builder<NODE, OBJECT, ARRAY, ATOM> applicationSpec(ApplicationSpec applicationSpec) {
+    Builder applicationSpec(ApplicationSpec applicationSpec) {
       this.applicationSpec = requireNonNull(applicationSpec);
       return this;
     }
@@ -29,41 +38,69 @@ public interface Preprocessor {
     public Preprocessor build() {
       requireNonNull(applicationSpec);
       requireNonNull(hostSpec);
-      return new Preprocessor() {
-        @Override
-        public ApplicationSpec.Dictionary preprocess(ApplicationSpec.Dictionary rawScript) {
-          ApplicationSpec.Dictionary ret = applicationSpec.deepMerge(
-              preprocess(rawScript, applicationSpec.preprocessors()),
-              applicationSpec.createDefaultValues());
-          for (String parent : applicationSpec.parentsOf(rawScript)) {
-            ret = applicationSpec.deepMerge(
-                readApplicationDictionaryWithMerging(parent, applicationSpec),
-                ret
+      return new Impl(applicationSpec, hostSpec);
+    }
+
+    private static List<String> parentsOf(Dictionary rawScript, ApplicationSpec applicationSpec) {
+      List<String> ret = applicationSpec.parentsOf(rawScript);
+      ret.sort(Comparator.reverseOrder());
+      return ret;
+    }
+
+    private static class Impl implements Preprocessor {
+      private ApplicationSpec applicationSpec;
+      private HostSpec        hostSpec;
+
+      Impl(ApplicationSpec applicationSpec, HostSpec hostSpec) {
+        this.applicationSpec = applicationSpec;
+        this.hostSpec = hostSpec;
+      }
+
+      @Override
+      public Dictionary preprocess(Dictionary rawScript, ResourceStoreSpec resourceStoreSpec) {
+        Dictionary input = performPreprocessingUnits(rawScript, applicationSpec.preprocessorUnits());
+        Dictionary defaultValues = applicationSpec.createDefaultValues();
+        Dictionary work = emptyDictionary();
+        {
+          for (String parent : parentsOf(input, applicationSpec)) {
+            work = applicationSpec.deepMerge(
+                readApplicationDictionaryWithMerging(parent, applicationSpec, resourceStoreSpec),
+                work
             );
           }
-          return applicationSpec.removeInheritanceDirective(ret);
         }
+        work = applicationSpec.deepMerge(work, defaultValues);
+        work = applicationSpec.deepMerge(input, work);
+        return applicationSpec.removeInheritanceDirective(work);
+      }
 
-        ApplicationSpec.Dictionary readApplicationDictionaryWithMerging(
-            String resourceName,
-            ApplicationSpec applicationSpec) {
-          ApplicationSpec.Dictionary resource = preprocess(
-              hostSpec.readRawScript(resourceName),
-              applicationSpec.preprocessors());
+      Dictionary readApplicationDictionaryWithMerging(
+          String resourceName,
+          ApplicationSpec applicationSpec,
+          ResourceStoreSpec resourceStoreSpec) {
+        Dictionary input = hostSpec.readRawScript(resourceName, resourceStoreSpec);
 
-          ApplicationSpec.Dictionary work_ = dict();
-          for (String s : applicationSpec.parentsOf(resource))
-            work_ = applicationSpec.deepMerge(readApplicationDictionaryWithMerging(s, applicationSpec), work_);
-          return applicationSpec.deepMerge(resource, work_);
+        Dictionary preprocessedInputDictionary = performPreprocessingUnits(
+            input,
+            applicationSpec.preprocessorUnits());
+        List<String> parents = parentsOf(preprocessedInputDictionary, applicationSpec);
+
+        Dictionary work_ = preprocessedInputDictionary;
+        for (String eachParentResourceName : parents)
+          work_ = applicationSpec.deepMerge(
+              work_,
+              readApplicationDictionaryWithMerging(eachParentResourceName, applicationSpec, resourceStoreSpec));
+        return applicationSpec.deepMerge(preprocessedInputDictionary, work_);
+      }
+
+      Dictionary performPreprocessingUnits(
+          Dictionary inputNode,
+          List<PreprocessingUnit> preprocessingUnits) {
+        for (PreprocessingUnit each : preprocessingUnits) {
+          inputNode = ApplicationSpec.preprocess(inputNode, each);
         }
-
-        ApplicationSpec.Dictionary preprocess(ApplicationSpec.Dictionary inputNode, List<PreprocessingUnit> preprocessingUnits) {
-          for (PreprocessingUnit each : preprocessingUnits) {
-            inputNode = ApplicationSpec.preprocess(inputNode, each);
-          }
-          return inputNode;
-        }
-      };
+        return inputNode;
+      }
     }
   }
 }

@@ -9,7 +9,6 @@ import org.codehaus.jackson.JsonNode;
 
 import java.util.List;
 import java.util.Map;
-import java.util.function.Supplier;
 
 import static java.lang.String.format;
 
@@ -17,11 +16,11 @@ public enum Exceptions {
   ;
 
   public static ResourceException scriptNotFound(String scriptName) {
-    return new ResourceException(format("Script:<%s> was not found. Check your classpath.", scriptName));
+    return new ResourceException(format("Script:<%s> was not found.", scriptName));
   }
 
   public static ResourceException functionNotFound(String functionName) {
-    throw new ResourceException(String.format("A function '%s' was not found.", functionName));
+    throw new ResourceException(String.format("A function:<%s> was not found.", functionName));
   }
 
   public static ScriptiveUnitException indexOutOfBounds(int index, int size) {
@@ -37,11 +36,11 @@ public enum Exceptions {
   }
 
   public static SyntaxException attributeNotFound(String attributeName, Stage context, Iterable<String> knownAttributeNames) {
-      throw new ScriptiveUnitUnclassifiedException(format(
-          "Attribute '%s' is accessed in stage:<%s>, but not found in your test case. Known attribute names are %s'",
-          attributeName,
-          context,
-          knownAttributeNames));
+    throw new ScriptiveUnitUnclassifiedException(format(
+        "Attribute '%s' is accessed in stage:<%s>, but not found in your test case. Known attribute names are %s'",
+        attributeName,
+        context,
+        knownAttributeNames));
   }
 
   public static SyntaxException nonObject(JsonNode jsonNode) {
@@ -80,16 +79,16 @@ public enum Exceptions {
     throw new TypeMismatch("Head of a call must be a string but '%s' as given", car);
   }
 
-  public static ConfigurationException duplicatedFormsAreFound(Map<String, List<Form>> duplicatedObjectMethods) {
+  public static ConfigurationException duplicatedFormsAreFound(Map<String, List<Form>> duplicatedObjectMethods, Class<?> driverClass) {
     StringBuffer buf = new StringBuffer();
     duplicatedObjectMethods.forEach((s, objectMethods) -> {
-      buf.append(format("%s:%n", s));
+      buf.append(format("Alias:<%s>:%n", s));
       objectMethods.forEach((Form each) -> buf.append(format("  %s%n", each)));
       buf.append(format("%n"));
     });
     String found = buf.toString();
     throw new ConfigurationException(format(
-        "Following object methods are found duplicated:%n%s", found
+        "Following object methods are found duplicated in class:<%s>:%n%s", driverClass.getCanonicalName(), found
     ));
   }
 
@@ -103,5 +102,9 @@ public enum Exceptions {
 
   public static ConfigurationException noScriptLoaderProvided(Class<?> driverClass) {
     throw new ConfigurationException(format("No script loader was provided for class:<%s>", driverClass));
+  }
+
+  public static ScriptiveUnitException unclassifiedException(String format, Object... args) {
+    return new ScriptiveUnitUnclassifiedException(format(format, args));
   }
 }

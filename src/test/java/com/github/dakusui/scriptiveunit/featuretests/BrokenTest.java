@@ -6,17 +6,16 @@ import com.github.dakusui.scriptiveunit.annotations.RunScript;
 import com.github.dakusui.scriptiveunit.core.JsonScript;
 import com.github.dakusui.scriptiveunit.core.ScriptLoader;
 import com.github.dakusui.scriptiveunit.exceptions.ScriptiveUnitException;
-import com.github.dakusui.scriptiveunit.model.lang.ApplicationSpec;
+import com.github.dakusui.scriptiveunit.utils.JsonUtils;
+import org.codehaus.jackson.JsonNode;
+import org.codehaus.jackson.node.ObjectNode;
 import org.junit.Test;
 
 import java.lang.reflect.InvocationTargetException;
 
-import static com.github.dakusui.crest.Crest.allOf;
-import static com.github.dakusui.crest.Crest.asObject;
-import static com.github.dakusui.crest.Crest.asString;
-import static com.github.dakusui.crest.Crest.assertThat;
-import static com.github.dakusui.crest.Crest.call;
+import static com.github.dakusui.crest.Crest.*;
 import static com.github.dakusui.scriptiveunit.testutils.TestUtils.runClasses;
+import static com.github.dakusui.scriptiveunit.utils.IoUtils.currentWorkingDirectory;
 
 public class BrokenTest {
   @Test(expected = ScriptiveUnitException.class)
@@ -47,17 +46,17 @@ public class BrokenTest {
 
       @Override
       public JsonScript load(Class<?> driverClass) {
-        ApplicationSpec.Dictionary dictionary = new ApplicationSpec.Dictionary.Factory() {
-          ApplicationSpec.Dictionary create() {
-            return dict(
-                $("testOracles", array(
-                    dict(
-                        $("when", array("brokenForm")),
-                        $("then", array("matches", array("output"), "bye"))
+        return JsonScript.Utils.createScript(driverClass, new JsonUtils.NodeFactory<ObjectNode>() {
+              @Override
+              public JsonNode create() {
+                return obj($("testOracles", arr(
+                    obj(
+                        $("when", arr("brokenForm")),
+                        $("then", arr("matches", arr("output"), "bye"))
                     ))));
-          }
-        }.create();
-        return JsonScript.Utils.createScript(dictionary, driverClass);
+              }
+            }.get(),
+            currentWorkingDirectory());
       }
 
     }
@@ -68,4 +67,5 @@ public class BrokenTest {
       }
     }
   }
+
 }

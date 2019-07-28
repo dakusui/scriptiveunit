@@ -22,7 +22,10 @@ import java.util.stream.Stream;
 
 import static com.github.dakusui.scriptiveunit.annotations.Utils.createScriptCompilerFrom;
 import static com.github.dakusui.scriptiveunit.exceptions.ScriptiveUnitException.wrapIfNecessary;
+import static com.github.dakusui.scriptiveunit.utils.JsonUtils.readJsonNodeFromStream;
+import static com.github.dakusui.scriptiveunit.utils.JsonUtils.requireObjectNode;
 import static com.github.dakusui.scriptiveunit.utils.ReflectionUtils.getAnnotation;
+import static com.github.dakusui.scriptiveunit.utils.ReflectionUtils.openResourceAsStream;
 import static java.lang.String.format;
 import static java.util.stream.Collectors.toList;
 
@@ -133,7 +136,7 @@ public class ScriptiveSuiteSet extends ParentRunner<Runner> {
           createScriptCompilerFrom(getAnnotation(klass, RunScript.class)
               .orElseThrow(() -> Exceptions.noScriptCompilerProvided(klass))
               .compiler()),
-          new JsonScript.FromDriverClass(klass, scriptResourceName));
+          new JsonScript.FromDriverClass(klass, scriptResourceName, requireObjectNode(readJsonNodeFromStream(openResourceAsStream(scriptResourceName)))));
     } catch (Throwable throwable) {
       throw wrapIfNecessary(throwable);
     }

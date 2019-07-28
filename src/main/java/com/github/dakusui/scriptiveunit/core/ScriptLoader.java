@@ -6,6 +6,9 @@ import com.github.dakusui.scriptiveunit.annotations.Value;
 import com.github.dakusui.scriptiveunit.exceptions.Exceptions;
 import com.github.dakusui.scriptiveunit.utils.ReflectionUtils;
 
+import static com.github.dakusui.scriptiveunit.utils.JsonUtils.readJsonNodeFromStream;
+import static com.github.dakusui.scriptiveunit.utils.JsonUtils.requireObjectNode;
+import static com.github.dakusui.scriptiveunit.utils.ReflectionUtils.openResourceAsStream;
 import static java.util.Objects.requireNonNull;
 
 public interface ScriptLoader {
@@ -42,7 +45,7 @@ public interface ScriptLoader {
 
     @Override
     public JsonScript load(Class<?> driverClass) {
-      return new JsonScript.FromDriverClass(driverClass, System.getProperties().getProperty(getScriptResourceNameKey(driverClass)));
+      return new JsonScript.FromDriverClass(driverClass, System.getProperties().getProperty(getScriptResourceNameKey(driverClass)), requireObjectNode(readJsonNodeFromStream(openResourceAsStream(System.getProperties().getProperty(getScriptResourceNameKey(driverClass))))));
     }
 
     static String getScriptResourceNameKey(RunScript runScriptAnnotation) {

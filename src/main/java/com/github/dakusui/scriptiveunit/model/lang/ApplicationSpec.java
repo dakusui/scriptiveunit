@@ -1,25 +1,18 @@
 package com.github.dakusui.scriptiveunit.model.lang;
 
-import com.github.dakusui.scriptiveunit.exceptions.ScriptiveUnitException;
 import com.github.dakusui.scriptiveunit.exceptions.ScriptiveUnitUnclassifiedException;
 import com.github.dakusui.scriptiveunit.loaders.preprocessing.PreprocessingUnit;
-import com.github.dakusui.scriptiveunit.utils.Checks;
 
-import java.util.Arrays;
-import java.util.Iterator;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
-import static com.github.dakusui.scriptiveunit.model.lang.ApplicationSpec.Utils.nonDictionaryFound;
+import static com.github.dakusui.scriptiveunit.exceptions.Requirements.isInstanceOf;
+import static com.github.dakusui.scriptiveunit.exceptions.Requirements.require;
 import static com.github.dakusui.scriptiveunit.model.lang.ApplicationSpec.Utils.requireDictionary;
 import static com.github.dakusui.scriptiveunit.utils.Checks.check;
-import static java.lang.String.format;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static java.util.Objects.requireNonNull;
@@ -28,7 +21,7 @@ import static java.util.stream.Collectors.toList;
 public interface ApplicationSpec {
   Dictionary createDefaultValues();
 
-  List<PreprocessingUnit> preprocessors();
+  List<PreprocessingUnit> preprocessorUnits();
 
   Dictionary removeInheritanceDirective(Dictionary inputNode);
 
@@ -42,8 +35,8 @@ public interface ApplicationSpec {
             .map(each -> source.containsKey(each) ?
                 isDictionary(source.valueOf(each)) ?
                     $(each, deepMerge(
-                        requireDictionary(source.valueOf(each), nonDictionaryFound(each)),
-                        requireDictionary(target.valueOf(each), nonDictionaryFound(each)))) :
+                        requireDictionary(source.valueOf(each)),
+                        requireDictionary(target.valueOf(each)))) :
                     $(each, source.valueOf(each)) :
                 $(each, target.valueOf(each))),
         source.streamKeys()
@@ -102,23 +95,55 @@ public interface ApplicationSpec {
   enum Utils {
     ;
 
-    static Function<Node, ScriptiveUnitException> nonDictionaryFound(String key) {
-      return node -> {
-        throw new ScriptiveUnitUnclassifiedException(format("Non dictionary node:'%s' was found at key:'%s'", node, key));
-      };
-    }
-
-    public static Dictionary requireDictionary(Node node, Function<Node, ScriptiveUnitException> otherwiseThrow) {
-      Checks.check(isDictionary(node), () -> otherwiseThrow.apply(node));
-      return (Dictionary) node;
+    public static Dictionary requireDictionary(Node node) {
+      return (Dictionary) require(node, isInstanceOf(Dictionary.class), ScriptiveUnitUnclassifiedException::new);
     }
 
     private static String requireString(Object object) {
-      return (String) object;
+      return (String) require(object, isInstanceOf(String.class), ScriptiveUnitUnclassifiedException::new);
     }
   }
 
-  class Standard implements ApplicationSpec {
+  abstract class Base implements ApplicationSpec {
+    @Override
+    public List<String> parentsOf(Dictionary rootNode) {
+      return rootNode.containsKey(inheritanceKeyword()) ?
+          toStringList(requireArray(rootNode.valueOf(inheritanceKeyword()))) :
+          emptyList();
+    }
+
+    private String inheritanceKeyword() {
+      return HostSpec.Json.EXTENDS_KEYWORD;
+    }
+
+    private static Array requireArray(Node node) {
+      return (Array) require(node, isInstanceOf(Array.class), IllegalArgumentException::new);
+    }
+
+    private static Atom requireAtom(Node node) {
+      return (Atom) require(node, isInstanceOf(Atom.class), IllegalArgumentException::new);
+    }
+
+    @Override
+    public Dictionary removeInheritanceDirective(Dictionary inputNode) {
+      return ApplicationSpec.dict(
+          inputNode.streamKeys()
+              .filter(each -> !Objects.equals(inheritanceKeyword(), each))
+              .map(each -> $(each, inputNode.valueOf(each)))
+              .toArray(Dictionary.Entry[]::new)
+      );
+    }
+
+    private static List<String> toStringList(Array array) {
+      return array.stream()
+          .map(Base::requireAtom)
+          .map(Atom::get)
+          .map(Utils::requireString)
+          .collect(toList());
+    }
+  }
+
+  class Standard extends Base {
     @Override
     public Dictionary createDefaultValues() {
       return dict(
@@ -134,49 +159,11 @@ public interface ApplicationSpec {
     }
 
     @Override
-    public List<String> parentsOf(Dictionary rootNode) {
-      return rootNode.containsKey(inheritanceKeyword()) ?
-          toStringList(requireArray(rootNode.valueOf(inheritanceKeyword()))) :
-          emptyList();
-    }
-
-    @Override
-    public List<PreprocessingUnit> preprocessors() {
+    public List<PreprocessingUnit> preprocessorUnits() {
       return singletonList(
           PreprocessingUnit.preprocessor(toUniformedObjectNodeTranslator(),
               PreprocessingUnit.Utils.pathMatcher("factorSpace", "factors", ".*")));
     }
-
-    @Override
-    public Dictionary removeInheritanceDirective(Dictionary inputNode) {
-      return ApplicationSpec.dict(
-          inputNode.streamKeys()
-              .filter(each -> !Objects.equals(inheritanceKeyword(), each))
-              .map(each -> $(each, inputNode.valueOf(each)))
-              .toArray(Dictionary.Entry[]::new)
-      );
-    }
-
-    private String inheritanceKeyword() {
-      return HostSpec.Json.EXTENDS_KEYWORD;
-    }
-
-    private static Array requireArray(Node node) {
-      return (Array) node;
-    }
-
-    private static Atom requireAtom(Node node) {
-      return (Atom) node;
-    }
-
-    private static List<String> toStringList(Array array) {
-      return array.stream()
-          .map(Standard::requireAtom)
-          .map(Atom::get)
-          .map(Utils::requireString)
-          .collect(toList());
-    }
-
 
     static Function<Node, Node> toUniformedObjectNodeTranslator() {
       return (targetElement) -> {
@@ -324,6 +311,11 @@ public interface ApplicationSpec {
     }
 
     interface Factory {
+      static Dictionary emptyDictionary() {
+        return new Factory() {
+        }.dict();
+      }
+
       default Dictionary dict(Entry... entries) {
         return ApplicationSpec.dict(entries);
       }
@@ -346,7 +338,6 @@ public interface ApplicationSpec {
 
       default Entry $(String key, Object value) {
         return this.entry(key, value);
-      }
-    }
+      }    }
   }
 }

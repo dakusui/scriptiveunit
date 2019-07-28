@@ -6,8 +6,8 @@ import com.github.dakusui.actionunit.core.Context;
 import com.github.dakusui.jcunit.core.tuples.Tuple;
 import com.github.dakusui.scriptiveunit.core.Reporting;
 import com.github.dakusui.scriptiveunit.core.Script;
-import com.github.dakusui.scriptiveunit.exceptions.Exceptions;
 import com.github.dakusui.scriptiveunit.core.ScriptCompiler;
+import com.github.dakusui.scriptiveunit.exceptions.Exceptions;
 import com.github.dakusui.scriptiveunit.model.desc.TestSuiteDescriptor;
 import com.github.dakusui.scriptiveunit.model.desc.testitem.IndexedTestCase;
 import com.github.dakusui.scriptiveunit.model.desc.testitem.TestOracle;
@@ -17,17 +17,16 @@ import com.github.dakusui.scriptiveunit.model.session.action.Source;
 import com.github.dakusui.scriptiveunit.model.stage.Stage;
 import com.github.dakusui.scriptiveunit.model.statement.Statement;
 import com.github.dakusui.scriptiveunit.utils.ActionUtils;
+import org.codehaus.jackson.JsonNode;
+import org.codehaus.jackson.node.ArrayNode;
+import org.codehaus.jackson.node.ObjectNode;
 import org.hamcrest.Matcher;
 
 import java.util.Optional;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 
-import static com.github.dakusui.actionunit.core.ActionSupport.attempt;
-import static com.github.dakusui.actionunit.core.ActionSupport.leaf;
-import static com.github.dakusui.actionunit.core.ActionSupport.named;
-import static com.github.dakusui.actionunit.core.ActionSupport.nop;
-import static com.github.dakusui.actionunit.core.ActionSupport.sequential;
+import static com.github.dakusui.actionunit.core.ActionSupport.*;
 import static com.github.dakusui.scriptiveunit.utils.TestItemUtils.formatTestName;
 import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
@@ -36,7 +35,7 @@ import static org.junit.Assume.assumeThat;
 
 public interface Session {
 
-  Script getScript();
+  Script<JsonNode, ObjectNode, ArrayNode, JsonNode> getScript();
 
   TestSuiteDescriptor getTestSuiteDescriptor();
 
@@ -50,16 +49,16 @@ public interface Session {
 
   Action createTearDownAfterAllAction();
 
-  static Session create(Script script, ScriptCompiler scriptCompiler) {
+  static Session create(Script<JsonNode, ObjectNode, ArrayNode, JsonNode> script, ScriptCompiler scriptCompiler) {
     return new Impl(script, scriptCompiler);
   }
 
   class Impl implements Session {
-    private final Script<?, ?, ?, ?>                                                script;
+    private final Script<JsonNode, ObjectNode, ArrayNode, JsonNode>                 script;
     private final Function<String, BiFunction<IndexedTestCase, TestOracle, Report>> reportCreator;
     private final TestSuiteDescriptor                                               testSuiteDescriptor;
 
-    Impl(Script<?, ?, ?, ?> script, ScriptCompiler scriptCompiler) {
+    Impl(Script<JsonNode, ObjectNode, ArrayNode, JsonNode> script, ScriptCompiler scriptCompiler) {
       this.script = script;
       Reporting reporting = this.script.getReporting()
           .orElseThrow(Exceptions::noReportingObjectIsAvailable);
@@ -71,11 +70,11 @@ public interface Session {
           reporting.reportFileName,
           indexedTestCase,
           testOracle);
-      this.testSuiteDescriptor = scriptCompiler.compile(this);
+      this.testSuiteDescriptor = scriptCompiler.compile(this, script.languageSpec().resourceStoreSpec());
     }
 
     @Override
-    public Script getScript() {
+    public Script<JsonNode, ObjectNode, ArrayNode, JsonNode> getScript() {
       return this.script;
     }
 

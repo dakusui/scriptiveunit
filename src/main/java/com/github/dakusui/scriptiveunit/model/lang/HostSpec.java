@@ -1,7 +1,6 @@
 package com.github.dakusui.scriptiveunit.model.lang;
 
 import com.github.dakusui.scriptiveunit.utils.JsonUtils;
-import com.github.dakusui.scriptiveunit.utils.ReflectionUtils;
 import org.codehaus.jackson.JsonNode;
 import org.codehaus.jackson.node.ArrayNode;
 import org.codehaus.jackson.node.JsonNodeFactory;
@@ -10,11 +9,7 @@ import org.codehaus.jackson.node.ObjectNode;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
-import static com.github.dakusui.scriptiveunit.model.lang.ApplicationSpec.isArray;
-import static com.github.dakusui.scriptiveunit.model.lang.ApplicationSpec.isAtom;
-import static com.github.dakusui.scriptiveunit.model.lang.ApplicationSpec.isDictionary;
-import static com.github.dakusui.scriptiveunit.utils.CoreUtils.toBigDecimal;
-import static com.github.dakusui.scriptiveunit.utils.JsonUtils.requireObjectNode;
+import static com.github.dakusui.scriptiveunit.model.lang.ApplicationSpec.*;
 import static java.lang.String.format;
 
 public interface HostSpec<NODE, OBJECT extends NODE, ARRAY extends NODE, ATOM extends NODE> {
@@ -38,8 +33,6 @@ public interface HostSpec<NODE, OBJECT extends NODE, ARRAY extends NODE, ATOM ex
 
   Object valueOf(ATOM atom);
 
-  OBJECT readObjectNode(String resourceName);
-
   void putToObject(OBJECT ret, String eachKey, NODE jsonNodeValue);
 
   void addToArray(ARRAY ret, NODE eachNode);
@@ -48,7 +41,9 @@ public interface HostSpec<NODE, OBJECT extends NODE, ARRAY extends NODE, ATOM ex
 
   ApplicationSpec.Dictionary toApplicationDictionary(OBJECT object);
 
-  ApplicationSpec.Dictionary readRawScript(String resourceName);
+  ApplicationSpec.Dictionary readRawScript(String resourceName, ResourceStoreSpec resourceStoreSpec);
+
+  OBJECT readHostDictionary(String resourceName, ResourceStoreSpec resourceStoreSpec);
 
   interface Default<NODE, OBJECT extends NODE, ARRAY extends NODE, ATOM extends NODE> extends HostSpec<NODE, OBJECT, ARRAY, ATOM> {
     @Override
@@ -131,18 +126,7 @@ public interface HostSpec<NODE, OBJECT extends NODE, ARRAY extends NODE, ATOM ex
 
     @Override
     public JsonNode newAtomNode(Object value) {
-      if (value == null)
-        return JsonNodeFactory.instance.nullNode();
-      if (value instanceof Number) {
-        if (value instanceof Integer)
-          return JsonNodeFactory.instance.numberNode((Integer) value);
-        if (value instanceof Long)
-          return JsonNodeFactory.instance.numberNode((Long) value);
-        return JsonNodeFactory.instance.numberNode(toBigDecimal((Number) value));
-      }
-      if (value instanceof String)
-        return JsonNodeFactory.instance.textNode((String) value);
-      throw new RuntimeException(format("Unsupported value was given: '%s'", value));
+      return JsonUtils.toJsonNode(value);
     }
 
     @Override
@@ -179,29 +163,7 @@ public interface HostSpec<NODE, OBJECT extends NODE, ARRAY extends NODE, ATOM ex
 
     @Override
     public Object valueOf(JsonNode jsonNode) {
-      if (jsonNode.isNull())
-        return null;
-      if (jsonNode.isTextual())
-        return jsonNode.asText();
-      if (jsonNode.isBoolean())
-        return jsonNode.asBoolean();
-      if (jsonNode.isInt())
-        return jsonNode.asInt();
-      if (jsonNode.isLong())
-        return jsonNode.asLong();
-      if (jsonNode.isBigInteger())
-        return jsonNode.getBigIntegerValue();
-      if (jsonNode.isBigDecimal())
-        return jsonNode.getDecimalValue();
-      if (jsonNode.isNumber()) {
-        return jsonNode.getDecimalValue();
-      }
-      throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public ObjectNode readObjectNode(String resourceName) {
-      return requireObjectNode(JsonUtils.readJsonNodeFromStream(ReflectionUtils.openResourceAsStream(resourceName)));
+      return JsonUtils.toPlainObject(jsonNode);
     }
 
     @Override
@@ -215,8 +177,16 @@ public interface HostSpec<NODE, OBJECT extends NODE, ARRAY extends NODE, ATOM ex
     }
 
     @Override
-    public ApplicationSpec.Dictionary readRawScript(String resourceName) {
-      return this.toApplicationDictionary(this.readObjectNode(resourceName));
+    public ApplicationSpec.Dictionary readRawScript(
+        String resourceName,
+        ResourceStoreSpec resourceStoreSpec) {
+      return this.toApplicationDictionary(readHostDictionary(resourceName, resourceStoreSpec));
     }
+
+    @Override
+    public ObjectNode readHostDictionary(String resourceName, ResourceStoreSpec resourceStoreSpec) {
+      return resourceStoreSpec.readObjectNode(resourceName);
+    }
+
   }
 }
