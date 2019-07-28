@@ -555,4 +555,28 @@ public class PreprocessorTest {
     }
   }
 
+  public static class FromFile extends Base {
+    @Override
+    public ApplicationSpec.Dictionary given() {
+      return new ApplicationSpec.Dictionary.Factory() {
+        ApplicationSpec.Dictionary create() {
+          return dict($("$extends", array("src/test/resources/examples/from_file.json")));
+        }
+      }.create();
+    }
+
+    @Override
+    void verifyObjectNode(ObjectNode preprocessedObjectNode) {
+      assertThat(
+          preprocessedObjectNode,
+          allOf(
+              asString(call("get", "keyOnlyInParent1").andThen("asText").$())
+                  .equalTo("valueOnlyInParent1").$(),
+              asString(call("get", "keyOnlyInParent2").andThen("asText").$())
+                  .equalTo("valueOnlyInParent2").$(),
+              asString(call("get", "keyBothInParent1AndParent2").andThen("asText").$())
+                  .equalTo("valueInParent1").$()
+          ));
+    }
+  }
 }

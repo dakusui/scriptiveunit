@@ -4,6 +4,7 @@ import com.github.dakusui.scriptiveunit.core.ScriptLoader.FromResourceSpecifiedB
 import com.github.dakusui.scriptiveunit.model.form.FormRegistry;
 import com.github.dakusui.scriptiveunit.model.lang.ApplicationSpec;
 import com.github.dakusui.scriptiveunit.model.lang.LanguageSpec;
+import com.github.dakusui.scriptiveunit.utils.IoUtils;
 import org.codehaus.jackson.JsonNode;
 import org.codehaus.jackson.node.ArrayNode;
 import org.codehaus.jackson.node.ObjectNode;
@@ -88,7 +89,17 @@ public interface JsonScript extends Script<JsonNode, ObjectNode, ArrayNode, Json
     }
   }
 
-  enum Utils {
+  class FromFile extends Default {
+    public FromFile(Class<?> driverClass, String scriptFileName) {
+      super(Utils.createLanguageSpecFrom(
+          createFormRegistry(
+              Utils.createDriverObject(driverClass)),
+          new File(scriptFileName).getParentFile()),
+          Reporting.create(),
+          scriptFileName,
+          requireObjectNode(readJsonNodeFromStream(IoUtils.openFile(new File(scriptFileName)))));
+    }
+  }  enum Utils {
     ;
 
     public static JsonScript createScript(final Class<?> driverClass, final ObjectNode mainNode, final File baseDir) {

@@ -1,4 +1,4 @@
-package com.github.dakusui.scriptiveunit.modeltests;
+package com.github.dakusui.scriptiveunit.testutils;
 
 import com.github.dakusui.scriptiveunit.core.JsonScript;
 import com.github.dakusui.scriptiveunit.core.Reporting;
@@ -36,7 +36,7 @@ public class UtScript implements JsonScript {
     return mainNode;
   }
 
-  static JsonScript create(FormRegistry formRegistry, ObjectNode mainNode) {
+  public static JsonScript create(FormRegistry formRegistry, ObjectNode mainNode) {
     return new UtScript(LanguageSpec.ForJson.create(formRegistry, currentWorkingDirectory()), mainNode);
   }
 }
