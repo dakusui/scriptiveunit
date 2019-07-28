@@ -1,11 +1,14 @@
 package com.github.dakusui.scriptiveunit.loaders.preprocessing;
 
 import com.github.dakusui.scriptiveunit.model.lang.ApplicationSpec;
+import com.github.dakusui.scriptiveunit.model.lang.ApplicationSpec.Dictionary;
 import com.github.dakusui.scriptiveunit.model.lang.HostSpec;
 import com.github.dakusui.scriptiveunit.model.lang.ResourceStoreSpec;
 
+import java.util.Comparator;
 import java.util.List;
 
+import static com.github.dakusui.scriptiveunit.model.lang.ApplicationSpec.Dictionary.Factory.emptyDictionary;
 import static java.util.Objects.requireNonNull;
 
 public interface Preprocessor {
@@ -15,7 +18,7 @@ public interface Preprocessor {
         .build();
   }
 
-  ApplicationSpec.Dictionary preprocess(ApplicationSpec.Dictionary rawScript, ResourceStoreSpec resourceStoreSpec);
+  Dictionary preprocess(Dictionary rawScript, ResourceStoreSpec resourceStoreSpec);
 
   class Builder {
     private ApplicationSpec applicationSpec;
@@ -35,52 +38,69 @@ public interface Preprocessor {
     public Preprocessor build() {
       requireNonNull(applicationSpec);
       requireNonNull(hostSpec);
-      return new Preprocessor() {
-        @Override
-        public ApplicationSpec.Dictionary preprocess(ApplicationSpec.Dictionary rawScript, ResourceStoreSpec resourceStoreSpec) {
-          ApplicationSpec.Dictionary ret = applicationSpec.createDefaultValues();
-          ret = applicationSpec.deepMerge(
-              preprocess(rawScript, applicationSpec.preprocessorUnits()),
-              ret
-          );
-          for (String parent : parentsOf(rawScript, applicationSpec)) {
-            ret = applicationSpec.deepMerge(
-                ret,
-                readApplicationDictionaryWithMerging(parent, applicationSpec, resourceStoreSpec)
-            );
-          }
-          return applicationSpec.removeInheritanceDirective(ret);
-        }
-
-        ApplicationSpec.Dictionary readApplicationDictionaryWithMerging(
-            String resourceName,
-            ApplicationSpec applicationSpec,
-            ResourceStoreSpec resourceStoreSpec) {
-          ApplicationSpec.Dictionary inputDictionary = hostSpec.readRawScript(resourceName, resourceStoreSpec);
-          ApplicationSpec.Dictionary work_ = inputDictionary;
-          ApplicationSpec.Dictionary preprocessedInputDictionary = preprocess(
-              work_,
-              applicationSpec.preprocessorUnits());
-          List<String> parents = parentsOf(inputDictionary, applicationSpec);
-          for (String parentResourceName : parents)
-            work_ = applicationSpec.deepMerge(
-                work_,
-                readApplicationDictionaryWithMerging(parentResourceName, applicationSpec, resourceStoreSpec)
-            );
-          return applicationSpec.deepMerge(preprocessedInputDictionary, work_);
-        }
-
-        ApplicationSpec.Dictionary preprocess(ApplicationSpec.Dictionary inputNode, List<PreprocessingUnit> preprocessingUnits) {
-          for (PreprocessingUnit each : preprocessingUnits) {
-            inputNode = ApplicationSpec.preprocess(inputNode, each);
-          }
-          return inputNode;
-        }
-      };
+      return new Impl(applicationSpec, hostSpec);
     }
 
-    static List<String> parentsOf(ApplicationSpec.Dictionary rawScript, ApplicationSpec applicationSpec) {
-      return applicationSpec.parentsOf(rawScript);
+    private static List<String> parentsOf(Dictionary rawScript, ApplicationSpec applicationSpec) {
+      List<String> ret = applicationSpec.parentsOf(rawScript);
+      ret.sort(Comparator.reverseOrder());
+      return ret;
+    }
+
+    private static class Impl implements Preprocessor {
+      private ApplicationSpec applicationSpec;
+      private HostSpec        hostSpec;
+
+      Impl(ApplicationSpec applicationSpec, HostSpec hostSpec) {
+        this.applicationSpec = applicationSpec;
+        this.hostSpec = hostSpec;
+      }
+
+      @Override
+      public Dictionary preprocess(Dictionary rawScript, ResourceStoreSpec resourceStoreSpec) {
+        Dictionary input = performPreprocessingUnits(rawScript, applicationSpec.preprocessorUnits());
+        Dictionary defaultValues = applicationSpec.createDefaultValues();
+        Dictionary work = emptyDictionary();
+        {
+          for (String parent : parentsOf(input, applicationSpec)) {
+            work = applicationSpec.deepMerge(
+                readApplicationDictionaryWithMerging(parent, applicationSpec, resourceStoreSpec),
+                work
+            );
+          }
+        }
+        work = applicationSpec.deepMerge(work, defaultValues);
+        work = applicationSpec.deepMerge(input, work);
+        return applicationSpec.removeInheritanceDirective(work);
+      }
+
+      Dictionary readApplicationDictionaryWithMerging(
+          String resourceName,
+          ApplicationSpec applicationSpec,
+          ResourceStoreSpec resourceStoreSpec) {
+        Dictionary input = hostSpec.readRawScript(resourceName, resourceStoreSpec);
+
+        Dictionary preprocessedInputDictionary = performPreprocessingUnits(
+            input,
+            applicationSpec.preprocessorUnits());
+        List<String> parents = parentsOf(preprocessedInputDictionary, applicationSpec);
+
+        Dictionary work_ = preprocessedInputDictionary;
+        for (String eachParentResourceName : parents)
+          work_ = applicationSpec.deepMerge(
+              work_,
+              readApplicationDictionaryWithMerging(eachParentResourceName, applicationSpec, resourceStoreSpec));
+        return applicationSpec.deepMerge(preprocessedInputDictionary, work_);
+      }
+
+      Dictionary performPreprocessingUnits(
+          Dictionary inputNode,
+          List<PreprocessingUnit> preprocessingUnits) {
+        for (PreprocessingUnit each : preprocessingUnits) {
+          inputNode = ApplicationSpec.preprocess(inputNode, each);
+        }
+        return inputNode;
+      }
     }
   }
 }

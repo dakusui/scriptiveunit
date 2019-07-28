@@ -311,6 +311,11 @@ public interface ApplicationSpec {
     }
 
     interface Factory {
+      static Dictionary emptyDictionary() {
+        return new Factory() {
+        }.dict();
+      }
+
       default Dictionary dict(Entry... entries) {
         return ApplicationSpec.dict(entries);
       }

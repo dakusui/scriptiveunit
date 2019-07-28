@@ -274,7 +274,7 @@ public class PreprocessorTest {
         ApplicationSpec.Dictionary create() {
           return dict(
               $("$extends", array("parent")),
-              $("key", "valueInChild"),
+              $("keyBothInParentAndChild", "valueInChild"),
               $("keyOnlyInChild", "valueOnlyInChild")
           );
         }
@@ -287,7 +287,7 @@ public class PreprocessorTest {
           @Override
           public JsonNode create() {
             return obj(
-                $("key", $("valueInParent")),
+                $("keyBothInParentAndChild", $("valueInParent")),
                 $("keyOnlyInParent", $("valueOnlyInParent"))
             );
           }
@@ -300,7 +300,7 @@ public class PreprocessorTest {
       assertThat(
           preprocessedObjectNode,
           allOf(
-              asString(call("get", "key").andThen("asText").$()).equalTo("valueInChild").$(),
+              asString(call("get", "keyBothInParentAndChild").andThen("asText").$()).equalTo("valueInChild").$(),
               asString(call("get", "keyOnlyInChild").andThen("asText").$()).equalTo("valueOnlyInChild").$(),
               asString(call("get", "keyOnlyInParent").andThen("asText").$()).equalTo("valueOnlyInParent").$()
           ));
