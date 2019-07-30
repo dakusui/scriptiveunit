@@ -17,11 +17,17 @@ interface Metric<E> {
 
     @Override
     default double calc(List<E> docs) {
+      if (docs.isEmpty())
+        return Double.NaN;
       return ((double) docs.stream().filter(this::isRelevant).count()) / ((double) docs.size());
     }
   }
 
   interface Dcg<E> extends Metric<E> {
 
+  }
+
+  public static void main(String...args) {
+    System.out.println(Double.NaN + 1);
   }
 }
