@@ -1,5 +1,6 @@
 package com.github.dakusui.scriptiveunit.libs.extras;
 
+import com.github.dakusui.scriptiveunit.annotations.Scriptable;
 import com.github.dakusui.scriptiveunit.libs.Predicates;
 import com.github.dakusui.scriptiveunit.model.form.value.Value;
 import com.github.dakusui.scriptiveunit.model.form.value.ValueList;
@@ -11,26 +12,38 @@ import java.util.Set;
 import java.util.function.Function;
 import java.util.function.Predicate;
 
-import static java.util.Arrays.asList;
+import static java.util.Objects.requireNonNull;
 
-abstract public class SearchEngine<REQ extends SearchEngine.Request, RESP extends SearchEngine.Response<E>, E> {
-  Value<RESP> service(Value<REQ> request) {
-    return s -> performService(request.apply(s));
-  }
-
-  abstract RESP performService(REQ request);
-
-  abstract <T> List<Checker<E, RESP, T>> checkers();
-
+abstract public class SearchEngine<REQ extends SearchEngine.Request, RESP extends SearchEngine.Response<DOC>, DOC> {
   private final Predicates predicates = new Predicates();
 
-  Value<Boolean> verify(Value<RESP> request) {
+  @Scriptable
+  Value<RESP> issueRequest(Value<REQ> request) {
+    return s -> service(request.apply(s));
+  }
+
+  @Scriptable
+  public Value<Boolean> verifyResponseWith(Value<RESP> request, ValueList<Checker<DOC, RESP, ?>> checkers) {
     return predicates.and(ValueList.create(checks(request)));
   }
 
-  private Checker.DocsMetric<E, RESP> precision(Predicate<E> documentOracle, Predicate<Double> criterion) {
-    return new Checker.DocsMetric<E, RESP>() {
-      Metric.Precision<E> metric = documentOracle::test;
+  protected abstract RESP service(REQ request);
+
+  protected abstract String idOf(DOC doc);
+
+  private static <DOC, RESP extends Response<DOC>> Checker.DocsMetric<DOC, RESP> precisionCheckerByKnownRelevantDocIds(List<String> relevantDocIds, Function<DOC, String> id, Predicate<? super Double> criterion) {
+    Set<String> relevantDocIdSet = new HashSet<>(requireNonNull(relevantDocIds));
+    return precisionChecker((DOC doc) -> relevantDocIdSet.contains(id.apply(doc)), criterion);
+  }
+
+  private static <DOC, RESP extends Response<DOC>> Checker.DocsMetric<DOC, RESP> precisionCheckerByKnownIrrelevantDocIds(List<String> irrelevantDocIds, Function<DOC, String> id, Predicate<? super Double> criterion) {
+    Set<String> irrelevantDocIdSet = new HashSet<>(requireNonNull(irrelevantDocIds));
+    return precisionChecker((DOC doc) -> !irrelevantDocIdSet.contains(id.apply(doc)), criterion);
+  }
+
+  private static <DOC, RESP extends Response<DOC>> Checker.DocsMetric<DOC, RESP> precisionChecker(Predicate<DOC> documentOracle, Predicate<? super Double> criterion) {
+    return new Checker.DocsMetric<DOC, RESP>() {
+      Metric.Precision<DOC> metric = documentOracle::test;
 
       @Override
       public Double transform(RESP response) {
@@ -42,16 +55,6 @@ abstract public class SearchEngine<REQ extends SearchEngine.Request, RESP extend
         return criterion.test(value);
       }
     };
-  }
-
-  Predicate<E> knownToBeRelevant(Function<E, String> id, String... ids) {
-    Set<String> idsOfKnownToBeRelevant = new HashSet<>(asList(ids));
-    return entry -> idsOfKnownToBeRelevant.contains(id.apply(entry));
-  }
-
-  Predicate<E> knownToBeIrrelevant(Function<E, String> id, String... ids) {
-    Set<String> idsOfKnownToBeRelevant = new HashSet<>(asList(ids));
-    return entry -> !idsOfKnownToBeRelevant.contains(id.apply(entry));
   }
 
   protected List<Value<Boolean>> checks(Value<RESP> request) {
