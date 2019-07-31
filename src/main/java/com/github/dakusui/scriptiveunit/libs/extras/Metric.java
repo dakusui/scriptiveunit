@@ -24,10 +24,17 @@ interface Metric<E> {
   }
 
   interface Dcg<E> extends Metric<E> {
+    int p();
 
-  }
+    double relevancy(E doc);
 
-  public static void main(String...args) {
-    System.out.println(Double.NaN + 1);
+    @Override
+    default double calc(List<E> docs) {
+      double ret = 0;
+      for (int i = 1; i < Math.min(p(), docs.size()); i++) {
+        ret += (Math.pow(2, relevancy(docs.get(i))) - 1) / Math.log(i + 1);
+      }
+      return ret;
+    }
   }
 }

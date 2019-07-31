@@ -2,9 +2,9 @@ package com.github.dakusui.scriptiveunit.libs;
 
 import com.github.dakusui.scriptiveunit.annotations.Doc;
 import com.github.dakusui.scriptiveunit.annotations.Scriptable;
+import com.github.dakusui.scriptiveunit.model.form.value.Value;
 import com.github.dakusui.scriptiveunit.model.form.value.ValueList;
 import com.github.dakusui.scriptiveunit.model.stage.Stage;
-import com.github.dakusui.scriptiveunit.model.form.value.Value;
 
 import java.util.Objects;
 
@@ -12,6 +12,25 @@ import static com.github.dakusui.scriptiveunit.utils.CoreUtils.toBigDecimalIfPos
 import static java.util.Objects.requireNonNull;
 
 public class Predicates {
+  @Scriptable
+  @Doc({
+      "Returns true if and only if all the given predicates return true.",
+      "Predicates are evaluated sequentially in an order where they are given.",
+      "Even when one of those predicate is evaluated false, the rest will still be evaluated.",
+      "In case no predicate is given, this returns true"
+  })
+  public final Value<Boolean> allOf(
+      @Doc("Predicates to be evaluated.") ValueList<Boolean> predicates) {
+    return (Stage input) -> {
+      boolean ret = true;
+      for (Value<Boolean> each : predicates) {
+        if (!(requireNonNull(each.apply(input)))) {
+          ret = false;
+        }
+      }
+      return ret;
+    };
+  }
 
   @SuppressWarnings("unused")
   @Scriptable
@@ -30,6 +49,27 @@ public class Predicates {
         }
       }
       return true;
+    };
+  }
+
+  @SuppressWarnings("unused")
+  @Scriptable
+  @Doc({
+      "Returns true if any of the given predicates return true.",
+      "Predicates are evaluated sequentially in an order where they are given.",
+      "Even when one of those predicate is evaluated true, the rest will still be evaluated.",
+      "In case no predicate is given, this returns false"
+  })
+  public final Value<Boolean> anyOf(
+      @Doc("Predicates to be evaluated.") ValueList<Boolean> predicates) {
+    return (Stage input) -> {
+      boolean ret = false;
+      for (Value<Boolean> each : predicates) {
+        if (!(requireNonNull(each.apply(input)))) {
+          ret = true;
+        }
+      }
+      return ret;
     };
   }
 
