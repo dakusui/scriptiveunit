@@ -10,32 +10,35 @@ public interface ResponseChecker<REQ extends SearchEngine.Request, RESP extends 
 
   boolean verify(T value);
 
-  interface Docs<REQ extends SearchEngine.Request, RESP extends SearchEngine.Response<DOC>, DOC> extends ResponseChecker<REQ, RESP, DOC, List<DOC>> {
+  interface ByDocs<REQ extends SearchEngine.Request, RESP extends SearchEngine.Response<DOC>, DOC> extends ResponseChecker<REQ, RESP, DOC, List<DOC>> {
 
   }
 
-  interface DocsMetric<DOC, REQ extends SearchEngine.Request,RESP extends SearchEngine.Response<DOC>> extends ResponseChecker<REQ, RESP, DOC, Double> {
+  interface ByDocsMetric<DOC, REQ extends SearchEngine.Request,RESP extends SearchEngine.Response<DOC>> extends ResponseChecker<REQ, RESP, DOC, Double> {
 
   }
 
-  static <DOC, REQ extends SearchEngine.Request, RESP extends SearchEngine.Response<DOC>> DocsMetric<DOC, REQ, RESP> precisionCheckerByKnownRelevantDocIds(Collection<String> relevantDocIds, Function<DOC, String> id, Predicate<? super Double> criterion) {
+  static <DOC, REQ extends SearchEngine.Request, RESP extends SearchEngine.Response<DOC>> ByDocsMetric<DOC, REQ, RESP> precisionCheckerByKnownRelevantDocIds(Collection<String> relevantDocIds, Function<DOC, String> id, Predicate<? super Double> criterion) {
     return precisionChecker((DOC doc) -> relevantDocIds.contains(id.apply(doc)), criterion);
   }
 
-  static <DOC, REQ extends SearchEngine.Request, RESP extends SearchEngine.Response<DOC>> DocsMetric<DOC, REQ, RESP> precisionCheckerByKnownIrrelevantDocIds(Collection<String> irrelevantDocIds, Function<DOC, String> id, Predicate<? super Double> criterion) {
+  static <DOC, REQ extends SearchEngine.Request, RESP extends SearchEngine.Response<DOC>> ByDocsMetric<DOC, REQ, RESP> precisionCheckerByKnownIrrelevantDocIds(Collection<String> irrelevantDocIds, Function<DOC, String> id, Predicate<? super Double> criterion) {
     return precisionChecker((DOC doc) -> !irrelevantDocIds.contains(id.apply(doc)), criterion);
   }
 
   static <DOC, REQ extends SearchEngine.Request, RESP extends SearchEngine.Response<DOC>>
-  DocsMetric<DOC, REQ, RESP> precisionChecker(Predicate<DOC> documentOracle, Predicate<? super Double> criterion) {
+  ByDocsMetric<DOC, REQ, RESP> precisionChecker(Predicate<DOC> documentOracle, Predicate<? super Double> criterion) {
     return Metric.Precision.create(documentOracle, criterion);
   }
 
-  static <DOC, REQ extends SearchEngine.Request, RESP extends SearchEngine.Response<DOC>> DocsMetric<DOC, REQ, RESP> dcgChecker(Function<DOC, Double> relevancy, int p, Predicate<? super Double> criterion) {
+  static <DOC, REQ extends SearchEngine.Request, RESP extends SearchEngine.Response<DOC>>
+  ByDocsMetric<DOC, REQ, RESP>
+  dcgChecker(Function<DOC, Double> relevancy, int p, Predicate<? super Double> criterion) {
     return createChecker(criterion, Metric.Dcg.create(relevancy, p));
   }
 
-  static <DOC, REQ extends SearchEngine.Request, RESP extends SearchEngine.Response<DOC>> DocsMetric<DOC, REQ, RESP>
+  static <DOC, REQ extends SearchEngine.Request, RESP extends SearchEngine.Response<DOC>>
+  ByDocsMetric<DOC, REQ, RESP>
   ndcgChecker(Function<DOC, Double> relevancy, Integer p, double idcg, Predicate<? super Double> criterion) {
     return createChecker(
         criterion,
@@ -43,8 +46,8 @@ public interface ResponseChecker<REQ extends SearchEngine.Request, RESP extends 
   }
 
   static <DOC, REQ extends SearchEngine.Request, RESP extends SearchEngine.Response<DOC>>
-  DocsMetric<DOC, REQ, RESP> createChecker(Predicate<? super Double> criterion, final Metric<DOC, ? super REQ> metric) {
-    return new DocsMetric<DOC, REQ, RESP>() {
+  ByDocsMetric<DOC, REQ, RESP> createChecker(Predicate<? super Double> criterion, final Metric<DOC, ? super REQ> metric) {
+    return new ByDocsMetric<DOC, REQ, RESP>() {
       Metric<DOC, ? super REQ> dcg = metric;
 
       @Override

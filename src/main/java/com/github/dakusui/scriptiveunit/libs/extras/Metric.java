@@ -16,7 +16,7 @@ interface Metric<DOC, REQ extends SearchEngine.Request> {
 
   interface Precision<E> extends Metric<E, SearchEngine.Request> {
     static
-    <DOC, REQ extends SearchEngine.Request, RESP extends SearchEngine.Response<DOC>> ResponseChecker.DocsMetric<DOC, REQ, RESP>
+    <DOC, REQ extends SearchEngine.Request, RESP extends SearchEngine.Response<DOC>> ResponseChecker.ByDocsMetric<DOC, REQ, RESP>
     create(Predicate<DOC> documentOracle, Predicate<? super Double> criterion) {
       return ResponseChecker.createChecker(criterion, (Precision<DOC>) documentOracle::test);
     }
@@ -32,7 +32,7 @@ interface Metric<DOC, REQ extends SearchEngine.Request> {
   }
 
   interface Dcg<E> extends Metric<E, SearchEngine.Request> {
-    static <DOC> Dcg<DOC> create(Function<DOC, Double> relevancy, Integer p) {
+    static <DOC> Dcg<DOC> create(Function<DOC, Double> relevancy, int p) {
       return new Dcg<DOC>() {
         @Override
         public int p() {
@@ -58,5 +58,10 @@ interface Metric<DOC, REQ extends SearchEngine.Request> {
       }
       return ret;
     }
+  }
+
+  interface IDcg<E> extends Metric<E, SearchEngine.Request> {
+    Dcg<E> dcg();
+
   }
 }
