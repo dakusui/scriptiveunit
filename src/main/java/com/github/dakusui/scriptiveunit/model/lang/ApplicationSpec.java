@@ -338,6 +338,7 @@ public interface ApplicationSpec {
 
       default Entry $(String key, Object value) {
         return this.entry(key, value);
-      }    }
+      }
+    }
   }
 }

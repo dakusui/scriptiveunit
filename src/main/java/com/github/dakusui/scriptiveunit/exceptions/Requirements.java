@@ -14,13 +14,13 @@ import static java.util.Objects.requireNonNull;
 public enum Requirements {
   ;
 
-  public static <T> Predicate<? super T> isInstanceOf(Class<T> klass) {
+  public static <T> Predicate<T> isInstanceOf(Class<? extends T> klass) {
     return Printable.predicate(
         () -> format("isInstanceOf[%s]", klass.getSimpleName()),
         v -> v != null && klass.isAssignableFrom(v.getClass()));
   }
 
-  public static <T> Predicate<? super T> isNonNull() {
+  public static <T> Predicate<T> isNonNull() {
     return Printable.predicate(() -> "isNonNull", Objects::nonNull);
   }
 
@@ -32,7 +32,7 @@ public enum Requirements {
     return Printable.predicate(() -> format("isGreaterThanOrEqualTo[%s]", value), v -> v.compareTo(value) >= 0);
   }
 
-  public static <V> V require(V v, Predicate<V> req, Function<String, ? extends RuntimeException> otherwise) {
+  public static <V> V require(V v, Predicate<? super V> req, Function<String, ? extends RuntimeException> otherwise) {
     requireNonNull(req);
     if (req.test(v))
       return v;
@@ -43,7 +43,7 @@ public enum Requirements {
             "(unknown)"));
   }
 
-  public static <V> V requireState(V v, Predicate<V> req) {
+  public static <V> V requireState(V v, Predicate<? super V> req) {
     return require(v, req, IllegalStateException::new);
   }
 

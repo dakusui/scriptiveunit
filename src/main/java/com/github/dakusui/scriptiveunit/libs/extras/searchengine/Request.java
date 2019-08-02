@@ -8,6 +8,34 @@ import static com.github.dakusui.scriptiveunit.exceptions.Requirements.*;
 
 public interface Request {
   interface Option<V> {
+    static <T> Option<T> create(final String name, final T value) {
+      return new Option<T>() {
+        @Override
+        public String name() {
+          return name;
+        }
+
+        @Override
+        public Optional<T> value() {
+          return Optional.of(value);
+        }
+      };
+    }
+
+    static <T> Option<T> empty(final String name) {
+      return new Option<T>() {
+        @Override
+        public String name() {
+          return name;
+        }
+
+        @Override
+        public Optional<T> value() {
+          return Optional.empty();
+        }
+      };
+    }
+
     String name();
 
     Optional<V> value();

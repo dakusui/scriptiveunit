@@ -10,7 +10,6 @@ import com.github.dakusui.scriptiveunit.model.form.value.Value;
 import com.github.dakusui.scriptiveunit.model.form.value.ValueList;
 
 import java.util.List;
-import java.util.Optional;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
@@ -41,32 +40,12 @@ public class SearchEngineLib<REQ extends Request, RESP extends Response<DOC>, DO
 
   @Scriptable
   public <T> Value<Request.Option<T>> option(Value<String> name, Value<T> value) {
-    return s -> new Request.Option<T>() {
-      @Override
-      public String name() {
-        return name.apply(s);
-      }
-
-      @Override
-      public Optional<T> value() {
-        return Optional.of(value.apply(s));
-      }
-    };
+    return s -> Request.Option.create(name.apply(s), value.apply(s));
   }
 
   @Scriptable
   public <T> Value<Request.Option<T>> emptyOption(Value<String> name) {
-    return s -> new Request.Option<T>() {
-      @Override
-      public String name() {
-        return name.apply(s);
-      }
-
-      @Override
-      public Optional<T> value() {
-        return Optional.empty();
-      }
-    };
+    return s -> Request.Option.empty(name.apply(s));
   }
 
   @Scriptable

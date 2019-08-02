@@ -5,26 +5,28 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 
 interface Metric<DOC, REQ extends Request> {
-  double calc(List<DOC> docs, REQ request);
+  double calc(List<DOC> docs);
 
   interface Size<E> extends Metric<E, Request> {
     @Override
-    default double calc(List<E> docs, Request request) {
+    default double calc(List<E> docs) {
       return docs.size();
     }
   }
 
-  interface Precision<E> extends Metric<E, Request> {
+  interface Precision<DOC> extends Metric<DOC, Request> {
     static
     <DOC, REQ extends Request, RESP extends Response<DOC>> ResponseChecker.ByDocsMetric<DOC, REQ, RESP>
     create(Predicate<DOC> documentOracle, Predicate<? super Double> criterion) {
       return ResponseChecker.createChecker(criterion, (Precision<DOC>) documentOracle::test);
     }
 
-    boolean isRelevant(E doc);
+
+
+    boolean isRelevant(DOC doc);
 
     @Override
-    default double calc(List<E> docs, Request request) {
+    default double calc(List<DOC> docs) {
       if (docs.isEmpty())
         return Double.NaN;
       return ((double) docs.stream().filter(this::isRelevant).count()) / ((double) docs.size());
@@ -51,7 +53,7 @@ interface Metric<DOC, REQ extends Request> {
     double relevancy(E doc);
 
     @Override
-    default double calc(List<E> docs, Request request) {
+    default double calc(List<E> docs) {
       double ret = 0;
       for (int i = 1; i < Math.min(p(), docs.size()); i++) {
         ret += (Math.pow(2, relevancy(docs.get(i))) - 1) / Math.log(i + 1);

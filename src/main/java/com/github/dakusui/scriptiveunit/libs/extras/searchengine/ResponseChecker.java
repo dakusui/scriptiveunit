@@ -6,7 +6,7 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 
 public interface ResponseChecker<REQ extends Request, RESP extends Response<DOC>, DOC, T> {
-  T transform(REQ res, RESP response);
+  T transform(REQ request, RESP response);
 
   boolean verify(T value);
 
@@ -42,7 +42,7 @@ public interface ResponseChecker<REQ extends Request, RESP extends Response<DOC>
   ndcgChecker(Function<DOC, Double> relevancy, Integer p, double idcg, Predicate<? super Double> criterion) {
     return createChecker(
         criterion,
-        (docs, request) -> idcg != 0 ? Metric.Dcg.create(relevancy, p).calc(docs, request) / idcg : Double.NaN);
+        (docs) -> idcg != 0 ? Metric.Dcg.create(relevancy, p).calc(docs) / idcg : Double.NaN);
   }
 
   static <DOC, REQ extends Request, RESP extends Response<DOC>>
@@ -51,8 +51,8 @@ public interface ResponseChecker<REQ extends Request, RESP extends Response<DOC>
       Metric<DOC, ? super REQ> dcg = metric;
 
       @Override
-      public Double transform(REQ req, RESP response) {
-        return dcg.calc(response.docs(), req);
+      public Double transform(REQ request, RESP response) {
+        return dcg.calc(response.docs());
       }
 
       @Override
