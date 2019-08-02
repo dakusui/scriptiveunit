@@ -7,6 +7,14 @@ import java.util.Optional;
 import static com.github.dakusui.scriptiveunit.exceptions.Requirements.*;
 
 public interface Request {
+  String userQuery();
+
+  int offset();
+
+  int hits();
+
+  List<Option<?>> options();
+
   interface Option<V> {
     static <T> Option<T> create(final String name, final T value) {
       return new Option<T>() {
@@ -42,10 +50,10 @@ public interface Request {
   }
 
   abstract class Builder<REQ extends Request, B extends Builder<REQ, B>> {
-    private String          userQuery = null;
-    private int             offset    = 0;
-    private int             hits      = 0;
-    private List<Option<?>> options   = new LinkedList<>();
+    private String userQuery = null;
+    private int offset = 0;
+    private int hits = 0;
+    private List<Option<?>> options = new LinkedList<>();
 
     @SuppressWarnings("unchecked")
     public B userQuery(String userQuery) {
