@@ -7,21 +7,20 @@ import com.github.dakusui.scriptiveunit.model.form.value.Value;
 import com.github.dakusui.scriptiveunit.model.form.value.ValueList;
 
 import java.util.List;
+import java.util.Set;
 import java.util.function.BiPredicate;
-import java.util.function.Function;
 import java.util.function.Predicate;
-import java.util.function.ToDoubleFunction;
 import java.util.stream.Collectors;
 
-import static com.github.dakusui.scriptiveunit.libs.extras.searchengine.ResponseChecker.*;
+import static com.github.dakusui.scriptiveunit.libs.extras.searchengine.ResponseChecker.ByDocs;
 import static java.util.Objects.requireNonNull;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
 
 public class SearchEngineLib<REQ extends Request, RESP extends Response<DOC, REQ>, DOC> {
-  private final Predicates predicates = new Predicates();
+  private final Predicates                   predicates = new Predicates();
   private final SearchEngine<REQ, RESP, DOC> searchEngine;
-  private final SearchResultEvaluator<DOC> evaluator;
+  private final SearchResultEvaluator<DOC>   evaluator;
 
   public SearchEngineLib(SearchEngine<REQ, RESP, DOC> searchEngine, SearchResultEvaluator<DOC> evaluator) {
     this.searchEngine = requireNonNull(searchEngine);
@@ -53,15 +52,12 @@ public class SearchEngineLib<REQ extends Request, RESP extends Response<DOC, REQ
   @Scriptable
   public Value<Boolean>
   verifyResponseWith(Value<RESP> respValue, ValueList<ResponseChecker<RESP, DOC, ? super Object>> checkerValues) {
-    return stage -> {
-      RESP resp = respValue.apply(stage);
-      return predicates.allOf(
-          ValueList.create(
-              checkerValues.stream()
-                  .map((Value<ResponseChecker<RESP, DOC, Object>> each) -> evaluate(resp, each.apply(stage)))
-                  .collect(Collectors.toList())))
-          .apply(stage);
-    };
+    return stage -> predicates.allOf(
+        ValueList.create(
+            checkerValues.stream()
+                .map((Value<ResponseChecker<RESP, DOC, Object>> each) -> verifyResponse(respValue, each))
+                .collect(Collectors.toList())))
+        .apply(stage);
   }
 
   @Scriptable
@@ -80,70 +76,68 @@ public class SearchEngineLib<REQ extends Request, RESP extends Response<DOC, REQ
   }
 
   @Scriptable
-  public Value<ByDocsMetric<DOC, RESP>>
+  public Value<ResponseChecker<RESP, DOC, Double>>
   precisionByKnownRelevantDocIds(Value<Predicate<? super Double>> criterion, ValueList<String> valueDocIds) {
-    return stage -> precisionCheckerByKnownRelevantDocIds(
-        valueDocIds
-            .stream()
-            .map(each -> each.apply(stage))
-            .collect(toSet()),
-        this::idOf,
-        criterion.apply(stage));
+    return stage -> ResponseChecker.createResponseCheckerByPrecision(
+        criterion.apply(stage),
+        new BiPredicate<DOC, REQ>() {
+          Set<String> docIds = valueDocIds.stream().map(each -> each.apply(stage)).collect(toSet());
+
+          @Override
+          public boolean test(DOC doc, REQ req) {
+            return docIds.contains(searchEngine.idOf(doc));
+          }
+        }
+    );
+  }
+
+  @Scriptable
+  public Value<ResponseChecker<RESP, DOC, Double>>
+  precisionByKnownIrrelevantDocIds(Value<Predicate<? super Double>> criterion, ValueList<String> valueDocIds) {
+    return stage -> ResponseChecker.createResponseCheckerByPrecision(
+        criterion.apply(stage),
+        new BiPredicate<DOC, REQ>() {
+          Set<String> docIds = valueDocIds.stream().map(each -> each.apply(stage)).collect(toSet());
+
+          @Override
+          public boolean test(DOC doc, REQ req) {
+            return !docIds.contains(searchEngine.idOf(doc));
+          }
+        }
+    );
   }
 
   @Scriptable
   public Value<ResponseChecker<RESP, DOC, Double>>
   precisionByEvaluator(Value<Predicate<? super Double>> criterion) {
-    return stage -> createResponseCheckerByPrecision(
-        criterion.apply(stage),
-        (each, request) -> evaluator.isRelevant(
-            each,
-            request.userQuery(),
-            request.options()));
-  }
-
-  private ResponseChecker<RESP, DOC, Double> createResponseCheckerByPrecision(final Predicate<? super Double> range, final BiPredicate<DOC, REQ> docChecker) {
-    return createResponseCheckerByMetric(range, response -> {
-      Predicate<DOC> docPredicate = each -> docChecker.test(each, response.request());
-      return (double) response.docs()
-          .stream()
-          .filter(docPredicate)
-          .count()
-          / (double) response.docs().size();
-    });
-  }
-
-  private ResponseChecker<RESP, DOC, Double> createResponseCheckerByMetric(Predicate<? super Double> range, final ToDoubleFunction<RESP> metric) {
-    return new ResponseChecker<RESP, DOC, Double>() {
-
-      @Override
-      public Double transform(RESP response) {
-        return metric.applyAsDouble(response);
-      }
-
-      @Override
-      public boolean verify(Double value) {
-        return range.test(value);
-      }
-    };
+    return stage -> ResponseChecker.createResponseCheckerByPrecision(criterion.apply(stage), evaluator);
   }
 
   @Scriptable
-  public Value<ByDocsMetric<DOC, RESP>>
-  precisionByKnownIrrelevantDocIds(Value<Predicate<? super Double>> criterion, ValueList<String> valueDocIds) {
-    return stage -> precisionCheckerByKnownIrrelevantDocIds(
-        valueDocIds.stream()
-            .map(each -> each.apply(stage))
-            .collect(toSet()), this::idOf, criterion.apply(stage));
+  public Value<ResponseChecker<RESP, DOC, Double>>
+  precisionKbyEvaluator(Value<Predicate<? super Double>> criterion, Value<Integer> k) {
+    return stage -> ResponseChecker.createResponseCheckerByPrecisionK(criterion.apply(stage), k.apply(stage), evaluator);
   }
 
-  private String idOf(DOC doc) {
-    return searchEngine.idOf(doc);
+  @Scriptable
+  public Value<ResponseChecker<RESP, DOC, Double>>
+  dcgByEvaluator(Value<Predicate<? super Double>> criterion, Value<Integer> p) {
+    return stage -> ResponseChecker.createResponseCheckerByDcg(criterion.apply(stage), p.apply(stage), evaluator);
   }
+
+  @Scriptable
+  public Value<ResponseChecker<RESP, DOC, Double>>
+  ndcgByEvaluator(Value<Predicate<? super Double>> criterion, Value<Integer> p) {
+    return stage -> ResponseChecker.createResponseCheckerByNDcg(criterion.apply(stage), p.apply(stage), evaluator);
+  }
+
 
   private static <DOC, REQ extends Request, RESP extends Response<DOC, REQ>, T>
   Value<Boolean>
-  evaluate(RESP resp, ResponseChecker<RESP, DOC, T> checker) {
-    return stage -> checker.verify(checker.transform(resp));
+  verifyResponse(Value<RESP> resp, Value<ResponseChecker<RESP, DOC, T>> responseCheckerValue) {
+    return stage -> {
+      ResponseChecker<RESP, DOC, T> reponseChecker = responseCheckerValue.apply(stage);
+      return reponseChecker.verify(reponseChecker.transform(resp.apply(stage)));
+    };
   }
 }
