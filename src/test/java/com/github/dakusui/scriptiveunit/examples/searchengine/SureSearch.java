@@ -6,7 +6,8 @@ import com.github.dakusui.scriptiveunit.model.lang.ApplicationSpec;
 
 import java.util.Optional;
 
-public class SureSearch implements SearchEngine<SureSearchRequest, SureSearchResponse, ApplicationSpec.Dictionary> {
+public class
+SureSearch implements SearchEngine<SureSearchRequest, SureSearchResponse, ApplicationSpec.Dictionary> {
   @Override
   public SureSearchResponse service(SureSearchRequest request) {
     return null;
