@@ -1,4 +1,4 @@
-package com.github.dakusui.scriptiveunit.libs.extras;
+package com.github.dakusui.scriptiveunit.examples.qapi;
 
 import com.github.dakusui.scriptiveunit.annotations.Scriptable;
 import com.github.dakusui.scriptiveunit.libs.Core;

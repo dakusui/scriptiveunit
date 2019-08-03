@@ -3,7 +3,7 @@ package com.github.dakusui.scriptiveunit.unittests.core;
 import com.github.dakusui.crest.Crest;
 import com.github.dakusui.scriptiveunit.ScriptiveCore;
 import com.github.dakusui.scriptiveunit.core.Description;
-import com.github.dakusui.scriptiveunit.examples.Qapi;
+import com.github.dakusui.scriptiveunit.examples.qapi.Qapi;
 import com.github.dakusui.scriptiveunit.exceptions.ValidationFailure;
 import com.github.dakusui.scriptiveunit.exceptions.ResourceException;
 import com.github.dakusui.scriptiveunit.testassets.Driver1;

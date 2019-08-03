@@ -4,6 +4,7 @@ import com.github.dakusui.scriptiveunit.annotations.Scriptable;
 import com.github.dakusui.scriptiveunit.model.form.value.Value;
 import com.github.dakusui.scriptiveunit.model.form.value.ValueList;
 
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import static java.util.Objects.requireNonNull;
@@ -34,6 +35,11 @@ public class Strings {
   @Scriptable
   public Value<Boolean> matches(Value<String> str, Value<String> regex) {
     return input -> requireNonNull(str.apply(input)).matches(requireNonNull(regex.apply(input)));
+  }
+
+  @Scriptable
+  public Value<Boolean> find(Value<String> str, Value<String> regex) {
+    return input -> Pattern.compile(requireNonNull(regex.apply(input))).matcher(requireNonNull(str.apply(input))).find();
   }
 
   @Scriptable

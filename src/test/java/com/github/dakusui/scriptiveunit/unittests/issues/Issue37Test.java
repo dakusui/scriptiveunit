@@ -4,7 +4,7 @@ import com.github.dakusui.crest.core.Matcher;
 import com.github.dakusui.crest.matcherbuilders.AsList;
 import com.github.dakusui.crest.matcherbuilders.AsObject;
 import com.github.dakusui.scriptiveunit.libs.actions.Basic;
-import com.github.dakusui.scriptiveunit.examples.Qapi;
+import com.github.dakusui.scriptiveunit.examples.qapi.Qapi;
 import com.github.dakusui.scriptiveunit.testutils.TestBase;
 import com.github.dakusui.scriptiveunit.testutils.TestUtils;
 import org.junit.Test;

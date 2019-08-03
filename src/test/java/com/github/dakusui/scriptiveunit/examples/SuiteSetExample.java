@@ -1,5 +1,6 @@
 package com.github.dakusui.scriptiveunit.examples;
 
+import com.github.dakusui.scriptiveunit.examples.qapi.Qapi;
 import com.github.dakusui.scriptiveunit.runners.ScriptiveSuiteSet;
 import com.github.dakusui.scriptiveunit.runners.ScriptiveSuiteSet.SuiteScripts;
 import org.junit.runner.RunWith;

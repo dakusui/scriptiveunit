@@ -1,6 +1,6 @@
 package com.github.dakusui.scriptiveunit.unittests.negative;
 
-import com.github.dakusui.scriptiveunit.examples.Qapi;
+import com.github.dakusui.scriptiveunit.examples.qapi.Qapi;
 import com.github.dakusui.scriptiveunit.testutils.TestBase;
 import com.github.dakusui.scriptiveunit.testutils.TestUtils;
 import org.junit.Test;

@@ -187,6 +187,5 @@ public interface HostSpec<NODE, OBJECT extends NODE, ARRAY extends NODE, ATOM ex
     public ObjectNode readHostDictionary(String resourceName, ResourceStoreSpec resourceStoreSpec) {
       return resourceStoreSpec.readObjectNode(resourceName);
     }
-
   }
 }

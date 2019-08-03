@@ -110,6 +110,41 @@ public interface ResponseChecker<RESP extends Response<DOC, ?>, DOC, T> {
     };
   }
 
+  static <REQ extends Request, RESP extends Response<DOC, REQ>, DOC>
+  ResponseChecker<RESP, DOC, DOC>
+  createResponseCheckerForAll(Predicate<? super DOC> cond_) {
+    return new ResponseChecker<RESP, DOC, DOC>() {
+      Predicate<? super DOC> cond = cond_.negate();
+
+      @Override
+      public DOC transform(RESP response) {
+        return response.docs().stream().filter(cond).findAny().orElse(null);
+      }
+
+      @Override
+      public boolean verify(DOC counterExample) {
+        return counterExample == null;
+      }
+    };
+  }
+
+  static <REQ extends Request, RESP extends Response<DOC, REQ>, DOC>
+  ResponseChecker<RESP, DOC, DOC> createResponseCheckerForAny(Predicate<? super DOC> cond_) {
+    return new ResponseChecker<RESP, DOC, DOC>() {
+      Predicate<? super DOC> cond = cond_;
+
+      @Override
+      public DOC transform(RESP response) {
+        return response.docs().stream().filter(cond).findAny().orElse(null);
+      }
+
+      @Override
+      public boolean verify(DOC example) {
+        return example != null;
+      }
+    };
+  }
+
   T transform(RESP response);
 
   boolean verify(T value);
@@ -129,9 +164,5 @@ public interface ResponseChecker<RESP extends Response<DOC, ?>, DOC, T> {
       }
       return ret;
     }
-  }
-
-  interface ByDocs<RESP extends Response<DOC, ?>, DOC> extends ResponseChecker<RESP, DOC, List<DOC>> {
-
   }
 }

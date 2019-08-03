@@ -1,4 +1,4 @@
-package com.github.dakusui.scriptiveunit.examples;
+package com.github.dakusui.scriptiveunit.examples.qapi;
 
 
 import com.github.dakusui.scriptiveunit.annotations.CompileWith;
@@ -11,7 +11,6 @@ import com.github.dakusui.scriptiveunit.libs.Collections;
 import com.github.dakusui.scriptiveunit.libs.Predicates;
 import com.github.dakusui.scriptiveunit.libs.Strings;
 import com.github.dakusui.scriptiveunit.libs.actions.Basic;
-import com.github.dakusui.scriptiveunit.libs.extras.QueryApi;
 import com.github.dakusui.scriptiveunit.core.ScriptCompiler;
 import com.github.dakusui.scriptiveunit.model.form.value.Value;
 import com.github.dakusui.scriptiveunit.runners.ScriptiveUnit;

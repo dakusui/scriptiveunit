@@ -3,7 +3,7 @@ package com.github.dakusui.scriptiveunit.testassets.drivers;
 
 import com.github.dakusui.scriptiveunit.runners.ScriptiveSuiteSet;
 import com.github.dakusui.scriptiveunit.runners.ScriptiveSuiteSet.SuiteScripts;
-import com.github.dakusui.scriptiveunit.examples.Qapi;
+import com.github.dakusui.scriptiveunit.examples.qapi.Qapi;
 import org.junit.runner.RunWith;
 
 @RunWith(ScriptiveSuiteSet.class)
