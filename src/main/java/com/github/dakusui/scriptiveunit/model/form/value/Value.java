@@ -69,8 +69,8 @@ public interface Value<O> extends Function<Stage, O> {
   interface Listener {
     void enter(Value value);
 
-    void leave(Value form, Object value);
+    <T> T leave(Value form, T value);
 
-    void fail(Value value, Throwable t);
+    <T extends Throwable> T fail(Value value, T t) throws T;
   }
 }

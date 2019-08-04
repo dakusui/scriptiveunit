@@ -4,6 +4,7 @@ import com.github.dakusui.scriptiveunit.model.form.value.Value;
 import com.github.dakusui.scriptiveunit.model.stage.Stage;
 
 import java.util.Objects;
+import java.util.function.BiFunction;
 import java.util.function.Predicate;
 import java.util.function.ToDoubleFunction;
 
@@ -48,5 +49,13 @@ public enum SearchEngineUtils {
         return Objects.toString(name);
       }
     };
+  }
+
+  public static <U> U evaluateValueWithoutListening(Stage stage, Value<U> value) {
+    return evaluateValueWithoutListening(stage, value, Value::apply);
+  }
+
+  public static <U> U evaluateValueWithoutListening(Stage stage, Value<U> value, BiFunction<Value<U>, Stage, U> applier) {
+    return applier.apply(value, stage);
   }
 }

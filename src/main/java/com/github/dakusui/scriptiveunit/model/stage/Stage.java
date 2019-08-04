@@ -18,15 +18,19 @@ import static com.github.dakusui.scriptiveunit.utils.Checks.check;
  * executed.
  */
 public interface Stage extends Value.Listener {
+  static <U> U evaluateValue(Stage stage, Value<U> value) {
+    return evaluateValue(stage, value, Value::apply);
+  }
+
+  @SuppressWarnings("TryWithIdenticalCatches")
   static <U> U evaluateValue(Stage stage, Value<U> value, BiFunction<Value<U>, Stage, U> applier) {
     stage.enter(value);
     try {
-      U ret = applier.apply(value, stage);
-      stage.leave(value, ret);
-      return ret;
-    } catch (RuntimeException | Error e) {
-      stage.fail(value, e);
-      throw e;
+      return stage.leave(value, applier.apply(value, stage));
+    } catch (RuntimeException e) {
+      throw stage.fail(value, e);
+    } catch (Error e) {
+      throw stage.fail(value, e);
     }
   }
 
@@ -71,12 +75,13 @@ public interface Stage extends Value.Listener {
     }
 
     @Override
-    default void leave(Value form, Object value) {
-
+    default <T> T leave(Value form, T value) {
+      return value;
     }
 
     @Override
-    default void fail(Value value, Throwable t) {
+    default <T extends Throwable> T fail(Value value, T t) throws T {
+      throw t;
     }
   }
 
@@ -165,13 +170,13 @@ public interface Stage extends Value.Listener {
         }
 
         @Override
-        public void leave(Value form, Object value) {
-          stage.leave(form, value);
+        public <T> T leave(Value form, T value) {
+          return stage.leave(form, value);
         }
 
         @Override
-        public void fail(Value value, Throwable t) {
-          stage.fail(value, t);
+        public <T extends Throwable> T fail(Value value, T t) throws T {
+          throw stage.fail(value, t);
         }
       };
     }
@@ -229,13 +234,14 @@ public interface Stage extends Value.Listener {
         }
 
         @Override
-        public void leave(Value form, Object value) {
+        public <T> T leave(Value form, T value) {
           formListener.leave(form, value);
+          return value;
         }
 
         @Override
-        public void fail(Value value, Throwable t) {
-          formListener.fail(value, t);
+        public <T extends Throwable> T fail(Value value, T t) throws T {
+          throw formListener.fail(value, t);
         }
       };
     }

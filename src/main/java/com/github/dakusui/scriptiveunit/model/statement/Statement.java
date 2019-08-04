@@ -107,7 +107,7 @@ public interface Statement {
             return new Value<U>() {
               @Override
               public U apply(Stage stage) {
-                return Stage.evaluateValue(stage, value, Value::apply);
+                return Stage.evaluateValue(stage, value);
               }
 
               @Override

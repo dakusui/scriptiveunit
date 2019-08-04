@@ -13,18 +13,12 @@ import org.hamcrest.BaseMatcher;
 import org.hamcrest.Description;
 import org.hamcrest.Matcher;
 
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 import java.util.function.Function;
 import java.util.function.Predicate;
 
 import static com.github.dakusui.actionunit.core.ActionSupport.nop;
-import static com.github.dakusui.scriptiveunit.utils.StringUtils.alignLeft;
-import static com.github.dakusui.scriptiveunit.utils.StringUtils.indent;
-import static com.github.dakusui.scriptiveunit.utils.StringUtils.iterableToString;
+import static com.github.dakusui.scriptiveunit.utils.StringUtils.*;
 import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
 
@@ -155,15 +149,17 @@ public interface TestOracleValuesFactory {
           }
 
           @Override
-          public void leave(Value form, Object value) {
+          public <T> T leave(Value form, T value) {
             level--;
             addValue(form, value);
+            return value;
           }
 
           @Override
-          public void fail(Value value, Throwable t) {
+          public <T extends Throwable> T fail(Value value, T t) throws T {
             level--;
             addValue(value, t.getMessage());
+            throw t;
           }
 
           @Override

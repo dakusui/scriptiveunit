@@ -38,7 +38,7 @@ public class SureSearchTest {
                           $("then",
                               arr("verifyResponseWith",
                                   arr("precisionByEvaluator",
-                                      arr("lambda", arr("eq", arr(0), 1.00)))))),
+                                      arr("lambda", arr("eq", arr(0), 1.0)))))),
                       obj(
                           $("description", $("Non-emptiness test")),
                           $("when", arr("issueRequest", "apple", 0, 10)),

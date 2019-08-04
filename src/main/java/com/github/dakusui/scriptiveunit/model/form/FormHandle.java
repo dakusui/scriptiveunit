@@ -74,10 +74,7 @@ public interface FormHandle {
 
     @Override
     public <U> Value<U> toValue(Statement.Compound statement) {
-      return Value.Named.create(
-          "<lambda>",
-          lambdaFormToValue(statement)
-      );
+      return Value.Named.create("<lambda>", lambdaFormToValue(statement));
     }
 
     @SuppressWarnings("unchecked")

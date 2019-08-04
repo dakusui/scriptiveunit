@@ -8,13 +8,9 @@ import com.github.dakusui.scriptiveunit.model.form.value.ValueList;
 import com.github.dakusui.scriptiveunit.model.stage.Stage;
 
 import java.util.List;
-import java.util.Objects;
 import java.util.Set;
 import java.util.function.BiPredicate;
-import java.util.function.Function;
-import java.util.function.IntPredicate;
 import java.util.function.Predicate;
-import java.util.regex.Pattern;
 
 import static com.github.dakusui.scriptiveunit.libs.extras.searchengine.ResponseChecker.*;
 import static com.github.dakusui.scriptiveunit.libs.extras.searchengine.SearchEngineUtils.toValue;
@@ -58,14 +54,16 @@ public class SearchEngineLib<REQ extends Request, RESP extends Response<DOC, REQ
   @Scriptable
   public Value<Boolean>
   verifyResponseWith(ValueList<ResponseChecker<RESP, DOC, ? super Object>> checkerValues) {
-    return stage -> predicates.allOf(
-        ValueList.create(
-            checkerValues.stream()
-                .map((Value<ResponseChecker<RESP, DOC, Object>> each) -> verifyResponse(
-                    stage.<RESP>response().orElseThrow(IllegalStateException::new),
-                    each))
-                .collect(toList())))
-        .apply(stage);
+    return stage -> SearchEngineUtils.evaluateValueWithoutListening(
+        stage,
+        s -> predicates.allOf(
+            ValueList.create(
+                checkerValues.stream()
+                    .map((Value<ResponseChecker<RESP, DOC, Object>> each) ->
+                        SearchEngineUtils.evaluateValueWithoutListening(
+                            s,
+                            ss -> verifyResponse(ss.<RESP>response().orElseThrow(IllegalStateException::new), each)))
+                    .collect(toList()))).apply(s));
   }
 
   @Scriptable
@@ -80,22 +78,6 @@ public class SearchEngineLib<REQ extends Request, RESP extends Response<DOC, REQ
       public boolean verify(Boolean value) {
         return value;
       }
-    };
-  }
-
-  @Scriptable
-  public Value<ResponseChecker<RESP, DOC, DOC>> any(Value<Predicate<? super DOC>> condValue) {
-    return stage -> {
-      Predicate<? super DOC> cond_ = condValue.apply(stage);
-      return createResponseCheckerForAny(cond_);
-    };
-  }
-
-  @Scriptable
-  public Value<ResponseChecker<RESP, DOC, DOC>> all(Value<Predicate<? super DOC>> condValue) {
-    return stage -> {
-      Predicate<? super DOC> cond_ = condValue.apply(stage);
-      return createResponseCheckerForAll(cond_);
     };
   }
 
@@ -152,25 +134,17 @@ public class SearchEngineLib<REQ extends Request, RESP extends Response<DOC, REQ
   @Scriptable
   public Value<ResponseChecker<RESP, DOC, Double>>
   precisionByEvaluator(Value<Value<Boolean>> criterion) {
-    return stage -> {
-      return createResponseCheckerByPrecision((
-              SearchEngineUtils.printablePredicate(
-                  criterion.name(),
-                  aDouble -> {
-                    Value<Boolean> booleanValue = criterion.apply(stage);
-                    Stage wrappedStage = wrapValueAsArgumentInStage(stage, toValue(criterion.name(), aDouble));
-                    wrappedStage.enter(booleanValue);
-                    try {
-                      Boolean ret = booleanValue.apply(wrappedStage);
-                      wrappedStage.leave(booleanValue, ret);
-                      return ret;
-                    } catch (RuntimeException | Error e) {
-                      stage.fail(booleanValue, e);
-                      throw e;
-                    }
-                  })),
-          evaluator);
-    };
+    return stage -> SearchEngineUtils.evaluateValueWithoutListening(
+        stage,
+        s -> createResponseCheckerByPrecision((
+                SearchEngineUtils.printablePredicate(
+                    criterion.name(),
+                    aDouble -> {
+                      Stage wrappedStage = wrapValueAsArgumentInStage(s, toValue(criterion.name(), aDouble));
+                      Value<Boolean> booleanValue = criterion.apply(s);
+                      return SearchEngineUtils.evaluateValueWithoutListening(wrappedStage, booleanValue);
+                    })),
+            evaluator));
   }
 
 
@@ -192,80 +166,15 @@ public class SearchEngineLib<REQ extends Request, RESP extends Response<DOC, REQ
     return stage -> createResponseCheckerByNDcg(criterion.apply(stage), p.apply(stage), evaluator);
   }
 
-  @Scriptable
-  public Value<Predicate<DOC>> hasAttr(Value<String> attr) {
-    return stage -> (Predicate<DOC>) doc -> searchEngine.valueOf(doc, attr.apply(stage)).isPresent();
-  }
-
-  @SuppressWarnings("unchecked")
-  @Scriptable
-  public <T> Value<Function<DOC, T>> attrValue(Value<String> attr) {
-    return stage -> (DOC doc) -> searchEngine.valueOf(doc, attr.apply(stage))
-        .map(element -> (T) element)
-        .orElseThrow(RuntimeException::new);
-  }
-
-  @SuppressWarnings("unchecked")
-  @Scriptable
-  public <T> Value<Predicate<DOC>> attrValueSatisfies(Value<String> attr, Value<Predicate<? super T>> condValue) {
-    return stage -> (Predicate<DOC>) doc -> searchEngine.valueOf(doc, attr.apply(stage))
-        .map(element -> (T) element)
-        .map(element -> condValue.apply(stage).test(element))
-        .orElseThrow(RuntimeException::new);
-  }
-
-  @SuppressWarnings("unchecked")
-  @Scriptable
-  public <T> Value<Predicate<DOC>> attrValueEqualsTo(Value<String> attr, Value<T> anotherValue) {
-    return stage -> (Predicate<DOC>) doc -> searchEngine.valueOf(doc, attr.apply(stage))
-        .map(element -> (T) element)
-        .map(element -> Objects.equals(element, anotherValue.apply(stage)))
-        .orElseThrow(RuntimeException::new);
-  }
-
-  @Scriptable
-  public Value<Predicate<DOC>> attrValueMatchesRegex(Value<String> attr, Value<String> regexValue) {
-    return stage -> (Predicate<DOC>) doc -> searchEngine.valueOf(doc, attr.apply(stage))
-        .map(element -> (String) element)
-        .map(element -> Pattern.compile(regexValue.apply(stage)).matcher(element).find())
-        .orElseThrow(RuntimeException::new);
-  }
-
-  @Scriptable
-  public <V extends Comparable<V>> Value<Predicate<DOC>> attrValueGreaterThan(Value<String> attr, Value<V> value) {
-    return stage -> compareAttributeValueWith(attr.apply(stage), value.apply(stage), v -> v > 0);
-  }
-
-  @Scriptable
-  public <V extends Comparable<V>> Value<Predicate<DOC>> attrValueGreaterThanOrEqualTo(Value<String> attr, Value<V> value) {
-    return stage -> compareAttributeValueWith(attr.apply(stage), value.apply(stage), v -> v >= 0);
-  }
-
-  @Scriptable
-  public <V extends Comparable<V>> Value<Predicate<DOC>> attrValueLessThanOrEqualTo(Value<String> attr, Value<V> value) {
-    return stage -> compareAttributeValueWith(attr.apply(stage), value.apply(stage), v -> v <= 0);
-  }
-
-  @Scriptable
-  public <V extends Comparable<V>> Value<Predicate<DOC>> attrValueLessThan(Value<String> attr, Value<V> value) {
-    return stage -> compareAttributeValueWith(attr.apply(stage), value.apply(stage), v -> v < 0);
-  }
-
-  @SuppressWarnings("unchecked")
-  private <V extends Comparable<V>> Predicate<DOC> compareAttributeValueWith(String attrName, V value, IntPredicate predicate) {
-    return doc -> searchEngine.valueOf(doc, attrName)
-        .map(element -> (V) requireNonNull(element))
-        .map(element -> predicate.test(element.compareTo(requireNonNull(value))))
-        .orElseThrow(RuntimeException::new);
-  }
-
-
   private static <DOC, REQ extends Request, RESP extends Response<DOC, REQ>, T>
   Value<Boolean>
   verifyResponse(RESP resp, Value<ResponseChecker<RESP, DOC, T>> responseCheckerValue) {
-    return stage -> {
-      ResponseChecker<RESP, DOC, T> responseChecker = responseCheckerValue.apply(stage);
-      return responseChecker.verify(responseChecker.transform(resp));
-    };
+    return stage -> SearchEngineUtils.evaluateValueWithoutListening(
+        stage,
+        s -> {
+          ResponseChecker<RESP, DOC, T> responseChecker = responseCheckerValue.apply(s);
+          return responseChecker.verify(responseChecker.transform(resp));
+        }
+    );
   }
 }
