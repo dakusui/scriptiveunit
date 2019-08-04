@@ -181,6 +181,11 @@ public interface ApplicationSpec {
     check(value, v -> !(v instanceof Node),
         "Value must not be an instance of '%s' but was: %s", Node.class.getSimpleName(), value);
     return new Atom() {
+      @Override
+      public String toString() {
+        return String.format("%s", value);
+      }
+
       @SuppressWarnings("unchecked")
       @Override
       public <T> T get() {
@@ -199,6 +204,11 @@ public interface ApplicationSpec {
       @Override
       public int size() {
         return nodes.length;
+      }
+
+      @Override
+      public String toString() {
+        return String.format("%s", Arrays.toString(nodes));
       }
     };
   }
@@ -229,6 +239,11 @@ public interface ApplicationSpec {
       public int size() {
         return map.size();
       }
+
+      @Override
+      public String toString() {
+        return String.format("%s", map);
+      }
     };
   }
 
@@ -244,6 +259,11 @@ public interface ApplicationSpec {
       @Override
       public Node value() {
         return value;
+      }
+
+      @Override
+      public void formatTo(Formatter formatter, int flags, int width, int precision) {
+        formatter.format("(%s,%s)", key, value);
       }
     };
   }
@@ -304,7 +324,7 @@ public interface ApplicationSpec {
       return StreamSupport.stream(keys().spliterator(), false);
     }
 
-    interface Entry {
+    interface Entry extends Formattable {
       String key();
 
       Node value();

@@ -8,8 +8,13 @@ import java.util.function.ToDoubleFunction;
 
 import static com.github.dakusui.scriptiveunit.libs.extras.searchengine.ResponseChecker.Utils.dcg;
 import static java.lang.Math.*;
+import static java.lang.String.format;
 
 public interface ResponseChecker<RESP extends Response<DOC, ?>, DOC, T> {
+  T transform(RESP response);
+
+  boolean verify(T value);
+
   static <REQ extends Request, RESP extends Response<DOC, REQ>, DOC>
   ResponseChecker<RESP, DOC, Double> createResponseCheckerByPrecision(
       Predicate<? super Double> range, SearchResultEvaluator<DOC> evaluator) {
@@ -37,12 +42,13 @@ public interface ResponseChecker<RESP extends Response<DOC, ?>, DOC, T> {
       Predicate<? super Double> range, int p, SearchResultEvaluator<DOC> evaluator) {
     return createResponseCheckerByMetric(
         range,
-        resp -> dcg(
-            p,
-            position -> evaluator.relevancyOf(
-                resp.docs().get(position),
-                resp.request().userQuery(),
-                resp.request().options())));
+        SearchEngineUtils.printableToDoubleFunction("dcg",
+            resp -> dcg(
+                p,
+                position -> evaluator.relevancyOf(
+                    resp.docs().get(position),
+                    resp.request().userQuery(),
+                    resp.request().options()))));
   }
 
   static <REQ extends Request, RESP extends Response<DOC, REQ>, DOC>
@@ -50,14 +56,14 @@ public interface ResponseChecker<RESP extends Response<DOC, ?>, DOC, T> {
       Predicate<? super Double> range, int p, SearchResultEvaluator<DOC> evaluator) {
     return createResponseCheckerByMetric(
         range,
-        resp -> {
-          String userQuery = resp.request().userQuery();
-          List<Request.Option<?>> options = resp.request().options();
-          return dcg(p, position -> evaluator.relevancyOf(resp.docs().get(position), userQuery, options))
-              / dcg(p, position -> evaluator.relevancyOfDocumentInIdealSearchResultAt(position, userQuery, options));
-        }
-
-    );
+        SearchEngineUtils.printableToDoubleFunction("nDcg",
+            resp -> {
+              String userQuery = resp.request().userQuery();
+              List<Request.Option<?>> options = resp.request().options();
+              return dcg(p, position -> evaluator.relevancyOf(resp.docs().get(position), userQuery, options))
+                  / dcg(p, position -> evaluator.relevancyOfDocumentInIdealSearchResultAt(position, userQuery, options));
+            }
+        ));
   }
 
   static <REQ extends Request, RESP extends Response<DOC, REQ>, DOC>
@@ -65,14 +71,15 @@ public interface ResponseChecker<RESP extends Response<DOC, ?>, DOC, T> {
   createResponseCheckerByPrecision(final Predicate<? super Double> range, final BiPredicate<DOC, REQ> docChecker) {
     return createResponseCheckerByMetric(
         range,
-        response -> {
-          Predicate<DOC> docPredicate = each -> docChecker.test(each, response.request());
-          return (double) response.docs()
-              .stream()
-              .filter(docPredicate)
-              .count()
-              / (double) response.docs().size();
-        });
+        SearchEngineUtils.printableToDoubleFunction("precision",
+            (RESP response) -> {
+              Predicate<DOC> docPredicate = each -> docChecker.test(each, response.request());
+              return (double) response.docs()
+                  .stream()
+                  .filter(docPredicate)
+                  .count()
+                  / (double) response.docs().size();
+            }));
   }
 
   static <REQ extends Request, RESP extends Response<DOC, REQ>, DOC>
@@ -80,15 +87,16 @@ public interface ResponseChecker<RESP extends Response<DOC, ?>, DOC, T> {
   createResponseCheckerByPrecisionK(final Predicate<? super Double> range, int k, final BiPredicate<DOC, REQ> docChecker) {
     return createResponseCheckerByMetric(
         range,
-        response -> {
-          Predicate<DOC> docPredicate = each -> docChecker.test(each, response.request());
-          return (double) response.docs()
-              .subList(0, min(k, response.docs().size()))
-              .stream()
-              .filter(docPredicate)
-              .count()
-              / (double) k;
-        });
+        SearchEngineUtils.printableToDoubleFunction(format("precision@k{k=%s}", k),
+            response -> {
+              Predicate<DOC> docPredicate = each -> docChecker.test(each, response.request());
+              return (double) response.docs()
+                  .subList(0, min(k, response.docs().size()))
+                  .stream()
+                  .filter(docPredicate)
+                  .count()
+                  / (double) k;
+            }));
   }
 
   static <REQ extends Request, RESP extends Response<DOC, REQ>, DOC>
@@ -106,6 +114,11 @@ public interface ResponseChecker<RESP extends Response<DOC, ?>, DOC, T> {
       @Override
       public boolean verify(Double value) {
         return range.test(value);
+      }
+
+      @Override
+      public String toString() {
+        return format("ResponseCheckerByMetric{metric:<%s>,range:<%s>}", metric, range);
       }
     };
   }
@@ -144,10 +157,6 @@ public interface ResponseChecker<RESP extends Response<DOC, ?>, DOC, T> {
       }
     };
   }
-
-  T transform(RESP response);
-
-  boolean verify(T value);
 
   enum Utils {
     ;

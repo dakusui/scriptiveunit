@@ -1,12 +1,10 @@
 package com.github.dakusui.scriptiveunit.libs.extras.searchengine;
 
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 import static com.github.dakusui.scriptiveunit.exceptions.Requirements.*;
 
-public interface Request {
+public interface Request extends Formattable {
   String userQuery();
 
   int offset();
@@ -15,7 +13,22 @@ public interface Request {
 
   List<Option<?>> options();
 
+  @Override
+  default void formatTo(Formatter formatter, int flags, int width, int precision) {
+    formatter.format("%s:{userQuery=<%s>,offset=<%s>,hits=<%s>,options:<%s>}",
+        this.getClass().getSimpleName(),
+        this.userQuery(),
+        this.offset(),
+        this.hits(),
+        options()
+    );
+  }
+
   interface Option<V> {
+    String name();
+
+    Optional<V> value();
+
     static <T> Option<T> create(final String name, final T value) {
       return new Option<T>() {
         @Override
@@ -43,17 +56,13 @@ public interface Request {
         }
       };
     }
-
-    String name();
-
-    Optional<V> value();
   }
 
   abstract class Builder<REQ extends Request, B extends Builder<REQ, B>> {
-    private String userQuery = null;
-    private int offset = 0;
-    private int hits = 0;
-    private List<Option<?>> options = new LinkedList<>();
+    private String          userQuery = null;
+    private int             offset    = 0;
+    private int             hits      = 0;
+    private List<Option<?>> options   = new LinkedList<>();
 
     @SuppressWarnings("unchecked")
     public B userQuery(String userQuery) {
@@ -82,11 +91,11 @@ public interface Request {
     public REQ build() {
       return buildRequest(
           requireState(this.userQuery, isNonNull()),
-          requireState(this.hits, isGreaterThan(0)),
-          requireState(this.offset, isGreaterThanOrEqualTo(0)),
-          this.options);
+          this.options, requireState(this.hits, isGreaterThan(0)),
+          requireState(this.offset, isGreaterThanOrEqualTo(0))
+      );
     }
 
-    protected abstract REQ buildRequest(String userQuery, int hits, int offset, List<Option<?>> options);
+    protected abstract REQ buildRequest(String userQuery, List<Option<?>> options, int hits, int offset);
   }
 }

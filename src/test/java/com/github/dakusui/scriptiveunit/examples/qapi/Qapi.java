@@ -12,6 +12,7 @@ import com.github.dakusui.scriptiveunit.libs.Predicates;
 import com.github.dakusui.scriptiveunit.libs.Strings;
 import com.github.dakusui.scriptiveunit.libs.actions.Basic;
 import com.github.dakusui.scriptiveunit.core.ScriptCompiler;
+import com.github.dakusui.scriptiveunit.libs.extras.searchengine.SearchEngineUtils;
 import com.github.dakusui.scriptiveunit.model.form.value.Value;
 import com.github.dakusui.scriptiveunit.runners.ScriptiveUnit;
 import com.github.dakusui.scriptiveunit.unittests.cli.MemoizationExample;
@@ -48,7 +49,7 @@ public class Qapi {
     @SuppressWarnings("unused")
     @Scriptable
     public Value<Boolean> evalintp(Value<Integer> value, Value<Value<Boolean>> predicate) {
-      return input -> predicate.apply(input).apply(Collections.wrapValueAsArgumentInStage(input, value));
+      return input -> predicate.apply(input).apply(SearchEngineUtils.wrapValueAsArgumentInStage(input, value));
     }
   }
 

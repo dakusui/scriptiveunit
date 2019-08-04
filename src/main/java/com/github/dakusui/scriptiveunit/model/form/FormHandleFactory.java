@@ -30,7 +30,7 @@ public class FormHandleFactory {
       @Override
       public <U> Value<U> toValue(Statement.Compound statement) {
         Value<U> value = formHandle.toValue(statement);
-        return stage -> Stage.evaluateValue(stage, value, Value::apply);
+        return Value.Named.create(Statement.format(statement), stage -> Stage.evaluateValue(stage, value, Value::apply));
       }
 
       @Override

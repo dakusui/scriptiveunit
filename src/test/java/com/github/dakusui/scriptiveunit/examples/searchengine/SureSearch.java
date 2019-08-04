@@ -1,30 +1,31 @@
 package com.github.dakusui.scriptiveunit.examples.searchengine;
 
-import com.github.dakusui.scriptiveunit.libs.extras.searchengine.Request;
 import com.github.dakusui.scriptiveunit.libs.extras.searchengine.SearchEngine;
-import com.github.dakusui.scriptiveunit.model.lang.ApplicationSpec;
+import com.github.dakusui.scriptiveunit.model.lang.ApplicationSpec.Dictionary;
 
-import java.util.Optional;
+import java.util.List;
 
-public class
-SureSearch implements SearchEngine<SureSearchRequest, SureSearchResponse, ApplicationSpec.Dictionary> {
+import static java.util.stream.Collectors.toList;
+
+public class SureSearch implements SearchEngine<SureSearchRequest, SureSearchResponse, Dictionary> , SureSearchDocAccessor {
+  private final List<Dictionary> docs;
+
+  SureSearch(List<Dictionary> docs) {
+    this.docs = docs;
+  }
+
   @Override
   public SureSearchResponse service(SureSearchRequest request) {
-    return null;
+    return new SureSearchResponse(
+        request,
+        this.docs.stream()
+            .filter(doc -> descriptionOf(doc).contains(request.userQuery()))
+            .collect(toList())
+    );
   }
 
   @Override
-  public Request.Builder<SureSearchRequest, ? extends Request.Builder> requestBuilder() {
-    return null;
-  }
-
-  @Override
-  public String idOf(ApplicationSpec.Dictionary dictionary) {
-    return null;
-  }
-
-  @Override
-  public Optional<?> valueOf(ApplicationSpec.Dictionary dictionary, String fieldName) {
-    return Optional.empty();
+  public SureSearchRequest.Builder requestBuilder() {
+    return new SureSearchRequest.Builder();
   }
 }

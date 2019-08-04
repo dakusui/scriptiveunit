@@ -5,6 +5,7 @@ import com.github.dakusui.scriptiveunit.libs.Predicates;
 import com.github.dakusui.scriptiveunit.libs.extras.searchengine.*;
 import com.github.dakusui.scriptiveunit.model.form.value.Value;
 import com.github.dakusui.scriptiveunit.model.form.value.ValueList;
+import com.github.dakusui.scriptiveunit.model.stage.Stage;
 
 import java.util.List;
 import java.util.Objects;
@@ -16,6 +17,8 @@ import java.util.function.Predicate;
 import java.util.regex.Pattern;
 
 import static com.github.dakusui.scriptiveunit.libs.extras.searchengine.ResponseChecker.*;
+import static com.github.dakusui.scriptiveunit.libs.extras.searchengine.SearchEngineUtils.toValue;
+import static com.github.dakusui.scriptiveunit.libs.extras.searchengine.SearchEngineUtils.wrapValueAsArgumentInStage;
 import static java.util.Objects.requireNonNull;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
@@ -54,29 +57,29 @@ public class SearchEngineLib<REQ extends Request, RESP extends Response<DOC, REQ
 
   @Scriptable
   public Value<Boolean>
-  verifyResponseWith(Value<RESP> respValue, ValueList<ResponseChecker<RESP, DOC, ? super Object>> checkerValues) {
+  verifyResponseWith(ValueList<ResponseChecker<RESP, DOC, ? super Object>> checkerValues) {
     return stage -> predicates.allOf(
         ValueList.create(
             checkerValues.stream()
-                .map((Value<ResponseChecker<RESP, DOC, Object>> each) -> verifyResponse(respValue, each))
+                .map((Value<ResponseChecker<RESP, DOC, Object>> each) -> verifyResponse(
+                    stage.<RESP>response().orElseThrow(IllegalStateException::new),
+                    each))
                 .collect(toList())))
         .apply(stage);
   }
 
   @Scriptable
   public Value<ResponseChecker<RESP, DOC, Boolean>> nonEmpty() {
-    return stage -> {
-      return new ResponseChecker<RESP, DOC, Boolean>() {
-        @Override
-        public Boolean transform(RESP response) {
-          return response.docs().stream().findAny().isPresent();
-        }
+    return stage -> new ResponseChecker<RESP, DOC, Boolean>() {
+      @Override
+      public Boolean transform(RESP response) {
+        return response.docs().stream().findAny().isPresent();
+      }
 
-        @Override
-        public boolean verify(Boolean value) {
-          return value;
-        }
-      };
+      @Override
+      public boolean verify(Boolean value) {
+        return value;
+      }
     };
   }
 
@@ -148,9 +151,28 @@ public class SearchEngineLib<REQ extends Request, RESP extends Response<DOC, REQ
 
   @Scriptable
   public Value<ResponseChecker<RESP, DOC, Double>>
-  precisionByEvaluator(Value<Predicate<? super Double>> criterion) {
-    return stage -> createResponseCheckerByPrecision(criterion.apply(stage), evaluator);
+  precisionByEvaluator(Value<Value<Boolean>> criterion) {
+    return stage -> {
+      return createResponseCheckerByPrecision((
+              SearchEngineUtils.printablePredicate(
+                  criterion.name(),
+                  aDouble -> {
+                    Value<Boolean> booleanValue = criterion.apply(stage);
+                    Stage wrappedStage = wrapValueAsArgumentInStage(stage, toValue(criterion.name(), aDouble));
+                    wrappedStage.enter(booleanValue);
+                    try {
+                      Boolean ret = booleanValue.apply(wrappedStage);
+                      wrappedStage.leave(booleanValue, ret);
+                      return ret;
+                    } catch (RuntimeException | Error e) {
+                      stage.fail(booleanValue, e);
+                      throw e;
+                    }
+                  })),
+          evaluator);
+    };
   }
+
 
   @Scriptable
   public Value<ResponseChecker<RESP, DOC, Double>>
@@ -240,10 +262,10 @@ public class SearchEngineLib<REQ extends Request, RESP extends Response<DOC, REQ
 
   private static <DOC, REQ extends Request, RESP extends Response<DOC, REQ>, T>
   Value<Boolean>
-  verifyResponse(Value<RESP> resp, Value<ResponseChecker<RESP, DOC, T>> responseCheckerValue) {
+  verifyResponse(RESP resp, Value<ResponseChecker<RESP, DOC, T>> responseCheckerValue) {
     return stage -> {
       ResponseChecker<RESP, DOC, T> responseChecker = responseCheckerValue.apply(stage);
-      return responseChecker.verify(responseChecker.transform(resp.apply(stage)));
+      return responseChecker.verify(responseChecker.transform(resp));
     };
   }
 }

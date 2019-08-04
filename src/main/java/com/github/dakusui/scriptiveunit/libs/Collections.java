@@ -1,6 +1,7 @@
 package com.github.dakusui.scriptiveunit.libs;
 
 import com.github.dakusui.scriptiveunit.annotations.Scriptable;
+import com.github.dakusui.scriptiveunit.libs.extras.searchengine.SearchEngineUtils;
 import com.github.dakusui.scriptiveunit.model.form.value.Value;
 import com.github.dakusui.scriptiveunit.model.stage.Stage;
 import com.google.common.collect.Iterables;
@@ -47,18 +48,10 @@ public class Collections {
         requireNonNull(iterable.apply(i)).spliterator(),
         false
     ).filter(
-        (E entry) -> predicate.apply(i).apply(wrapValueAsArgumentInStage(i, toFunc(entry)))
+        (E entry) -> predicate.apply(i).apply(SearchEngineUtils.wrapValueAsArgumentInStage(i, SearchEngineUtils.toValue(entry)))
     ).collect(
         Collectors.<E>toList()
     );
-  }
-
-  private static <F> Value<F> toFunc(F entry) {
-    return input -> entry;
-  }
-
-  public static <E> Stage wrapValueAsArgumentInStage(Stage i, Value<E> value) {
-    return Stage.Factory.createWrappedStage(i, value);
   }
 
   @SuppressWarnings("unused")

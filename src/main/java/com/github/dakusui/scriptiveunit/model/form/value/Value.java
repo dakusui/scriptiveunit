@@ -28,6 +28,11 @@ public interface Value<O> extends Function<Stage, O> {
         public O apply(Stage input) {
           return value.apply(input);
         }
+
+        @Override
+        public String toString() {
+          return Objects.toString(name());
+        }
       };
     }
   }
@@ -40,7 +45,7 @@ public interface Value<O> extends Function<Stage, O> {
    * @param <O> Type of output constant.
    */
   interface Const<O> extends Value<O> {
-    static  <U> Const<U> createConst(Object value) {
+    static <U> Const<U> createConst(Object value) {
       return new Const<U>() {
         @SuppressWarnings("unchecked")
         @Override
