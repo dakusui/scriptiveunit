@@ -35,4 +35,9 @@ class SureSearchResultEvaluator implements SearchResultEvaluator<Dictionary>, Su
   public boolean isRelevant(Dictionary doc, String userQuery, List<Request.Option<?>> options) {
     return relevancyOf(doc, userQuery, options) > 0;
   }
+
+  @Override
+  public String toString() {
+    return this.getClass().getSimpleName();
+  }
 }

@@ -33,11 +33,20 @@ public class SureSearchTest {
               return obj(
                   $("testOracles", arr(
                       obj(
-                          $("description", $("A precision test")),
+                          $("description", $("A precision test by known relevant id set evaluator")),
                           $("when", arr("issueRequest", "apple", 0, 10)),
                           $("then",
                               arr("verifyResponseWith",
-                                  arr("precisionByEvaluator",
+                                  arr("precisionBy",
+                                      arr("evaluatorByKnownRelevantDocIds", "0", "5"),
+                                      arr("lambda", arr("eq", arr(0), 1.0)))))),
+                      obj(
+                          $("description", $("A precision test by default evaluator")),
+                          $("when", arr("issueRequest", "apple", 0, 10)),
+                          $("then",
+                              arr("verifyResponseWith",
+                                  arr("precisionBy",
+                                      arr("defaultEvaluator"),
                                       arr("lambda", arr("eq", arr(0), 1.0)))))),
                       obj(
                           $("description", $("Non-emptiness test")),

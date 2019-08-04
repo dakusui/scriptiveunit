@@ -142,6 +142,6 @@ public class Core {
   @SuppressWarnings("unchecked")
   @Scriptable
   public <T> Value<T> output() {
-    return input -> (T) input.response().orElseThrow(RuntimeException::new);
+    return input -> Stage.evaluateValue(input, i -> (T) i.response().orElseThrow(RuntimeException::new));
   }
 }
