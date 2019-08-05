@@ -8,6 +8,7 @@ import com.github.dakusui.scriptiveunit.core.JsonScript;
 import com.github.dakusui.scriptiveunit.core.ScriptLoader;
 import com.github.dakusui.scriptiveunit.libs.Core;
 import com.github.dakusui.scriptiveunit.libs.Predicates;
+import com.github.dakusui.scriptiveunit.libs.Strings;
 import com.github.dakusui.scriptiveunit.libs.extras.SearchEngineLib;
 import com.github.dakusui.scriptiveunit.model.lang.ApplicationSpec.Dictionary;
 import com.github.dakusui.scriptiveunit.runners.ScriptiveUnit;
@@ -33,12 +34,32 @@ public class SureSearchTest {
               return obj(
                   $("testOracles", arr(
                       obj(
-                          $("description", $("A precision test by known relevant id set evaluator")),
+                          $("description", $("A precision test by lambda")),
+                          $("when", arr("issueRequest", "apple", 0, 10)),
+                          $("then",
+                              arr("verifyResponseWith",
+                                  arr("precisionBy",
+                                      arr("evaluatorByLambda",
+                                          arr("lambda",
+                                              arr("find",
+                                                  arr("docAttr", arr(0), "description"),
+                                                  " +apple"))),
+                                      arr("lambda", arr("eq", arr(0), 1.0)))))),
+                      obj(
+                          $("description", $("A precision test by known relevant id set")),
                           $("when", arr("issueRequest", "apple", 0, 10)),
                           $("then",
                               arr("verifyResponseWith",
                                   arr("precisionBy",
                                       arr("evaluatorByKnownRelevantDocIds", "0", "5"),
+                                      arr("lambda", arr("eq", arr(0), 1.0)))))),
+                      obj(
+                          $("description", $("A precision test by known irrelevant id set")),
+                          $("when", arr("issueRequest", "apple", 0, 10)),
+                          $("then",
+                              arr("verifyResponseWith",
+                                  arr("precisionBy",
+                                      arr("evaluatorByKnownIrrelevantDocIds", "2", "3", "4"),
                                       arr("lambda", arr("eq", arr(0), 1.0)))))),
                       obj(
                           $("description", $("A precision test by default evaluator")),
@@ -62,6 +83,9 @@ public class SureSearchTest {
 
   @Import
   public final Core core = new Core();
+
+  @Import
+  public final Strings strings = new Strings();
 
   @Import
   public final Predicates predicates = new Predicates();

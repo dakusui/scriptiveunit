@@ -1,6 +1,7 @@
 package com.github.dakusui.scriptiveunit.libs.extras.searchengine;
 
 import com.github.dakusui.scriptiveunit.model.form.value.Value;
+import com.github.dakusui.scriptiveunit.model.form.value.ValueList;
 import com.github.dakusui.scriptiveunit.model.stage.Stage;
 
 import java.util.Objects;
@@ -21,6 +22,11 @@ public enum SearchEngineUtils {
 
   public static <E> Stage wrapValueAsArgumentInStage(Stage i, Value<E> value) {
     return Stage.Factory.createWrappedStage(i, value);
+  }
+
+  @SafeVarargs
+  public static <E> Stage wrapValuesAsArgumentsInStage(Stage i, Value<E>... values) {
+        return Stage.Factory.createWrappedStage(i, values);
   }
 
   public static <T> Predicate<T> printablePredicate(String name, Predicate<T> predicate) {

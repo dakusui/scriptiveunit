@@ -24,11 +24,11 @@ public interface ResponseChecker<RESP extends Response<DOC, ?>, DOC, T> {
   }
 
   static <REQ extends Request, RESP extends Response<DOC, REQ>, DOC>
-  ResponseChecker<RESP, DOC, Double> createResponseCheckerByPrecisionK(
+  ResponseChecker<RESP, DOC, Double> createResponseCheckerByPrecisionAtK(
       Predicate<? super Double> range,
       int k,
       SearchResultEvaluator<DOC> evaluator) {
-    return createResponseCheckerByPrecisionK(
+    return createResponseCheckerByPrecisionAtK(
         range,
         k,
         (each, request) -> evaluator.isRelevant(
@@ -84,7 +84,7 @@ public interface ResponseChecker<RESP extends Response<DOC, ?>, DOC, T> {
 
   static <REQ extends Request, RESP extends Response<DOC, REQ>, DOC>
   ResponseChecker<RESP, DOC, Double>
-  createResponseCheckerByPrecisionK(final Predicate<? super Double> range, int k, final BiPredicate<DOC, REQ> docChecker) {
+  createResponseCheckerByPrecisionAtK(final Predicate<? super Double> range, int k, final BiPredicate<DOC, REQ> docChecker) {
     return createResponseCheckerByMetric(
         range,
         SearchEngineUtils.printableToDoubleFunction(format("precision@k{k=%s}", k),

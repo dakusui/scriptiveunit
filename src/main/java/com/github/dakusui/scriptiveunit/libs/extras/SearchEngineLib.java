@@ -8,20 +8,20 @@ import com.github.dakusui.scriptiveunit.model.form.value.ValueList;
 import com.github.dakusui.scriptiveunit.model.stage.Stage;
 
 import java.util.List;
+import java.util.NoSuchElementException;
 import java.util.Set;
 import java.util.function.Predicate;
 
 import static com.github.dakusui.scriptiveunit.libs.extras.searchengine.ResponseChecker.*;
-import static com.github.dakusui.scriptiveunit.libs.extras.searchengine.SearchEngineUtils.toValue;
-import static com.github.dakusui.scriptiveunit.libs.extras.searchengine.SearchEngineUtils.wrapValueAsArgumentInStage;
+import static com.github.dakusui.scriptiveunit.libs.extras.searchengine.SearchEngineUtils.*;
 import static java.util.Objects.requireNonNull;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
 
 public class SearchEngineLib<REQ extends Request, RESP extends Response<DOC, REQ>, DOC> {
-  private final Predicates                   predicates = new Predicates();
+  private final Predicates predicates = new Predicates();
   private final SearchEngine<REQ, RESP, DOC> searchEngine;
-  private final SearchResultEvaluator<DOC>   defaultEvaluator;
+  private final SearchResultEvaluator<DOC> defaultEvaluator;
 
   public SearchEngineLib(SearchEngine<REQ, RESP, DOC> searchEngine, SearchResultEvaluator<DOC> defaultEvaluator) {
     this.searchEngine = requireNonNull(searchEngine);
@@ -129,14 +129,14 @@ public class SearchEngineLib<REQ extends Request, RESP extends Response<DOC, REQ
 
       @Override
       public String toString() {
-        return "";
+        return "evaluatorByKnownRelevantDocIds:" + docIds;
       }
     };
   }
 
   @Scriptable
   public Value<SearchResultEvaluator<DOC>>
-  evaluatorByKnownIrrelevantDocIds(Value<Predicate<? super Double>> criterion, ValueList<String> valueDocIds) {
+  evaluatorByKnownIrrelevantDocIds(ValueList<String> valueDocIds) {
     return stage -> new SearchResultEvaluator<DOC>() {
       Set<String> docIds = valueDocIds.stream().map(each -> each.apply(stage)).collect(toSet());
 
@@ -154,6 +154,45 @@ public class SearchEngineLib<REQ extends Request, RESP extends Response<DOC, REQ
       @Override
       public boolean isRelevant(DOC doc, String userQuery, List<Request.Option<?>> options) {
         return !docIds.contains(searchEngine.idOf(doc));
+      }
+
+      @Override
+      public String toString() {
+        return "evaluatorByKnownIrrelevantDocIds:" + docIds;
+      }
+    };
+  }
+
+  @Scriptable
+  public Value<SearchResultEvaluator<DOC>>
+  evaluatorByLambda(Value<Value<Boolean>> lambda) {
+    return stage -> new SearchResultEvaluator<DOC>() {
+      @Override
+      public double relevancyOfDocumentInIdealSearchResultAt(int position, String userQuery, List<Request.Option<?>> options) {
+        // TODO document this behaviour.
+        return 1.0;
+      }
+
+      @Override
+      public double relevancyOf(DOC doc, String userQuery, List<Request.Option<?>> options) {
+        return isRelevant(doc, userQuery, options) ? 1.0 : 0.0;
+      }
+
+      @Override
+      public boolean isRelevant(DOC doc, String userQuery, List<Request.Option<?>> options) {
+        Stage wrappedStage = wrapValuesAsArgumentsInStage(
+            stage,
+            toValue(searchEngine.idOf(doc), doc),
+            toValue("userQuery", userQuery),
+            toValue("options", options)
+        );
+        Value<Boolean> booleanValue = lambda.apply(stage);
+        return SearchEngineUtils.evaluateValueWithoutListening(wrappedStage, booleanValue);
+      }
+
+      @Override
+      public String toString() {
+        return "evaluatorByLambda:" + lambda.name();
       }
     };
   }
@@ -177,25 +216,32 @@ public class SearchEngineLib<REQ extends Request, RESP extends Response<DOC, REQ
 
   @Scriptable
   public Value<ResponseChecker<RESP, DOC, Double>>
-  precisionAtKbyEvaluator(
+  precisionAtKby(
+      Value<Integer> k,
       Value<SearchResultEvaluator<DOC>> evaluatorValue,
-      Value<Predicate<? super Double>> criterion,
-      Value<Integer> k) {
-    return stage -> createResponseCheckerByPrecisionK(criterion.apply(stage), k.apply(stage), evaluatorValue.apply(stage));
+      Value<Predicate<? super Double>> criterion) {
+    return stage -> createResponseCheckerByPrecisionAtK(criterion.apply(stage), k.apply(stage), evaluatorValue.apply(stage));
   }
 
   @Scriptable
   public Value<ResponseChecker<RESP, DOC, Double>>
-  dcgByEvaluator(Value<SearchResultEvaluator<DOC>> evaluatorValue,
-      Value<Predicate<? super Double>> criterion, Value<Integer> p) {
+  dcgBy(Value<Integer> p,
+        Value<SearchResultEvaluator<DOC>> evaluatorValue,
+        Value<Predicate<? super Double>> criterion) {
     return stage -> createResponseCheckerByDcg(criterion.apply(stage), p.apply(stage), evaluatorValue.apply(stage));
   }
 
   @Scriptable
   public Value<ResponseChecker<RESP, DOC, Double>>
-  ndcgByEvaluator(Value<SearchResultEvaluator<DOC>> evaluatorValue,
-      Value<Predicate<? super Double>> criterion, Value<Integer> p) {
+  ndcgBy(Value<Integer> p,
+         Value<SearchResultEvaluator<DOC>> evaluatorValue,
+         Value<Predicate<? super Double>> criterion) {
     return stage -> createResponseCheckerByNDcg(criterion.apply(stage), p.apply(stage), evaluatorValue.apply(stage));
+  }
+
+  @Scriptable
+  public <T> Value<T> docAttr(Value<DOC> doc, Value<String> attrName) {
+    return stage -> (T)searchEngine.valueOf(doc.apply(stage), attrName.apply(stage)).orElseThrow(NoSuchElementException::new);
   }
 
   private static <DOC, REQ extends Request, RESP extends Response<DOC, REQ>, T>
