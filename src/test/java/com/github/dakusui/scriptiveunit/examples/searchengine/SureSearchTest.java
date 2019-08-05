@@ -9,7 +9,7 @@ import com.github.dakusui.scriptiveunit.core.ScriptLoader;
 import com.github.dakusui.scriptiveunit.libs.Core;
 import com.github.dakusui.scriptiveunit.libs.Predicates;
 import com.github.dakusui.scriptiveunit.libs.Strings;
-import com.github.dakusui.scriptiveunit.libs.extras.SearchEngineLib;
+import com.github.dakusui.scriptiveunit.libs.extras.SearchEngineSupport;
 import com.github.dakusui.scriptiveunit.model.lang.ApplicationSpec.Dictionary;
 import com.github.dakusui.scriptiveunit.runners.ScriptiveUnit;
 import com.github.dakusui.scriptiveunit.utils.JsonUtils;
@@ -20,7 +20,7 @@ import org.junit.runner.RunWith;
 import static com.github.dakusui.scriptiveunit.utils.IoUtils.currentWorkingDirectory;
 
 /**
- * A search engine named "SureSearch", which is for explaining "ScriptiveUnit"'s functionality.
+ * A toy search engine named "SureSearch", which is for demonstrating "ScriptiveUnit"'s functionality.
  */
 @RunScript(compiler = @CompileWith, loader = @LoadBy(SureSearchTest.Loader.class))
 @RunWith(ScriptiveUnit.class)
@@ -33,6 +33,10 @@ public class SureSearchTest {
             public JsonNode create() {
               return obj(
                   $("testOracles", arr(
+                      obj(
+                          $("description", $("Non-emptiness test")),
+                          $("when", arr("issueRequest", "apple", 0, 10)),
+                          $("then", arr("verifyResponseWith", arr("nonEmpty")))),
                       obj(
                           $("description", $("A precision test by lambda")),
                           $("when", arr("issueRequest", "apple", 0, 10)),
@@ -68,11 +72,7 @@ public class SureSearchTest {
                               arr("verifyResponseWith",
                                   arr("precisionBy",
                                       arr("defaultEvaluator"),
-                                      arr("lambda", arr("eq", arr(0), 1.0)))))),
-                      obj(
-                          $("description", $("Non-emptiness test")),
-                          $("when", arr("issueRequest", "apple", 0, 10)),
-                          $("then", arr("verifyResponseWith", arr("nonEmpty"))))
+                                      arr("lambda", arr("eq", arr(0), 1.0))))))
                   )));
             }
           }.get(),
@@ -91,8 +91,8 @@ public class SureSearchTest {
   public final Predicates predicates = new Predicates();
 
   @Import
-  public final SearchEngineLib<SureSearchRequest, SureSearchResponse, Dictionary> searchEngineLib =
-      new SearchEngineLib<>(
+  public final SearchEngineSupport<SureSearchRequest, SureSearchResponse, Dictionary> searchEngineSupport =
+      new SearchEngineSupport<>(
           new SureSearch(SureSearchDocSet.DEFAULT.docs()),
           new SureSearchResultEvaluator(SureSearchDocSet.DEFAULT));
 

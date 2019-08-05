@@ -18,12 +18,12 @@ import static java.util.Objects.requireNonNull;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
 
-public class SearchEngineLib<REQ extends Request, RESP extends Response<DOC, REQ>, DOC> {
-  private final Predicates predicates = new Predicates();
+public class SearchEngineSupport<REQ extends Request, RESP extends Response<DOC, REQ>, DOC> {
+  private final Predicates                   predicates = new Predicates();
   private final SearchEngine<REQ, RESP, DOC> searchEngine;
-  private final SearchResultEvaluator<DOC> defaultEvaluator;
+  private final SearchResultEvaluator<DOC>   defaultEvaluator;
 
-  public SearchEngineLib(SearchEngine<REQ, RESP, DOC> searchEngine, SearchResultEvaluator<DOC> defaultEvaluator) {
+  public SearchEngineSupport(SearchEngine<REQ, RESP, DOC> searchEngine, SearchResultEvaluator<DOC> defaultEvaluator) {
     this.searchEngine = requireNonNull(searchEngine);
     this.defaultEvaluator = requireNonNull(defaultEvaluator);
   }
@@ -200,12 +200,12 @@ public class SearchEngineLib<REQ extends Request, RESP extends Response<DOC, REQ
   @Scriptable
   public Value<ResponseChecker<RESP, DOC, Double>>
   precisionBy(Value<SearchResultEvaluator<DOC>> evaluatorValue, Value<Value<Boolean>> criterion) {
-    return stage -> SearchEngineUtils.evaluateValueWithoutListening(
+    return (Stage stage) -> SearchEngineUtils.evaluateValueWithoutListening(
         stage,
-        s -> createResponseCheckerByPrecision((
+        (Stage s) -> createResponseCheckerByPrecision((
                 SearchEngineUtils.printablePredicate(
                     criterion.name(),
-                    aDouble -> {
+                    (Double aDouble) -> {
                       Stage wrappedStage = wrapValueAsArgumentInStage(s, toValue(criterion.name(), aDouble));
                       Value<Boolean> booleanValue = criterion.apply(s);
                       return SearchEngineUtils.evaluateValueWithoutListening(wrappedStage, booleanValue);
@@ -226,22 +226,23 @@ public class SearchEngineLib<REQ extends Request, RESP extends Response<DOC, REQ
   @Scriptable
   public Value<ResponseChecker<RESP, DOC, Double>>
   dcgBy(Value<Integer> p,
-        Value<SearchResultEvaluator<DOC>> evaluatorValue,
-        Value<Predicate<? super Double>> criterion) {
+      Value<SearchResultEvaluator<DOC>> evaluatorValue,
+      Value<Predicate<? super Double>> criterion) {
     return stage -> createResponseCheckerByDcg(criterion.apply(stage), p.apply(stage), evaluatorValue.apply(stage));
   }
 
   @Scriptable
   public Value<ResponseChecker<RESP, DOC, Double>>
   ndcgBy(Value<Integer> p,
-         Value<SearchResultEvaluator<DOC>> evaluatorValue,
-         Value<Predicate<? super Double>> criterion) {
+      Value<SearchResultEvaluator<DOC>> evaluatorValue,
+      Value<Predicate<? super Double>> criterion) {
     return stage -> createResponseCheckerByNDcg(criterion.apply(stage), p.apply(stage), evaluatorValue.apply(stage));
   }
 
+  @SuppressWarnings("unchecked")
   @Scriptable
   public <T> Value<T> docAttr(Value<DOC> doc, Value<String> attrName) {
-    return stage -> (T)searchEngine.valueOf(doc.apply(stage), attrName.apply(stage)).orElseThrow(NoSuchElementException::new);
+    return stage -> (T) searchEngine.valueOf(doc.apply(stage), attrName.apply(stage)).orElseThrow(NoSuchElementException::new);
   }
 
   private static <DOC, REQ extends Request, RESP extends Response<DOC, REQ>, T>

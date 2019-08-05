@@ -103,7 +103,7 @@ public interface Statement {
 
           @Override
           public <U> Value<U> toValue() {
-            Value<U> value = input -> input.getArgument((this.value()));
+            Value<U> value = Value.Named.create("[" + car + "]", input -> input.getArgument((this.value())));
             return new Value<U>() {
               @Override
               public U apply(Stage stage) {
