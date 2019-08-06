@@ -53,13 +53,13 @@ public class SearchEngineSupport<REQ extends Request, RESP extends Response<DOC,
   @Scriptable
   public Value<Boolean>
   verifyResponseWith(ValueList<ResponseChecker<RESP, DOC, ? super Object>> checkerValues) {
-    return stage -> SearchEngineUtils.evaluateValueWithoutListening(
+    return stage -> evaluateValueWithoutListening(
         stage,
         s -> predicates.allOf(
             ValueList.create(
                 checkerValues.stream()
                     .map((Value<ResponseChecker<RESP, DOC, Object>> each) ->
-                        SearchEngineUtils.evaluateValueWithoutListening(
+                        evaluateValueWithoutListening(
                             s,
                             ss -> verifyResponse(ss.<RESP>response().orElseThrow(IllegalStateException::new), each)))
                     .collect(toList()))).apply(s));
@@ -120,32 +120,9 @@ public class SearchEngineSupport<REQ extends Request, RESP extends Response<DOC,
   evaluatorByKnownRelevantDocIds(ValueList<String> valueDocIds) {
     return stage -> {
       Set<String> docIds = valueDocIds.stream().map(each -> each.apply(stage)).collect(toSet());
-      return createSearchResultEvaluatorFromDocPredicate(
+      return SearchResultEvaluator.createSearchResultEvaluatorFromDocPredicate(
           "evaluatorByKnownRelevantDocIds:" + docIds,
           doc -> docIds.contains(searchEngine.idOf(doc)));
-    };
-  }
-
-  public static <DOC> SearchResultEvaluator<DOC> createSearchResultEvaluatorFromDocPredicate(
-      final String name,
-      Predicate<DOC> predicate) {
-    return new SearchResultEvaluator<DOC>() {
-
-      @Override
-      public double relevancyOfDocumentInIdealSearchResultAt(int position, String userQuery, List<Request.Option<?>> options) {
-        // TODO document this behaviour.
-        return 1.0;
-      }
-
-      @Override
-      public DocumentChecker<DOC> createDocumentCheckerFor(String userQuery, List<Request.Option<?>> options) {
-        return DocumentChecker.createFromDocumentPredicate(predicate);
-      }
-
-      @Override
-      public String toString() {
-        return name;
-      }
     };
   }
 
@@ -154,7 +131,7 @@ public class SearchEngineSupport<REQ extends Request, RESP extends Response<DOC,
   evaluatorByKnownIrrelevantDocIds(ValueList<String> valueDocIds) {
     return stage -> {
       Set<String> docIds = valueDocIds.stream().map(each -> each.apply(stage)).collect(toSet());
-      return createSearchResultEvaluatorFromDocPredicate(
+      return SearchResultEvaluator.createSearchResultEvaluatorFromDocPredicate(
           "evaluatorByKnownIrelevantDocIds:" + docIds,
           doc -> !docIds.contains(searchEngine.idOf(doc)));
     };
@@ -163,38 +140,22 @@ public class SearchEngineSupport<REQ extends Request, RESP extends Response<DOC,
   @Scriptable
   public Value<SearchResultEvaluator<DOC>>
   evaluatorByLambda(Value<Value<Boolean>> lambda) {
-    return stage -> new SearchResultEvaluator<DOC>() {
-      @Override
-      public double relevancyOfDocumentInIdealSearchResultAt(int position, String userQuery, List<Request.Option<?>> options) {
-        // TODO document this behaviour.
-        return 1.0;
-      }
-
-      @Override
-      public DocumentChecker<DOC> createDocumentCheckerFor(String userQuery, List<Request.Option<?>> options) {
-        return DocumentChecker.createFromDocumentPredicate(d -> getaBoolean(d, userQuery, options, stage, lambda, searchEngine));
-      }
-
-      @Override
-      public String toString() {
-        return "evaluatorByLambda:" + lambda.name();
-      }
-    };
-  }
-
-  public static <REQ extends Request, RESP extends Response<DOC, REQ>, DOC> Boolean getaBoolean(DOC doc, String userQuery, List<Request.Option<?>> options, Stage stage1, Value<Value<Boolean>> lambda1, SearchEngine<REQ, RESP, DOC> searchEngine) {
-    return SearchEngineUtils.evaluateValueWithoutListening(wrapValuesAsArgumentsInStage(
-        stage1,
-        toValue(searchEngine.idOf(doc), doc),
-        toValue("userQuery", userQuery),
-        toValue("options", options)
-    ), lambda1.apply(stage1));
+    return stage -> SearchResultEvaluator.createSearchResultEvaluatorFromDocumentCheckerFactory(
+        "evaluatorByLambda:" + lambda.name(),
+        (userQuery, options) ->
+            (SearchResultEvaluator.DocumentChecker.PredicateBased<DOC>) doc ->
+                evaluateValueWithoutListening(wrapValuesAsArgumentsInStage(
+                    stage,
+                    toValue(searchEngine.idOf(doc), doc),
+                    toValue("userQuery", userQuery),
+                    toValue("options", options)),
+                    lambda.apply(stage)));
   }
 
   @Scriptable
   public Value<ResponseChecker<RESP, DOC, Double>>
   precisionBy(Value<SearchResultEvaluator<DOC>> evaluatorValue, Value<Value<Boolean>> criterion) {
-    return (Stage stage) -> SearchEngineUtils.evaluateValueWithoutListening(
+    return (Stage stage) -> evaluateValueWithoutListening(
         stage,
         (Stage s) -> createResponseCheckerByPrecision((
                 SearchEngineUtils.printablePredicate(
@@ -202,7 +163,7 @@ public class SearchEngineSupport<REQ extends Request, RESP extends Response<DOC,
                     (Double aDouble) -> {
                       Stage wrappedStage = wrapValueAsArgumentInStage(s, toValue(criterion.name(), aDouble));
                       Value<Boolean> booleanValue = criterion.apply(s);
-                      return SearchEngineUtils.evaluateValueWithoutListening(wrappedStage, booleanValue);
+                      return evaluateValueWithoutListening(wrappedStage, booleanValue);
                     })),
             evaluatorValue.apply(s)));
   }
@@ -242,7 +203,7 @@ public class SearchEngineSupport<REQ extends Request, RESP extends Response<DOC,
   private static <DOC, REQ extends Request, RESP extends Response<DOC, REQ>, T>
   Value<Boolean>
   verifyResponse(RESP resp, Value<ResponseChecker<RESP, DOC, T>> responseCheckerValue) {
-    return stage -> SearchEngineUtils.evaluateValueWithoutListening(
+    return stage -> evaluateValueWithoutListening(
         stage,
         s -> {
           ResponseChecker<RESP, DOC, T> responseChecker = responseCheckerValue.apply(s);
