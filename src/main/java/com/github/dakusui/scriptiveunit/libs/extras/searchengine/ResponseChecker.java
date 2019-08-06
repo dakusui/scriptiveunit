@@ -22,7 +22,7 @@ public interface ResponseChecker<RESP extends Response<DOC, ?>, DOC, T> {
       Predicate<? super Double> range, SearchResultEvaluator<DOC> evaluator) {
     return createResponseCheckerByPrecision(
         range,
-        (each, request) -> evaluator.isRelevant(each, request.userQuery(), request.options()));
+        (each, request) -> evaluator.createDocumentCheckerFor(request.userQuery(), request.options()).isRelevant(each));
   }
 
   static <REQ extends Request, RESP extends Response<DOC, REQ>, DOC>
@@ -33,10 +33,9 @@ public interface ResponseChecker<RESP extends Response<DOC, ?>, DOC, T> {
     return createResponseCheckerByPrecisionAtK(
         range,
         k,
-        (each, request) -> evaluator.isRelevant(
-            each,
+        (each, request) -> evaluator.createDocumentCheckerFor(
             request.userQuery(),
-            request.options()));
+            request.options()).isRelevant(each));
   }
 
   static <REQ extends Request, RESP extends Response<DOC, REQ>, DOC>
@@ -48,10 +47,8 @@ public interface ResponseChecker<RESP extends Response<DOC, ?>, DOC, T> {
         SearchEngineUtils.printableToDoubleFunction("dcg",
             resp -> dcg(
                 p,
-                position -> evaluator.relevancyOf(
-                    resp.docs().get(position),
-                    resp.request().userQuery(),
-                    resp.request().options()))));
+                position -> evaluator.createDocumentCheckerFor(resp.request().userQuery(), resp.request().options())
+                    .relevancyOf(resp.docs().get(position)))));
   }
 
   static <REQ extends Request, RESP extends Response<DOC, REQ>, DOC>
@@ -64,7 +61,7 @@ public interface ResponseChecker<RESP extends Response<DOC, ?>, DOC, T> {
             resp -> {
               String userQuery = resp.request().userQuery();
               List<Request.Option<?>> options = resp.request().options();
-              return dcg(p, position -> evaluator.relevancyOf(resp.docs().get(position), userQuery, options))
+              return dcg(p, position -> evaluator.createDocumentCheckerFor(userQuery, options).relevancyOf(resp.docs().get(position)))
                   / dcg(p, position -> evaluator.relevancyOfDocumentInIdealSearchResultAt(position, userQuery, options));
             }
         ));

@@ -19,9 +19,9 @@ import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
 
 public class SearchEngineSupport<REQ extends Request, RESP extends Response<DOC, REQ>, DOC> {
-  private final Predicates predicates = new Predicates();
+  private final Predicates                   predicates = new Predicates();
   private final SearchEngine<REQ, RESP, DOC> searchEngine;
-  private final SearchResultEvaluator<DOC> defaultEvaluator;
+  private final SearchResultEvaluator<DOC>   defaultEvaluator;
 
   public SearchEngineSupport(SearchEngine<REQ, RESP, DOC> searchEngine, SearchResultEvaluator<DOC> defaultEvaluator) {
     this.searchEngine = requireNonNull(searchEngine);
@@ -118,8 +118,18 @@ public class SearchEngineSupport<REQ extends Request, RESP extends Response<DOC,
   @Scriptable
   public Value<SearchResultEvaluator<DOC>>
   evaluatorByKnownRelevantDocIds(ValueList<String> valueDocIds) {
-    return stage -> new SearchResultEvaluator<DOC>() {
+    return stage -> {
       Set<String> docIds = valueDocIds.stream().map(each -> each.apply(stage)).collect(toSet());
+      return createSearchResultEvaluatorFromDocPredicate(
+          "evaluatorByKnownRelevantDocIds:" + docIds,
+          doc -> docIds.contains(searchEngine.idOf(doc)));
+    };
+  }
+
+  public static <DOC> SearchResultEvaluator<DOC> createSearchResultEvaluatorFromDocPredicate(
+      final String name,
+      Predicate<DOC> predicate) {
+    return new SearchResultEvaluator<DOC>() {
 
       @Override
       public double relevancyOfDocumentInIdealSearchResultAt(int position, String userQuery, List<Request.Option<?>> options) {
@@ -128,18 +138,13 @@ public class SearchEngineSupport<REQ extends Request, RESP extends Response<DOC,
       }
 
       @Override
-      public double relevancyOf(DOC doc, String userQuery, List<Request.Option<?>> options) {
-        return isRelevant(doc, userQuery, options) ? 1.0 : 0.0;
-      }
-
-      @Override
-      public boolean isRelevant(DOC doc, String userQuery, List<Request.Option<?>> options) {
-        return docIds.contains(searchEngine.idOf(doc));
+      public DocumentChecker<DOC> createDocumentCheckerFor(String userQuery, List<Request.Option<?>> options) {
+        return DocumentChecker.createFromDocumentPredicate(predicate);
       }
 
       @Override
       public String toString() {
-        return "evaluatorByKnownRelevantDocIds:" + docIds;
+        return name;
       }
     };
   }
@@ -147,29 +152,11 @@ public class SearchEngineSupport<REQ extends Request, RESP extends Response<DOC,
   @Scriptable
   public Value<SearchResultEvaluator<DOC>>
   evaluatorByKnownIrrelevantDocIds(ValueList<String> valueDocIds) {
-    return stage -> new SearchResultEvaluator<DOC>() {
+    return stage -> {
       Set<String> docIds = valueDocIds.stream().map(each -> each.apply(stage)).collect(toSet());
-
-      @Override
-      public double relevancyOfDocumentInIdealSearchResultAt(int position, String userQuery, List<Request.Option<?>> options) {
-        // TODO document this behaviour.
-        return 1.0;
-      }
-
-      @Override
-      public double relevancyOf(DOC doc, String userQuery, List<Request.Option<?>> options) {
-        return isRelevant(doc, userQuery, options) ? 1.0 : 0.0;
-      }
-
-      @Override
-      public boolean isRelevant(DOC doc, String userQuery, List<Request.Option<?>> options) {
-        return !docIds.contains(searchEngine.idOf(doc));
-      }
-
-      @Override
-      public String toString() {
-        return "evaluatorByKnownIrrelevantDocIds:" + docIds;
-      }
+      return createSearchResultEvaluatorFromDocPredicate(
+          "evaluatorByKnownIrelevantDocIds:" + docIds,
+          doc -> !docIds.contains(searchEngine.idOf(doc)));
     };
   }
 
@@ -184,20 +171,8 @@ public class SearchEngineSupport<REQ extends Request, RESP extends Response<DOC,
       }
 
       @Override
-      public double relevancyOf(DOC doc, String userQuery, List<Request.Option<?>> options) {
-        return isRelevant(doc, userQuery, options) ? 1.0 : 0.0;
-      }
-
-      @Override
-      public boolean isRelevant(DOC doc, String userQuery, List<Request.Option<?>> options) {
-        Stage wrappedStage = wrapValuesAsArgumentsInStage(
-            stage,
-            toValue(searchEngine.idOf(doc), doc),
-            toValue("userQuery", userQuery),
-            toValue("options", options)
-        );
-        Value<Boolean> booleanValue = lambda.apply(stage);
-        return SearchEngineUtils.evaluateValueWithoutListening(wrappedStage, booleanValue);
+      public DocumentChecker<DOC> createDocumentCheckerFor(String userQuery, List<Request.Option<?>> options) {
+        return DocumentChecker.createFromDocumentPredicate(d -> getaBoolean(d, userQuery, options, stage, lambda, searchEngine));
       }
 
       @Override
@@ -205,6 +180,15 @@ public class SearchEngineSupport<REQ extends Request, RESP extends Response<DOC,
         return "evaluatorByLambda:" + lambda.name();
       }
     };
+  }
+
+  public static <REQ extends Request, RESP extends Response<DOC, REQ>, DOC> Boolean getaBoolean(DOC doc, String userQuery, List<Request.Option<?>> options, Stage stage1, Value<Value<Boolean>> lambda1, SearchEngine<REQ, RESP, DOC> searchEngine) {
+    return SearchEngineUtils.evaluateValueWithoutListening(wrapValuesAsArgumentsInStage(
+        stage1,
+        toValue(searchEngine.idOf(doc), doc),
+        toValue("userQuery", userQuery),
+        toValue("options", options)
+    ), lambda1.apply(stage1));
   }
 
   @Scriptable
@@ -236,16 +220,16 @@ public class SearchEngineSupport<REQ extends Request, RESP extends Response<DOC,
   @Scriptable
   public Value<ResponseChecker<RESP, DOC, Double>>
   dcgBy(Value<Integer> p,
-        Value<SearchResultEvaluator<DOC>> evaluatorValue,
-        Value<Predicate<? super Double>> criterion) {
+      Value<SearchResultEvaluator<DOC>> evaluatorValue,
+      Value<Predicate<? super Double>> criterion) {
     return stage -> createResponseCheckerByDcg(criterion.apply(stage), p.apply(stage), evaluatorValue.apply(stage));
   }
 
   @Scriptable
   public Value<ResponseChecker<RESP, DOC, Double>>
   ndcgBy(Value<Integer> p,
-         Value<SearchResultEvaluator<DOC>> evaluatorValue,
-         Value<Predicate<? super Double>> criterion) {
+      Value<SearchResultEvaluator<DOC>> evaluatorValue,
+      Value<Predicate<? super Double>> criterion) {
     return stage -> createResponseCheckerByNDcg(criterion.apply(stage), p.apply(stage), evaluatorValue.apply(stage));
   }
 

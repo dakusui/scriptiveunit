@@ -27,13 +27,18 @@ class SureSearchResultEvaluator implements SearchResultEvaluator<Dictionary>, Su
   }
 
   @Override
-  public double relevancyOf(Dictionary doc, String userQuery, List<Request.Option<?>> options) {
-    return docSet.lookUp(idOf(doc)).map(d -> d.relevancyWith(userQuery)).orElseThrow(RuntimeException::new);
-  }
+  public DocumentChecker<Dictionary> createDocumentCheckerFor(String userQuery, List<Request.Option<?>> options) {
+    return new DocumentChecker<Dictionary>() {
+      @Override
+      public double relevancyOf(Dictionary doc) {
+        return docSet.lookUp(idOf(doc)).map(d -> d.relevancyWith(userQuery)).orElseThrow(RuntimeException::new);
+      }
 
-  @Override
-  public boolean isRelevant(Dictionary doc, String userQuery, List<Request.Option<?>> options) {
-    return relevancyOf(doc, userQuery, options) > 0;
+      @Override
+      public boolean isRelevant(Dictionary doc) {
+        return relevancyOf(doc) > 0;
+      }
+    };
   }
 
   @Override
