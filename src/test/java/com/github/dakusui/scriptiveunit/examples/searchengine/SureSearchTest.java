@@ -9,6 +9,7 @@ import com.github.dakusui.scriptiveunit.core.ScriptLoader;
 import com.github.dakusui.scriptiveunit.libs.Core;
 import com.github.dakusui.scriptiveunit.libs.Predicates;
 import com.github.dakusui.scriptiveunit.libs.Strings;
+import com.github.dakusui.scriptiveunit.libs.extras.DataStore;
 import com.github.dakusui.scriptiveunit.libs.extras.SearchEngineSupport;
 import com.github.dakusui.scriptiveunit.model.lang.ApplicationSpec.Dictionary;
 import com.github.dakusui.scriptiveunit.runners.ScriptiveUnit;
@@ -73,7 +74,8 @@ public class SureSearchTest {
                                   arr("precisionBy",
                                       arr("defaultEvaluator"),
                                       arr("lambda", arr("eq", arr(0), 1.0))))))
-                  )));
+                  )),
+                  $("tearDownAfterAll", arr($("submit"))));
             }
           }.get(),
           currentWorkingDirectory()
@@ -96,4 +98,6 @@ public class SureSearchTest {
           new SureSearch(SureSearchDocSet.DEFAULT.docs()),
           new SureSearchResultEvaluator(SureSearchDocSet.DEFAULT));
 
+  @Import
+  public final DataStore dataStore = new DataStore();
 }

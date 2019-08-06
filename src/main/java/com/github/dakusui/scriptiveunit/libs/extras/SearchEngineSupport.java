@@ -19,9 +19,9 @@ import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
 
 public class SearchEngineSupport<REQ extends Request, RESP extends Response<DOC, REQ>, DOC> {
-  private final Predicates                   predicates = new Predicates();
+  private final Predicates predicates = new Predicates();
   private final SearchEngine<REQ, RESP, DOC> searchEngine;
-  private final SearchResultEvaluator<DOC>   defaultEvaluator;
+  private final SearchResultEvaluator<DOC> defaultEvaluator;
 
   public SearchEngineSupport(SearchEngine<REQ, RESP, DOC> searchEngine, SearchResultEvaluator<DOC> defaultEvaluator) {
     this.searchEngine = requireNonNull(searchEngine);
@@ -84,6 +84,11 @@ public class SearchEngineSupport<REQ extends Request, RESP extends Response<DOC,
       public boolean verify(Boolean value) {
         return value;
       }
+
+      @Override
+      public String name() {
+        return "nonEmpty";
+      }
     };
   }
 
@@ -101,6 +106,11 @@ public class SearchEngineSupport<REQ extends Request, RESP extends Response<DOC,
       @Override
       public boolean verify(List<DOC> value) {
         return range.apply(stage).test(value.size());
+      }
+
+      @Override
+      public String name() {
+        return "numDocsSatisfying[" + cond + "] is " + range;
       }
     };
   }
@@ -226,16 +236,16 @@ public class SearchEngineSupport<REQ extends Request, RESP extends Response<DOC,
   @Scriptable
   public Value<ResponseChecker<RESP, DOC, Double>>
   dcgBy(Value<Integer> p,
-      Value<SearchResultEvaluator<DOC>> evaluatorValue,
-      Value<Predicate<? super Double>> criterion) {
+        Value<SearchResultEvaluator<DOC>> evaluatorValue,
+        Value<Predicate<? super Double>> criterion) {
     return stage -> createResponseCheckerByDcg(criterion.apply(stage), p.apply(stage), evaluatorValue.apply(stage));
   }
 
   @Scriptable
   public Value<ResponseChecker<RESP, DOC, Double>>
   ndcgBy(Value<Integer> p,
-      Value<SearchResultEvaluator<DOC>> evaluatorValue,
-      Value<Predicate<? super Double>> criterion) {
+         Value<SearchResultEvaluator<DOC>> evaluatorValue,
+         Value<Predicate<? super Double>> criterion) {
     return stage -> createResponseCheckerByNDcg(criterion.apply(stage), p.apply(stage), evaluatorValue.apply(stage));
   }
 
@@ -252,7 +262,10 @@ public class SearchEngineSupport<REQ extends Request, RESP extends Response<DOC,
         stage,
         s -> {
           ResponseChecker<RESP, DOC, T> responseChecker = responseCheckerValue.apply(s);
-          return responseChecker.verify(responseChecker.transform(resp));
+          T value = responseChecker.transform(resp);
+          if (s.getReport().isPresent())
+            s.getReport().get().put(responseChecker.name(), value);
+          return responseChecker.verify(value);
         }
     );
   }
