@@ -37,7 +37,8 @@ public class SureSearchTest {
                       obj(
                           $("description", $("Non-emptiness test")),
                           $("when", arr("issueRequest", "apple", 0, 10)),
-                          $("then", arr("verifyResponseWith", arr("nonEmpty")))),
+                          $("then", arr("verifyResponseWith", arr("nonEmpty"))),
+                          $("after", arr("submit"))),
                       obj(
                           $("description", $("A precision test by lambda")),
                           $("when", arr("issueRequest", "apple", 0, 10)),
@@ -49,7 +50,8 @@ public class SureSearchTest {
                                               arr("find",
                                                   arr("docAttr", arr(0), "description"),
                                                   " +apple"))),
-                                      arr("lambda", arr("eq", arr(0), 1.0)))))),
+                                      arr("lambda", arr("eq", arr(0), 1.0))))),
+                          $("after", arr("submit"))),
                       obj(
                           $("description", $("A precision test by known relevant id set")),
                           $("when", arr("issueRequest", "apple", 0, 10)),
@@ -57,7 +59,8 @@ public class SureSearchTest {
                               arr("verifyResponseWith",
                                   arr("precisionBy",
                                       arr("evaluatorByKnownRelevantDocIds", "0", "5"),
-                                      arr("lambda", arr("eq", arr(0), 1.0)))))),
+                                      arr("lambda", arr("eq", arr(0), 1.0))))),
+                          $("after", arr("submit"))),
                       obj(
                           $("description", $("A precision test by known irrelevant id set")),
                           $("when", arr("issueRequest", "apple", 0, 10)),
@@ -65,7 +68,8 @@ public class SureSearchTest {
                               arr("verifyResponseWith",
                                   arr("precisionBy",
                                       arr("evaluatorByKnownIrrelevantDocIds", "2", "3", "4"),
-                                      arr("lambda", arr("eq", arr(0), 1.0)))))),
+                                      arr("lambda", arr("eq", arr(0), 1.0))))),
+                          $("after", arr("submit"))),
                       obj(
                           $("description", $("A precision test by default evaluator")),
                           $("when", arr("issueRequest", "apple", 0, 10)),
@@ -73,9 +77,9 @@ public class SureSearchTest {
                               arr("verifyResponseWith",
                                   arr("precisionBy",
                                       arr("defaultEvaluator"),
-                                      arr("lambda", arr("eq", arr(0), 1.0))))))
-                  )),
-                  $("tearDownAfterAll", arr($("submit"))));
+                                      arr("lambda", arr("eq", arr(0), 1.0))))),
+                          $("after", arr("submit")))
+                  )));
             }
           }.get(),
           currentWorkingDirectory()

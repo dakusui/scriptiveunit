@@ -158,7 +158,7 @@ public class SearchEngineSupport<REQ extends Request, RESP extends Response<DOC,
     return (Stage stage) -> evaluateValueWithoutListening(
         stage,
         (Stage s) -> createResponseCheckerByPrecision((
-                SearchEngineUtils.printablePredicate(
+                printablePredicate(
                     criterion.name(),
                     (Double aDouble) -> {
                       Stage wrappedStage = wrapValueAsArgumentInStage(s, toValue(criterion.name(), aDouble));

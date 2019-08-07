@@ -7,6 +7,7 @@ import java.util.function.Predicate;
 import java.util.function.ToDoubleFunction;
 
 import static com.github.dakusui.scriptiveunit.libs.extras.searchengine.ResponseChecker.Utils.dcg;
+import static com.github.dakusui.scriptiveunit.libs.extras.searchengine.SearchEngineUtils.printableBiPredicate;
 import static java.lang.Math.*;
 import static java.lang.String.format;
 
@@ -22,7 +23,9 @@ public interface ResponseChecker<RESP extends Response<DOC, ?>, DOC, T> {
       Predicate<? super Double> range, SearchResultEvaluator<DOC> evaluator) {
     return createResponseCheckerByPrecision(
         range,
-        (each, request) -> evaluator.createDocumentCheckerFor(request.userQuery(), request.options()).isRelevant(each));
+        printableBiPredicate(
+            "isRelevantBy[" + evaluator + "]",
+            (each, request) -> evaluator.createDocumentCheckerFor(request.userQuery(), request.options()).isRelevant(each)));
   }
 
   static <REQ extends Request, RESP extends Response<DOC, REQ>, DOC>

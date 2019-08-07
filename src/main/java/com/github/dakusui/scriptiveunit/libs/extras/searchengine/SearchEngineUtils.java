@@ -1,11 +1,11 @@
 package com.github.dakusui.scriptiveunit.libs.extras.searchengine;
 
 import com.github.dakusui.scriptiveunit.model.form.value.Value;
-import com.github.dakusui.scriptiveunit.model.form.value.ValueList;
 import com.github.dakusui.scriptiveunit.model.stage.Stage;
 
 import java.util.Objects;
 import java.util.function.BiFunction;
+import java.util.function.BiPredicate;
 import java.util.function.Predicate;
 import java.util.function.ToDoubleFunction;
 
@@ -26,7 +26,7 @@ public enum SearchEngineUtils {
 
   @SafeVarargs
   public static <E> Stage wrapValuesAsArgumentsInStage(Stage i, Value<E>... values) {
-        return Stage.Factory.createWrappedStage(i, values);
+    return Stage.Factory.createWrappedStage(i, values);
   }
 
   public static <T> Predicate<T> printablePredicate(String name, Predicate<T> predicate) {
@@ -34,6 +34,20 @@ public enum SearchEngineUtils {
       @Override
       public boolean test(T t) {
         return predicate.test(t);
+      }
+
+      @Override
+      public String toString() {
+        return name;
+      }
+    };
+  }
+
+  public static <T, U> BiPredicate<T, U> printableBiPredicate(String name, BiPredicate<T, U> predicate) {
+    return new BiPredicate<T, U>() {
+      @Override
+      public boolean test(T t, U u) {
+        return predicate.test(t, u);
       }
 
       @Override

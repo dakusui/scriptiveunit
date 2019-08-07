@@ -41,7 +41,7 @@ public interface SearchResultEvaluator<DOC> {
 
   /**
    * A default {@link SearchResultEvaluator} interface, which always returns 1.0 on {@code relevancyOfDocumentInIdealSearchResultAt} method call.
-   * This means the search engine under evaluation has infinite number of ideal documents on any search query.
+   * This means the search engine under evaluation should have infinite number of ideal documents on any search query.
    *
    * @param <DOC> A type that is handled by the search engine under evaluation.
    */
