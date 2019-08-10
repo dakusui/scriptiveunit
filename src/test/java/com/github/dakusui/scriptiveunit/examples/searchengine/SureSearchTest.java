@@ -33,15 +33,19 @@ public class SureSearchTest {
             @Override
             public JsonNode create() {
               return obj(
+                  $("factorSpace", obj($("factors",
+                      obj(
+                          $("keyword", arr("apple", "orange"))
+                      )))),
                   $("testOracles", arr(
                       obj(
                           $("description", $("Non-emptiness test")),
-                          $("when", arr("issueRequest", "apple", 0, 10)),
+                          $("when", arr("issueRequest", arr("attr", "keyword"), 0, 10)),
                           $("then", arr("verifyResponseWith", arr("nonEmpty"))),
                           $("after", arr("submit"))),
                       obj(
                           $("description", $("A precision test by lambda")),
-                          $("when", arr("issueRequest", "apple", 0, 10)),
+                          $("when", arr("issueRequest", arr("attr", "keyword"), 0, 10)),
                           $("then",
                               arr("verifyResponseWith",
                                   arr("precisionBy",
@@ -54,7 +58,7 @@ public class SureSearchTest {
                           $("after", arr("submit"))),
                       obj(
                           $("description", $("A precision test by known relevant id set")),
-                          $("when", arr("issueRequest", "apple", 0, 10)),
+                          $("when", arr("issueRequest", arr("attr", "keyword"), 0, 10)),
                           $("then",
                               arr("verifyResponseWith",
                                   arr("precisionBy",
@@ -63,7 +67,7 @@ public class SureSearchTest {
                           $("after", arr("submit"))),
                       obj(
                           $("description", $("A precision test by known irrelevant id set")),
-                          $("when", arr("issueRequest", "apple", 0, 10)),
+                          $("when", arr("issueRequest", arr("attr", "keyword"), 0, 10)),
                           $("then",
                               arr("verifyResponseWith",
                                   arr("precisionBy",
@@ -72,7 +76,7 @@ public class SureSearchTest {
                           $("after", arr("submit"))),
                       obj(
                           $("description", $("A precision test by default evaluator")),
-                          $("when", arr("issueRequest", "apple", 0, 10)),
+                          $("when", arr("issueRequest", arr("attr", "keyword"), 0, 10)),
                           $("then",
                               arr("verifyResponseWith",
                                   arr("precisionBy",
