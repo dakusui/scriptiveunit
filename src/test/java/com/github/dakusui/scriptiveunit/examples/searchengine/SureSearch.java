@@ -10,7 +10,7 @@ import static java.util.stream.Collectors.toList;
 public class SureSearch implements SearchEngine<SureSearchRequest, SureSearchResponse, Dictionary> , SureSearchDocAccessor {
   private final List<Dictionary> docs;
 
-  SureSearch(List<Dictionary> docs) {
+  public SureSearch(List<Dictionary> docs) {
     this.docs = docs;
   }
 

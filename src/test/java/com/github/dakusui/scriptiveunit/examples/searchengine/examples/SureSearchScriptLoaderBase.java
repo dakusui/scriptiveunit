@@ -1,4 +1,4 @@
-package com.github.dakusui.scriptiveunit.examples.searchengine;
+package com.github.dakusui.scriptiveunit.examples.searchengine.examples;
 
 import com.github.dakusui.scriptiveunit.core.JsonScript;
 import com.github.dakusui.scriptiveunit.core.ScriptLoader;
@@ -31,16 +31,24 @@ public abstract class SureSearchScriptLoaderBase extends ScriptLoader.Base {
     }
 
     ObjectNode createNonEmptinessTest() {
-      return addAsAfter(obj(
+      return obj(
           $("description", $("Non-emptiness test")),
           $("when", arr("issueRequest", arr("attr", "keyword"), 0, 10)),
-          $("then", arr("verifyResponseWith", arr("nonEmpty")))),
-          arr("submit"));
+          $("then", arr("verifyResponseWith", arr("nonEmpty"))));
     }
 
     ObjectNode createFactorSpace(String... keywords) {
       return obj($("factors",
           obj($("keyword", arr((Object[]) keywords)))));
+    }
+
+    ObjectNode createUserForms() {
+      return obj($(
+          "findApple", arr("lambda",
+              arr("find",
+                  arr("docAttr", arr(0), "description"),
+                  " +apple")))
+      );
     }
   }
 

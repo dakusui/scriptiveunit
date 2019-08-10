@@ -8,10 +8,10 @@ import java.util.List;
 
 import static java.util.stream.Collectors.toList;
 
-class SureSearchResultEvaluator implements SearchResultEvaluator<Dictionary>, SureSearchDocAccessor {
+public class SureSearchResultEvaluator implements SearchResultEvaluator<Dictionary>, SureSearchDocAccessor {
   private final SureSearchDocSet docSet;
 
-  SureSearchResultEvaluator(SureSearchDocSet docSet) {
+  public SureSearchResultEvaluator(SureSearchDocSet docSet) {
     this.docSet = docSet;
   }
 

@@ -39,7 +39,7 @@ public enum SureSearchDocSet {
         Optional.empty();
   }
 
-  List<Dictionary> docs() {
+  public List<Dictionary> docs() {
     return annotatedDocs.values().stream()
         .map(SureSearchDoc::content)
         .collect(toList());
