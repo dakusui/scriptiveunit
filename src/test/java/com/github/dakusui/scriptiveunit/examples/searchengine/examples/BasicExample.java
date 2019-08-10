@@ -12,6 +12,7 @@ import org.junit.runner.RunWith;
  */
 @RunScript(compiler = @CompileWith, loader = @LoadBy(BasicExample.Loader.class))
 @RunWith(ScriptiveUnit.class)
+@Expect(passing = 4, failing = 8, ignored = 0)
 public class BasicExample extends SureSearchExampleBase {
   public static class Loader extends SureSearchScriptLoaderBase {
     @Override

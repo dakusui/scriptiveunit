@@ -1,11 +1,12 @@
 package com.github.dakusui.scriptiveunit.featuretests;
 
+import com.github.dakusui.scriptiveunit.testutils.TestBase;
 import com.github.dakusui.scriptiveunit.utils.JsonUtils;
 import org.codehaus.jackson.JsonNode;
 import org.codehaus.jackson.node.ObjectNode;
 import org.junit.Test;
 
-public class NodeFactoryTest {
+public class NodeFactoryTest extends TestBase {
   @Test
   public void test() {
     JsonNode node = new JsonUtils.NodeFactory<ObjectNode>() {

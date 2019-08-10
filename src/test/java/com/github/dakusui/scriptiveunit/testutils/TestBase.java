@@ -34,6 +34,6 @@ public class TestBase {
 
   private void restoreStdOutErr() {
     System.setOut(stdout);
-    System.setOut(stderr);
+    System.setErr(stderr);
   }
 }

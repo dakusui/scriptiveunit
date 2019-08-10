@@ -4,6 +4,7 @@ import com.github.dakusui.actionunit.core.Context;
 import com.github.dakusui.scriptiveunit.model.session.action.Pipe;
 import com.github.dakusui.scriptiveunit.model.session.action.Sink;
 import com.github.dakusui.scriptiveunit.model.session.action.Source;
+import com.github.dakusui.scriptiveunit.testutils.TestBase;
 import com.github.dakusui.scriptiveunit.utils.StringUtils;
 import org.junit.Test;
 
@@ -15,7 +16,7 @@ import static com.github.dakusui.crest.Crest.assertThat;
 import static java.util.Collections.singletonList;
 import static org.junit.Assert.assertEquals;
 
-public class StringUtilsTest {
+public class StringUtilsTest extends TestBase {
   @Test
   public void testRunnable() {
     Runnable runnable = StringUtils.prettify("hello", () -> {
