@@ -12,7 +12,7 @@ import org.junit.runner.RunWith;
  */
 @RunScript(compiler = @CompileWith, loader = @LoadBy(BasicExample.Loader.class))
 @RunWith(ScriptiveUnit.class)
-@Expect(passing = 4, failing = 8, ignored = 0)
+@Expect(passing = 6, failing = 10, ignored = 0)
 public class BasicExample extends SureSearchExampleBase {
   public static class Loader extends SureSearchScriptLoaderBase {
     @Override
@@ -21,29 +21,25 @@ public class BasicExample extends SureSearchExampleBase {
         @Override
         public JsonNode create() {
           return obj(
-              $("factorSpace", createFactorSpace("apple", "orange")),
+              $("factorSpace", createFactorSpace()),
               $("define", createUserForms()),
               $("testOracles", arr(
                   createNonEmptinessTest(),
+                  createDcgTest("A DCG test by pre-defined lambda", 3,
+                      arr("evaluatorByLambda", arr("findWord"))),
+                  createNDcgTest("An nDCG test by pre-defined lambda", 3,
+                      arr("evaluatorByLambda", arr("findWord"))),
                   createPrecisionTest("A precision test by pre-defined lambda",
-                      arr("evaluatorByLambda", arr("findApple"))),
-                  addAsAfter(
-                      createPrecisionTest("A precision test by lambda",
-                          arr("evaluatorByLambda", arr("lambda",
-                              arr("find",
-                                  arr("docAttr", arr(0), "description"),
-                                  " +apple")))),
-                      arr("submit")),
-                  addAsAfter(
-                      createPrecisionTest("A precision test by known relevant id set",
-                          arr("evaluatorByKnownRelevantDocIds", "0", "5")),
-                      arr("submit")),
-                  addAsAfter(
-                      createPrecisionTest("A precision test by known irrelevant id set", arr("evaluatorByKnownIrrelevantDocIds", "2", "3", "4")),
-                      arr("submit")),
-                  addAsAfter(
-                      createPrecisionTest("A precision test by default evaluator", arr("defaultEvaluator")),
-                      arr("submit"))
+                      arr("evaluatorByLambda", arr("findWord"))),
+                  createPrecisionTest("A precision test by lambda",
+                      arr("evaluatorByLambda", arr("lambda",
+                          arr("find",
+                              arr("docAttr", arr(0), "description"),
+                              arr("format", "\\b%s\\b", arr("attr", "keyword")))))),
+                  createPrecisionTest("A precision test by known relevant id set",
+                      arr("evaluatorByKnownRelevantDocIds", "0", "5")),
+                  createPrecisionTest("A precision test by known irrelevant id set", arr("evaluatorByKnownIrrelevantDocIds", "2", "3", "4")),
+                  createPrecisionTest("A precision test by default evaluator", arr("defaultEvaluator"))
               )));
         }
       };

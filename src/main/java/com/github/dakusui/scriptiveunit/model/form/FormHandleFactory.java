@@ -62,7 +62,7 @@ public class FormHandleFactory {
 
   private Optional<FormHandle> createUserDefinedFormHandle(String name) {
     return getUserDefinedStatementByName(name)
-        .map(FormHandle.User::new);
+        .map(each -> new FormHandle.User(name, each));
   }
 
   private Optional<Statement> getUserDefinedStatementByName(String name) {

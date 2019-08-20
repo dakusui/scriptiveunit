@@ -42,6 +42,16 @@ public interface ResponseChecker<RESP extends Response<DOC, ?>, DOC, T> {
   }
 
   static <REQ extends Request, RESP extends Response<DOC, REQ>, DOC>
+  ResponseChecker<RESP, DOC, Double> createResponseCheckerByDetectedNoiseRate(
+      Predicate<? super Double> range, SearchResultEvaluator<DOC> evaluator) {
+    return createResponseCheckerByDetectedNoiseRate(
+        range,
+        printableBiPredicate(
+            "isIrrelevantBy[" + evaluator + "]",
+            (each, request) -> !evaluator.createDocumentCheckerFor(request.userQuery(), request.options()).isRelevant(each)));
+  }
+
+  static <REQ extends Request, RESP extends Response<DOC, REQ>, DOC>
   ResponseChecker<RESP, DOC, Double> createResponseCheckerByDcg(
       Predicate<? super Double> range, int p, SearchResultEvaluator<DOC> evaluator) {
     return createResponseCheckerByMetric(
@@ -50,8 +60,11 @@ public interface ResponseChecker<RESP extends Response<DOC, ?>, DOC, T> {
         SearchEngineUtils.printableToDoubleFunction("dcg",
             resp -> dcg(
                 p,
-                position -> evaluator.createDocumentCheckerFor(resp.request().userQuery(), resp.request().options())
-                    .relevancyOf(resp.docs().get(position)))));
+                position -> position < resp.docs().size() ?
+                    evaluator.createDocumentCheckerFor(
+                        resp.request().userQuery(),
+                        resp.request().options()).relevancyOf(resp.docs().get(position)) :
+                    0)));
   }
 
   static <REQ extends Request, RESP extends Response<DOC, REQ>, DOC>
@@ -64,8 +77,11 @@ public interface ResponseChecker<RESP extends Response<DOC, ?>, DOC, T> {
             resp -> {
               String userQuery = resp.request().userQuery();
               List<Request.Option<?>> options = resp.request().options();
-              return dcg(p, position -> evaluator.createDocumentCheckerFor(userQuery, options).relevancyOf(resp.docs().get(position)))
-                  / dcg(p, position -> evaluator.relevancyOfDocumentInIdealSearchResultAt(position, userQuery, options));
+              return dcg(p,
+                  position -> position < resp.docs().size() ?
+                      evaluator.createDocumentCheckerFor(userQuery, options).relevancyOf(resp.docs().get(position)) :
+                      0.0) /
+                  dcg(p, position -> evaluator.relevancyOfDocumentInIdealSearchResultAt(position, userQuery, options));
             }
         ));
   }
@@ -102,6 +118,23 @@ public interface ResponseChecker<RESP extends Response<DOC, ?>, DOC, T> {
                   .filter(docPredicate)
                   .count()
                   / (double) k;
+            }));
+  }
+
+  static <REQ extends Request, RESP extends Response<DOC, REQ>, DOC>
+  ResponseChecker<RESP, DOC, Double>
+  createResponseCheckerByDetectedNoiseRate(final Predicate<? super Double> range, final BiPredicate<DOC, REQ> docChecker) {
+    return createResponseCheckerByMetric(
+        "precision[" + docChecker + "]",
+        range,
+        SearchEngineUtils.printableToDoubleFunction("detectedNoiseRate",
+            (RESP response) -> {
+              Predicate<DOC> docPredicate = each -> docChecker.test(each, response.request());
+              return 1 - ((double) response.docs()
+                  .stream()
+                  .filter(docPredicate)
+                  .count() /
+                  (double) response.docs().size());
             }));
   }
 
@@ -174,7 +207,7 @@ public interface ResponseChecker<RESP extends Response<DOC, ?>, DOC, T> {
 
       @Override
       public String name() {
-        return "nonOf[" + cond_ + "]";
+        return "noneOf[" + cond_ + "]";
       }
     };
   }
@@ -188,8 +221,8 @@ public interface ResponseChecker<RESP extends Response<DOC, ?>, DOC, T> {
 
     public static double dcg(int p, IntToDoubleFunction documentPositionToRelevancy) {
       double ret = 0;
-      for (int i = 1; i < p; i++) {
-        double relevancy = documentPositionToRelevancy.applyAsDouble(i);
+      for (int i = 1; i <= p; i++) {
+        double relevancy = documentPositionToRelevancy.applyAsDouble(i - 1);
         ret += (pow(2, relevancy) - 1) / log2(i + 1);
       }
       return ret;

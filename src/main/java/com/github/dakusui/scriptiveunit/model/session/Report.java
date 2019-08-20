@@ -1,6 +1,5 @@
 package com.github.dakusui.scriptiveunit.model.session;
 
-import com.github.dakusui.scriptiveunit.exceptions.ScriptiveUnitException;
 import com.github.dakusui.scriptiveunit.exceptions.ScriptiveUnitUnclassifiedException;
 import com.github.dakusui.scriptiveunit.model.desc.testitem.IndexedTestCase;
 import com.github.dakusui.scriptiveunit.model.desc.testitem.TestOracle;

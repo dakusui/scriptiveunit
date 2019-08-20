@@ -93,14 +93,21 @@ public interface FormHandle {
 
   class User extends Base {
     final Statement userDefinedStatement;
+    private final String name;
 
-    User(Statement userDefinedStatement) {
+    User(String name, Statement userDefinedStatement) {
+      this.name = requireNonNull(name);
       this.userDefinedStatement = requireNonNull(userDefinedStatement);
     }
 
     @Override
     public <U> Value<U> toValue(Statement.Compound statement) {
       return resolveValue(this, statement);
+    }
+
+    @Override
+    public String toString() {
+      return "<user>:" + name;
     }
 
     @SuppressWarnings("unchecked")
@@ -127,11 +134,6 @@ public interface FormHandle {
           .apply(input)
           .toValue()
           .apply(createWrappedStage(input, args));
-    }
-
-    @Override
-    public String toString() {
-      return "<user>:" + userDefinedStatement;
     }
   }
 }

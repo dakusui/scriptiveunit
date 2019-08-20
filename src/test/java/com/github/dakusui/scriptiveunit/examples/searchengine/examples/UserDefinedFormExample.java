@@ -18,9 +18,14 @@ public class UserDefinedFormExample extends SureSearchExampleBase {
         @Override
         public ObjectNode create() {
           return obj(
-              $("factorSpace", createFactorSpace("apple")),
+              $("factorSpace", createFactorSpace()),
               $("testOracles", arr(
                   createPrecisionTest("A precision test by default evaluator", arr("defaultEvaluator")))));
+        }
+
+        @Override
+        ObjectNode createFactorSpace() {
+          return createFactorSpace("apple");
         }
       };
     }

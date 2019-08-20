@@ -14,6 +14,43 @@ public abstract class SureSearchScriptLoaderBase extends ScriptLoader.Base {
     @Override
     public abstract JsonNode create();
 
+    ObjectNode createFactorSpace() {
+      return createFactorSpace("apple", "orange");
+    }
+
+    ObjectNode createUserForms() {
+      return obj($(
+          "findWord", arr("lambda",
+              arr("find",
+                  arr("docAttr", arr(0), "description"),
+                  arr("format", "\\b%s\\b", arr("attr", "keyword")))))
+      );
+    }
+
+    ObjectNode createDcgTest(String s, int p, ArrayNode evaluator) {
+      return obj(
+          $("description", $(s)),
+          $("when", arr("issueRequest", arr("attr", "keyword"), 0, 10)),
+          $("then",
+              arr("verifyResponseWith",
+                  arr("dcgBy",
+                      p,
+                      evaluator,
+                      arr("lambda", arr("gt", arr(0), 2.13))))));
+    }
+
+    ObjectNode createNDcgTest(String s, int p, ArrayNode evaluator) {
+      return obj(
+          $("description", $(s)),
+          $("when", arr("issueRequest", arr("attr", "keyword"), 0, 10)),
+          $("then",
+              arr("verifyResponseWith",
+                  arr("ndcgBy",
+                      p,
+                      evaluator,
+                      arr("lambda", arr("eq", arr(0), 1.00))))));
+    }
+
     ObjectNode createPrecisionTest(String s, ArrayNode evaluator) {
       return obj(
           $("description", $(s)),
@@ -23,6 +60,17 @@ public abstract class SureSearchScriptLoaderBase extends ScriptLoader.Base {
                   arr("precisionBy",
                       evaluator,
                       arr("lambda", arr("eq", arr(0), 1.0))))));
+    }
+
+    ObjectNode createDetectedNoiseRateTest(String s, ArrayNode evaluator) {
+      return obj(
+          $("description", $(s)),
+          $("when", arr("issueRequest", arr("attr", "keyword"), 0, 10)),
+          $("then",
+              arr("verifyResponseWith",
+                  arr("detectedNoiseRateBy",
+                      evaluator,
+                      arr("lambda", arr("eq", arr(0), 0.0))))));
     }
 
     ObjectNode addAsAfter(ObjectNode obj, ArrayNode after) {
@@ -40,15 +88,6 @@ public abstract class SureSearchScriptLoaderBase extends ScriptLoader.Base {
     ObjectNode createFactorSpace(String... keywords) {
       return obj($("factors",
           obj($("keyword", arr((Object[]) keywords)))));
-    }
-
-    ObjectNode createUserForms() {
-      return obj($(
-          "findApple", arr("lambda",
-              arr("find",
-                  arr("docAttr", arr(0), "description"),
-                  " +apple")))
-      );
     }
   }
 

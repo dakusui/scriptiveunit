@@ -18,7 +18,7 @@ public class KeywordFactorExample extends SureSearchExampleBase {
         @Override
         public ObjectNode create() {
           return obj(
-              $("factorSpace", createFactorSpace("apple", "orange")),
+              $("factorSpace", createFactorSpace()),
               $("define", createUserForms()),
               $("testOracles", arr(
                   createPrecisionTest(

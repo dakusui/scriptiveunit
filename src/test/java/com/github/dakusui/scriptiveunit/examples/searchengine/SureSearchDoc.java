@@ -90,5 +90,15 @@ class SureSearchDoc {
               $("description", "This is a document about a forbidden fruit")
           ));
     }
+
+    SureSearchDoc appleDotCom() {
+      return new SureSearchDoc(
+          dict(),
+          dict(
+              $("id", "6"),
+              $("name", "Apple.com"),
+              $("description", "This is a document about the apple.com, not a fruit.")
+          ));
+    }
   }
 }

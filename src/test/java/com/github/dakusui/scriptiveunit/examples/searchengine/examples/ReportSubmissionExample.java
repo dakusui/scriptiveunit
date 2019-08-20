@@ -18,7 +18,7 @@ public class ReportSubmissionExample extends SureSearchExampleBase {
         @Override
         public ObjectNode create() {
           return obj(
-              $("factorSpace", createFactorSpace("apple", "orange")),
+              $("factorSpace", createFactorSpace()),
               $("testOracles", arr(
                   addAsAfter(
                       createPrecisionTest(

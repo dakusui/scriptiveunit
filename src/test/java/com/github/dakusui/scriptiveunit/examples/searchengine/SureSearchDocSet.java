@@ -18,7 +18,9 @@ public enum SureSearchDocSet {
       DOC_FACTORY.pineapple(),
       DOC_FACTORY.citrus(),
       DOC_FACTORY.grapefruit(),
-      DOC_FACTORY.forbiddenFruit());
+      DOC_FACTORY.forbiddenFruit(),
+      DOC_FACTORY.appleDotCom()),
+  ;
 
   final Map<String, SureSearchDoc> annotatedDocs;
 

@@ -154,20 +154,27 @@ public class SearchEngineSupport<REQ extends Request, RESP extends Response<DOC,
 
   @Scriptable
   public Value<ResponseChecker<RESP, DOC, Double>>
+  detectedNoiseRateBy(Value<SearchResultEvaluator<DOC>> evaluatorValue, Value<Value<Boolean>> criterion) {
+    return (Stage stage) -> evaluateValueWithoutListening(
+        stage,
+        (Stage s) -> createResponseCheckerByDetectedNoiseRate((
+                printablePredicate(
+                    criterion.name(),
+                    criterionValueToPredicate(criterion, s))),
+            evaluatorValue.apply(s)));
+  }
+
+  @Scriptable
+  public Value<ResponseChecker<RESP, DOC, Double>>
   precisionBy(Value<SearchResultEvaluator<DOC>> evaluatorValue, Value<Value<Boolean>> criterion) {
     return (Stage stage) -> evaluateValueWithoutListening(
         stage,
         (Stage s) -> createResponseCheckerByPrecision((
                 printablePredicate(
                     criterion.name(),
-                    (Double aDouble) -> {
-                      Stage wrappedStage = wrapValueAsArgumentInStage(s, toValue(criterion.name(), aDouble));
-                      Value<Boolean> booleanValue = criterion.apply(s);
-                      return evaluateValueWithoutListening(wrappedStage, booleanValue);
-                    })),
+                    criterionValueToPredicate(criterion, s))),
             evaluatorValue.apply(s)));
   }
-
 
   @Scriptable
   public Value<ResponseChecker<RESP, DOC, Double>>
@@ -182,22 +189,40 @@ public class SearchEngineSupport<REQ extends Request, RESP extends Response<DOC,
   public Value<ResponseChecker<RESP, DOC, Double>>
   dcgBy(Value<Integer> p,
       Value<SearchResultEvaluator<DOC>> evaluatorValue,
-      Value<Predicate<? super Double>> criterion) {
-    return stage -> createResponseCheckerByDcg(criterion.apply(stage), p.apply(stage), evaluatorValue.apply(stage));
+      Value<Value<Boolean>> criterion) {
+    return stage -> createResponseCheckerByDcg(
+        printablePredicate(
+            criterion.name(),
+            criterionValueToPredicate(criterion, stage)),
+        p.apply(stage),
+        evaluatorValue.apply(stage));
   }
 
   @Scriptable
   public Value<ResponseChecker<RESP, DOC, Double>>
   ndcgBy(Value<Integer> p,
       Value<SearchResultEvaluator<DOC>> evaluatorValue,
-      Value<Predicate<? super Double>> criterion) {
-    return stage -> createResponseCheckerByNDcg(criterion.apply(stage), p.apply(stage), evaluatorValue.apply(stage));
+      Value<Value<Boolean>> criterion) {
+    return stage -> createResponseCheckerByNDcg(
+        printablePredicate(
+            criterion.name(),
+            criterionValueToPredicate(criterion, stage)),
+        p.apply(stage),
+        evaluatorValue.apply(stage));
   }
 
   @SuppressWarnings("unchecked")
   @Scriptable
   public <T> Value<T> docAttr(Value<DOC> doc, Value<String> attrName) {
     return stage -> (T) searchEngine.valueOf(doc.apply(stage), attrName.apply(stage)).orElseThrow(NoSuchElementException::new);
+  }
+
+  private static Predicate<Double> criterionValueToPredicate(Value<Value<Boolean>> criterion, Stage s) {
+    return (Double aDouble) -> {
+      Stage wrappedStage = wrapValueAsArgumentInStage(s, toValue(criterion.name(), aDouble));
+      Value<Boolean> booleanValue = criterion.apply(s);
+      return evaluateValueWithoutListening(wrappedStage, booleanValue);
+    };
   }
 
   private static <DOC, REQ extends Request, RESP extends Response<DOC, REQ>, T>
