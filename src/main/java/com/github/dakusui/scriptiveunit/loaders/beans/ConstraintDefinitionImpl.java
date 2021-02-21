@@ -1,8 +1,8 @@
 package com.github.dakusui.scriptiveunit.loaders.beans;
 
-import com.github.dakusui.scriptiveunit.model.form.handle.FormUtils;
+import com.github.dakusui.scriptiveunit.model.form.value.ValueUtils;
 import com.github.dakusui.scriptiveunit.model.desc.ConstraintDefinition;
-import com.github.dakusui.scriptiveunit.model.session.Stage;
+import com.github.dakusui.scriptiveunit.model.stage.Stage;
 import com.github.dakusui.scriptiveunit.model.statement.Statement;
 
 import java.util.List;
@@ -18,11 +18,11 @@ public class ConstraintDefinitionImpl implements ConstraintDefinition {
 
   @Override
   public boolean test(Stage stage) {
-    return requireNonNull(statement.<Boolean>toForm()).apply(stage);
+    return requireNonNull(statement.<Boolean>toValue()).apply(stage);
   }
 
   @Override
   public List<String> involvedParameterNames() {
-    return FormUtils.involvedParameters(statement);
+    return ValueUtils.involvedParameters(statement);
   }
 }

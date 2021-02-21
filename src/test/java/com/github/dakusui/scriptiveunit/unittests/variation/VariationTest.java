@@ -6,12 +6,21 @@ import com.github.dakusui.jcunit8.runners.junit4.annotations.Condition;
 import com.github.dakusui.jcunit8.runners.junit4.annotations.From;
 import com.github.dakusui.jcunit8.runners.junit4.annotations.Given;
 import com.github.dakusui.jcunit8.runners.junit4.annotations.ParameterSource;
+import com.github.dakusui.scriptiveunit.core.JsonScript;
+import com.github.dakusui.scriptiveunit.core.Reporting;
+import com.github.dakusui.scriptiveunit.core.ScriptCompiler;
+import com.github.dakusui.scriptiveunit.model.form.FormRegistry;
+import com.github.dakusui.scriptiveunit.model.lang.ApplicationSpec;
+import com.github.dakusui.scriptiveunit.model.lang.HostSpec;
+import com.github.dakusui.scriptiveunit.model.lang.LanguageSpec;
+import com.github.dakusui.scriptiveunit.model.lang.ResourceStoreSpec;
 import com.github.dakusui.scriptiveunit.runners.ScriptiveUnit;
-import com.github.dakusui.scriptiveunit.core.Config;
-import com.github.dakusui.scriptiveunit.utils.JsonUtils;
 import com.github.dakusui.scriptiveunit.testassets.drivers.Loader;
 import com.github.dakusui.scriptiveunit.testassets.drivers.Simple;
 import com.github.dakusui.scriptiveunit.testutils.Resource;
+import com.github.dakusui.scriptiveunit.utils.JsonUtils;
+import org.codehaus.jackson.JsonNode;
+import org.codehaus.jackson.node.ArrayNode;
 import org.codehaus.jackson.node.ObjectNode;
 import org.junit.Test;
 import org.junit.runner.JUnitCore;
@@ -19,17 +28,22 @@ import org.junit.runner.RunWith;
 
 import java.io.InputStream;
 import java.util.List;
-import java.util.Properties;
+import java.util.Optional;
 import java.util.function.Function;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
+import static com.github.dakusui.scriptiveunit.utils.JsonUtils.readJsonNodeFromStream;
+import static com.github.dakusui.scriptiveunit.utils.JsonUtils.requireObjectNode;
 import static com.github.dakusui.scriptiveunit.utils.ReflectionUtils.allScriptsUnderMatching;
+import static com.github.dakusui.scriptiveunit.utils.ReflectionUtils.openResourceAsStream;
 
 
 @RunWith(JCUnit8.class)
 public class VariationTest {
-  private Parameter.Factory<Resource<ObjectNode>> createResourceParameterFactory(String resourcePackagePrefix, String suffix) {
+  private Parameter.Factory<Resource<ObjectNode>> createResourceParameterFactory(
+      String resourcePackagePrefix,
+      String suffix) {
     List<String> resourceNames = allScriptsUnderMatching(
         resourcePackagePrefix,
         Pattern.compile(".+\\." + suffix + "$")
@@ -111,17 +125,18 @@ public class VariationTest {
     );
   }
 
+  /*
   @Given("!isFactorsAttributePresent&&isConstraintsAttributePresent")
   @Test(expected = RuntimeException.class)
   public void whenRunTest$thenTerminatesWithMessage(
-      Resource<ObjectNode> _extends,
-      Resource<ObjectNode> description,
-      Resource<ObjectNode> factors,
-      Resource<ObjectNode> constraints,
-      Resource<ObjectNode> runnerType,
-      Resource<ObjectNode> setUp,
-      Resource<ObjectNode> setUpBeforeAll,
-      Resource<ObjectNode> testOracles
+      @From("_extends") Resource<ObjectNode> _extends,
+      @From("description") Resource<ObjectNode> description,
+      @From("factors") Resource<ObjectNode> factors,
+      @From("constraints") Resource<ObjectNode> constraints,
+      @From("runnerType") Resource<ObjectNode> runnerType,
+      @From("setUp") Resource<ObjectNode> setUp,
+      @From("setUpBeforeAll") Resource<ObjectNode> setUpBeforeAll,
+      @From("testOracles") Resource<ObjectNode> testOracles
   ) throws Throwable {
     runTest(
         _extends,
@@ -134,6 +149,7 @@ public class VariationTest {
         testOracles
     );
   }
+   */
 
   @Condition
   public boolean isFactorsAttributePresent(
@@ -159,19 +175,58 @@ public class VariationTest {
       Resource<ObjectNode> setUpBeforeAll,
       Resource<ObjectNode> testOracles
   ) throws Throwable {
+    JsonScript.FromDriverClass baseScript = new JsonScript.FromDriverClass(
+        Simple.class,
+        "components/root.json", requireObjectNode(readJsonNodeFromStream(openResourceAsStream("components/root.json"))));
     new JUnitCore().run(
         new ScriptiveUnit(
             Simple.class,
-            Loader.create(
-                new Config.Builder(Simple.class, new Properties()).withScriptResourceName("components/root.json").build(),
-                _extends,
-                description,
-                factors,
-                constraints,
-                runnerType,
-                setUp,
-                setUpBeforeAll,
-                testOracles
-            )));
+            new ScriptCompiler.Default(),
+            new JsonScript() {
+              @Override
+              public Optional<Reporting> getReporting() {
+                return baseScript.getReporting();
+              }
+
+              @Override
+              public LanguageSpec<JsonNode, ObjectNode, ArrayNode, JsonNode> languageSpec() {
+                return new LanguageSpec.ForJson() {
+                  @Override
+                  public HostSpec<JsonNode, ObjectNode, ArrayNode, JsonNode> hostSpec() {
+                    return baseScript.languageSpec().hostSpec();
+                  }
+
+                  @Override
+                  public ApplicationSpec applicationSpec() {
+                    return baseScript.languageSpec().applicationSpec();
+                  }
+
+                  @Override
+                  public ResourceStoreSpec resourceStoreSpec() {
+                    return baseScript.languageSpec().resourceStoreSpec();
+                  }
+
+                  @Override
+                  public FormRegistry formRegistry() {
+                    return baseScript.languageSpec().formRegistry();
+                  }
+                };
+              }
+
+              @Override
+              public ObjectNode mainNode() {
+                return languageSpec().hostSpec().toHostObject(Loader.create(
+                    baseScript.languageSpec().applicationSpec(),
+                    _extends,
+                    description,
+                    factors,
+                    constraints,
+                    runnerType,
+                    setUp,
+                    setUpBeforeAll,
+                    testOracles
+                ).createDefaultValues());
+              }
+            }));
   }
 }

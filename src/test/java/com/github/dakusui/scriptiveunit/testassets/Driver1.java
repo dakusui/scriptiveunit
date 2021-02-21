@@ -4,12 +4,12 @@ import com.github.dakusui.scriptiveunit.annotations.Doc;
 import com.github.dakusui.scriptiveunit.annotations.Import;
 import com.github.dakusui.scriptiveunit.annotations.Import.Alias;
 import com.github.dakusui.scriptiveunit.annotations.Scriptable;
-import com.github.dakusui.scriptiveunit.drivers.Arith;
-import com.github.dakusui.scriptiveunit.drivers.Core;
-import com.github.dakusui.scriptiveunit.drivers.Predicates;
-import com.github.dakusui.scriptiveunit.drivers.actions.Basic;
-import com.github.dakusui.scriptiveunit.model.form.Form;
-import com.github.dakusui.scriptiveunit.model.session.Stage;
+import com.github.dakusui.scriptiveunit.libs.Arith;
+import com.github.dakusui.scriptiveunit.libs.Core;
+import com.github.dakusui.scriptiveunit.libs.Predicates;
+import com.github.dakusui.scriptiveunit.libs.actions.Basic;
+import com.github.dakusui.scriptiveunit.model.form.value.Value;
+import com.github.dakusui.scriptiveunit.model.stage.Stage;
 import com.github.dakusui.scriptiveunit.runners.ScriptiveUnit;
 import org.junit.runner.RunWith;
 
@@ -49,13 +49,13 @@ public class Driver1 {
     @Doc({"Hello, world", "everyone"})
     @SuppressWarnings("unused")
     @Scriptable
-    public Form<String> helloWorld() {
+    public Value<String> helloWorld() {
       return (Stage input) -> "Hello world";
     }
 
     @SuppressWarnings("unused")
     @Scriptable
-    public Form<String> printString(Form<String> s) {
+    public Value<String> printString(Value<String> s) {
       return (Stage input) -> {
         System.out.println(s.apply(input));
         return s.apply(input);
@@ -64,7 +64,7 @@ public class Driver1 {
 
     @SuppressWarnings("unused")
     @Scriptable
-    public Form<String> printVarargs(List<Form<String>> strings) {
+    public Value<String> printVarargs(List<Value<String>> strings) {
       StringBuffer buf = new StringBuffer();
       return (Stage input) -> {
         strings.forEach(s -> {

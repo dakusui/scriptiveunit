@@ -9,13 +9,8 @@ import com.google.common.collect.Iterables;
 import java.awt.Font;
 import java.awt.FontFormatException;
 import java.awt.font.FontRenderContext;
-import java.io.BufferedInputStream;
-import java.io.BufferedOutputStream;
-import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
+import java.util.Arrays;
 import java.util.Map;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
@@ -23,8 +18,8 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import static com.github.dakusui.scriptiveunit.exceptions.ScriptiveUnitException.wrapIfNecessary;
-import static com.github.dakusui.scriptiveunit.exceptions.SyntaxException.cyclicTemplatingFound;
-import static com.github.dakusui.scriptiveunit.exceptions.SyntaxException.undefinedFactor;
+import static com.github.dakusui.scriptiveunit.exceptions.Exceptions.cyclicTemplatingFound;
+import static com.github.dakusui.scriptiveunit.exceptions.Exceptions.undefinedFactor;
 import static java.lang.Character.isUpperCase;
 import static java.lang.Character.toLowerCase;
 import static java.lang.Character.toUpperCase;
@@ -55,7 +50,7 @@ public enum StringUtils {
     i.forEach((Object in) -> {
       b.append("  ");
       b.append(in);
-      b.append("\n");
+      b.append(format("%n"));
     });
     b.append("]");
     return b.toString();
@@ -199,7 +194,7 @@ public enum StringUtils {
     int originalWidth = width(text);
     if (originalWidth >= requiredWidth)
       return text;
-    return text + String.format("%" + (requiredWidth - originalWidth) + "s", "");
+    return text + format("%" + (requiredWidth - originalWidth) + "s", "");
   }
 
   private static final Font MONOSPACEFONT = loadMonospaceFont();
@@ -207,7 +202,7 @@ public enum StringUtils {
   private static Font loadMonospaceFont() {
     try {
       return Font.createFont(Font.TRUETYPE_FONT,
-          materializeResource("font/unifont-12.1.02.ttf"));
+          IoUtils.materializeResource("font/unifont-12.1.02.ttf"));
     } catch (FontFormatException | IOException e) {
       throw wrapIfNecessary(e);
     }
@@ -220,46 +215,7 @@ public enum StringUtils {
   }
 
 
-  private static File materializeResource(@SuppressWarnings("SameParameterValue") String resourceName) {
-    try {
-      try (InputStream i = new BufferedInputStream(openResource(resourceName))) {
-        return writeToTempFile(i);
-      }
-    } catch (IOException e) {
-      throw wrapIfNecessary(e);
-    }
-  }
-
-  private static File writeToTempFile(InputStream i) {
-    try {
-      File ret = File.createTempFile("scriptiveunit", "tmp");
-      ret.deleteOnExit();
-      writeTo(ret, i);
-      return ret;
-    } catch (IOException e) {
-      throw wrapIfNecessary(e);
-    }
-  }
-
-  private static void writeTo(File out, InputStream i) {
-    try {
-      byte[] buf = new byte[4096];
-      try (OutputStream fileOutputStream = new BufferedOutputStream(new FileOutputStream(out))) {
-        int len;
-        while ((len = i.read(buf, 0, buf.length)) > 0) {
-          fileOutputStream.write(buf, 0, len);
-        }
-      }
-    } catch (IOException e) {
-      throw wrapIfNecessary(e);
-    }
-  }
-
-  private static InputStream openResource(String resourceName) {
-    try {
-      return requireNonNull(StringUtils.class.getClassLoader().getResource(resourceName)).openStream();
-    } catch (IOException e) {
-      throw wrapIfNecessary(e);
-    }
+  public static String arrayToString(Object[] args) {
+    return Arrays.toString(args);
   }
 }

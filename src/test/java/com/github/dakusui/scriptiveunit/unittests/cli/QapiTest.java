@@ -4,7 +4,7 @@ import com.github.dakusui.jcunit8.factorspace.Parameter;
 import com.github.dakusui.jcunit8.runners.junit4.JCUnit8;
 import com.github.dakusui.jcunit8.runners.junit4.annotations.From;
 import com.github.dakusui.jcunit8.runners.junit4.annotations.ParameterSource;
-import com.github.dakusui.scriptiveunit.examples.Qapi;
+import com.github.dakusui.scriptiveunit.examples.qapi.Qapi;
 import com.github.dakusui.scriptiveunit.testassets.drivers.Simple;
 import com.github.dakusui.scriptiveunit.testutils.JUnitResultMatcher;
 import com.github.dakusui.scriptiveunit.testutils.TestBase;

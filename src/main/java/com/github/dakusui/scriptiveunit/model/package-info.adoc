@@ -1,0 +1,9 @@
+
+
+== Terminology rectification
+
+
+* Form -> A call of form (FormCall, FuncCall), StatementFactory?
+* {ObjectMethod, ...} -> {Form, Func}
+* Statement
+     Argument, Compound, Atom

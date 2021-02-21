@@ -136,5 +136,7 @@ The Script and driver mentioned above will generate test results like following.
 * Dependency mechanism
 
 # References
+* [Site](https://dakusui.github.io/scriptiveunit/)
+* [API Reference](https://dakusui.github.io/scriptiveunit/apidocs/index.html)
 * [JCUnit](https://github.com/dakusui/jcunit)
 * [ActionUnit](https://github.com/dakusui/actionunit)

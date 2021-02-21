@@ -1,0 +1,42 @@
+A pacakge to host exception classes
+
+== Exception Hierarchy
+
+
+* Sources of errors
+  ** User input
+    *** Value
+    *** Reference to resources (files, url, classpath resources)
+  ** I/O
+    *** Files
+    *** Network
+    *** Class path resources
+  ** Script
+    *** Malformed
+    *** Invalid
+    *** Type mismatch
+  ** Program (bug)
+
+
+* Execution phases
+
+  - Resource (raw script; JSON)
+  - -> Dictionary (abstract representation)
+  - -> (Preprocessing)
+  - -> Dictionary
+  - -> (Mapping)
+  - -> ObjectNode (JSON)
+  - -> TestSuiteDescriptorBean (List<Object>)
+  - -> (noname): Compile?
+  - -> TestSuiteDescriptor (Statements) + () -> Statements (userForms)
+  - -> (eval) ** Runtime 1
+  - -> Object (evaluated value; action)
+  - -> (perform) ** Runtime 2
+  - -> Test Result
+
+ScriptiveUnit
+
+* Parameter Error
+* Syntax Error in script
+* Runtime Error
+  * Type Mismatch (Class Cast Exception)

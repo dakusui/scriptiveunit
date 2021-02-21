@@ -5,6 +5,7 @@ import com.github.dakusui.scriptiveunit.model.statement.Statement;
 import java.util.List;
 import java.util.Optional;
 
+import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
 
 public interface TestOracle {
@@ -106,6 +107,14 @@ public interface TestOracle {
     @Override
     public Definition definition() {
       return definition;
+    }
+
+    @Override
+    public String toString() {
+      return format("testOracle[%s]:{description=%s, definition=%s}",
+          this.index,
+          this.description,
+          this.definition);
     }
   }
 }

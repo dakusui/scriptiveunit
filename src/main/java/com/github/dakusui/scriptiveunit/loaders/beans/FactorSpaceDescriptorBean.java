@@ -3,17 +3,20 @@ package com.github.dakusui.scriptiveunit.loaders.beans;
 import com.github.dakusui.jcunit.fsm.spec.FsmSpec;
 import com.github.dakusui.jcunit8.factorspace.Constraint;
 import com.github.dakusui.jcunit8.factorspace.Parameter;
-import com.github.dakusui.scriptiveunit.exceptions.ScriptiveUnitException;
+import com.github.dakusui.scriptiveunit.exceptions.ValidationFailure;
 import com.github.dakusui.scriptiveunit.model.desc.ParameterSpaceDescriptor;
 import com.github.dakusui.scriptiveunit.model.session.Session;
+import com.github.dakusui.scriptiveunit.model.stage.Stage;
 import com.github.dakusui.scriptiveunit.model.statement.Statement;
 
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 import static java.lang.Class.forName;
+import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
 import static java.util.stream.Collectors.toList;
 
@@ -48,10 +51,15 @@ public abstract class FactorSpaceDescriptorBean {
 
       @Override
       public List<Constraint> getConstraints() {
+        AtomicInteger i = new AtomicInteger(0);
         return constraintList.stream()
             .map(statementFactory::create)
             .map(ConstraintDefinitionImpl::new)
-            .map(session::createConstraint)
+            .map((ConstraintDefinitionImpl constraintDefinition) ->
+                Constraint.create(
+                    "constriant:" + i.getAndIncrement(),
+                    in -> constraintDefinition.test(Stage.createFixtureLevelStage(in, ((Session.Impl) session).getScript())),
+                    constraintDefinition.involvedParameterNames()))
             .collect(toList());
       }
     };
@@ -79,7 +87,7 @@ public abstract class FactorSpaceDescriptorBean {
                 }
               default:
                 throw new RuntimeException(
-                    String.format(
+                    format(
                         "unknown type '%s' was given to parameter '%s''s definition.",
                         def.type,
                         parameterName
@@ -95,7 +103,7 @@ public abstract class FactorSpaceDescriptorBean {
 
   private List<Object> validateParameterDefinitionArgsForRegex(List<Object> def) {
     if (def.size() != 1)
-      throw ScriptiveUnitException.fail("").get();
+      throw new ValidationFailure(format("One and only one value is required but <%s> was given", def));
     return def;
   }
 }

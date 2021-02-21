@@ -1,7 +1,8 @@
 package com.github.dakusui.scriptiveunit.runners;
 
-import com.github.dakusui.scriptiveunit.core.Config;
-import com.github.dakusui.scriptiveunit.exceptions.ScriptiveUnitException;
+import com.github.dakusui.scriptiveunit.annotations.RunScript;
+import com.github.dakusui.scriptiveunit.core.JsonScript;
+import com.github.dakusui.scriptiveunit.exceptions.Exceptions;
 import com.github.dakusui.scriptiveunit.utils.ReflectionUtils;
 import org.junit.runner.Description;
 import org.junit.runner.Runner;
@@ -10,11 +11,7 @@ import org.junit.runners.ParentRunner;
 import org.junit.runners.model.InitializationError;
 import org.junit.runners.model.RunnerBuilder;
 
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Inherited;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
+import java.lang.annotation.*;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -23,6 +20,12 @@ import java.util.function.Predicate;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
+import static com.github.dakusui.scriptiveunit.annotations.Utils.createScriptCompilerFrom;
+import static com.github.dakusui.scriptiveunit.exceptions.ScriptiveUnitException.wrapIfNecessary;
+import static com.github.dakusui.scriptiveunit.utils.JsonUtils.readJsonNodeFromStream;
+import static com.github.dakusui.scriptiveunit.utils.JsonUtils.requireObjectNode;
+import static com.github.dakusui.scriptiveunit.utils.ReflectionUtils.getAnnotation;
+import static com.github.dakusui.scriptiveunit.utils.ReflectionUtils.openResourceAsStream;
 import static java.lang.String.format;
 import static java.util.stream.Collectors.toList;
 
@@ -81,8 +84,7 @@ public class ScriptiveSuiteSet extends ParentRunner<Runner> {
         klass,
         new SuiteScripts.Streamer(klass.getAnnotation(SuiteScripts.class)).stream()
             .map(
-                scriptResourceName ->
-                    createRunner(scriptResourceName, figureOutDriverClass(klass)))
+                scriptResourceName -> createRunner(scriptResourceName, figureOutDriverClass(klass)))
             .collect(toList()));
   }
 
@@ -129,11 +131,14 @@ public class ScriptiveSuiteSet extends ParentRunner<Runner> {
 
   private static Runner createRunner(String scriptResourceName, Class<?> klass) {
     try {
-      return new ScriptiveUnit(klass, new Config.Builder(klass, System.getProperties()).withScriptResourceName(scriptResourceName).build());
-    } catch (Error | RuntimeException e) {
-      throw e;
+      return new ScriptiveUnit(
+          klass,
+          createScriptCompilerFrom(getAnnotation(klass, RunScript.class)
+              .orElseThrow(() -> Exceptions.noScriptCompilerProvided(klass))
+              .compiler()),
+          new JsonScript.FromDriverClass(klass, scriptResourceName, requireObjectNode(readJsonNodeFromStream(openResourceAsStream(scriptResourceName)))));
     } catch (Throwable throwable) {
-      throw ScriptiveUnitException.wrapIfNecessary(throwable);
+      throw wrapIfNecessary(throwable);
     }
   }
 

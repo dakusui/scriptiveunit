@@ -1,11 +1,14 @@
 package com.github.dakusui.scriptiveunit.unittests.core;
 
+import com.github.dakusui.scriptiveunit.exceptions.SyntaxException;
+import com.github.dakusui.scriptiveunit.model.lang.ApplicationSpec;
 import com.github.dakusui.scriptiveunit.utils.Checks;
 import org.codehaus.jackson.JsonNode;
 import org.codehaus.jackson.node.JsonNodeFactory;
 import org.codehaus.jackson.node.ObjectNode;
 
-import static com.github.dakusui.scriptiveunit.exceptions.SyntaxException.mergeFailed;
+import static com.github.dakusui.scriptiveunit.unittests.core.UtJsonUtils.UtExceptionUtils.mergeFailed;
+import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
 
 public enum UtJsonUtils {
@@ -55,5 +58,17 @@ public enum UtJsonUtils {
       }
     }
     return target;
+  }
+
+  enum UtExceptionUtils {
+    ;
+
+    public static SyntaxException mergeFailed(ApplicationSpec.Dictionary source, ApplicationSpec.Dictionary target, String key) {
+      throw new SyntaxException(format("Failed to merge '%s' and '%s' on '%s'", source, target, key));
+    }
+
+    public static SyntaxException mergeFailed(ObjectNode source, ObjectNode target, String key) {
+      throw new SyntaxException(format("Failed to merge '%s' and '%s' on '%s'", source, target, key));
+    }
   }
 }

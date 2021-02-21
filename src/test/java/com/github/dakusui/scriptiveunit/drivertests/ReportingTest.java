@@ -1,17 +1,17 @@
 package com.github.dakusui.scriptiveunit.drivertests;
 
 import com.github.dakusui.actionunit.core.Action;
-import com.github.dakusui.scriptiveunit.drivers.extras.Reporting;
-import com.github.dakusui.scriptiveunit.model.session.Stage;
+import com.github.dakusui.scriptiveunit.libs.extras.Reporting;
+import com.github.dakusui.scriptiveunit.model.stage.Stage;
 import org.junit.Test;
 
 import static com.github.dakusui.crest.Crest.*;
 import static com.github.dakusui.scriptiveunit.testutils.UtUtils.createForm;
-import static com.github.dakusui.scriptiveunit.testutils.UtUtils.createOracleLevelStage;
+import static com.github.dakusui.scriptiveunit.testutils.UtUtils.createOracleStage;
 import static com.github.dakusui.scriptiveunit.utils.ActionUtils.performActionWithLogging;
 
 public class ReportingTest {
-  private final Stage stage = createOracleLevelStage();
+  private final Stage     stage     = createOracleStage();
   private final Reporting reporting = new Reporting();
 
   @Test

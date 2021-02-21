@@ -10,4 +10,8 @@ public class Reporting {
     this.reportFileName = reportFileName;
     this.reportBaseDirectory = reportBaseDirectory;
   }
+
+  public static Reporting create() {
+    return new Reporting("report.json", new File("."));
+  }
 }

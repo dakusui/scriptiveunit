@@ -1,6 +1,7 @@
 package com.github.dakusui.scriptiveunit.utils;
 
 import com.github.dakusui.scriptiveunit.exceptions.ScriptiveUnitException;
+import com.github.dakusui.scriptiveunit.exceptions.ScriptiveUnitUnclassifiedException;
 
 import java.util.function.Predicate;
 import java.util.function.Supplier;
@@ -24,13 +25,7 @@ public enum Checks {
 
   public static <V> V check(V target, Predicate<? super V> predicate, String fmt, Object... args) {
     if (!requireNonNull(predicate).test(target))
-      throw new ScriptiveUnitException(String.format(fmt, args));
+      throw new ScriptiveUnitUnclassifiedException(String.format(fmt, args));
     return target;
-  }
-
-  // safe because both Long.class and long.class are of type Class<Long>
-  @SuppressWarnings("unchecked")
-  public static <T> Class<T> wrap(Class<T> c) {
-    return c.isPrimitive() ? (Class<T>) CoreUtils.PRIMITIVES_TO_WRAPPERS.get(c) : c;
   }
 }
