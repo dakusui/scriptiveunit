@@ -1,13 +1,13 @@
 package com.github.dakusui.scriptiveunit.runners;
 
-import com.github.dakusui.jcunit.core.tuples.Tuple;
-import com.github.dakusui.scriptiveunit.annotations.Load;
-import com.github.dakusui.scriptiveunit.core.Config;
-import com.github.dakusui.scriptiveunit.loaders.TestSuiteDescriptorLoader;
+import com.github.dakusui.scriptiveunit.annotations.RunScript;
+import com.github.dakusui.scriptiveunit.core.Script;
+import com.github.dakusui.scriptiveunit.core.ScriptCompiler;
 import com.github.dakusui.scriptiveunit.model.desc.TestSuiteDescriptor;
 import com.github.dakusui.scriptiveunit.model.session.Session;
-import com.github.dakusui.scriptiveunit.utils.ReflectionUtils;
-import com.github.dakusui.scriptiveunit.utils.TupleUtils;
+import org.codehaus.jackson.JsonNode;
+import org.codehaus.jackson.node.ArrayNode;
+import org.codehaus.jackson.node.ObjectNode;
 import org.junit.internal.runners.statements.RunBefores;
 import org.junit.runner.Runner;
 import org.junit.runners.Parameterized;
@@ -18,7 +18,12 @@ import java.util.Collections;
 import java.util.List;
 
 import static com.github.dakusui.jcunit8.core.Utils.createTestClassMock;
+import static com.github.dakusui.scriptiveunit.annotations.Utils.createScriptCompilerFrom;
+import static com.github.dakusui.scriptiveunit.annotations.Utils.createScriptLoaderFrom;
+import static com.github.dakusui.scriptiveunit.exceptions.Exceptions.noScriptCompilerProvided;
+import static com.github.dakusui.scriptiveunit.exceptions.Exceptions.noScriptLoaderProvided;
 import static com.github.dakusui.scriptiveunit.utils.ActionUtils.performActionWithLogging;
+import static com.github.dakusui.scriptiveunit.utils.ReflectionUtils.getAnnotation;
 import static com.google.common.collect.Lists.newLinkedList;
 
 /**
@@ -30,7 +35,6 @@ public class ScriptiveUnit extends Parameterized {
    */
   private final List<Runner> runners;
   private final Session      session;
-  private       Tuple        commonFixture;
 
   /**
    * Only called reflectively. Do not use programmatically.
@@ -39,28 +43,22 @@ public class ScriptiveUnit extends Parameterized {
    */
   @SuppressWarnings("unused")
   public ScriptiveUnit(Class<?> klass) throws Throwable {
-    this(klass, new Config.Builder(klass, System.getProperties()).build());
+    this(klass,
+        createScriptCompilerFrom(getAnnotation(klass, RunScript.class)
+            .orElseThrow(() -> noScriptCompilerProvided(klass))
+            .compiler()),
+        createScriptLoaderFrom(
+            getAnnotation(klass, RunScript.class)
+                .orElseThrow(() -> noScriptLoaderProvided(klass))
+                .loader())
+            .load(klass)
+    );
   }
 
-  /**
-   * A constructor for testing.
-   *
-   * @param klass  A test class
-   * @param config A config object.
-   */
-  public ScriptiveUnit(Class<?> klass, Config config) throws Throwable {
-    this(klass, TestSuiteDescriptorLoader.createTestSuiteDescriptorLoader(
-        ReflectionUtils.getAnnotationWithDefault(
-            config.getDriverObject().getClass(),
-            Load.DEFAULT_INSTANCE).with(),
-        config));
-  }
-
-  public ScriptiveUnit(Class<?> klass, TestSuiteDescriptorLoader loader) throws Throwable {
+  public ScriptiveUnit(Class<?> klass, ScriptCompiler scriptCompiler, Script<JsonNode, ObjectNode, ArrayNode, JsonNode> script) throws Throwable {
     super(klass);
-    this.session = Session.create(loader.getConfig(), loader);
+    this.session = Session.create(script, scriptCompiler);
     this.runners = newLinkedList(createRunners());
-    this.commonFixture = TupleUtils.createCommonFixture(getTestSuiteDescriptor().getFactorSpaceDescriptor().getParameters());
   }
 
   public TestSuiteDescriptor getTestSuiteDescriptor() {
@@ -69,7 +67,8 @@ public class ScriptiveUnit extends Parameterized {
 
   @Override
   public String getName() {
-    return this.session.getConfig().getScriptResourceName().orElse(getTestClass().getName())
+    return this.session.getScript()
+        .name()
         .replaceAll(".+/", "")
         .replaceAll("\\.[^.]*$", "")
         + ":" + getTestSuiteDescriptor().getDescription();
@@ -91,7 +90,7 @@ public class ScriptiveUnit extends Parameterized {
     return new RunBefores(statement, Collections.emptyList(), null) {
       @Override
       public void evaluate() throws Throwable {
-        performActionWithLogging(session.createSetUpBeforeAllAction(commonFixture));
+        performActionWithLogging(session.createSetUpBeforeAllAction());
         super.evaluate();
       }
     };
@@ -103,7 +102,7 @@ public class ScriptiveUnit extends Parameterized {
       @Override
       public void evaluate() throws Throwable {
         super.evaluate();
-        performActionWithLogging(session.createTearDownAfterAllAction(commonFixture));
+        performActionWithLogging(session.createTearDownAfterAllAction());
       }
     };
   }

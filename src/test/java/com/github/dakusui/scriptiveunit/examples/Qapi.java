@@ -1,21 +1,19 @@
 package com.github.dakusui.scriptiveunit.examples;
 
 
+import com.github.dakusui.scriptiveunit.annotations.CompileWith;
+import com.github.dakusui.scriptiveunit.annotations.RunScript;
 import com.github.dakusui.scriptiveunit.annotations.Import;
 import com.github.dakusui.scriptiveunit.annotations.Import.Alias;
-import com.github.dakusui.scriptiveunit.annotations.Load;
 import com.github.dakusui.scriptiveunit.annotations.Scriptable;
-import com.github.dakusui.scriptiveunit.core.Config;
-import com.github.dakusui.scriptiveunit.drivers.Arith;
-import com.github.dakusui.scriptiveunit.drivers.Collections;
-import com.github.dakusui.scriptiveunit.drivers.Predicates;
-import com.github.dakusui.scriptiveunit.drivers.extras.QueryApi;
-import com.github.dakusui.scriptiveunit.drivers.Strings;
-import com.github.dakusui.scriptiveunit.drivers.actions.Basic;
-import com.github.dakusui.scriptiveunit.loaders.preprocessing.PreprocessingUnit;
-import com.github.dakusui.scriptiveunit.loaders.json.JsonBasedTestSuiteDescriptorLoader;
-import com.github.dakusui.scriptiveunit.loaders.preprocessing.ApplicationSpec;
-import com.github.dakusui.scriptiveunit.model.form.Form;
+import com.github.dakusui.scriptiveunit.libs.Arith;
+import com.github.dakusui.scriptiveunit.libs.Collections;
+import com.github.dakusui.scriptiveunit.libs.Predicates;
+import com.github.dakusui.scriptiveunit.libs.Strings;
+import com.github.dakusui.scriptiveunit.libs.actions.Basic;
+import com.github.dakusui.scriptiveunit.libs.extras.QueryApi;
+import com.github.dakusui.scriptiveunit.core.ScriptCompiler;
+import com.github.dakusui.scriptiveunit.model.form.value.Value;
 import com.github.dakusui.scriptiveunit.runners.ScriptiveUnit;
 import com.github.dakusui.scriptiveunit.unittests.cli.MemoizationExample;
 import com.google.common.collect.Maps;
@@ -26,12 +24,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
-import static com.github.dakusui.scriptiveunit.loaders.preprocessing.PreprocessingUnit.Utils.pathMatcher;
-import static com.github.dakusui.scriptiveunit.loaders.preprocessing.ApplicationSpec.$;
-import static com.github.dakusui.scriptiveunit.loaders.preprocessing.ApplicationSpec.Utils.requireDictionary;
-import static com.github.dakusui.scriptiveunit.loaders.preprocessing.ApplicationSpec.array;
-import static com.github.dakusui.scriptiveunit.loaders.preprocessing.ApplicationSpec.atom;
-import static com.github.dakusui.scriptiveunit.loaders.preprocessing.ApplicationSpec.dict;
 import static java.lang.String.format;
 import static java.util.Collections.unmodifiableMap;
 import static java.util.Objects.requireNonNull;
@@ -39,50 +31,24 @@ import static java.util.Objects.requireNonNull;
 /**
  * A driver example.
  */
-@Load(with = Qapi.Loader.class)
+@RunScript(compiler = @CompileWith(Qapi.Loader.class))
 @RunWith(ScriptiveUnit.class)
 public class Qapi {
-  public static class Loader extends JsonBasedTestSuiteDescriptorLoader {
-    private static ApplicationSpec applicationSpec = new ApplicationSpec.Standard();
-
-    @Override
-    protected ApplicationSpec createApplicationSpec() {
-      return new ApplicationSpec.Standard() {
-        @Override
-        public List<PreprocessingUnit> preprocessors() {
-          return new LinkedList<PreprocessingUnit>(super.preprocessors()) {{
-            add(PreprocessingUnit.preprocessor(
-                Loader::getModelNode,
-                pathMatcher("testOracles", ".*")));
-          }};
-        }
-      };
-    }
-
-    @SuppressWarnings("WeakerAccess")
-    public Loader(Config config) {
-      super(config);
-    }
-
-    static ApplicationSpec.Node getModelNode(ApplicationSpec.Node node) {
-      return applicationSpec.deepMerge(
-          requireDictionary(node),
-          dict(
-              $("after", array(atom("nop")))
-          ));
+  public static class Loader extends ScriptCompiler.Default {
+    public Loader() {
     }
   }
 
   public static class Misc {
     @SuppressWarnings("unused")
     @Scriptable
-    public Form<String> content(Form<Entry> entry) {
+    public Value<String> content(Value<Entry> entry) {
       return input -> entry.apply(input).content();
     }
 
     @SuppressWarnings("unused")
     @Scriptable
-    public Form<Boolean> evalintp(Form<Integer> value, Form<Form<Boolean>> predicate) {
+    public Value<Boolean> evalintp(Value<Integer> value, Value<Value<Boolean>> predicate) {
       return input -> predicate.apply(input).apply(Collections.wrapValueAsArgumentInStage(input, value));
     }
   }
@@ -131,7 +97,7 @@ public class Qapi {
       @Alias(value = "request", as = "query"),
       @Alias(value = "response", as = "result"),
       @Alias(value = "service", as = "issue"),
-      @Alias(value = "configAttr", as = "config_attr"),
+      @Alias(value = "scriptAttr", as = "config_attr"),
       @Alias(value = "systemProperty", as = "system_property"),
   })
   public QueryApi<Request, Response, Entry> queryApi = new QueryApi<Request, Response, Entry>() {
@@ -186,11 +152,11 @@ public class Qapi {
     }
 
     private final Map<String, Object> fixture;
-    private final Term[]              terms;
+    private final Term[] terms;
 
+    @SuppressWarnings("unchecked")
     Request(Map<String, Object> fixture) {
       this.fixture = unmodifiableMap(fixture);
-      //noinspection unchecked
       this.terms = ((List<String>) this.fixture.get("terms"))
           .stream()
           .map((Object input) -> new Term((String) input))
@@ -249,7 +215,7 @@ public class Qapi {
     ;
 
     private final String content;
-    private final int    price;
+    private final int price;
 
     Entry(String content, int price) {
       this.content = requireNonNull(content);

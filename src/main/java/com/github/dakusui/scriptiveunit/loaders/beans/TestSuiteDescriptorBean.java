@@ -4,18 +4,18 @@ import com.github.dakusui.jcunit.core.tuples.Tuple;
 import com.github.dakusui.jcunit8.factorspace.ParameterSpace;
 import com.github.dakusui.jcunit8.pipeline.Pipeline;
 import com.github.dakusui.jcunit8.pipeline.Requirement;
+import com.github.dakusui.jcunit8.runners.junit4.TestScenarioFactoryForJUnit4;
 import com.github.dakusui.jcunit8.testsuite.TestCase;
-import com.github.dakusui.scriptiveunit.core.Config;
 import com.github.dakusui.scriptiveunit.exceptions.ScriptiveUnitException;
 import com.github.dakusui.scriptiveunit.model.desc.ParameterSpaceDescriptor;
 import com.github.dakusui.scriptiveunit.model.desc.TestSuiteDescriptor;
 import com.github.dakusui.scriptiveunit.model.desc.testitem.IndexedTestCase;
 import com.github.dakusui.scriptiveunit.model.desc.testitem.TestOracle;
-import com.github.dakusui.scriptiveunit.model.form.handle.FormUtils;
 import com.github.dakusui.scriptiveunit.model.session.Session;
 import com.github.dakusui.scriptiveunit.model.statement.Statement;
 import com.github.dakusui.scriptiveunit.runners.RunningMode;
 import com.github.dakusui.scriptiveunit.utils.StringUtils;
+import org.junit.runners.model.TestClass;
 
 import java.util.List;
 import java.util.Map;
@@ -24,8 +24,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
 
 import static com.github.dakusui.scriptiveunit.model.statement.Statement.createStatementFactory;
-import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
+import static java.util.Objects.requireNonNull;
 import static java.util.stream.Collectors.toList;
 
 public abstract class TestSuiteDescriptorBean {
@@ -33,7 +33,7 @@ public abstract class TestSuiteDescriptorBean {
   private final List<? extends TestOracleBean> testOracleBeanList;
   private final String                         description;
   private final RunningMode                    runnerMode;
-  private final Map<String, List<Object>>      userDefinedFormClauses;
+  private final Map<String, List<Object>>      userDefinedFormClauseMap;
   private final List<Object>                   setUpClause;
   private final List<Object>                   setUpBeforeAllClause;
   private final List<Object>                   tearDownClause;
@@ -43,7 +43,7 @@ public abstract class TestSuiteDescriptorBean {
       String description,
       FactorSpaceDescriptorBean factorSpaceBean,
       String runnerType,
-      Map<String, List<Object>> userDefinedFormClauses,
+      Map<String, List<Object>> userDefinedFormClauseMap,
       List<Object> setUpBeforeAllClause,
       List<Object> setUpClause,
       List<? extends TestOracleBean> testOracleBeanList,
@@ -52,10 +52,10 @@ public abstract class TestSuiteDescriptorBean {
     this.description = description;
     this.runnerMode = RunningMode.valueOf(StringUtils.toALL_CAPS(runnerType));
     this.factorSpaceBean = factorSpaceBean;
-    this.userDefinedFormClauses = userDefinedFormClauses;
+    this.userDefinedFormClauseMap = userDefinedFormClauseMap;
     this.setUpBeforeAllClause = setUpBeforeAllClause;
     this.setUpClause = setUpClause;
-    this.testOracleBeanList = testOracleBeanList;
+    this.testOracleBeanList = requireNonNull(testOracleBeanList);
     this.tearDownClause = tearDownClause;
     this.tearDownAfterAllClause = tearDownAfterAllClause;
   }
@@ -64,7 +64,7 @@ public abstract class TestSuiteDescriptorBean {
     try {
       return new TestSuiteDescriptor() {
         private final Statement.Factory statementFactory =
-            createStatementFactory(session.getConfig(), this.getUserDefinedFormClauses());
+            createStatementFactory(session.getScript(), this.getUserDefinedFormClauses());
         private Statement setUpBeforeAllStatement = setUpBeforeAllClause != null ?
             statementFactory.create(setUpBeforeAllClause) :
             null;
@@ -83,7 +83,10 @@ public abstract class TestSuiteDescriptorBean {
 
         private List<TestOracle> createTestOracles() {
           AtomicInteger i = new AtomicInteger(0);
-          return testOracleBeanList.stream().map((TestOracleBean each) -> each.createTestOracle(i.getAndIncrement(), this)).collect(toList());
+          return testOracleBeanList
+              .stream()
+              .map((TestOracleBean each) -> each.createTestOracle(i.getAndIncrement(), this))
+              .collect(toList());
         }
 
         @Override
@@ -92,7 +95,7 @@ public abstract class TestSuiteDescriptorBean {
         }
 
         @Override
-        public ParameterSpaceDescriptor getFactorSpaceDescriptor() {
+        public ParameterSpaceDescriptor getParameterSpaceDescriptor() {
           return factorSpaceBean.create(session, statementFactory);
         }
 
@@ -128,19 +131,12 @@ public abstract class TestSuiteDescriptorBean {
 
         @Override
         public Map<String, List<Object>> getUserDefinedFormClauses() {
-          return userDefinedFormClauses;
+          return userDefinedFormClauseMap;
         }
 
         @Override
-        public List<String> getInvolvedParameterNamesInSetUpAction() {
-          return setUp()
-              .map(FormUtils::involvedParameters)
-              .orElse(emptyList());
-        }
-
-        @Override
-        public Config getConfig() {
-          return session.getConfig();
+        public List<String> fixtureLevelParameterNames() {
+          return TestSuiteDescriptor.Utils.fixtureLevelParameterNames(this);
         }
 
         @Override
@@ -157,12 +153,13 @@ public abstract class TestSuiteDescriptorBean {
           ParameterSpace parameterSpace = createParameterSpaceFrom(testSuiteDescriptor);
           if (parameterSpace.getParameterNames().isEmpty())
             return singletonList(new IndexedTestCase(0, new Tuple.Builder().build(), TestCase.Category.REGULAR));
-          return Pipeline.Standard.create().execute(
-              new com.github.dakusui.jcunit8.pipeline.Config.Builder(
-                  new Requirement.Builder().withNegativeTestGeneration(false).withStrength(2).build()
-              ).build(),
-              parameterSpace
-          ).stream()
+          return Pipeline.Standard.create()
+              .execute(new com.github.dakusui.jcunit8.pipeline.Config.Builder(
+                      new Requirement.Builder().withNegativeTestGeneration(false).withStrength(2).build())
+                      .build(),
+                  parameterSpace,
+                  TestScenarioFactoryForJUnit4.create(new TestClass(Object.class)))
+              .stream()
               .map(new Function<TestCase, IndexedTestCase>() {
                 int i = 0;
 
@@ -177,10 +174,10 @@ public abstract class TestSuiteDescriptorBean {
         private ParameterSpace createParameterSpaceFrom(TestSuiteDescriptor testSuiteDescriptor) {
           return new ParameterSpace.Builder()
               .addAllParameters(
-                  testSuiteDescriptor.getFactorSpaceDescriptor().getParameters()
+                  testSuiteDescriptor.getParameterSpaceDescriptor().getParameters()
               )
               .addAllConstraints(
-                  testSuiteDescriptor.getFactorSpaceDescriptor().getConstraints()
+                  testSuiteDescriptor.getParameterSpaceDescriptor().getConstraints()
               )
               .build();
         }

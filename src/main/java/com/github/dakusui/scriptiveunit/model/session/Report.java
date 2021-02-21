@@ -1,7 +1,9 @@
 package com.github.dakusui.scriptiveunit.model.session;
 
 import com.github.dakusui.scriptiveunit.exceptions.ScriptiveUnitException;
-import com.github.dakusui.scriptiveunit.model.desc.testitem.TestItem;
+import com.github.dakusui.scriptiveunit.exceptions.ScriptiveUnitUnclassifiedException;
+import com.github.dakusui.scriptiveunit.model.desc.testitem.IndexedTestCase;
+import com.github.dakusui.scriptiveunit.model.desc.testitem.TestOracle;
 import com.github.dakusui.scriptiveunit.utils.Checks;
 import org.codehaus.jackson.map.ObjectMapper;
 
@@ -10,14 +12,15 @@ import java.io.IOException;
 import java.util.Map;
 import java.util.TreeMap;
 
+import static com.github.dakusui.scriptiveunit.exceptions.ScriptiveUnitException.wrapMinimally;
 import static java.lang.String.format;
 
 public interface Report extends Map<String, Object> {
   void submit();
 
-  static Report create(File baseDir, final File applicationDirectory, final String testSuiteName, TestItem testItem, final String reportFileName) {
-    int testCaseId = testItem.getTestCaseId();
-    int oracleId = testItem.getTestOracleId();
+  static Report create(File baseDir, final File applicationDirectory, final String testSuiteName, final String reportFileName, IndexedTestCase testCase, TestOracle testOracle) {
+    int testCaseId = testCase.getIndex();
+    int oracleId = testOracle.getIndex();
     return new Base() {
       private final File base = baseDir;
 
@@ -27,7 +30,7 @@ public interface Report extends Map<String, Object> {
         try {
           new ObjectMapper().writeValue(reportFile, this);
         } catch (IOException e) {
-          throw ScriptiveUnitException.wrap(e, "Failed to write to a report file '%s'", reportFile);
+          throw wrapMinimally(format("Failed to write to a report file '%s'", reportFile), e);
         }
       }
 
@@ -36,6 +39,7 @@ public interface Report extends Map<String, Object> {
             reportingDirectory_() :
             new File(base, reportingDirectory_().getPath());
       }
+
       private File reportingDirectory_() {
         return new File(
             new File("reports"),
@@ -57,10 +61,10 @@ public interface Report extends Map<String, Object> {
 
       private File ensureDirectoryExists(File dir) {
         if (!dir.exists()) {
-          Checks.check(dir.mkdirs(), () -> new ScriptiveUnitException(format("Failed to create a directory '%s'.", dir)));
+          Checks.check(dir.mkdirs(), () -> new ScriptiveUnitUnclassifiedException(format("Failed to create a directory '%s'.", dir)));
           return dir;
         }
-        return Checks.check(dir, File::isDirectory, () -> new ScriptiveUnitException(format("'%s' exists, but not a directory.", dir)));
+        return Checks.check(dir, File::isDirectory, () -> new ScriptiveUnitUnclassifiedException(format("'%s' exists, but not a directory.", dir)));
       }
     };
   }

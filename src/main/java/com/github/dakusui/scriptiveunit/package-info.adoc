@@ -1,10 +1,10 @@
 The top level package of "ScriptiveUnit".
 
-= About "ScriptiveUnit"
+== About "ScriptiveUnit"
 
 The "ScriptiveUnit" is a library to build a domain specific testing language.
 
-== Pipeline
+=== Pipeline
 [ditaa]
 ----
                                                                                      +---------------+

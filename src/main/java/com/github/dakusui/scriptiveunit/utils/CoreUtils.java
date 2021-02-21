@@ -1,27 +1,35 @@
 package com.github.dakusui.scriptiveunit.utils;
 
-import com.google.common.collect.ImmutableMap;
+import com.github.dakusui.faultsource.FaultSource;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
+import java.util.function.Supplier;
+import java.util.stream.Collector;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
-import static com.github.dakusui.scriptiveunit.core.Exceptions.SCRIPTIVEUNIT;
 import static java.math.MathContext.DECIMAL128;
 
-public enum CoreUtils {
-  ;
-  public static final Map<Class<?>, Class<?>> PRIMITIVES_TO_WRAPPERS = new ImmutableMap.Builder<Class<?>, Class<?>>()
-      .put(boolean.class, Boolean.class).put(byte.class, Byte.class).put(char.class, Character.class)
-      .put(double.class, Double.class).put(float.class, Float.class).put(int.class, Integer.class)
-      .put(long.class, Long.class).put(short.class, Short.class).put(void.class, Void.class).build();
+public enum CoreUtils implements FaultSource {
+  SCRIPTIVEUNIT {
+    @Override
+    public RuntimeException exceptionForCaughtFailure(String message, Throwable t) {
+      throw new RuntimeException(message, t);
+    }
+
+    @Override
+    public RuntimeException exceptionForIllegalValue(String message) {
+      return new IllegalArgumentException(message);
+    }
+  };
 
   public static <V> Stream<V> iterableToStream(Iterable<V> iterable) {
     return StreamSupport.stream(iterable.spliterator(), false);
   }
+
   public static BigDecimal toBigDecimal(Number number) {
     if (number instanceof BigDecimal)
       return (BigDecimal) number;
@@ -57,5 +65,36 @@ public enum CoreUtils {
 
   public static List<Object> cdr(List<Object> raw) {
     return raw.subList(1, raw.size());
+  }
+
+  public static <T> Collector<T, List<T>, T> singletonCollector() {
+    return singletonCollector(IllegalStateException::new, IllegalStateException::new);
+  }
+
+  public static <T> Collector<T, List<T>, T> singletonCollector(Supplier<RuntimeException> onNotFound, Supplier<RuntimeException> onMultipleElements) {
+    return Collector.of(
+        ArrayList::new,
+        (ts, t) -> {
+          if (ts.isEmpty()) {
+            ts.add(t);
+            return;
+          }
+          throw onMultipleElements.get();
+        },
+        (left, right) -> {
+          if (left.size() == 1 && right.isEmpty() || left.isEmpty() && right.size() == 1) {
+            left.addAll(right);
+            return left;
+          }
+          throw onMultipleElements.get();
+        },
+        list -> {
+          if (list.isEmpty())
+            throw onNotFound.get();
+          if (list.size() > 1)
+            throw onMultipleElements.get();
+          return list.get(0);
+        }
+    );
   }
 }

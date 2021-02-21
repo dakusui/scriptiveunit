@@ -2,29 +2,31 @@ package com.github.dakusui.scriptiveunit.model.session;
 
 import com.github.dakusui.actionunit.core.Action;
 import com.github.dakusui.actionunit.core.ActionSupport;
+import com.github.dakusui.actionunit.core.Context;
 import com.github.dakusui.jcunit.core.tuples.Tuple;
-import com.github.dakusui.jcunit8.factorspace.Constraint;
-import com.github.dakusui.scriptiveunit.core.Config;
-import com.github.dakusui.scriptiveunit.loaders.TestSuiteDescriptorLoader;
-import com.github.dakusui.scriptiveunit.model.desc.ConstraintDefinition;
+import com.github.dakusui.scriptiveunit.core.Reporting;
+import com.github.dakusui.scriptiveunit.core.Script;
+import com.github.dakusui.scriptiveunit.core.ScriptCompiler;
+import com.github.dakusui.scriptiveunit.exceptions.Exceptions;
 import com.github.dakusui.scriptiveunit.model.desc.TestSuiteDescriptor;
 import com.github.dakusui.scriptiveunit.model.desc.testitem.IndexedTestCase;
-import com.github.dakusui.scriptiveunit.model.desc.testitem.TestItem;
 import com.github.dakusui.scriptiveunit.model.desc.testitem.TestOracle;
-import com.github.dakusui.scriptiveunit.model.form.handle.FormUtils;
 import com.github.dakusui.scriptiveunit.model.session.action.Pipe;
 import com.github.dakusui.scriptiveunit.model.session.action.Sink;
 import com.github.dakusui.scriptiveunit.model.session.action.Source;
+import com.github.dakusui.scriptiveunit.model.stage.Stage;
+import com.github.dakusui.scriptiveunit.model.statement.Statement;
 import com.github.dakusui.scriptiveunit.utils.ActionUtils;
+import org.codehaus.jackson.JsonNode;
+import org.codehaus.jackson.node.ArrayNode;
+import org.codehaus.jackson.node.ObjectNode;
 import org.hamcrest.Matcher;
 
+import java.util.Optional;
+import java.util.function.BiFunction;
 import java.util.function.Function;
 
-import static com.github.dakusui.actionunit.core.ActionSupport.attempt;
-import static com.github.dakusui.actionunit.core.ActionSupport.leaf;
-import static com.github.dakusui.actionunit.core.ActionSupport.named;
-import static com.github.dakusui.actionunit.core.ActionSupport.nop;
-import static com.github.dakusui.actionunit.core.ActionSupport.sequential;
+import static com.github.dakusui.actionunit.core.ActionSupport.*;
 import static com.github.dakusui.scriptiveunit.utils.TestItemUtils.formatTestName;
 import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
@@ -33,46 +35,47 @@ import static org.junit.Assume.assumeThat;
 
 public interface Session {
 
-  Config getConfig();
+  Script<JsonNode, ObjectNode, ArrayNode, JsonNode> getScript();
 
   TestSuiteDescriptor getTestSuiteDescriptor();
 
-  Constraint createConstraint(ConstraintDefinition constraintDefinition);
+  Action createSetUpBeforeAllAction();
 
-  Action createSetUpBeforeAllAction(Tuple commonFixtureTuple);
-
-  Action createSetUpActionForFixture(TestSuiteDescriptor testSuiteDescriptor, Tuple fixtureTuple);
+  Action createSetUpActionForFixture(Tuple testCaseTuple);
 
   Action createMainAction(TestOracle testOracle, IndexedTestCase indexedTestCase);
 
-  Action createTearDownActionForFixture(TestSuiteDescriptor testSuiteDescriptor, Tuple fixtureTuple);
+  Action createTearDownActionForFixture(Tuple testCaseTuple);
 
-  Action createTearDownAfterAllAction(Tuple commonFixtureTuple);
+  Action createTearDownAfterAllAction();
 
-  static Session create(Config config, TestSuiteDescriptorLoader testSuiteDescriptorLoader) {
-    return new Impl(config, testSuiteDescriptorLoader);
+  static Session create(Script<JsonNode, ObjectNode, ArrayNode, JsonNode> script, ScriptCompiler scriptCompiler) {
+    return new Impl(script, scriptCompiler);
   }
 
   class Impl implements Session {
-    private final Config                     config;
-    private final Function<TestItem, Report> reportCreator;
-    private final TestSuiteDescriptor        testSuiteDescriptor;
+    private final Script<JsonNode, ObjectNode, ArrayNode, JsonNode>                 script;
+    private final Function<String, BiFunction<IndexedTestCase, TestOracle, Report>> reportCreator;
+    private final TestSuiteDescriptor                                               testSuiteDescriptor;
 
-    @SuppressWarnings("WeakerAccess")
-    protected Impl(Config config, TestSuiteDescriptorLoader testSuiteDescriptorLoader) {
-      this.config = config;
-      this.reportCreator = testItem -> Report.create(
+    Impl(Script<JsonNode, ObjectNode, ArrayNode, JsonNode> script, ScriptCompiler scriptCompiler) {
+      this.script = script;
+      Reporting reporting = this.script.getReporting()
+          .orElseThrow(Exceptions::noReportingObjectIsAvailable);
+      this.reportCreator = (scriptResourceName) -> (indexedTestCase, testOracle) -> Report.create(
           null,
-          getConfig().getReporting().reportBaseDirectory,
-          getConfig().getScriptResourceName().orElse("__noname__"),
-          testItem,
-          getConfig().getReporting().reportFileName);
-      this.testSuiteDescriptor = testSuiteDescriptorLoader.loadTestSuiteDescriptor(this);
+          reporting.reportBaseDirectory,
+          // Only name of a test script is wanted here.
+          scriptResourceName,
+          reporting.reportFileName,
+          indexedTestCase,
+          testOracle);
+      this.testSuiteDescriptor = scriptCompiler.compile(this, script.languageSpec().resourceStoreSpec());
     }
 
     @Override
-    public Config getConfig() {
-      return this.config;
+    public Script<JsonNode, ObjectNode, ArrayNode, JsonNode> getScript() {
+      return this.script;
     }
 
     @Override
@@ -81,168 +84,154 @@ public interface Session {
     }
 
     @Override
-    public Constraint createConstraint(ConstraintDefinition constraintDefinition) {
-      return Constraint.create(
-          in -> constraintDefinition.test(createSuiteLevelStage(in)),
-          constraintDefinition.involvedParameterNames());
-    }
-
-    @Override
-    public Action createSetUpBeforeAllAction(Tuple commonFixtureTuple) {
+    public Action createSetUpBeforeAllAction() {
+      Tuple commonFixtureTuple = this.getTestSuiteDescriptor().createCommonFixture();
+      Optional<Statement> statement = getTestSuiteDescriptor().setUpBeforeAll();
       return ActionSupport.named(
           format("Suite level set up: %s", testSuiteDescriptor.getDescription()),
-          testSuiteDescriptor
-              .setUpBeforeAll()
-              .map(FormUtils.INSTANCE::<Action>toForm)
-              .map(f -> f.apply(this.createSuiteLevelStage(commonFixtureTuple)))
-              .orElse(nop()));
+          statement.isPresent() ?
+              Statement.eval(statement.get(), Stage.createSuiteLevelStage(commonFixtureTuple, this.getScript())) :
+              nop());
     }
 
     @Override
-    public Action createSetUpActionForFixture(TestSuiteDescriptor testSuiteDescriptor, Tuple fixtureTuple) {
+    public Action createSetUpActionForFixture(Tuple testCaseTuple) {
+      Tuple fixtureTuple = this.testSuiteDescriptor.createFixtureTupleFrom(testCaseTuple);
+      Optional<Statement> statement = this.testSuiteDescriptor.setUp();
       return ActionSupport.named(
           "Fixture set up",
-          testSuiteDescriptor
-              .setUp()
-              .map(FormUtils.INSTANCE::<Action>toForm)
-              .map(f -> f.apply(this.createFixtureLevelStage(fixtureTuple)))
-              .orElse(nop()));
+          statement.isPresent() ?
+              Statement.eval(statement.get(), Stage.createSuiteLevelStage(fixtureTuple, this.getScript())) :
+              nop());
     }
 
     @Override
     public Action createMainAction(TestOracle testOracle, IndexedTestCase indexedTestCase) {
-      TestItem testItem = TestItem.create(indexedTestCase, testOracle);
-      TestOracleFormFactory definition = testItem.testOracleActionFactory(
-          tuple -> formatTestName(tuple, testSuiteDescriptor, testOracle.getDescription().orElse("noname")));
-      Tuple testCaseTuple = testItem.getTestCaseTuple();
-      Report report = createReport(testItem);
+      TestOracleValuesFactory definition = testOracleActionFactory(
+          tuple -> formatTestName(tuple, testSuiteDescriptor, testOracle.getDescription().orElse("noname")), indexedTestCase, testOracle);
+      Tuple testCaseTuple = indexedTestCase.getTestInput();
+      Report report = createReport(indexedTestCase, testOracle);
       return named(
           definition.describeTestCase(testCaseTuple),
           sequential(
-              createBefore(testItem, definition, report),
+              createBefore(definition, report, indexedTestCase, testOracle),
               attempt(ActionUtils.<Tuple, TestIO>test()
-                  .given(createGiven(testItem, report, definition.givenFactory()))
-                  .when(createWhen(testItem, report, definition.whenFactory()))
-                  .then(createThen(testItem, report, definition.thenFactory())).build())
+                  .given(createGiven(report, definition.givenFactory(), indexedTestCase, testOracle))
+                  .when(createWhen(report, definition.whenFactory(), indexedTestCase, testOracle))
+                  .then(createThen(report, definition.thenFactory(), indexedTestCase, testOracle)).build())
                   .recover(
                       AssertionError.class,
-                      leaf(c -> createErrorHandler(testItem, definition, report).accept(c.thrownException(), c)))
-                  .ensure(createAfter(testItem, definition, report))));
+                      leaf(c -> createErrorHandler(definition, report, indexedTestCase, testOracle).accept(c.thrownException(), c)))
+                  .ensure(createAfter(definition, report, indexedTestCase, testOracle))));
     }
 
     @Override
-    public Action createTearDownActionForFixture(TestSuiteDescriptor testSuiteDescriptor, Tuple fixtureTuple) {
+    public Action createTearDownActionForFixture(Tuple testCaseTuple) {
+      Tuple fixtureTuple = testSuiteDescriptor.createFixtureTupleFrom(testCaseTuple);
+      Optional<Statement> statement = testSuiteDescriptor.tearDown();
       return ActionSupport.named(
           "Fixture tear down",
-          testSuiteDescriptor
-              .tearDown()
-              .map(FormUtils.INSTANCE::<Action>toForm)
-              .map(f -> f.apply(this.createSuiteLevelStage(fixtureTuple)))
-              .orElse(nop()));
+          statement.isPresent() ?
+              Statement.eval(statement.get(), Stage.createSuiteLevelStage(fixtureTuple, this.getScript())) :
+              nop());
     }
 
     @Override
-    public Action createTearDownAfterAllAction(Tuple commonFixtureTuple) {
+    public Action createTearDownAfterAllAction() {
+      Tuple commonFixtureTuple = testSuiteDescriptor.createCommonFixture();
+      Optional<Statement> statement = testSuiteDescriptor.tearDownAfterAll();
       return ActionSupport.named(
           format("Suite level tear down: %s", testSuiteDescriptor.getDescription()),
-          testSuiteDescriptor
-              .tearDownAfterAll()
-              .map(FormUtils.INSTANCE::<Action>toForm)
-              .map(f -> f.apply(this.createSuiteLevelStage(commonFixtureTuple)))
-              .orElse(nop()));
+          statement.isPresent() ?
+              Statement.eval(statement.get(), Stage.createSuiteLevelStage(commonFixtureTuple, this.getScript())) :
+              nop());
     }
 
-    Action createBefore(TestItem testItem, TestOracleFormFactory testOracleFormFactory, Report report) {
-      Stage beforeStage = this.createOracleLevelStage(testItem, report);
-      return testOracleFormFactory.beforeFactory().apply(beforeStage);
+    Action createBefore(TestOracleValuesFactory testOracleValuesFactory, Report report, IndexedTestCase testCase, TestOracle testOracle) {
+      Stage beforeStage = Stage.createOracleLevelStage(report, this.getScript(), testCase, testOracle);
+      return testOracleValuesFactory.beforeFactory().apply(beforeStage);
     }
 
     Source<Tuple> createGiven(
-        TestItem testItem,
-        Report report, final Function<Stage, Matcher<Tuple>> stageMatcherFunction) {
-      Tuple testCaseTuple = testItem.getTestCaseTuple();
-      Stage givenStage = createOracleLevelStage(testItem, report);
+        Report report,
+        final Function<Stage, Matcher<Tuple>> stageMatcherFunction, IndexedTestCase testCase, TestOracle testOracle) {
+      Stage givenStage = Stage.createOracleLevelStage(report, this.getScript(), testCase, testOracle);
       return context -> {
         Matcher<Tuple> matcher = stageMatcherFunction.apply(givenStage);
-        assumeThat(testCaseTuple, matcher);
-        return testCaseTuple;
+        assumeThat(testCase.getTestInput(), matcher);
+        return testCase.getTestInput();
       };
     }
 
-    Pipe<Tuple, TestIO> createWhen(TestItem testItem, Report report, final Function<Stage, Object> function) {
-      return (testCase, context) -> {
-        Stage whenStage = createOracleLevelStage(testItem, report);
+    Pipe<Tuple, TestIO> createWhen(Report report, final Function<Stage, Object> function, IndexedTestCase testCase, TestOracle testOracle) {
+      return (Tuple testCaseTuple, Context context) -> {
+        Stage whenStage = Stage.createOracleLevelStage(report, this.getScript(), testCase, testOracle);
         return TestIO.create(
-            testCase,
+            testCaseTuple,
             function.apply(whenStage));
       };
     }
 
-    Sink<TestIO> createThen(TestItem testItem, Report report, Function<Stage, Function<Object, Matcher<Stage>>> matcherFunction) {
+    Sink<TestIO> createThen(Report report, Function<Stage, Function<Object, Matcher<Stage>>> matcherFunction, IndexedTestCase testCase, TestOracle testOracle) {
       return (testIO, context) -> {
-        Stage thenStage = Impl.this.createOracleVerificationStage(testItem, testIO.getOutput(), report);
+        Stage thenStage = Impl.this.createOracleVerificationStage(testIO.getOutput(), report, testCase, testOracle);
         assertThat(
             format("Test:<%s> failed with input:<%s>",
                 formatTestName(
-                    testItem.getTestCaseTuple(),
+                    testCase.getTestInput(),
                     testSuiteDescriptor,
-                    testItem.getDescription().orElse("(noname)")),
+                    testOracle.getDescription().orElse("(noname)")),
                 testIO.getInput()),
             thenStage,
             matcherFunction.apply(thenStage).apply(testIO.getOutput()));
       };
     }
 
-    Report createReport(TestItem testItem) {
-      return this.reportCreator.apply(testItem);
+    Report createReport(IndexedTestCase testCase, TestOracle testOracle) {
+      return this.reportCreator
+          .apply(getScript().name())
+          .apply(testCase, testOracle);
     }
 
-    Sink<AssertionError> createErrorHandler(TestItem testItem, TestOracleFormFactory definition, Report report) {
+    Sink<AssertionError> createErrorHandler(TestOracleValuesFactory definition, Report report, IndexedTestCase testCase, TestOracle testOracle) {
       return (input, context) -> {
-        Stage onFailureStage = createOracleFailureHandlingStage(testItem, input, report);
+        Stage onFailureStage = createOracleFailureHandlingStage(input, report, testCase, testOracle);
         definition.errorHandlerFactory().apply(onFailureStage);
         throw input;
       };
     }
 
-    Action createAfter(TestItem testItem, TestOracleFormFactory definition, Report report) {
-      Stage afterStage = this.createOracleLevelStage(testItem, report);
+    Action createAfter(TestOracleValuesFactory definition, Report report, IndexedTestCase testCase, TestOracle testOracle) {
+      Stage afterStage = Stage.createOracleLevelStage(report, this.getScript(), testCase, testOracle);
       return definition.afterFactory().apply(afterStage);
     }
 
-    Stage createSuiteLevelStage(Tuple suiteLevelTuple) {
-      return Stage.Factory.frameworkStageFor(this.getConfig(), suiteLevelTuple);
-    }
-
-    Stage createFixtureLevelStage(Tuple fixtureLevelTuple) {
-      return Stage.Factory.frameworkStageFor(this.getConfig(), fixtureLevelTuple);
-    }
-
-    Stage createOracleLevelStage(TestItem testItem, Report report) {
-      return Stage.Factory.oracleLevelStageFor(
-          this.getConfig(),
-          testItem,
-          null,
-          null,
-          report);
-    }
-
-    <RESPONSE> Stage createOracleVerificationStage(TestItem testItem, RESPONSE response, Report report) {
-      return Stage.Factory.oracleLevelStageFor(
-          getConfig(),
-          testItem,
+    <RESPONSE> Stage createOracleVerificationStage(RESPONSE response, Report report, IndexedTestCase testCase, TestOracle testOracle) {
+      return Stage.Factory.oracleStageFor(
+          getScript(),
           requireNonNull(response),
-          null,
-          report);
+          testCase,
+          testOracle,
+          report,
+          null
+      );
     }
 
-    Stage createOracleFailureHandlingStage(TestItem testItem, Throwable throwable, Report report) {
-      return Stage.Factory.oracleLevelStageFor(
-          getConfig(),
-          testItem,
+    Stage createOracleFailureHandlingStage(Throwable throwable, Report report, IndexedTestCase testCase, TestOracle testOracle) {
+      return Stage.Factory.oracleStageFor(
+          getScript(),
           null,
-          throwable,
-          report);
+          testCase,
+          testOracle,
+          report,
+          throwable
+      );
+    }
+
+    static TestOracleValuesFactory testOracleActionFactory(Function<Tuple, String> testCaseFormatter, IndexedTestCase testCase, TestOracle testOracle) {
+      return TestOracleValuesFactory.createTestOracleValuesFactory(
+          testCaseFormatter, testCase, testOracle
+      );
     }
   }
 }

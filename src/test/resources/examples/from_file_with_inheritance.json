@@ -1,0 +1,4 @@
+{
+  "$extends":["from_file.json"],
+  "keyInChild": "valueInChild"
+}
